@@ -5,6 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../../context/SidebarContext";
 import {  Calculator, Car, ChartBar, ChevronDownIcon, DollarSign, Lightbulb, LucideGripHorizontal, PersonStanding, Settings, Users } from "lucide-react";
+import { useTheme } from "@/presentation/context/ThemeContext";
 
 type NavItem = {
   name: string;
@@ -70,6 +71,7 @@ const othersItems: NavItem[] = [
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const { theme } = useTheme()
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -281,19 +283,19 @@ const AppSidebar: React.FC = () => {
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-        <Link href="/">
+       <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/Grota_logo horizontal positivo.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/Grota_logo horizontal negativo.png"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -301,7 +303,11 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src={
+                theme === "dark"
+                  ? "/images/logo/Símbolo negativo.png" // versão branca
+                  : "/images/logo/Símbolo positivo.png" // versão padrão
+              }
               alt="Logo"
               width={32}
               height={32}

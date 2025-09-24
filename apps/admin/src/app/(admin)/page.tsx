@@ -3,10 +3,10 @@ import React from "react";
 
 
 export const metadata: Metadata = {
-  title:
-    "Next.js E-commerce Dashboard | TailAdmin - Next.js Dashboard Template",
-  description: "This is Next.js Home for TailAdmin Dashboard Template",
+  title: "Painel Administrativo | Grota - Gestão de Financiamentos de Veículos",
+  description: "Painel de administração da Grota para gerenciar financiamentos, clientes, veículos e aprovações de forma eficiente.",
 };
+
 
 export default function Dashboard() {
   return (
