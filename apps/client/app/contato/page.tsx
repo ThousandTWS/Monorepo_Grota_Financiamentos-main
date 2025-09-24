@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useCallback } from "react";
-
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
 import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
@@ -9,16 +8,14 @@ import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useSc
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 import Footer from "@/src/presentation/layout/Footer/Footer";
+import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
-import HeroSection from "@/src/presentation/components/Hero/BoxHero";
-import Carousel01 from "@/src/presentation/components/banners/carroucel/Carousel";
-import CTABanner from "@/src/presentation/components/banners/CTABanner";
-import FAQ from "@/src/presentation/components/FAQ/FAQ";
-import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection";
+import BoxHero from "@/src/presentation/components/contato/Hero/BoxHero";
+import BoxMapa from "@/src/presentation/components/contato/Mapa/BoxMapa";
+import BoxContatoForm from "@/src/presentation/components/contato/contatoForm/BoxContatoForm";
 
-export default function Home() {
+function Contato() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
@@ -57,11 +54,18 @@ export default function Home() {
 
       {/* Conteúdo Principal */}
       <main>
-        <HeroSection />
-        <Carousel01 />
-        <CTABanner />
-        <BentoGrid6 />
-        <FAQ />
+        <BoxHero />
+
+        <section className="py-16 px-4 max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-center mb-12 text-gray-800">
+            Contato
+          </h1>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <BoxMapa />
+            <BoxContatoForm />
+          </div>
+        </section>
       </main>
 
       {/* Footer + Modais */}
@@ -70,3 +74,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default Contato;

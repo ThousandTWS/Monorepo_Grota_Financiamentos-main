@@ -5,7 +5,6 @@ import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
 import React from "react";
-import NextTopLoader from 'nextjs-toploader'; // import do NextTopLoader
 
 export default function AdminLayout({
   children,
@@ -22,11 +21,7 @@ export default function AdminLayout({
 
   return (
     <div className="min-h-screen xl:flex">
-      {/* Barra de carregamento no topo */}
-      <NextTopLoader 
-        color="#f97316"  
-        showSpinner={false} 
-      />
+      
 
       {/* Sidebar and Backdrop */}
       <AppSidebar />
@@ -41,6 +36,8 @@ export default function AdminLayout({
 
         {/* Page Content */}
         <div className="p-4 mx-auto max-w-[var(--breakpoint-2xl)] md:p-6">
+          {/* Barra de carregamento no topo */}
+      
           {children}
         </div>
       </div>
