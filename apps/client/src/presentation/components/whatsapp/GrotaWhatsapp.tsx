@@ -10,24 +10,24 @@ export default function WhatsappGrota() {
 
 
   const message = encodeURIComponent(
-    "Olá, tenho interesse em financiamento de veículos Poderia me passar mais informações?"
+    "Olá! Tudo bem? Gostaria de mais informações sobre finaciamento de veículos."
   );
 
   return (
     <div className="fixed bottom-5 right-5 z-50">
-      {/* Anel suave de atenção */}
+
       <div className="absolute bottom-0 right-0 w-16 h-16 pointer-events-none">
         <span className="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75 animate-ping"></span>
       </div>
 
-      {/* Tooltip visível ao hover */}
+
       {isHovered && (
         <div className="absolute right-20 bottom-4 bg-white text-gray-800 px-3 py-1.5 rounded-full shadow-lg flex items-center gap-2 text-sm w-max max-w-[200px] whitespace-nowrap animate-fade-in">
           <span>💬</span> <span>Precisa de ajuda?</span>
         </div>
       )}
 
-      {/* Botão flutuante */}
+
       <Link
         href={`https://api.whatsapp.com/send?phone=5511981254861&text=${message}`}
         target="_blank"
