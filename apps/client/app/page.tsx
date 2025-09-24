@@ -17,6 +17,8 @@ import Carousel01 from "@/src/presentation/components/banners/carroucel/Carousel
 import CTABanner from "@/src/presentation/components/banners/CTABanner";
 import FAQ from "@/src/presentation/components/FAQ/FAQ";
 import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection";
+import { InflectedCardDemo } from "@/src/presentation/components/demo";
+
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -59,6 +61,7 @@ export default function Home() {
       <main>
         <HeroSection />
         <Carousel01 />
+        <InflectedCardDemo />
         <CTABanner />
         <BentoGrid6 />
         <FAQ />

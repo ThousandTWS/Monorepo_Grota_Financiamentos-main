@@ -12,22 +12,33 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
     <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm md:hidden">
       <div className="absolute top-20 left-4 right-4 mt-10 bg-orange-500 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-6">
         <nav className="flex flex-col space-y-4">
-          {["Inicio", "Pricing", "Testimonials", "FAQ"].map((item) => (
+          {[
+            { name: "Inicio", href: "/" },
+            { name: "Nossa Historia", href: "/nossa-historia" },
+            { name: "Soluções", href: "/solucoes" },
+            { name: "Financiamento", href: "#" },
+            { name: "Blog", href: "#" },
+            { name: "Contato", href: "/contato" }
+          ].map((item) => (
             <Link
-              key={item}
-              href="#"
-              className="text-left px-4 py-3 text-lg font-medium text-white hover:text-white transition-colors rounded-lg hover:bg-background/50 cursor-pointer"
+              key={item.name}
+              href={item.href}
+              className="relative px-4 py-2 text-white transition-colors cursor-pointer text-[1rem] 
+             after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-white 
+             after:transition-all after:duration-300 hover:after:w-40"
             >
-              {item}
+              <span className="relative z-20">{item.name}</span>
             </Link>
           ))}
           <div className="border-t border-border/50 pt-4 mt-4 flex flex-col space-y-3">
             <button
               onClick={onLoginClick}
-              className="px-4 py-3 text-lg font-bold text-center bg-white text-orange-500 rounded-lg shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+              type="button"
+              className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-orange-500 bg-white rounded-full shadow-md transition-colors duration-300 hover:bg-orange-500 hover:text-white border-2 border-white"
             >
-              Area do Logista
+              <span className="relative z-10">Área do Cliente</span>
             </button>
+
           </div>
         </nav>
       </div>

@@ -27,27 +27,25 @@ export const MobileHeader = ({ isMobileMenuOpen, onMenuToggle }: MobileHeaderPro
 
       <Button
         onClick={onMenuToggle}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-white transition-colors cursor-pointer"
         aria-label="Toggle menu"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md cursor-pointer hover:bg-orange-50 transition-colors focus:outline-none focus:ring-2 focus:ring-orange-500"
       >
-        <div className="flex flex-col items-center justify-center w-5 h-5 space-y-1">
+        <div className="flex flex-col items-center justify-center w-6 h-6 space-y-1.5 ">
           <span
-            className={`block w-4 h-0.5 bg-orange-500 transition-all duration-300 ${
-              isMobileMenuOpen ? "rotate-45 translate-y-1.5" : ""
-            }`}
+            className={`block h-0.5 w-6 rounded-sm bg-orange-500 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "rotate-45 translate-y-2" : ""
+              }`}
           />
           <span
-            className={`block w-4 h-0.5 bg-orange-500 transition-all duration-300 ${
-              isMobileMenuOpen ? "opacity-0" : ""
-            }`}
+            className={`block h-0.5 w-6 rounded-sm bg-orange-500 transition-opacity duration-300 ease-in-out ${isMobileMenuOpen ? "opacity-0" : "opacity-100"
+              }`}
           />
           <span
-            className={`block w-4 h-0.5 bg-orange-500 transition-all duration-300 ${
-              isMobileMenuOpen ? "-rotate-45 -translate-y-1.5" : ""
-            }`}
+            className={`block h-0.5 w-6 rounded-sm bg-orange-500 transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? "-rotate-45 -translate-y-2" : ""
+              }`}
           />
         </div>
       </Button>
+
     </header>
   )
 }

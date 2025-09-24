@@ -2,6 +2,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { slides } from "./data/slider"
+import { ClientButton } from "../../layout/shared/ClientButton"
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -46,9 +47,14 @@ const HeroSection = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="group bg-orange-500 hover:bg-orange-600 text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 flex items-center justify-center gap-2 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
-              Saiba mais
+            <button
+              type="button"
+              className="relative flex items-center  justify-center cursor-pointer w-80 px-4 py-3 text-base font-semibold text-orange-500 bg-white rounded-full shadow-md transition-colors duration-300 hover:bg-orange-500 hover:text-white border-2 border-white"
+            >
+              <span className="relative z-10 text-xl">Saiba mais</span>
             </button>
+
+
           </div>
         </div>
       </div>

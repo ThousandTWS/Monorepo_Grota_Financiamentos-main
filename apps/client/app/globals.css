@@ -1,15 +1,17 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
 
 @custom-variant dark (&:is(.dark *));
 
 :root {
   --background: oklch(1.0 0 0);
-  --foreground: #121113; /* Updated foreground color to specified dark color */
+  --foreground: #121113; 
   --card: oklch(1.0 0 0);
-  --card-foreground: #121113; /* Updated card foreground to match */
+  --card-foreground: #121113; 
   --popover: oklch(1.0 0 0);
-  --popover-foreground: #121113; /* Updated popover foreground to match */
+  --popover-foreground: #121113; 
   --primary: oklch(0.6716 0.1368 48.513);
   --primary-foreground: oklch(1.0 0 0);
   --secondary: oklch(0.536 0.0398 196.028);
@@ -17,7 +19,7 @@
   --muted: oklch(0.967 0.0029 264.5419);
   --muted-foreground: oklch(0.551 0.0234 264.3637);
   --accent: oklch(0.9491 0 0);
-  --accent-foreground: #121113; /* Updated accent foreground to match */
+  --accent-foreground: #121113; 
   --destructive: oklch(0.6368 0.2078 25.3313);
   --destructive-foreground: oklch(0.9851 0 0);
   --border: oklch(0.9276 0.0058 264.5313);
@@ -36,7 +38,7 @@
   --sidebar-accent-foreground: #121113; /* Updated sidebar accent foreground to match */
   --sidebar-border: oklch(0.9276 0.0058 264.5313);
   --sidebar-ring: oklch(0.6716 0.1368 48.513);
-  --font-sans: Geist Mono, ui-monospace, monospace;
+  --font-sans: 'Montserrat', sans-serif; /* <- atualizado */
   --font-serif: serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.75rem;
@@ -87,7 +89,7 @@
   --sidebar-accent-foreground: oklch(0.8109 0 0);
   --sidebar-border: oklch(0.252 0 0);
   --sidebar-ring: oklch(0.7214 0.1337 49.9802);
-  --font-sans: Geist Mono, ui-monospace, monospace;
+  --font-sans: 'Montserrat', sans-serif;
   --font-serif: serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.75rem;
@@ -163,6 +165,7 @@
 
 body {
   letter-spacing: var(--tracking-normal);
+  font-family: var(--font-sans);
 }
 
 /* Added custom text selection styling with orange background and dark text */
