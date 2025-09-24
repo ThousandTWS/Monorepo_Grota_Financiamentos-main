@@ -1,26 +1,20 @@
 export const slides = [
-    {
-      title: "Lorem Ipsum Dolor Sit",
-      subtitle: "Lorem ipsum dolor sit amet consectetur adipiscing elit",
-      badge: "Lorem Ipsum Dolor",
-      image: "https://placehold.net/800x600.png"
-    },
-     {
-      title: "Consectetur Adipiscing Elit",
-      subtitle: "Sed do eiusmod tempor incididunt ut labore et dolore",
-      badge: "Sed Do Eiusmod",
-      image: "https://placehold.net/800x600.png"
-    },
-     {
-      title: "Ut Enim Ad Minim",
-      subtitle: "Quis nostrud exercitation ullamco laboris nisi ut aliquip",
-      badge: "Quis Nostrud Exercitation",
-      image: "https://placehold.net/800x600.png"
-    },
-     {
-      title: "Duis Aute Irure Dolor",
-      subtitle: "In reprehenderit in voluptate velit esse cillum dolore",
-      badge: "Voluptate Velit Esse",
-      image: "https://placehold.net/800x600.png"
-    },
-  ]
+  {
+    title: "Realize o Sonho do Seu Carro",
+    subtitle: "Financiamento rápido e seguro para você conquistar o veículo que sempre quis, sem burocracia.",
+    badge: "Financiamento Fácil",
+    image: "https://res.cloudinary.com/dqxcs3pwx/image/upload/v1758680425/f1lqg1pf6xrjoqk1sei5.jpg"
+  },
+  {
+    title: "Planos Personalizados Para Você",
+    subtitle: "Escolha o prazo, a entrada e a parcela que cabem no seu bolso. Nós temos a melhor solução de financiamento.",
+    badge: "Parcelas que Cabem no Bolso",
+    image: "https://res.cloudinary.com/dqxcs3pwx/image/upload/v1758680508/tsuodbshhzervluikinh.jpg"
+  },
+  {
+    title: "Aprovação em Poucos Minutos",
+    subtitle: "Envie seus dados e receba a resposta do seu financiamento de forma rápida, prática e confiável.",
+    badge: "Rápido e Confiável",
+    image: "https://res.cloudinary.com/dqxcs3pwx/image/upload/v1758680662/wjm0dufk1ewft0ujdjr9.jpg"
+  },
+]

@@ -1,34 +1,28 @@
-import { CarouselItemType } from "../hooks/useDialog"
+import { CarouselItemType } from "../hooks/useDialog";
 
 export const carouselItems: CarouselItemType[] = [
   {
-    category: "Lorem",
-    title: "Lorem Ipsum Dolor Sit Amet",
-    description: "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    imageSrc: "https://placehold.net/600x600.png",
+    title: "Seu Carro Novo Espera Por Você",
+    description:
+      "Financiamento ágil e sem burocracia para você conquistar o veículo dos seus sonhos. Aproveite condições especiais de aprovação.",
+    category: "Financiamento Sem Burocracia",
+    imageSrc:
+      "https://images.pexels.com/photos/1181390/pexels-photo-1181390.jpeg",
   },
   {
-    category: "Ipsum",
-    title: "Consectetur Adipiscing Elit",
-    description: "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor.",
-    imageSrc: "https://placehold.net/600x600.png",
+    title: "Parcelas Que Cabem no Seu Bolso",
+    description:
+      "Escolha o prazo, a entrada e as parcelas que se ajustam ao seu orçamento. Com a Grota, você tem flexibilidade e segurança.",
+    category: "Planos Personalizados",
+    imageSrc:
+      "https://images.pexels.com/photos/1181392/pexels-photo-1181392.jpeg",
   },
   {
-    category: "Dolor",
-    title: "Sed Do Eiusmod Tempor",
-    description: "Incididunt ut labore et dolore magna aliqua ut enim ad minim veniam quis nostrud exercitation. Ullamco laboris nisi ut aliquip ex ea commodo consequat duis aute irure dolor in reprehenderit.",
-    imageSrc: "https://placehold.net/600x600.png",
+    title: "Aprovação Rápida e Segura",
+    description:
+      "Envie seus dados e obtenha a resposta do seu financiamento de forma rápida e confiável. Sem complicação, só solução.",
+    category: "Aprovação Imediata",
+    imageSrc:
+      "https://images.pexels.com/photos/1181393/pexels-photo-1181393.jpeg",
   },
-  {
-    category: "Sit",
-    title: "Ut Enim Ad Minim Veniam",
-    description: "Quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur excepteur sint.",
-    imageSrc: "https://placehold.net/600x600.png",
-  },
-  {
-    category: "Amet",
-    title: "Excepteur Sint Occaecat",
-    description: "Cupidatat non proident sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium totam rem aperiam.",
-    imageSrc: "https://placehold.net/600x600.png",
-  },
-]
+];

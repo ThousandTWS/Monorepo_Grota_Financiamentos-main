@@ -12,6 +12,7 @@ import Carousel01 from "@/src/presentation/components/banners/carroucel/Carousel
 import CTABanner from "@/src/presentation/components/banners/CTABanner"
 import Footer from "@/src/presentation/layout/Footer/Footer"
 import FAQ from "@/src/presentation/components/FAQ/FAQ"
+import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection"
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -44,9 +45,12 @@ export default function Home() {
       
       <HeroSection />
 
+      
+
       <Carousel01/>
       
       <CTABanner />
+      <BentoGrid6 />
       
       <FAQ />
       

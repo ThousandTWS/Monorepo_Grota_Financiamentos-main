@@ -1,22 +1,27 @@
 export const faqData = [
-  {
-    question: "Lorem ipsum dolor sit amet consectetur?",
-    answer: "Lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam quis nostrud exercitation ullamco laboris."
+ {
+    question: "Como faço para solicitar um financiamento?",
+    answer:
+      "Você pode solicitar seu financiamento diretamente pelo nosso site ou em uma de nossas unidades. Basta preencher o formulário com seus dados e informações do veículo desejado."
   },
   {
-    question: "Sed do eiusmod tempor incididunt ut labore?",
-    answer: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident sunt in culpa qui officia deserunt mollit anim."
+    question: "Quais são os documentos necessários?",
+    answer:
+      "Para solicitar um financiamento, você precisará apresentar RG, CPF, comprovante de residência e comprovante de renda atualizado."
   },
   {
-    question: "Ut enim ad minim veniam quis nostrud?",
-    answer: "At vero eos et accusamus et iusto odio dignissimos ducimus qui blanditiis praesentium voluptatum deleniti atque corrupti quos dolores et quas molestias excepturi sint occaecati cupiditate non provident."
+    question: "Qual o prazo para aprovação do financiamento?",
+    answer:
+      "Aprovações são geralmente feitas em poucos minutos, após a análise dos documentos enviados. Nosso processo é rápido, seguro e transparente."
   },
   {
-    question: "Excepteur sint occaecat cupidatat non proident?",
-    answer: "Similique sunt in culpa qui officia deserunt mollitia animi id est laborum et dolorum fuga. Et harum quidem rerum facilis est et expedita distinctio nam libero tempore cum soluta nobis."
+    question: "Posso escolher o valor da entrada e das parcelas?",
+    answer:
+      "Sim! Nossos planos são totalmente personalizados. Você escolhe o valor da entrada, o prazo e as parcelas que cabem no seu bolso."
   },
   {
-    question: "Quis autem vel eum iure reprehenderit?",
-    answer: "Qui in ea voluptate velit esse quam nihil molestiae consequatur vel illum qui dolorem eum fugiat quo voluptas nulla pariatur. At vero eos et accusamus et iusto odio dignissimos ducimus."
+    question: "O que acontece se eu quiser antecipar parcelas?",
+    answer:
+      "Você pode antecipar parcelas a qualquer momento. Entre em contato com nossa equipe para simular o valor e atualizar seu contrato."
   }
 ]

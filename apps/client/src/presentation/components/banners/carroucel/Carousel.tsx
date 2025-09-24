@@ -107,7 +107,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({ item, onPlusClick }) => (
           {item.description.substring(0, 120)}...
         </p>
       </div>
-      
+
       <button
         onClick={(e) => onPlusClick(e, item)}
         className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
@@ -156,7 +156,7 @@ const DetailDialog: React.FC<DetailDialogProps> = ({
               <p className="text-gray-600 leading-relaxed text-base mb-6">
                 {selectedItem.description}
               </p>
-              
+
               <div className="space-y-3 mb-8">
                 <div className="flex items-center text-sm text-gray-700">
                   <svg className="w-5 h-5 text-green-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
