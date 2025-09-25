@@ -7,6 +7,14 @@
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
+    "run-java": {
+      "dependsOn": [],
+      "outputs": []
+    },
+     "run-py": {
+      "dependsOn": [],
+      "outputs": []
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
