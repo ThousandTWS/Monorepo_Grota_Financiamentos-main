@@ -9,6 +9,9 @@ import org.example.server.repository.LogisticRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class LogisticService {
 
@@ -31,5 +34,10 @@ public class LogisticService {
         logistic = logisticRepository.save(logistic);
 
         return logisticMapper.toDTO(logistic);
+    }
+
+    public List<LogisticResponseDTO> findAll() {
+        List<Logistic> logisticList = logisticRepository.findAll();
+        return logisticList.stream().map(logistic -> logisticMapper.toDTO(logistic)).collect(Collectors.toList());
     }
 }

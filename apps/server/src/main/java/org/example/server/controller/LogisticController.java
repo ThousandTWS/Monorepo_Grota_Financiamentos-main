@@ -6,10 +6,9 @@ import org.example.server.model.Logistic;
 import org.example.server.service.LogisticService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/grota-financiamentos/logistics")
@@ -25,5 +24,11 @@ public class LogisticController {
     public ResponseEntity<LogisticResponseDTO> create(@RequestBody LogisticRequestDTO logisticRequestDTO){
         LogisticResponseDTO responseDTO = logisticService.create(logisticRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<LogisticResponseDTO>> findAll(){
+        List<LogisticResponseDTO> logisticList = logisticService.findAll();
+        return ResponseEntity.ok().body(logisticList);
     }
 }
