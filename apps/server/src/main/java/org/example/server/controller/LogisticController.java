@@ -31,4 +31,10 @@ public class LogisticController {
         List<LogisticResponseDTO> logisticList = logisticService.findAll();
         return ResponseEntity.ok().body(logisticList);
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LogisticResponseDTO> findById(@PathVariable Long id){
+        LogisticResponseDTO logistic = logisticService.findById(id);
+        return ResponseEntity.ok().body(logistic);
+    }
 }

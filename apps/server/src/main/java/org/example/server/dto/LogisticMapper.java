@@ -15,6 +15,7 @@ public class LogisticMapper {
         User user = logistic.getUser();
 
         return new LogisticResponseDTO(
+                logistic.getId(),
                 logistic.getFullName(),
                 user != null ? user.getEmail() : null,
                 logistic.getPhone(),

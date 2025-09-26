@@ -40,4 +40,8 @@ public class LogisticService {
         List<Logistic> logisticList = logisticRepository.findAll();
         return logisticList.stream().map(logistic -> logisticMapper.toDTO(logistic)).collect(Collectors.toList());
     }
+
+    public LogisticResponseDTO findById(Long id) {
+      return logisticMapper.toDTO(logisticRepository.findById(id).orElseThrow(() -> new RuntimeException("Logistic não encontrado")));
+    }
 }
