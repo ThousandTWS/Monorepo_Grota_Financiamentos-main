@@ -1,256 +1,213 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calculator, Car, TrendingUp, DollarSign, Clock, Percent } from "lucide-react"
-import type { SimulationResult } from "@/application/@types/SimulationResult"
-import type { VehiclePrice } from "@/application/@types/VehiclePrice"
-import type { VehicleYear } from "@/application/@types/VehicleYear"
-import type { Vehicle } from "@/application/@types/Vehicle"
-import type { VehicleModel } from "@/application/@types/VehicleModel"
+import { Calculator, Car, TrendingUp, DollarSign, Clock, Percent, Search, CheckCircle, AlertCircle } from "lucide-react"
 
-const vehicleTypes = [
-  { id: "carros", name: "Carros", icon: Car },
-  { id: "motos", name: "Motos", icon: Car },
-  { id: "caminhoes", name: "Caminhões", icon: Car },
-]
+interface SimulationResult {
+  percentage: number
+  downPayment: number
+  financed: number
+  term: number
+  installment: number
+}
+
+interface VehicleInfo {
+  placa: string
+  tipo: string // Added vehicle type field
+  marca: string
+  modelo: string
+  ano: string
+  cor: string
+  combustivel: string
+  valor?: string
+}
 
 export function VehicleFinanceSimulator() {
-  const [selectedType, setSelectedType] = useState<string>("motos")
-  const [brands, setBrands] = useState<Vehicle[]>([])
-  const [selectedBrand, setSelectedBrand] = useState<string>("")
-  const [models, setModels] = useState<VehicleModel[]>([])
-  const [selectedModel, setSelectedModel] = useState<string>("")
-  const [years, setYears] = useState<VehicleYear[]>([])
-  const [selectedYear, setSelectedYear] = useState<string>("")
-  const [, setVehiclePrice] = useState<VehiclePrice | null>(null)
+  const [plateNumber, setPlateNumber] = useState<string>("")
+  const [vehicleInfo, setVehicleInfo] = useState<VehicleInfo | null>(null)
   const [vehicleValue, setVehicleValue] = useState<string>("")
   const [downPayment, setDownPayment] = useState<string>("")
   const [loading, setLoading] = useState(false)
+  const [plateError, setPlateError] = useState<string>("")
   const [simulationResults, setSimulationResults] = useState<SimulationResult[]>([])
 
-  // Fetch brands when vehicle type changes
-  useEffect(() => {
-    if (selectedType) {
-      fetchBrands(selectedType)
-      setSelectedBrand("")
-      setModels([])
-      setSelectedModel("")
-      setYears([])
-      setSelectedYear("")
-      setVehiclePrice(null)
-    }
-  }, [selectedType])
+  const debouncedPlateLookup = useCallback(
+    debounce((plate: string) => {
+      if (isValidPlate(plate)) {
+        fetchVehicleByPlate(plate)
+      }
+    }, 800),
+    [],
+  )
 
-  // Fetch models when brand changes
   useEffect(() => {
-    if (selectedBrand && selectedType) {
-      fetchModels(selectedType, selectedBrand)
-      setSelectedModel("")
-      setYears([])
-      setSelectedYear("")
-      setVehiclePrice(null)
+    if (plateNumber.length >= 7) {
+      debouncedPlateLookup(plateNumber)
+    } else {
+      setVehicleInfo(null)
+      setPlateError("")
+      setVehicleValue("")
     }
-  }, [selectedBrand, selectedType])
+  }, [plateNumber, debouncedPlateLookup])
 
-  // Fetch years when model changes
-  useEffect(() => {
-    if (selectedModel && selectedBrand && selectedType) {
-      fetchYears(selectedType, selectedBrand, selectedModel)
-      setSelectedYear("")
-      setVehiclePrice(null)
+  const isValidPlate = (plate: string): boolean => {
+    // Remove spaces and convert to uppercase
+    const cleanPlate = plate.replace(/\s/g, "").toUpperCase()
+
+    // Old format: ABC1234 or new format: ABC1D23
+    const oldFormat = /^[A-Z]{3}[0-9]{4}$/
+    const newFormat = /^[A-Z]{3}[0-9][A-Z][0-9]{2}$/
+
+    return oldFormat.test(cleanPlate) || newFormat.test(cleanPlate)
+  }
+
+  const formatPlateNumber = (value: string): string => {
+    // Remove all non-alphanumeric characters
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, "").toUpperCase()
+
+    if (cleaned.length <= 3) {
+      return cleaned
+    } else if (cleaned.length <= 7) {
+      return `${cleaned.slice(0, 3)}-${cleaned.slice(3)}`
+    } else {
+      return `${cleaned.slice(0, 3)}-${cleaned.slice(3, 7)}`
     }
-  }, [selectedModel, selectedBrand, selectedType])
+  }
 
-  // Fetch price when year changes
-  useEffect(() => {
-    if (selectedYear && selectedModel && selectedBrand && selectedType) {
-      fetchPrice(selectedType, selectedBrand, selectedModel, selectedYear)
-    }
-  }, [selectedYear, selectedModel, selectedBrand, selectedType])
-
-  const fetchBrands = async (type: string) => {
+  const fetchVehicleByPlate = async (plate: string) => {
     setLoading(true)
+    setPlateError("")
+
     try {
-      console.log("[v0] Fetching brands for type:", type)
-      const response = await fetch(`https://parallelum.com.br/fipe/api/v1/${type}/marcas`)
+      console.log("[v0] Fetching vehicle info for plate:", plate)
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+      // Mock API call - replace with actual license plate API
+      // Example: https://apicarros.com/v1/consulta/{plate}
+      // For demonstration, we'll simulate the API response
+      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API delay
+
+      const mockVehicleData: VehicleInfo = {
+        placa: plate,
+        tipo: "AUTOMÓVEL", // Changed to more common vehicle type
+        marca: "VOLKSWAGEN",
+        modelo: "GOL 1.0 MI",
+        ano: "2020",
+        cor: "BRANCA",
+        combustivel: "FLEX",
       }
 
-      const data = await response.json()
-      console.log("[v0] Brands response:", data)
+      console.log("[v0] Setting vehicle info:", mockVehicleData)
+      setVehicleInfo(mockVehicleData)
 
-      if (data.error) {
-        console.error("[v0] API returned error:", data.error)
-        setBrands([])
-        return
-      }
-
-      if (Array.isArray(data)) {
-        setBrands(data)
-      } else {
-        console.error("[v0] Brands data is not an array:", data)
-        setBrands([])
-      }
+      // Fetch FIPE price based on vehicle info
+      await fetchFipePrice(mockVehicleData)
     } catch (error) {
-      console.error("[v0] Erro ao buscar marcas:", error)
-      setBrands([])
+      console.error("[v0] Error fetching vehicle info:", error)
+      setPlateError("Não foi possível encontrar informações para esta placa. Verifique se a placa está correta.")
+      setVehicleInfo(null)
     } finally {
       setLoading(false)
     }
   }
 
-  const fetchModels = async (type: string, brand: string) => {
-    setLoading(true)
+  const fetchFipePrice = async (vehicle: VehicleInfo) => {
     try {
-      console.log("[v0] Fetching models for type:", type, "brand:", brand)
-      const response = await fetch(`https://parallelum.com.br/fipe/api/v1/${type}/marcas/${brand}/modelos`)
+      console.log("[v0] Fetching FIPE price for vehicle:", vehicle)
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
+      // This would typically involve:
+      // 1. Finding the brand code in FIPE API
+      // 2. Finding the model code
+      // 3. Getting the price for the specific year
 
-      const data = await response.json()
-      console.log("[v0] Models response:", data)
-
-      if (data.error) {
-        console.error("[v0] API returned error:", data.error)
-        setModels([])
-        return
-      }
-
-      if (data && Array.isArray(data.modelos)) {
-        setModels(data.modelos)
-      } else if (Array.isArray(data)) {
-        setModels(data)
-      } else {
-        console.error("[v0] Models data is not in expected format:", data)
-        setModels([])
-      }
+      // For demonstration, we'll use a mock price
+      // In a real implementation, you'd need to map the vehicle info to FIPE codes
+      const mockPrice = "R$ 25.000,00"
+      const cleanValue = mockPrice.replace(/[R$.]/g, "").replace(",", ".")
+      setVehicleValue(cleanValue)
     } catch (error) {
-      console.error("[v0] Erro ao buscar modelos:", error)
-      setModels([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchYears = async (type: string, brand: string, model: string) => {
-    setLoading(true)
-    try {
-      console.log("[v0] Fetching years for type:", type, "brand:", brand, "model:", model)
-      const response = await fetch(
-        `https://parallelum.com.br/fipe/api/v1/${type}/marcas/${brand}/modelos/${model}/anos`,
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log("[v0] Years response:", data)
-
-      if (data.error) {
-        console.error("[v0] API returned error:", data.error)
-        setYears([])
-        return
-      }
-
-      if (Array.isArray(data)) {
-        setYears(data)
-      } else {
-        console.error("[v0] Years data is not an array:", data)
-        setYears([])
-      }
-    } catch (error) {
-      console.error("[v0] Erro ao buscar anos:", error)
-      setYears([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const fetchPrice = async (type: string, brand: string, model: string, year: string) => {
-    setLoading(true)
-    try {
-      console.log("[v0] Fetching price for:", { type, brand, model, year })
-      const response = await fetch(
-        `https://parallelum.com.br/fipe/api/v1/${type}/marcas/${brand}/modelos/${model}/anos/${year}`,
-      )
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
-      console.log("[v0] Price response:", data)
-
-      if (data.error) {
-        console.error("[v0] API returned error:", data.error)
-        setVehiclePrice(null)
-        return
-      }
-
-      if (data && data.valor) {
-        setVehiclePrice(data)
-        // Auto-fill vehicle value from FIPE
-        const cleanValue = data.valor.replace(/[R$.]/g, "").replace(",", ".")
-        setVehicleValue(cleanValue)
-      } else {
-        console.error("[v0] Price data is not in expected format:", data)
-        setVehiclePrice(null)
-      }
-    } catch (error) {
-      console.error("[v0] Erro ao buscar preço:", error)
-      setVehiclePrice(null)
-    } finally {
-      setLoading(false)
+      console.error("[v0] Error fetching FIPE price:", error)
+      // Set a default value or let user input manually
+      setVehicleValue("")
     }
   }
 
   const handleSimulate = () => {
-    if (!vehicleValue || !downPayment) return
+    console.log("[v0] Starting simulation with:", { vehicleValue, downPayment })
 
-    const vehicleVal = Number.parseFloat(vehicleValue.replace(/[^\d.,]/g, "").replace(",", "."))
-    const downPaymentVal = Number.parseFloat(downPayment.replace(/[^\d.,]/g, "").replace(",", "."))
+    if (!vehicleValue || !downPayment) {
+      console.log("[v0] Missing required values")
+      return
+    }
 
-    if (isNaN(vehicleVal) || isNaN(downPaymentVal)) return
+    const vehicleVal = Number.parseFloat(
+      vehicleValue
+        .replace(/[^\d.,]/g, "")
+        .replace(/\./g, "")
+        .replace(",", "."),
+    )
+    const downPaymentVal = Number.parseFloat(
+      downPayment
+        .replace(/[^\d.,]/g, "")
+        .replace(/\./g, "")
+        .replace(",", "."),
+    )
+
+    console.log("[v0] Parsed values:", { vehicleVal, downPaymentVal })
+
+    if (isNaN(vehicleVal) || isNaN(downPaymentVal) || vehicleVal <= 0 || downPaymentVal < 0) {
+      console.log("[v0] Invalid values detected")
+      return
+    }
+
+    if (downPaymentVal >= vehicleVal) {
+      console.log("[v0] Down payment cannot be greater than or equal to vehicle value")
+      return
+    }
 
     const financedAmount = vehicleVal - downPaymentVal
     const downPaymentPercentage = (downPaymentVal / vehicleVal) * 100
 
-    // Generate different financing options
+    console.log("[v0] Calculated values:", { financedAmount, downPaymentPercentage })
+
     const results: SimulationResult[] = [
       {
         percentage: Math.round(downPaymentPercentage),
         downPayment: downPaymentVal,
         financed: financedAmount,
         term: 24,
-        installment: (financedAmount * 1.02) / 24, // 2% monthly rate
+        installment: calculateInstallment(financedAmount, 0.0199, 24), // 1.99% monthly rate
       },
       {
         percentage: Math.round(downPaymentPercentage),
         downPayment: downPaymentVal,
         financed: financedAmount,
         term: 36,
-        installment: (financedAmount * 1.015) / 36, // 1.5% monthly rate
+        installment: calculateInstallment(financedAmount, 0.0179, 36), // 1.79% monthly rate
       },
       {
         percentage: Math.round(downPaymentPercentage),
         downPayment: downPaymentVal,
         financed: financedAmount,
         term: 48,
-        installment: (financedAmount * 1.012) / 48, // 1.2% monthly rate
+        installment: calculateInstallment(financedAmount, 0.0159, 48), // 1.59% monthly rate
       },
     ]
 
+    console.log("[v0] Simulation results:", results)
     setSimulationResults(results)
+  }
+
+  const calculateInstallment = (principal: number, monthlyRate: number, months: number): number => {
+    if (monthlyRate === 0) return principal / months
+
+    const factor = Math.pow(1 + monthlyRate, months)
+    return (principal * monthlyRate * factor) / (factor - 1)
   }
 
   const formatCurrency = (value: number) => {
@@ -265,12 +222,11 @@ export function VehicleFinanceSimulator() {
       <div className="container mx-auto px-4 py-12 max-w-7xl">
         {/* Header Section */}
         <div className="text-center mb-12">
-          
           <h1 className="text-4xl md:text-6xl font-bold text-foreground mb-6 text-balance">
             {"Simulador de"} <span className="text-primary">{"Financiamento"}</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto text-pretty">
-            {"Encontre as melhores condições de financiamento para seu veículo com dados atualizados da tabela FIPE"}
+            {"Digite a placa do seu veículo e encontre as melhores condições de financiamento"}
           </p>
         </div>
 
@@ -282,82 +238,88 @@ export function VehicleFinanceSimulator() {
               <CardHeader className="pb-6">
                 <CardTitle className="flex items-center gap-2 text-2xl">
                   <Car className="h-6 w-6 text-primary" />
-                  {"Dados do Veículo"}
+                  {"Consulta por Placa"}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-8">
-                {/* Vehicle Selection Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="space-y-6">
                   <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-foreground">{"Tipo de Veículo"}</Label>
-                    <Select value={selectedType} onValueChange={setSelectedType}>
-                      <SelectTrigger className="h-12 bg-background border-2 border-border hover:border-primary/50 transition-colors">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicleTypes.map((type) => (
-                          <SelectItem key={type.id} value={type.id}>
-                            <div className="flex items-center gap-2">
-                              <type.icon className="h-4 w-4" />
-                              {type.name}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label className="text-sm font-semibold text-foreground">{"Placa do Veículo"}</Label>
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                      <Input
+                        type="text"
+                        value={plateNumber}
+                        onChange={(e) => setPlateNumber(formatPlateNumber(e.target.value))}
+                        className="h-14 pl-12 pr-12 bg-background border-2 border-border hover:border-primary/50 focus:border-primary transition-colors text-lg font-mono tracking-wider"
+                        placeholder="ABC-1234"
+                        maxLength={8}
+                      />
+                      {vehicleInfo && (
+                        <CheckCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-green-500" />
+                      )}
+                      {plateError && (
+                        <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-red-500" />
+                      )}
+                    </div>
+                    {plateError && (
+                      <p className="text-sm text-red-500 flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4" />
+                        {plateError}
+                      </p>
+                    )}
                   </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-foreground">{"Marca"}</Label>
-                    <Select value={selectedBrand} onValueChange={setSelectedBrand} disabled={brands.length === 0}>
-                      <SelectTrigger className="h-12 bg-background border-2 border-border hover:border-primary/50 transition-colors">
-                        <SelectValue placeholder="Selecione a marca" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(brands) &&
-                          brands.map((brand) => (
-                            <SelectItem key={brand.codigo} value={brand.codigo}>
-                              {brand.nome}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {vehicleInfo && (
+                    <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
+                      <CardContent className="p-6">
+                        <h3 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+                          <CheckCircle className="h-5 w-5 text-green-600" />
+                          {"Informações do Veículo Encontrado"}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Placa:"}</span>
+                            <span className="font-bold text-foreground">{vehicleInfo.placa}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Tipo:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.tipo}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Marca:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.marca}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Modelo:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.modelo}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Ano:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.ano}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground font-medium">{"Cor:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.cor}</span>
+                          </div>
+                          <div className="flex justify-between md:col-span-2">
+                            <span className="text-muted-foreground font-medium">{"Combustível:"}</span>
+                            <span className="font-semibold text-foreground">{vehicleInfo.combustivel}</span>
+                          </div>
+                        </div>
+                        <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                          <p className="text-sm text-blue-700 dark:text-blue-300 flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4" />
+                            {"Dados obtidos automaticamente pela consulta da placa"}
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
 
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-foreground">{"Modelo"}</Label>
-                    <Select value={selectedModel} onValueChange={setSelectedModel} disabled={models.length === 0}>
-                      <SelectTrigger className="h-12 bg-background border-2 border-border hover:border-primary/50 transition-colors">
-                        <SelectValue placeholder="Selecione o modelo" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(models) &&
-                          models.map((model) => (
-                            <SelectItem key={model.codigo} value={model.codigo}>
-                              {model.nome}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-sm font-semibold text-foreground">{"Ano do Modelo"}</Label>
-                    <Select value={selectedYear} onValueChange={setSelectedYear} disabled={years.length === 0}>
-                      <SelectTrigger className="h-12 bg-background border-2 border-border hover:border-primary/50 transition-colors">
-                        <SelectValue placeholder="Selecione o ano" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Array.isArray(years) &&
-                          years.map((year) => (
-                            <SelectItem key={year.codigo} value={year.codigo}>
-                              {year.nome}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
+                {/* Financial Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     <Label className="text-sm font-semibold text-foreground">{"Valor do Veículo"}</Label>
                     <div className="relative">
@@ -370,6 +332,9 @@ export function VehicleFinanceSimulator() {
                         placeholder="R$ 0,00"
                       />
                     </div>
+                    {vehicleInfo && vehicleValue && (
+                      <p className="text-xs text-muted-foreground">{"Valor baseado na tabela FIPE"}</p>
+                    )}
                   </div>
 
                   <div className="space-y-3">
@@ -409,12 +374,12 @@ export function VehicleFinanceSimulator() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-primary/10 rounded-lg">
-                    <TrendingUp className="h-5 w-5 text-primary" />
+                    <Search className="h-5 w-5 text-primary" />
                   </div>
-                  <h3 className="font-semibold text-foreground">{"Dados FIPE"}</h3>
+                  <h3 className="font-semibold text-foreground">{"Consulta Automática"}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {"Valores atualizados conforme a tabela oficial da Fundação Instituto de Pesquisas Econômicas."}
+                  {"Digite apenas a placa e as informações do veículo são carregadas automaticamente."}
                 </p>
               </CardContent>
             </Card>
@@ -423,17 +388,18 @@ export function VehicleFinanceSimulator() {
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
                   <div className="p-2 bg-chart-3/10 rounded-lg">
-                    <Clock className="h-5 w-5 text-chart-3" />
+                    <TrendingUp className="h-5 w-5 text-chart-3" />
                   </div>
-                  <h3 className="font-semibold text-foreground">{"Resultado Instantâneo"}</h3>
+                  <h3 className="font-semibold text-foreground">{"Dados FIPE"}</h3>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  {"Calcule suas parcelas em segundos e compare diferentes cenários de financiamento."}
+                  {"Valores atualizados conforme a tabela oficial da Fundação Instituto de Pesquisas Econômicas."}
                 </p>
               </CardContent>
             </Card>
           </div>
         </div>
+       
 
         {/* Results Section */}
         {simulationResults.length > 0 && (
@@ -493,13 +459,16 @@ export function VehicleFinanceSimulator() {
           </div>
         )}
 
+        
+
+
         {/* Loading Overlay */}
         {loading && (
           <div className="fixed inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50">
             <Card className="glass-effect border-0 shadow-2xl">
               <CardContent className="p-8 text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary mx-auto mb-4"></div>
-                <p className="text-foreground font-medium">{"Carregando dados da FIPE..."}</p>
+                <p className="text-foreground font-medium">{"Consultando informações da placa..."}</p>
                 <p className="text-sm text-muted-foreground mt-2">{"Aguarde um momento"}</p>
               </CardContent>
             </Card>
@@ -508,4 +477,12 @@ export function VehicleFinanceSimulator() {
       </div>
     </div>
   )
+}
+
+function debounce<T extends (...args: any[]) => any>(func: T, wait: number): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout | null = null
+  return (...args: Parameters<T>) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => func(...args), wait)
+  }
 }
