@@ -18,6 +18,7 @@ import CTABanner from "@/src/presentation/components/banners/CTABanner";
 import FAQ from "@/src/presentation/components/FAQ/FAQ";
 import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection";
 import { InflectedCardDemo } from "@/src/presentation/components/demo";
+import TestimonialSlider from "@/components/testimonial-slider";
 
 
 export default function Home() {
@@ -64,6 +65,7 @@ export default function Home() {
         <InflectedCardDemo />
         <CTABanner />
         <BentoGrid6 />
+        <TestimonialSlider/>
         <FAQ />
       </main>
 
