@@ -5,6 +5,10 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../../context/SidebarContext";
 import { useTheme } from "@/presentation/context/ThemeContext";
+import { NavItem } from "./types";
+import { ChevronDownIcon, LucideGripHorizontal } from "lucide-react";
+import { navItems } from "./links/NavItem";
+import { othersItems } from "./links/OthersItems";
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
