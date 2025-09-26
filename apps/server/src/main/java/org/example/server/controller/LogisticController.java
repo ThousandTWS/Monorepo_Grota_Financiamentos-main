@@ -1,7 +1,11 @@
 package org.example.server.controller;
 
+import org.example.server.dto.LogisticRequestDTO;
+import org.example.server.dto.LogisticResponseDTO;
 import org.example.server.model.Logistic;
 import org.example.server.service.LogisticService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,7 +22,8 @@ public class LogisticController {
     }
 
     @PostMapping
-    public Logistic create(@RequestBody Logistic logistic){
-        return logisticService.create(logistic);
+    public ResponseEntity<LogisticResponseDTO> create(@RequestBody LogisticRequestDTO logisticRequestDTO){
+        LogisticResponseDTO responseDTO = logisticService.create(logisticRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 }

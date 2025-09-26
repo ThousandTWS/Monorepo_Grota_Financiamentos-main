@@ -27,11 +27,11 @@ public class Logistic {
     public Logistic() {
     }
 
-    public Logistic(Long id, String fullName, String phone, String enterprise) {
-        this.id = id;
+    public Logistic(String fullName, String phone, String enterprise, User user) {
         this.fullName = fullName;
         this.phone = phone;
         this.enterprise = enterprise;
+        this.user = user;
     }
 
     public Long getId() {
@@ -62,16 +62,11 @@ public class Logistic {
         this.enterprise = enterprise;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Logistic logistic = (Logistic) object;
-        return Objects.equals(id, logistic.id);
+    public User getUser() {
+        return user;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setUser(User user) {
+        this.user = user;
     }
 }

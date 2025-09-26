@@ -33,10 +33,11 @@ public class User {
     public User() {
     }
 
-    public User(String email, String password, LocalDateTime createdAt) {
+    public User(String email, String password, LocalDateTime createdAt, Logistic logistic) {
         this.email = email;
         this.password = password;
         this.createdAt = createdAt;
+        this.logistic = logistic;
     }
 
     public Long getId() {
@@ -63,16 +64,11 @@ public class User {
         return createdAt;
     }
 
-    @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        User user = (User) object;
-        return Objects.equals(id, user.id);
+    public Logistic getLogistic() {
+        return logistic;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id);
+    public void setLogistic(Logistic logistic) {
+        this.logistic = logistic;
     }
 }
