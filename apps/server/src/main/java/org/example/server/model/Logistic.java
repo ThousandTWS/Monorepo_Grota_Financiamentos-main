@@ -20,6 +20,10 @@ public class Logistic {
     @Column(length = 150)
     private String enterprise;
 
+    @OneToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
     public Logistic() {
     }
 

@@ -22,6 +22,9 @@ public class User {
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Logistic logistic;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
