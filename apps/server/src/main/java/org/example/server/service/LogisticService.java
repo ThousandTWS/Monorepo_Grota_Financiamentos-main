@@ -1,5 +1,6 @@
 package org.example.server.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.LogisticMapper;
 import org.example.server.dto.LogisticRequestDTO;
 import org.example.server.dto.LogisticResponseDTO;
@@ -8,6 +9,7 @@ import org.example.server.model.User;
 import org.example.server.repository.LogisticRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -43,5 +45,28 @@ public class LogisticService {
 
     public LogisticResponseDTO findById(Long id) {
       return logisticMapper.toDTO(logisticRepository.findById(id).orElseThrow(() -> new RuntimeException("Logistic não encontrado")));
+    }
+
+    @Transactional
+    public LogisticResponseDTO update(Long id, LogisticRequestDTO logisticRequestDTO) {
+        Logistic logistic = logisticRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Logistic não encontrada"));
+
+        User user =  logistic.getUser();
+        if (user == null){
+            throw new EntityNotFoundException("Usuário vinculado à logística não encontrado");
+        }
+
+        logistic.setFullName(logisticRequestDTO.fullName());
+        logistic.setPhone(logisticRequestDTO.phone());
+        logistic.setEnterprise(logisticRequestDTO.enterprise());
+
+        user.setEmail(logisticRequestDTO.email());
+        user.setPassword(logisticRequestDTO.password());
+
+        userRepository.save(user);
+        logisticRepository.save(logistic);
+
+        return logisticMapper.toDTO(logistic);
     }
 }

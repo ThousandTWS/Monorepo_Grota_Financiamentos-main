@@ -2,7 +2,6 @@ package org.example.server.controller;
 
 import org.example.server.dto.LogisticRequestDTO;
 import org.example.server.dto.LogisticResponseDTO;
-import org.example.server.model.Logistic;
 import org.example.server.service.LogisticService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,4 +36,11 @@ public class LogisticController {
         LogisticResponseDTO logistic = logisticService.findById(id);
         return ResponseEntity.ok().body(logistic);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<LogisticResponseDTO> update(@PathVariable Long id, @RequestBody LogisticRequestDTO logisticRequestDTO){
+        LogisticResponseDTO logistic = logisticService.update(id, logisticRequestDTO);
+        return ResponseEntity.ok().body(logistic);
+    }
 }
+
