@@ -4,69 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../../context/SidebarContext";
-import {  Calculator, Car, ChartBar, ChevronDownIcon, DollarSign, Lightbulb, LucideGripHorizontal, PersonStanding, Settings, Users } from "lucide-react";
 import { useTheme } from "@/presentation/context/ThemeContext";
-
-type NavItem = {
-  name: string;
-  icon: React.ReactNode;
-  path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
-};
-
-const navItems: NavItem[] = [
-  {
-    icon: <ChartBar />,
-    name: "Dashboard",
-    subItems: [{ name: "Visao Geral", path: "/visao-geral", pro: false }, { name: "Relatorios", path: "/", pro: false }],
-  },
-  {
-    icon: <DollarSign/>,
-    name: "Comissões",
-    subItems: [{ name: "Comissões e Repasse", path: "/", pro: false }],
-  },
-  {
-    name: "Veículos",
-    icon: <Car/>,
-    subItems: [{ name: "Gestão de Veículos", path: "/", pro: false }],
-  },
-  {
-    name: "Clientes",
-    icon: <Users />,
-    subItems: [{ name: "Listas de Clientes", path: "/", pro: false }, { name: "Documentos", path: "/", pro: false }],
-  },
-  {
-    name: "Financiamento",
-    icon: <Calculator/>,
-    subItems: [
-      { name: "Todos", path: "/", pro: false },
-      { name: "Simulação", path: "/", pro: false },
-    ],
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <Settings />,
-    name: "Configurações",
-    path: "/",
-  },
-  {
-    icon: <Lightbulb />,
-    name: "Dicas & Tutoriais",
-    subItems: [
-      { name: "Introdução", path: "/", pro: false },
-      { name: "Guia de Funções", path: "/", pro: false },
-      { name: "Personalização", path: "/", pro: false },
-      { name: "Ajuda", path: "/", pro: false },
-    ],
-  },
-   {
-    icon: <PersonStanding/>,
-    name: "Acessibilidade",
-    path: "/",
-  },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();

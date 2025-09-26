@@ -11,10 +11,6 @@
       "dependsOn": [],
       "outputs": []
     },
-     "run-py": {
-      "dependsOn": [],
-      "outputs": []
-    },
     "lint": {
       "dependsOn": ["^lint"]
     },
