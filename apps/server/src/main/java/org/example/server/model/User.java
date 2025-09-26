@@ -19,10 +19,13 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    @CreatedDate
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     public User() {
     }
