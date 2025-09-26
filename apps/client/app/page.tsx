@@ -42,7 +42,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen w-full relative bg-white">
-      {/* Navbar */}
+
       <DesktopHeader
         isScrolled={isScrolled}
         onLoginClick={modalManager.openLoginModal}
@@ -58,7 +58,6 @@ export default function Home() {
         onLoginClick={handleMobileLoginClick}
       />
 
-      {/* Conteúdo Principal */}
       <main>
         <HeroSection />
         <Carousel01 />
@@ -69,7 +68,6 @@ export default function Home() {
         <FAQ />
       </main>
 
-      {/* Footer + Modais */}
       <Footer />
       <ModalContainer {...modalManager} />
     </div>
