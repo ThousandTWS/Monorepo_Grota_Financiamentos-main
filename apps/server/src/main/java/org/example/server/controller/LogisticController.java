@@ -1,5 +1,6 @@
 package org.example.server.controller;
 
+import jakarta.validation.Valid;
 import org.example.server.dto.LogisticRequestDTO;
 import org.example.server.dto.LogisticResponseDTO;
 import org.example.server.service.LogisticService;
@@ -20,7 +21,7 @@ public class LogisticController {
     }
 
     @PostMapping
-    public ResponseEntity<LogisticResponseDTO> create(@RequestBody LogisticRequestDTO logisticRequestDTO){
+    public ResponseEntity<LogisticResponseDTO> create(@Valid @RequestBody LogisticRequestDTO logisticRequestDTO){
         LogisticResponseDTO responseDTO = logisticService.create(logisticRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
@@ -38,7 +39,7 @@ public class LogisticController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<LogisticResponseDTO> update(@PathVariable Long id, @RequestBody LogisticRequestDTO logisticRequestDTO){
+    public ResponseEntity<LogisticResponseDTO> update(@Valid @PathVariable Long id, @RequestBody LogisticRequestDTO logisticRequestDTO){
         LogisticResponseDTO logistic = logisticService.update(id, logisticRequestDTO);
         return ResponseEntity.ok().body(logistic);
     }

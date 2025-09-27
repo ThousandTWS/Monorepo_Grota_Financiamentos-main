@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.LogisticMapper;
 import org.example.server.dto.LogisticRequestDTO;
 import org.example.server.dto.LogisticResponseDTO;
+import org.example.server.exception.RecordNotFoundException;
 import org.example.server.model.Logistic;
 import org.example.server.model.User;
 import org.example.server.repository.LogisticRepository;
@@ -33,9 +34,7 @@ public class LogisticService {
         User user = logistic.getUser();
         userRepository.save(user);
 
-        logistic = logisticRepository.save(logistic);
-
-        return logisticMapper.toDTO(logistic);
+        return logisticMapper.toDTO(logisticRepository.save(logistic));
     }
 
     public List<LogisticResponseDTO> findAll() {
@@ -44,13 +43,14 @@ public class LogisticService {
     }
 
     public LogisticResponseDTO findById(Long id) {
-      return logisticMapper.toDTO(logisticRepository.findById(id).orElseThrow(() -> new RuntimeException("Logistic não encontrado")));
+      return logisticMapper.toDTO(logisticRepository.findById(id)
+              .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
     @Transactional
     public LogisticResponseDTO update(Long id, LogisticRequestDTO logisticRequestDTO) {
         Logistic logistic = logisticRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Logistic não encontrada"));
+                .orElseThrow(() -> new RecordNotFoundException(id));
 
         User user =  logistic.getUser();
         if (user == null){
