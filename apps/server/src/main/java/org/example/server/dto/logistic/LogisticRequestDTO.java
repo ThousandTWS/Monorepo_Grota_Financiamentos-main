@@ -1,4 +1,4 @@
-package org.example.server.dto;
+package org.example.server.dto.logistic;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -22,6 +22,6 @@ public record LogisticRequestDTO(
         String enterprise,
 
         @NotBlank(message = "A senha é obrigatória")
-        @Size(min = 6, max = 20, message = "A senha deve ter entre 6 e 20 caracteres")
+        @Size(min = 6, max = 8, message = "A senha deve ter entre 6 e 8 caracteres")
         String password
 ){}

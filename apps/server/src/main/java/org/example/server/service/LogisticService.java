@@ -1,14 +1,15 @@
 package org.example.server.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.example.server.dto.LogisticMapper;
-import org.example.server.dto.LogisticRequestDTO;
-import org.example.server.dto.LogisticResponseDTO;
+import org.example.server.dto.logistic.LogisticMapper;
+import org.example.server.dto.logistic.LogisticRequestDTO;
+import org.example.server.dto.logistic.LogisticResponseDTO;
 import org.example.server.exception.RecordNotFoundException;
 import org.example.server.model.Logistic;
 import org.example.server.model.User;
 import org.example.server.repository.LogisticRepository;
 import org.example.server.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,23 +22,31 @@ public class LogisticService {
     private final LogisticRepository logisticRepository;
     private final UserRepository userRepository;
     private  final LogisticMapper logisticMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public LogisticService(LogisticRepository logisticRepository, UserRepository userRepository, LogisticMapper logisticMapper) {
+    public LogisticService(LogisticRepository logisticRepository, UserRepository userRepository, LogisticMapper logisticMapper, PasswordEncoder passwordEncoder) {
         this.logisticRepository = logisticRepository;
         this.userRepository = userRepository;
         this.logisticMapper = logisticMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public LogisticResponseDTO create(LogisticRequestDTO logisticRequestDTO) {
+        if(userRepository.existsByEmail(logisticRequestDTO.email())){
+            throw new RuntimeException("Email já existe");
+        }
+
         Logistic logistic = logisticMapper.toEntity(logisticRequestDTO);
 
         User user = logistic.getUser();
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
 
         return logisticMapper.toDTO(logisticRepository.save(logistic));
     }
 
-    public List<LogisticResponseDTO> findAll() {
+    public List<LogisticResponseDTO>
+    findAll() {
         List<Logistic> logisticList = logisticRepository.findAll();
         return logisticList.stream().map(logistic -> logisticMapper.toDTO(logistic)).collect(Collectors.toList());
     }

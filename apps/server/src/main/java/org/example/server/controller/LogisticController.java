@@ -1,8 +1,8 @@
 package org.example.server.controller;
 
 import jakarta.validation.Valid;
-import org.example.server.dto.LogisticRequestDTO;
-import org.example.server.dto.LogisticResponseDTO;
+import org.example.server.dto.logistic.LogisticRequestDTO;
+import org.example.server.dto.logistic.LogisticResponseDTO;
 import org.example.server.service.LogisticService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/grota-financiamentos/logistics")
+@RequestMapping("/api/v1/grota-financiamentos/logistics")
 public class LogisticController {
 
     private final LogisticService logisticService;

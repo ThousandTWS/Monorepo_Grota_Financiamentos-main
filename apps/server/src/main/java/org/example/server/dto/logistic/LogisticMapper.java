@@ -1,4 +1,4 @@
-package org.example.server.dto;
+package org.example.server.dto.logistic;
 
 import org.example.server.model.Logistic;
 import org.example.server.model.User;

@@ -1,6 +1,7 @@
 package org.example.server.controller;
 
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,7 @@ import java.util.List;
 public class ErrorResponse {
     private int status;
     private String message;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime timestamp;
     private List<String> errors;
 
