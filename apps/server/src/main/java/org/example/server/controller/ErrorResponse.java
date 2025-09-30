@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 public class ErrorResponse {
@@ -18,7 +19,7 @@ public class ErrorResponse {
         this.status = status.value();
         this.message = message;
         this.timestamp = LocalDateTime.now();
-        this.errors = errors;
+        this.errors = errors != null ? errors : Collections.emptyList();
     }
 
     public ErrorResponse(HttpStatus status, String message){

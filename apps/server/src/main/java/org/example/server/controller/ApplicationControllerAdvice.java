@@ -1,7 +1,6 @@
 package org.example.server.controller;
 
-import org.example.server.exception.InvalidPasswordException;
-import org.example.server.exception.RecordNotFoundException;
+import org.example.server.exception.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -29,18 +28,29 @@ public class ApplicationControllerAdvice {
         );
     }
 
-    @ExceptionHandler(RecordNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse RecordNotFoundException(RecordNotFoundException ex){
+    @ExceptionHandler({
+            RecordNotFoundException.class,
+            UserAlreadyVerifiedException.class,
+            InvalidVerificationCodeException.class,
+            VerificationCodeExpiredException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleBadRequestExceptions(RuntimeException ex){
+        return new ErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserNotVerifiedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleUserNotVerifiedException(UserNotVerifiedException ex){
         return new ErrorResponse(
-                HttpStatus.NOT_FOUND,
+                HttpStatus.FORBIDDEN,
                 ex.getMessage()
         );
     }
 
     @ExceptionHandler(InvalidPasswordException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse invalidPasswordException(InvalidPasswordException ex){
+    public ErrorResponse handleInvalidPasswordException(InvalidPasswordException ex){
         return new ErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 ex.getMessage()

@@ -22,6 +22,11 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
+    private boolean verified;
+
+    private String verificationCode;
+    private LocalDateTime codeExpiration;
+
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
 
@@ -36,9 +41,12 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(String email, String password, LocalDateTime createdAt, Logistic logistic) {
+    public User(String email, String password, boolean verified, String verificationCode, LocalDateTime codeExpiration, LocalDateTime createdAt, Logistic logistic) {
         this.email = email;
         this.password = password;
+        this.verified = verified;
+        this.verificationCode = verificationCode;
+        this.codeExpiration = codeExpiration;
         this.createdAt = createdAt;
         this.logistic = logistic;
     }
@@ -91,6 +99,30 @@ public class User implements UserDetails {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public void setVerified(boolean verified) {
+        this.verified = verified;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public void setVerificationCode(String verificationCode) {
+        this.verificationCode = verificationCode;
+    }
+
+    public LocalDateTime getCodeExpiration() {
+        return codeExpiration;
+    }
+
+    public void setCodeExpiration(LocalDateTime codeExpiration) {
+        this.codeExpiration = codeExpiration;
     }
 
     public LocalDateTime getCreatedAt() {
