@@ -36,8 +36,13 @@ public class SecurityConfig {
                         .frameOptions(frame -> frame.disable()) // libera uso de frames (necessário p/ console H2)
                 )
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/grota-financiamentos/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/grota-financiamentos/logistics").permitAll()
+                        .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/logistics").permitAll()
+
+
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
+
+
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().permitAll()  //authenticated()
                 )

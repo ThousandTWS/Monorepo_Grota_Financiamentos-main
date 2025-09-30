@@ -1,5 +1,6 @@
 package org.example.server.controller;
 
+import org.example.server.exception.InvalidPasswordException;
 import org.example.server.exception.RecordNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -33,6 +34,15 @@ public class ApplicationControllerAdvice {
     public ErrorResponse RecordNotFoundException(RecordNotFoundException ex){
         return new ErrorResponse(
                 HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(InvalidPasswordException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse invalidPasswordException(InvalidPasswordException ex){
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST,
                 ex.getMessage()
         );
     }
