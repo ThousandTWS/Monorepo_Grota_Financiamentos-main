@@ -1,71 +1,75 @@
-import { ArrowUp } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
 
 interface DesktopHeaderProps {
-  isScrolled: boolean
-  onLoginClick: () => void
+  isScrolled: boolean;
+  onLoginClick: () => void;
 }
 
 export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) => {
   return (
     <header
-      className={`sticky top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full bg-[#1B4B7C] md:flex backdrop-blur-sm border border-border/50 shadow-lg transition-all duration-300 ${isScrolled ? "max-w-6xl px-10" : "max-w-7xl px-6"
-        } py-3`}
-      style={{
-        willChange: "transform",
-        transform: "translateZ(0)",
-        backfaceVisibility: "hidden",
-        perspective: "1000px",
-      }}
-    >
+  className={`
+    sticky top-4 z-[9999] mx-auto flex w-full flex-row items-center justify-between rounded-4xl
+    transition-all duration-500 backdrop-blur-md border border-border/50 shadow-lg
+    max-w-7xl px-6
+    ${isScrolled ? "bg-white text-[#1B4B7C] " : "bg-[#1B4B7C] text-white"}
+  `}
+>
+  {/* Logo */}
+  <Link href="/" className="flex items-center justify-center gap-2 transition-all duration-500">
+    <Image
+      src="https://res.cloudinary.com/dx1659yxu/image/upload/v1759322731/Artboard_1_copy_mskwp8.svg"
+      alt="Logo"
+      width={150}
+      height={150}
+      className={`${isScrolled ? "filter-none" : "filter brightness-0 invert"}`}
+    />
+  </Link>
+
+  {/* Navigation */}
+  <nav className="hidden md:flex flex-1 justify-center space-x-6 font-medium text-lg min-w-0">
+    {[
+      { name: "Inicio", href: "/" },
+      { name: "Nossa Historia", href: "/nossa-historia" },
+      { name: "Soluções", href: "/solucoes" },
+      { name: "Financiamento", href: "#" },
+      { name: "Blog", href: "#" },
+      { name: "Contato", href: "/contato" }
+    ].map((item) => (
       <Link
-        className={`z-50 flex items-center justify-center gap-2 transition-all duration-300 ${isScrolled ? "ml-4" : ""
-          }`}
-        href="/"
+        key={item.name}
+        href={item.href}
+        className={`relative px-4 py-1 whitespace-nowrap group transition-colors duration-300 ${
+          isScrolled ? "text-[#1B4B7C] hover:text-orange-500" : "text-white hover:text-orange-400"
+        }`}
       >
-        <Image
-          src="/Grota_logo_horizontal_positivo-removebg-preview.png"
-          alt="Logo"
-          width={150}
-          height={150}
-          className="filter brightness-0 invert"
-        />
+        <span className="relative z-10">{item.name}</span>
+        <span className="absolute left-0 bottom-0 h-[2px] w-0 bg-orange-500 transition-all duration-300 group-hover:w-full" />
       </Link>
+    ))}
+  </nav>
 
-      <nav className="absolute inset-0 hidden flex-1 flex-row items-center justify-center space-x-2 text-sm font-medium text-muted-foreground transition duration-200 hover:text-foreground md:flex md:space-x-2">
-        {[
-          { name: "Inicio", href: "/" },
-          { name: "Nossa Historia", href: "/nossa-historia" },
-          { name: "Soluções", href: "/solucoes" },
-          { name: "Financiamento", href: "#" },
-          { name: "Blog", href: "#" },
-          { name: "Contato", href: "/contato" }
-        ].map((item) => (
-          <Link
-            key={item.name}
-            href={item.href}
-            className="relative px-4 py-2 text-white transition-colors cursor-pointer text-[1rem] 
-             after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-white 
-             after:transition-all after:duration-300 hover:after:w-full"
-          >
-            <span className="relative z-20">{item.name}</span>
-          </Link>
+  {/* CTA Button */}
+  <div className="flex items-center gap-4">
+    <button
+      onClick={onLoginClick}
+      type="button"
+      className={`
+        relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-full shadow-md overflow-hidden group transition-all duration-300
+        ${isScrolled ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]" : "bg-white border-2 border-gray-200 hover:bg-[#1b4b7cda]"}
+      `}
+    >
+      <span className={`relative z-10 transition-colors duration-300 ${isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"}`}>
+        Area do cliente
+      </span>
+      <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
+    </button>
+  </div>
+</header>
 
-        ))}
-      </nav>
 
-      <div className="flex items-center gap-4">
-        <button
-          onClick={onLoginClick}
-          type="submit"
-          className="relative z-10 flex items-center justify-center gap-2 px-6 py-2 mx-auto text-[1rem] font-semibold border-2 text-[#2C2C2C] hover:text-white border-gray-200 rounded-full shadow-xl bg-white backdrop-blur-md overflow-hidden group cursor-pointer"
-        >
-          <span className="relative z-10">Area do cliente</span>
-          {/* Efeito de background animado */}
-          <span className="absolute inset-0 transition-all duration-700 -z-10 group-hover:scale-150 group-hover:bg-[#1b4b7cda] hover:text-white rounded-full"></span>
-        </button>
-      </div>
-    </header>
-  )
-}
+  );
+};

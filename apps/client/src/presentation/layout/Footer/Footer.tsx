@@ -6,7 +6,7 @@ import { MapPin, Phone, Mail, Clock, Facebook, Instagram, Linkedin, Youtube } fr
 
 export default function Footer() {
   return (
-    <footer className="bg-[#1B4B7C] rounded-t-4xl p-5 text-[#F8FAFC]">
+    <footer className="bg-[#1B4B7C] p-5 text-[#F8FAFC]">
       {/* Main Footer */}
       <div className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

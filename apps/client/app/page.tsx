@@ -13,12 +13,15 @@ import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer"
 import Footer from "@/src/presentation/layout/Footer/Footer";
 
 import HeroSection from "@/src/presentation/components/Hero/BoxHero";
-import Carousel01 from "@/src/presentation/components/banners/carroucel/Carousel";
 import CTABanner from "@/src/presentation/components/banners/CTABanner";
-import FAQ from "@/src/presentation/components/FAQ/FAQ";
 import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection";
 import { InflectedCardDemo } from "@/src/presentation/components/demo";
 import TestimonialSlider from "@/components/testimonial-slider";
+import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
+import CTA from "@/src/presentation/components/banners/LogoSection/Banner";
+import { HeroSectionGrota } from "@/src/presentation/components/HeroCTA";
+
+
 
 
 export default function Home() {
@@ -60,12 +63,13 @@ export default function Home() {
 
       <main>
         <HeroSection />
-        <Carousel01 />
+        <HeroSectionGrota/>
         <InflectedCardDemo />
         <CTABanner />
         <BentoGrid6 />
         <TestimonialSlider/>
-        <FAQ />
+        <FaqSection/>
+        <CTA/>
       </main>
 
       <Footer />

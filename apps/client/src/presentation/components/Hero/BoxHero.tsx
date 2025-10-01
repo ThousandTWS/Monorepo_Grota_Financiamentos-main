@@ -1,8 +1,6 @@
-import { ArrowRight, ChevronLeft, ChevronRight, Play } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useState } from "react"
 import { slides } from "./data/slider"
-import { ClientButton } from "../../layout/shared/ClientButton"
 
 const HeroSection = () => {
   const [currentSlide, setCurrentSlide] = useState(0)
@@ -29,7 +27,7 @@ const HeroSection = () => {
             className="object-cover"
             priority={index === 0}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/60 to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
         </div>
       ))}
@@ -37,55 +35,32 @@ const HeroSection = () => {
       <div className="relative z-10 flex items-center justify-center h-full px-4">
         <div className="text-center text-white space-y-8 max-w-4xl mx-auto">
           <div className="space-y-6">
-            <h1 className="text-5xl lg:text-7xl font-bold leading-tight transition-all duration-500">
-              {slides[currentSlide].title.split(' ').slice(0, -2).join(' ')}
-              <span className="text-orange-500 block">{slides[currentSlide].title.split(' ').slice(-2).join(' ')}</span>
+            <h1 className="text-5xl lg:text-5xl whitespace-pre-line  font-bold leading-tight transition-all duration-500">
+              Financiamento com Segurança<br/> e Confiança
             </h1>
-            <p className="text-xl text-gray-300 leading-relaxed max-w-2xl mx-auto transition-all duration-500">
-              {slides[currentSlide].subtitle}
+            <p className="text-2xl whitespace-pre-line text-gray-300 leading-relaxed max-w-2xl mx-auto transition-all duration-500">
+              Há mais de 30 anos conectando clientes, lojistas<br/> e instituições financeiras.
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button
               type="button"
-              className="relative flex items-center  justify-center cursor-pointer w-80 px-4 py-3 text-base font-semibold text-orange-500 bg-white rounded-full shadow-md transition-colors duration-300 hover:bg-orange-500 hover:text-white border-2 border-white"
+              className="relative flex items-center justify-center cursor-pointer w-80 px-4 py-3 text-base font-semibold text-white bg-[#1B4B7C] rounded-full shadow-md transition-colors duration-300 hover:bg-[#164574] hover:text-white animate-[blink_1s_infinite]"
             >
-              <span className="relative z-10 text-xl">Saiba mais</span>
+              <span className="relative z-10 text-xl">Simule seu Financiamento</span>
             </button>
 
 
+           <button
+              type="button"
+              className="relative flex items-center justify-center cursor-pointer w-80 px-4 py-3 text-base font-semibold text-[#1B4B7C] bg-[#F8FAFC] rounded-full shadow-md transition-colors duration-300 hover:bg-[#1B4B7C] hover:text-white animate-[blink_1s_infinite]"
+            >
+              <span className="relative z-10 text-xl">Seja nosso Parceiro</span>
+            </button>
           </div>
         </div>
       </div>
-
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4">
-        <div className="flex gap-2">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${index === currentSlide ? "bg-orange-500 w-8" : "bg-white/30"
-                }`}
-            />
-          ))}
-        </div>
-
-      </div>
-
-      <button
-        onClick={() => setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length)}
-        className="absolute left-8 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm"
-      >
-        <ChevronLeft className="w-6 h-6" />
-      </button>
-
-      <button
-        onClick={() => setCurrentSlide((prev) => (prev + 1) % slides.length)}
-        className="absolute right-8 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full transition-all duration-300 backdrop-blur-sm"
-      >
-        <ChevronRight className="w-6 h-6 " />
-      </button>
     </section>
   )
 }

@@ -92,7 +92,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({ item, onPlusClick }) => (
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
       <div className="absolute top-4 left-4">
-        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-orange-500 rounded-full uppercase tracking-wide">
+        <span className="inline-block px-3 py-1 text-xs font-semibold text-white bg-[#1B4B7C] rounded-full uppercase tracking-wide">
           {item.category}
         </span>
       </div>
@@ -110,7 +110,7 @@ const CarouselItem: React.FC<CarouselItemProps> = ({ item, onPlusClick }) => (
 
       <button
         onClick={(e) => onPlusClick(e, item)}
-        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
+        className="w-full bg-[#1B4B7C] hover:bg-[#174470] text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center gap-2"
       >
         <span>Lorem Ipsum</span>
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
