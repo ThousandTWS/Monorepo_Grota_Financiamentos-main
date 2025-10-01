@@ -10,7 +10,7 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
 
   return (
     <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm md:hidden">
-      <div className="absolute top-20 left-4 right-4 mt-10 bg-orange-500 backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-6">
+      <div className="absolute top-20 left-4 right-4 mt-10 bg-[#F8FAFC] backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-6">
         <nav className="flex flex-col space-y-4">
           {[
             { name: "Inicio", href: "/" },
@@ -23,8 +23,8 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
             <Link
               key={item.name}
               href={item.href}
-              className="relative px-4 py-2 text-white transition-colors cursor-pointer text-[1rem] 
-             after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-white 
+              className="relative px-4 py-2 text-[#2C2C2C] transition-colors cursor-pointer text-[1.2rem] 
+             after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-[#1B4B7C] 
              after:transition-all after:duration-300 hover:after:w-40"
             >
               <span className="relative z-20">{item.name}</span>
@@ -34,7 +34,7 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
             <button
               onClick={onLoginClick}
               type="button"
-              className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-orange-500 bg-white rounded-full shadow-md transition-colors duration-300 hover:bg-orange-500 hover:text-white border-2 border-white"
+              className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-white bg-[#1B4B7C] rounded-full shadow-md transition-colors duration-300 hover:bg-[#1b4b7ce1] hover:text-white border-2 border-white"
             >
               <span className="relative z-10">Área do Cliente</span>
             </button>

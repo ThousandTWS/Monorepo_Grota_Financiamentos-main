@@ -10,7 +10,7 @@ interface DesktopHeaderProps {
 export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) => {
   return (
     <header
-      className={`sticky top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full bg-orange-500 md:flex backdrop-blur-sm border border-border/50 shadow-lg transition-all duration-300 ${isScrolled ? "max-w-6xl px-10" : "max-w-7xl px-6"
+      className={`sticky top-4 z-[9999] mx-auto hidden w-full flex-row items-center justify-between self-start rounded-full bg-[#1B4B7C] md:flex backdrop-blur-sm border border-border/50 shadow-lg transition-all duration-300 ${isScrolled ? "max-w-6xl px-10" : "max-w-7xl px-6"
         } py-3`}
       style={{
         willChange: "transform",
@@ -59,11 +59,11 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
         <button
           onClick={onLoginClick}
           type="submit"
-          className="relative z-10 flex items-center justify-center gap-2 px-6 py-2 mx-auto text-[1rem] font-semibold border-2 text-orange-500 hover:text-white border-gray-200 rounded-full shadow-xl bg-white backdrop-blur-md overflow-hidden group cursor-pointer"
+          className="relative z-10 flex items-center justify-center gap-2 px-6 py-2 mx-auto text-[1rem] font-semibold border-2 text-[#2C2C2C] hover:text-white border-gray-200 rounded-full shadow-xl bg-white backdrop-blur-md overflow-hidden group cursor-pointer"
         >
           <span className="relative z-10">Area do cliente</span>
           {/* Efeito de background animado */}
-          <span className="absolute inset-0 transition-all duration-700 -z-10 group-hover:scale-150 group-hover:bg-orange-500 hover:text-white rounded-full"></span>
+          <span className="absolute inset-0 transition-all duration-700 -z-10 group-hover:scale-150 group-hover:bg-[#1b4b7cda] hover:text-white rounded-full"></span>
         </button>
       </div>
     </header>
