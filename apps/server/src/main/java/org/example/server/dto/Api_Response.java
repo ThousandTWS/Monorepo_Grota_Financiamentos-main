@@ -1,6 +1,6 @@
 package org.example.server.dto;
 
-public record ApiResponse(
+public record Api_Response(
         boolean success,
         String message
 ) {}
