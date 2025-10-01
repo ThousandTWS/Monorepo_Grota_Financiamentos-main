@@ -3,7 +3,7 @@ package org.example.server.dto.auth;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record ChangePassword(
+public record ChangePasswordDTO(
         @NotBlank(message = "A senha antiga é obrigatoria")
         String oldPassword,
 

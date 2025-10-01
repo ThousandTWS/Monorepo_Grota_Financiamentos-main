@@ -24,8 +24,11 @@ public class User implements UserDetails {
 
     private boolean verified;
 
-    private String verificationCode;
-    private LocalDateTime codeExpiration;
+    private String verificationCode; // Para ativação da conta
+    private LocalDateTime codeExpiration; // Expiração da ativação
+
+    private String resetCode; // Para reset de senha
+    private LocalDateTime resetCodeExpiration; // Expiração de reset
 
     @Column(name = "created_at", updatable = false, nullable = false)
     private LocalDateTime createdAt;
@@ -41,12 +44,14 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(String email, String password, boolean verified, String verificationCode, LocalDateTime codeExpiration, LocalDateTime createdAt, Logistic logistic) {
+    public User(String email, String password, boolean verified, String verificationCode, LocalDateTime codeExpiration, String resetCode, LocalDateTime resetCodeExpiration, LocalDateTime createdAt, Logistic logistic) {
         this.email = email;
         this.password = password;
         this.verified = verified;
         this.verificationCode = verificationCode;
         this.codeExpiration = codeExpiration;
+        this.resetCode = resetCode;
+        this.resetCodeExpiration = resetCodeExpiration;
         this.createdAt = createdAt;
         this.logistic = logistic;
     }
@@ -123,6 +128,22 @@ public class User implements UserDetails {
 
     public void setCodeExpiration(LocalDateTime codeExpiration) {
         this.codeExpiration = codeExpiration;
+    }
+
+    public String getResetCode() {
+        return resetCode;
+    }
+
+    public void setResetCode(String resetCode) {
+        this.resetCode = resetCode;
+    }
+
+    public LocalDateTime getResetCodeExpiration() {
+        return resetCodeExpiration;
+    }
+
+    public void setResetCodeExpiration(LocalDateTime resetCodeExpiration) {
+        this.resetCodeExpiration = resetCodeExpiration;
     }
 
     public LocalDateTime getCreatedAt() {

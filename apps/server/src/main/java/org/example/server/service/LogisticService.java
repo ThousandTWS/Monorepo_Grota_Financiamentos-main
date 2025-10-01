@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.logistic.LogisticMapper;
 import org.example.server.dto.logistic.LogisticRequestDTO;
 import org.example.server.dto.logistic.LogisticResponseDTO;
+import org.example.server.exception.EmailAlreadyExistsException;
 import org.example.server.exception.RecordNotFoundException;
 import org.example.server.model.Logistic;
 import org.example.server.model.User;
@@ -13,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Random;
@@ -38,29 +40,24 @@ public class LogisticService {
     @Transactional
     public LogisticResponseDTO create(LogisticRequestDTO logisticRequestDTO) {
         if (userRepository.existsByEmail(logisticRequestDTO.email())) {
-            throw new RuntimeException("Email já existe");
+            throw new EmailAlreadyExistsException("Email já existe");
         }
 
         Logistic logistic = logisticMapper.toEntity(logisticRequestDTO);
-
         User user = logistic.getUser();
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        String code = String.valueOf(100000 + new Random().nextInt(900000));
-        user.setVerificationCode(code);
-        user.setCodeExpiration(LocalDateTime.now().plusMinutes(10));
-        user.setVerified(false);
+        initializeUserVerification(user);
 
         userRepository.save(user);
         logisticRepository.save(logistic);
 
-        emailService.sendVerificartionEmail(user.getEmail(),code);
-
+        sendVerificationEmail(user);
         return logisticMapper.toDTO(logistic);
     }
 
-    public List<LogisticResponseDTO>
-    findAll() {
+    public List<LogisticResponseDTO> findAll() {
         List<Logistic> logisticList = logisticRepository.findAll();
         return logisticList.stream().map(logistic -> logisticMapper.toDTO(logistic)).collect(Collectors.toList());
     }
@@ -91,5 +88,22 @@ public class LogisticService {
         logisticRepository.save(logistic);
 
         return logisticMapper.toDTO(logistic);
+    }
+
+    // Métodos Auxiliares
+    private void initializeUserVerification(User user) {
+        String verificationCode = generateVerificationCode();
+        user.setVerificationCode(verificationCode);
+        user.setCodeExpiration(LocalDateTime.now().plusMinutes(10));
+        user.setVerified(false);
+    }
+
+    private String generateVerificationCode() {
+        SecureRandom random = new SecureRandom();
+        return String.format("%06d", random.nextInt(1_000_000));
+    }
+
+    private void sendVerificationEmail(User user) {
+        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
     }
 }

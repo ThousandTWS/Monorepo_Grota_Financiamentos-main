@@ -32,7 +32,10 @@ public class ApplicationControllerAdvice {
             RecordNotFoundException.class,
             UserAlreadyVerifiedException.class,
             InvalidVerificationCodeException.class,
-            VerificationCodeExpiredException.class
+            VerificationCodeExpiredException.class,
+            EmailAlreadyExistsException.class,
+            PasswordResetCodeInvalidException.class,
+            PasswordResetCodeExpiredException.class
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequestExceptions(RuntimeException ex){

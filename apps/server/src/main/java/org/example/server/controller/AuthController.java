@@ -2,25 +2,15 @@ package org.example.server.controller;
 
 import jakarta.validation.Valid;
 import org.example.server.dto.ApiResponse;
-import org.example.server.dto.auth.AuthRequest;
-import org.example.server.dto.auth.AuthResponse;
-import org.example.server.dto.auth.ChangePassword;
-import org.example.server.dto.auth.VerificationCodeRequestDTO;
-import org.example.server.exception.RecordNotFoundException;
-import org.example.server.exception.UserNotVerifiedException;
-import org.example.server.model.User;
+import org.example.server.dto.auth.*;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
 import org.example.server.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-
-import java.time.LocalDateTime;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
@@ -41,7 +31,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody @Valid AuthRequest request){
+    public AuthResponseDTO login(@RequestBody @Valid AuthRequest request){
        return userService.login(request);
     }
 
@@ -52,9 +42,21 @@ public class AuthController {
     }
 
     @PutMapping("/change-password")
-    public ResponseEntity<ApiResponse> changePassword(@RequestBody @Valid ChangePassword changePassword, Authentication authentication){
+    public ResponseEntity<ApiResponse> changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Authentication authentication){
         String email = authentication.getName();
-        userService.changePassword(email, changePassword);
+        userService.changePassword(email, changePasswordDTO);
         return ResponseEntity.ok(new ApiResponse(true, "Senha alterada com sucesso"));
+    }
+
+    @PostMapping("forgot-password")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
+        userService.requestPasswordReset(passwordResetRequestDTO);
+        return ResponseEntity.ok("Código de redefinição enviado para o email");
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+        userService.resetPassword(passwordResetConfirmRequestDTO);
+        return ResponseEntity.ok("Senha alterada com sucesso");
     }
 }
