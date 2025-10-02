@@ -7,9 +7,10 @@ import useMeasure from 'react-use-measure';
 
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import Image from 'next/image';
 
 function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+    return twMerge(clsx(inputs));
 }
 
 
@@ -80,15 +81,15 @@ function InfiniteSlider({
 
     const hoverProps = speedOnHover
         ? {
-              onHoverStart: () => {
-                  setIsTransitioning(true);
-                  setCurrentSpeed(speedOnHover);
-              },
-              onHoverEnd: () => {
-                  setIsTransitioning(true);
-                  setCurrentSpeed(speed);
-              },
-          }
+            onHoverStart: () => {
+                setIsTransitioning(true);
+                setCurrentSpeed(speedOnHover);
+            },
+            onHoverEnd: () => {
+                setIsTransitioning(true);
+                setCurrentSpeed(speed);
+            },
+        }
         : {};
 
     return (
@@ -150,8 +151,8 @@ const LOGOS = [
     { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_1_kt0gbb.svg", alt: "Lilly Logo", height: 30 },
     { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_2_w6hobf.svg", alt: "Lilly Logo", height: 30 },
     { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_5_fkmgx1.svg", alt: "Lilly Logo", height: 30 },
-    
-   
+
+
 ];
 
 export default function LogoCloudDemoPage() {
@@ -170,16 +171,17 @@ export default function LogoCloudDemoPage() {
                                 speedOnHover={20}
                                 speed={40}
                                 gap={112}
-                                fadeWidth={80} 
+                                fadeWidth={80}
                             >
                                 {LOGOS.map((logo) => (
                                     <div key={logo.src} className="flex">
-                                        <img
+                                        <Image
                                             className="mx-auto w-fit"
                                             src={logo.src}
                                             alt={logo.alt}
-                                            style={{ height: `${logo.height}px` }}
-                                            width="auto"
+                                            width={20}
+                                            height={logo.height}
+                                            style={{ height: `${logo.height}px`, width: "auto" }}
                                         />
                                     </div>
                                 ))}

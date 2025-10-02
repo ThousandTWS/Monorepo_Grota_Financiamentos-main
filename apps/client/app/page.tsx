@@ -20,11 +20,11 @@ import TestimonialSlider from "@/components/testimonial-slider";
 import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
 import CTA from "@/src/presentation/components/banners/LogoSection/Banner";
 import { HeroSectionGrota } from "@/src/presentation/components/HeroCTA";
-import LogoCloud from "@/src/presentation/components/banners/LogoSection/logo";
 import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection/primary";
 
-
-
+import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
+import { AssistantRuntimeProvider } from "@assistant-ui/react";
+import { AssistantModal } from "@/components/assistant-modal";
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -32,9 +32,7 @@ export default function Home() {
   const isScrolled = useScrollDetection(100);
   const modalManager = useModalManager();
 
-
   useTheme("dark");
-
 
   const handleMobileLoginClick = useCallback(() => {
     setIsMobileMenuOpen(false);
@@ -45,39 +43,48 @@ export default function Home() {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
+  
+  const runtime = useChatRuntime({
+    //@ts-ignore
+    api: "/api/chat",
+  });
+
   return (
-    <div className="min-h-screen w-full relative bg-white">
+    <AssistantRuntimeProvider runtime={runtime}>
+      <div className="min-h-screen w-full relative bg-white">
+        <DesktopHeader
+          isScrolled={isScrolled}
+          onLoginClick={modalManager.openLoginModal}
+        />
 
-      <DesktopHeader
-        isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
-      />
+        <MobileHeader
+          isMobileMenuOpen={isMobileMenuOpen}
+          onMenuToggle={toggleMobileMenu}
+        />
 
-      <MobileHeader
-        isMobileMenuOpen={isMobileMenuOpen}
-        onMenuToggle={toggleMobileMenu}
-      />
+        <MobileMenu
+          isOpen={isMobileMenuOpen}
+          onLoginClick={handleMobileLoginClick}
+        />
 
-      <MobileMenu
-        isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
-      />
+        <main>
+          <HeroSection />
+          <LogoCloudDemoPage />
+          <HeroSectionGrota />
+          <InflectedCardDemo />
+          <CTABanner />
+          <BentoGrid6 />
+          <TestimonialSlider />
+          <FaqSection />
+          <CTA />
+        </main>
 
-      <main>
-        <HeroSection />
-        <LogoCloudDemoPage/>
-        <HeroSectionGrota/>
-        
-        <InflectedCardDemo />
-        <CTABanner />
-        <BentoGrid6 />
-        <TestimonialSlider/>
-        <FaqSection/>
-        <CTA/>
-      </main>
+        {/* Chat modal AI */}
+        <AssistantModal />
 
-      <Footer />
-      <ModalContainer {...modalManager} />
-    </div>
+        <Footer />
+        <ModalContainer {...modalManager} />
+      </div>
+    </AssistantRuntimeProvider>
   );
 }
