@@ -1,6 +1,5 @@
 package org.example.server.service;
 
-import org.example.server.exception.RecordNotFoundException;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

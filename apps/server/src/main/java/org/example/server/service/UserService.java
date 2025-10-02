@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
+import java.time.Duration;
 
 @Service
 public class UserService {
@@ -36,20 +36,20 @@ public class UserService {
     }
 
     @Transactional
-    public void changePassword(String email, ChangePasswordDTO changePasswordDTO){
-       var user = userRepository.findByEmail(email)
+    public void changePassword(String email, ChangePasswordDTO changePasswordDTO) {
+        var user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
 
-       if (!passwordEncoder.matches(changePasswordDTO.oldPassword(), user.getPassword())){
-           throw new InvalidPasswordException("Senha atual incorreta");
-       }
+        if (!passwordEncoder.matches(changePasswordDTO.oldPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("Senha atual incorreta");
+        }
 
-       if (passwordEncoder.matches(changePasswordDTO.newPassword(), user.getPassword())){
-           throw new InvalidPasswordException("A nova senha não pode ser igual à senha atual");
-       }
+        if (passwordEncoder.matches(changePasswordDTO.newPassword(), user.getPassword())) {
+            throw new InvalidPasswordException("A nova senha não pode ser igual à senha atual");
+        }
 
-       user.setPassword(passwordEncoder.encode(changePasswordDTO.newPassword()));
-       userRepository.save(user);
+        user.setPassword(passwordEncoder.encode(changePasswordDTO.newPassword()));
+        userRepository.save(user);
     }
 
     public AuthResponseDTO login(AuthRequest request) {
@@ -59,7 +59,7 @@ public class UserService {
         var user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
 
-        if(!user.isVerified()){
+        if (!user.isVerified()) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
 
@@ -71,57 +71,42 @@ public class UserService {
         User user = userRepository.findByEmail(verificationCodeRequestDTO.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado"));
 
-        if (user.isVerified()) throw new UserAlreadyVerifiedException("Usuário já verificado");
-        if (user.getVerificationCode() == null || !user.getVerificationCode().equalsIgnoreCase(verificationCodeRequestDTO.code()))
-            throw new InvalidVerificationCodeException("Códico inválido");
-        if (user.getCodeExpiration().isBefore(LocalDateTime.now())) throw new VerificationCodeExpiredException("Código expirado.");
+        if (user.isVerified()) {
+            throw new UserAlreadyVerifiedException("Usuário já verificado");
+        }
+        if (user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {
+            throw new InvalidVerificationCodeException("Código invádo ou expirado");
+        }
 
-        user.setVerified(true);
-        user.setVerificationCode(null);
-        user.setCodeExpiration(null);
+        user.markAsVerified();
         userRepository.save(user);
     }
 
     @Transactional
-    public void requestPasswordReset(PasswordResetRequestDTO passwordResetRequestDTO){
+    public void requestPasswordReset(PasswordResetRequestDTO passwordResetRequestDTO) {
         User user = userRepository.findByEmail(passwordResetRequestDTO.email())
                 .orElseThrow(() -> new EmailAlreadyExistsException("Usuário não encontrado"));
 
         String resetCode = generateResetCode();
-        user.setResetCode(resetCode);
-        user.setResetCodeExpiration(LocalDateTime.now().plusMinutes(10));
+        user.generateResetCode(resetCode, Duration.ofMinutes(10));
 
         userRepository.save(user);
-
         emailService.sendPasswordResetEmail(user.getEmail(), resetCode);
     }
 
     @Transactional
-    public void resetPassword(PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+    public void resetPassword(PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO) {
         User user = userRepository.findByEmail(passwordResetConfirmRequestDTO.email())
                 .orElseThrow(() -> new EmailAlreadyExistsException("Usuário não encontrado"));
 
-        if (user.getResetCode() == null || !user.getResetCode().equalsIgnoreCase(passwordResetConfirmRequestDTO.code())){
-            throw new PasswordResetCodeInvalidException("Código de redefinição inválido");
-        };
-
-        if (user.getResetCodeExpiration().isBefore(LocalDateTime.now())){
-            throw new PasswordResetCodeExpiredException("Código de redefinição expirado");
+        if (user.isResetCodeValid(passwordResetConfirmRequestDTO.code())) {
+            throw new PasswordResetCodeExpiredException("Código inválido ou expirado");
         }
 
         user.setPassword(passwordResetConfirmRequestDTO.newPassword());
-        user.setResetCode(null);
-        user.setResetCodeExpiration(null);
-
+        user.clearVerificationCode();
         userRepository.save(user);
     }
-
-
-
-
-
-
-
 
     private String generateResetCode() {
         return String.format("%06d", random.nextInt(1_000_000));

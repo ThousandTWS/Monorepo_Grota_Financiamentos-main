@@ -15,9 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 @Service
@@ -47,8 +47,7 @@ public class LogisticService {
         User user = logistic.getUser();
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        initializeUserVerification(user);
+        user.generateVerificationCode(generateVerificationCode(), Duration.ofMinutes(10));
 
         userRepository.save(user);
         logisticRepository.save(logistic);
@@ -82,7 +81,7 @@ public class LogisticService {
         logistic.setEnterprise(logisticRequestDTO.enterprise());
 
         user.setEmail(logisticRequestDTO.email());
-        user.setPassword(logisticRequestDTO.password());
+        user.setPassword(passwordEncoder.encode(logisticRequestDTO.password()));
 
         userRepository.save(user);
         logisticRepository.save(logistic);
@@ -91,13 +90,6 @@ public class LogisticService {
     }
 
     // Métodos Auxiliares
-    private void initializeUserVerification(User user) {
-        String verificationCode = generateVerificationCode();
-        user.setVerificationCode(verificationCode);
-        user.setCodeExpiration(LocalDateTime.now().plusMinutes(10));
-        user.setVerified(false);
-    }
-
     private String generateVerificationCode() {
         SecureRandom random = new SecureRandom();
         return String.format("%06d", random.nextInt(1_000_000));

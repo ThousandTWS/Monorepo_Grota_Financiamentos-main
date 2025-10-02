@@ -5,6 +5,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Objects;
@@ -44,16 +45,45 @@ public class User implements UserDetails {
     public User() {
     }
 
-    public User(String email, String password, boolean verified, String verificationCode, LocalDateTime codeExpiration, String resetCode, LocalDateTime resetCodeExpiration, LocalDateTime createdAt, Logistic logistic) {
+    public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = verified;
-        this.verificationCode = verificationCode;
-        this.codeExpiration = codeExpiration;
-        this.resetCode = resetCode;
-        this.resetCodeExpiration = resetCodeExpiration;
-        this.createdAt = createdAt;
-        this.logistic = logistic;
+        this.verified = false;
+    }
+
+    public void markAsVerified(){
+        this.verified = true;
+        clearVerificationCode();
+    }
+
+    public void generateVerificationCode(String code, Duration validity){
+        this.verificationCode = code;
+        this.codeExpiration = LocalDateTime.now().plus(validity);
+        this.verified = false;
+    }
+
+    public boolean isVerificationCodeValid(String code){
+        return  this.verificationCode != null &&
+                this.verificationCode.equalsIgnoreCase(code) &&
+                this.codeExpiration != null &&
+                LocalDateTime.now().isBefore(this.codeExpiration);
+    }
+
+    public void clearVerificationCode() {
+        this.verificationCode = null;
+        this.codeExpiration = null;
+    }
+
+    public void generateResetCode(String code, Duration validity){
+        this.resetCode = code;
+        this.resetCodeExpiration = LocalDateTime.now().plus(validity);
+    }
+
+    public boolean isResetCodeValid(String code){
+        return  this.resetCode != null &&
+                this.resetCode.equalsIgnoreCase(code) &&
+                this.resetCodeExpiration != null &&
+                LocalDateTime.now().isBefore(this.resetCodeExpiration);
     }
 
     public Long getId() {
@@ -68,13 +98,51 @@ public class User implements UserDetails {
         this.email = email;
     }
 
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public boolean isVerified() {
+        return verified;
+    }
+
+    public String getVerificationCode() {
+        return verificationCode;
+    }
+
+    public LocalDateTime getCodeExpiration() {
+        return codeExpiration;
+    }
+
+    public String getResetCode() {
+        return resetCode;
+    }
+
+    public LocalDateTime getResetCodeExpiration() {
+        return resetCodeExpiration;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public Logistic getLogistic() {
+        return logistic;
+    }
+
+    public void setLogistic(Logistic logistic) {
+        this.logistic = logistic;
+    }
+
+
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return null;
-    }
-
-    public String getPassword() {
-        return this.password;
     }
 
     @Override
@@ -100,61 +168,5 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public boolean isVerified() {
-        return verified;
-    }
-
-    public void setVerified(boolean verified) {
-        this.verified = verified;
-    }
-
-    public String getVerificationCode() {
-        return verificationCode;
-    }
-
-    public void setVerificationCode(String verificationCode) {
-        this.verificationCode = verificationCode;
-    }
-
-    public LocalDateTime getCodeExpiration() {
-        return codeExpiration;
-    }
-
-    public void setCodeExpiration(LocalDateTime codeExpiration) {
-        this.codeExpiration = codeExpiration;
-    }
-
-    public String getResetCode() {
-        return resetCode;
-    }
-
-    public void setResetCode(String resetCode) {
-        this.resetCode = resetCode;
-    }
-
-    public LocalDateTime getResetCodeExpiration() {
-        return resetCodeExpiration;
-    }
-
-    public void setResetCodeExpiration(LocalDateTime resetCodeExpiration) {
-        this.resetCodeExpiration = resetCodeExpiration;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public Logistic getLogistic() {
-        return logistic;
-    }
-
-    public void setLogistic(Logistic logistic) {
-        this.logistic = logistic;
     }
 }
