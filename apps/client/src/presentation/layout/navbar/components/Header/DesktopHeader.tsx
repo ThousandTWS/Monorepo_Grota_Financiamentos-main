@@ -11,65 +11,73 @@ interface DesktopHeaderProps {
 export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) => {
   return (
     <header
-  className={`
-    sticky top-4 z-[9999] mx-auto flex w-full flex-row items-center justify-between rounded-4xl
-    transition-all duration-500 backdrop-blur-md border border-border/50 shadow-lg
-    max-w-7xl px-6
-    ${isScrolled ? "bg-white text-[#1B4B7C] " : "bg-[#1B4B7C] text-white"}
-  `}
->
-  {/* Logo */}
-  <Link href="/" className="flex items-center justify-center gap-2 transition-all duration-500">
-    <Image
-      src="https://res.cloudinary.com/dx1659yxu/image/upload/v1759322731/Artboard_1_copy_mskwp8.svg"
-      alt="Logo"
-      width={150}
-      height={150}
-      className={`${isScrolled ? "filter-none" : "filter brightness-0 invert"}`}
-    />
-  </Link>
-
-  {/* Navigation */}
-  <nav className="hidden md:flex flex-1 justify-center space-x-6 font-medium text-lg min-w-0">
-    {[
-      { name: "Inicio", href: "/" },
-      { name: "Nossa Historia", href: "/nossa-historia" },
-      { name: "Soluções", href: "/solucoes" },
-      { name: "Financiamento", href: "#" },
-      { name: "Blog", href: "#" },
-      { name: "Contato", href: "/contato" }
-    ].map((item) => (
-      <Link
-        key={item.name}
-        href={item.href}
-        className={`relative px-4 py-1 whitespace-nowrap group transition-colors duration-300 ${
-          isScrolled ? "text-[#1B4B7C] hover:text-orange-500" : "text-white hover:text-orange-400"
-        }`}
-      >
-        <span className="relative z-10">{item.name}</span>
-        <span className="absolute left-0 bottom-0 h-[2px] w-0 bg-orange-500 transition-all duration-300 group-hover:w-full" />
-      </Link>
-    ))}
-  </nav>
-
-  {/* CTA Button */}
-  <div className="flex items-center gap-4">
-    <button
-      onClick={onLoginClick}
-      type="button"
       className={`
-        relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-full shadow-md overflow-hidden group transition-all duration-300
-        ${isScrolled ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]" : "bg-white border-2 border-gray-200 hover:bg-[#1b4b7cda]"}
+        hidden md:flex
+        sticky top-4 z-[9999] mx-auto w-full flex-row items-center justify-between rounded-4xl
+        transition-all duration-500 backdrop-blur-md border border-border/50 shadow-lg
+        max-w-7xl px-6
+        ${isScrolled ? "bg-white text-[#1B4B7C]" : "bg-[#1B4B7C] text-white"}
       `}
     >
-      <span className={`relative z-10 transition-colors duration-300 ${isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"}`}>
-        Area do cliente
-      </span>
-      <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-    </button>
-  </div>
-</header>
+      {/* Logo */}
+      <Link href="/" className="flex items-center justify-center gap-2 transition-all duration-500">
+        <Image
+          src="https://res.cloudinary.com/dx1659yxu/image/upload/v1759322731/Artboard_1_copy_mskwp8.svg"
+          alt="Logo"
+          width={150}
+          height={150}
+          className={`${isScrolled ? "filter-none" : "filter brightness-0 invert"}`}
+        />
+      </Link>
 
+      {/* Navigation */}
+      <nav className="flex flex-1 justify-center space-x-6 font-medium text-lg min-w-0">
+        {[
+          { name: "Inicio", href: "/" },
+          { name: "Nossa Historia", href: "/nossa-historia" },
+          { name: "Soluções", href: "/solucoes" },
+          { name: "Financiamento", href: "#" },
+          { name: "Blog", href: "#" },
+          { name: "Contato", href: "/contato" }
+        ].map((item) => (
+          <Link
+            key={item.name}
+            href={item.href}
+            className={`relative px-4 py-1 whitespace-nowrap group transition-colors duration-300 ${
+              isScrolled
+                ? "text-[#1B4B7C] hover:text-[#1B4B7C]"
+                : "text-white hover:text-white"
+            }`}
+          >
+            <span className="relative z-10">{item.name}</span>
+            <span
+  className={`absolute left-0 bottom-0 h-[2px] w-0 transition-all duration-300 group-hover:w-full
+    ${isScrolled ? "bg-[#1B4B7C]" : "bg-white"}`}
+></span>
+          </Link>
+        ))}
+      </nav>
 
+      {/* CTA Button */}
+      <div className="flex items-center gap-4">
+        <button
+          onClick={onLoginClick}
+          type="button"
+          className={`
+            relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-full shadow-md overflow-hidden group transition-all duration-300
+            ${isScrolled ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]" : "bg-white border-2 border-gray-200 hover:bg-[#1b4b7cda]"}
+          `}
+        >
+          <span
+            className={`relative z-10 transition-colors duration-300 ${
+              isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"
+            }`}
+          >
+            Área do cliente
+          </span>
+          <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
+        </button>
+      </div>
+    </header>
   );
 };
