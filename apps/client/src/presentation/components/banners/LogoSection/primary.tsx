@@ -139,41 +139,43 @@ export function BlurredInfiniteSlider({
 
 
 const LOGOS = [
-    { src: "https://html.tailus.io/blocks/customers/openai.svg", alt: "OpenAI Logo", height: 24 },
-    { src: "https://html.tailus.io/blocks/customers/nvidia.svg", alt: "Nvidia Logo", height: 20 },
-    { src: "https://html.tailus.io/blocks/customers/column.svg", alt: "Column Logo", height: 16 },
-    { src: "https://html.tailus.io/blocks/customers/github.svg", alt: "GitHub Logo", height: 16 },
-    { src: "https://html.tailus.io/blocks/customers/nike.svg", alt: "Nike Logo", height: 20 },
-    { src: "https://html.tailus.io/blocks/customers/lemonsqueezy.svg", alt: "Lemon Squeezy Logo", height: 20 },
-    { src: "https://html.tailus.io/blocks/customers/laravel.svg", alt: "Laravel Logo", height: 16 },
-    { src: "https://html.tailus.io/blocks/customers/lilly.svg", alt: "Lilly Logo", height: 28 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_10_qwqsyy.svg", alt: "OpenAI Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_9_p0u6bp.svg", alt: "Nvidia Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_11_sxc8pc.svg", alt: "Column Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_4_ukdky6.svg", alt: "GitHub Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_8_hsubyy.svg", alt: "Nike Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_6_vz6pnl.svg", alt: "Lemon Squeezy Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_7_kftxir.svg", alt: "Laravel Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_3_qddfil.svg", alt: "Lilly Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_1_kt0gbb.svg", alt: "Lilly Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_2_w6hobf.svg", alt: "Lilly Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_5_fkmgx1.svg", alt: "Lilly Logo", height: 30 },
+    
+   
 ];
 
 export default function LogoCloudDemoPage() {
     return (
-        <main className=" w-full flex items-center justify-center text-black dark:text-white">
-            <section className=" overflow-hidden py-16 w-full">
-                <div className="m-auto max-w-7xl px-6">
-                    {/* Эта структура отвечает за адаптивную верстку */}
+        <main className="w-full flex items-center justify-center text-black dark:text-white">
+            <section className=" overflow-hidden py-5 w-full">
+                <div className="m-auto max-w-8xl px-6">
                     <div className="flex flex-col items-center md:flex-row">
-                        {/* На экранах 'md' и шире этот блок будет слева с линией */}
                         <div className="flex-shrink-0 text-center md:text-right md:max-w-44 md:border-r md:border-gray-200 dark:md:border-gray-800 md:pr-6">
-                            <p className="text-md text-black dark:text-gray-800">
+                            <p className="text-2xl text-black dark:text-gray-800">
                                 Bancos Parceiros
                             </p>
                         </div>
-                        {/* На маленьких экранах этот блок будет под текстом */}
                         <div className="w-full py-6 md:w-auto md:flex-1">
                             <BlurredInfiniteSlider
                                 speedOnHover={20}
                                 speed={40}
                                 gap={112}
-                                fadeWidth={80} // Ширина затухания по краям
+                                fadeWidth={80} 
                             >
                                 {LOGOS.map((logo) => (
                                     <div key={logo.src} className="flex">
                                         <img
-                                            className="mx-auto w-fit dark:invert"
+                                            className="mx-auto w-fit"
                                             src={logo.src}
                                             alt={logo.alt}
                                             style={{ height: `${logo.height}px` }}
