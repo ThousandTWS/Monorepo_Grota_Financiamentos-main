@@ -31,6 +31,7 @@ public class SecurityConfig {
         System.out.println("JWT Filter executado!");
 
         http
+                .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable()) // libera uso de frames (necessário p/ console H2)
