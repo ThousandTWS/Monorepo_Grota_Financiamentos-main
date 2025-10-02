@@ -20,6 +20,8 @@ import TestimonialSlider from "@/components/testimonial-slider";
 import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
 import CTA from "@/src/presentation/components/banners/LogoSection/Banner";
 import { HeroSectionGrota } from "@/src/presentation/components/HeroCTA";
+import LogoCloud from "@/src/presentation/components/banners/LogoSection/logo";
+import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection/primary";
 
 
 
@@ -63,7 +65,9 @@ export default function Home() {
 
       <main>
         <HeroSection />
+        <LogoCloudDemoPage/>
         <HeroSectionGrota/>
+        
         <InflectedCardDemo />
         <CTABanner />
         <BentoGrid6 />
