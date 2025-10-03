@@ -64,10 +64,11 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
           onClick={onLoginClick}
           type="button"
           className={`
-            relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-full shadow-md overflow-hidden group transition-all duration-300
+            relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300
             ${isScrolled ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]" : "bg-white border-2 border-gray-200 hover:bg-[#1b4b7cda]"}
           `}
         >
+          
           <span
             className={`relative z-10 transition-colors duration-300 ${
               isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"
