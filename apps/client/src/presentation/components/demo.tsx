@@ -1,6 +1,3 @@
-// InflectedCardDemo.tsx
-// Demo showcase for the InflectedCard component adapted for Grota Financiamentos de Veículos
-
 import InflectedCard from "@/components/inflected-card";
 import React from "react";
 
@@ -13,8 +10,8 @@ const InflectedCardDemo = () => (
             <InflectedCard
                 id="1"
                 image="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg"
-                title="Transparência"
-                description="Todo o processo de financiamento explicado de forma clara, sem surpresas ou burocracia desnecessária."
+                title="Missão"
+                description="Oferecer soluções financeiras ágeis e seguras em financiamentos de veículos, conectando clientes, concessionárias e instituições financeiras com transparência, ética e excelência no atendimento."
                 tags={[
                     { name: "", textColor: "#", backgroundColor: "#", rounding: 5 },
                 ]}
@@ -25,7 +22,7 @@ const InflectedCardDemo = () => (
                 buttonIconHoverColor="#f8f8fa"
                 buttonBackgroundColor="#f97316"
                 buttonBackgroundHoverColor="#f97316"
-                price="Aprenda mais"
+                price=""
                 titleColor="#181818"
                 descriptionColor="#565656"
                 titleAlignment="center"
@@ -40,8 +37,8 @@ const InflectedCardDemo = () => (
             <InflectedCard
                 id="1"
                 image="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg"
-                title="Transparência"
-                description="Todo o processo de financiamento explicado de forma clara, sem surpresas ou burocracia desnecessária."
+                title="Visão"
+                description="Ser referência regional em crédito automotivo, reconhecida pela confiança, solidez e inovação, ampliando continuamente parcerias e oportunidades para clientes e lojistas."
                 tags={[
                     { name: "", textColor: "#181818", backgroundColor: "#", rounding: 5 },
                 ]}
@@ -69,7 +66,7 @@ const InflectedCardDemo = () => (
             <InflectedCard
                 id="3"
                 image="https://images.pexels.com/photos/3184292/pexels-photo-3184292.jpeg"
-                title="Suporte Completo"
+                title="Valores"
                 description="Acompanhamento do início ao fim do financiamento, com atendimento humanizado e suporte personalizado."
                 tags={[
                     { name: "", textColor: "#fff", backgroundColor: "#", rounding: 5 },

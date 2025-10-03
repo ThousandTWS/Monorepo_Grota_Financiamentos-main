@@ -15,7 +15,6 @@ import Footer from "@/src/presentation/layout/Footer/Footer";
 import HeroSection from "@/src/presentation/components/Hero/BoxHero";
 import CTABanner from "@/src/presentation/components/banners/CTABanner";
 import { BentoGrid6 } from "@/src/presentation/components/Hero/HeroSection";
-import { InflectedCardDemo } from "@/src/presentation/components/demo";
 import TestimonialSlider from "@/components/testimonial-slider";
 import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
 import CTA from "@/src/presentation/components/banners/LogoSection/Banner";
@@ -25,6 +24,9 @@ import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { AssistantModal } from "@/components/assistant-modal";
+import { Feature108Demo } from "@/components/visao";
+import { FeatureGrota } from "@/components/shadcnblocks-com-feature108";
+
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -71,17 +73,14 @@ export default function Home() {
           <HeroSection />
           <LogoCloudDemoPage />
           <HeroSectionGrota />
-          <InflectedCardDemo />
+          <FeatureGrota/>
           <CTABanner />
           <BentoGrid6 />
           <TestimonialSlider />
           <FaqSection />
           <CTA />
         </main>
-
-        {/* Chat modal AI */}
         <AssistantModal />
-
         <Footer />
         <ModalContainer {...modalManager} />
       </div>

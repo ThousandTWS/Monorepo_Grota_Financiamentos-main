@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
-import { type FC, forwardRef, useEffect, useRef } from "react";
+import { type FC, forwardRef, useEffect, useRef, useState } from "react";
 import { AssistantModalPrimitive } from "@assistant-ui/react";
 
 import { Thread } from "@/components/thread";
@@ -11,28 +11,41 @@ import Lottie, { LottieRefCurrentProps } from "lottie-react";
 import chatAnimation from "@/components/lottie/UjjHSCy8Kl.json";
 
 export const AssistantModal: FC = () => {
+  const [open, setOpen] = useState(false);
+
   return (
-    <AssistantModalPrimitive.Root>
-      {/* Botão flutuante posicionado acima do WhatsApp */}
+    <AssistantModalPrimitive.Root open={open} onOpenChange={setOpen}>
       <AssistantModalPrimitive.Anchor className="aui-root aui-modal-anchor fixed right-5 bottom-24 size-[4rem] z-[100]">
         <AssistantModalPrimitive.Trigger asChild>
           <AssistantModalButton />
         </AssistantModalPrimitive.Trigger>
       </AssistantModalPrimitive.Anchor>
 
-      {/* Janela do Assistente */}
       <AssistantModalPrimitive.Content
-        sideOffset={16}
+        sideOffset={56}
         className="
-          aui-root aui-modal-content z-50 h-[520px] w-[650px] overflow-hidden
+          relative
+          aui-root aui-modal-content  right-6  z-[110]
+          h-[420px] w-[450px] overflow-hidden
           rounded-2xl border border-blue-200
           bg-gradient-to-br from-white via-blue-50 to-blue-100
           p-0 text-white shadow-2xl outline-none
-          data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-bottom-1/2
-          data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-1/2 data-[state=open]:zoom-in
+          data-[state=closed]:animate-out data-[state=open]:animate-in
           [&>.aui-thread-root]:bg-[#F8FAFC]
         "
       >
+       
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setOpen(false);
+          }}
+          className="absolute right-5 top-3 z-[120] pointer-events-auto rounded-full p-2 text-gray-600 hover:bg-gray-200 hover:text-gray-900"
+          aria-label="Fechar"
+        >
+          ✕
+        </button>
+
         <Thread />
       </AssistantModalPrimitive.Content>
     </AssistantModalPrimitive.Root>
@@ -50,16 +63,15 @@ const AssistantModalButton = forwardRef<
 
   const lottieRef = useRef<LottieRefCurrentProps>(null);
 
-  // Controla animação Lottie conforme o estado do modal
   useEffect(() => {
     if (!lottieRef.current) return;
 
     if (state === "open") {
       lottieRef.current.setSpeed(1);
-      lottieRef.current.playSegments([0, 60], true); 
+      lottieRef.current.playSegments([0, 60], true);
     } else {
       lottieRef.current.setSpeed(1);
-      lottieRef.current.playSegments([60, 0], true); 
+      lottieRef.current.playSegments([60, 0], true);
     }
   }, [state]);
 
