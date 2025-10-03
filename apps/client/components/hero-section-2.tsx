@@ -2,7 +2,6 @@ import React from 'react';
 import { cn } from "@/src/application/core/lib/utils";
 import { motion } from 'framer-motion';
 
-// Prop types for the HeroSection component
 //@ts-ignore
 interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
   logo?: {
