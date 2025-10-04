@@ -7,8 +7,9 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle } from
-"@/components/ui/dialog";
+  DialogTitle
+} from
+  "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,9 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue } from
-"@/components/ui/select";
+  SelectValue
+} from
+  "@/components/ui/select";
 import { Logista } from "./columns";
 
 interface LogistaDialogProps {
@@ -40,6 +42,7 @@ export function LogistaDialog({
     id: "",
     nome: "",
     cpf: "",
+    cnpj: "",
     email: "",
     telefone: "",
     status: "ativo",
@@ -55,6 +58,7 @@ export function LogistaDialog({
         id: "",
         nome: "",
         cpf: "",
+        cnpj: "",
         email: "",
         telefone: "",
         status: "ativo",
@@ -123,7 +127,7 @@ export function LogistaDialog({
                   id="nome"
                   value={formData.nome}
                   onChange={(e) =>
-                  setFormData({ ...formData, nome: e.target.value })
+                    setFormData({ ...formData, nome: e.target.value })
                   }
                   placeholder="João Silva Santos"
                   disabled={isReadOnly}
@@ -133,6 +137,24 @@ export function LogistaDialog({
               </div>
 
               <div className="space-y-2" data-oid="c3hhoay">
+                <Label htmlFor="cnpj" data-oid="srk9ani">
+                  CNPJ
+                </Label>
+                <Input
+                  id="cnpj"
+                  value={formData.cnpj}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cnpj: e.target.value })
+                  }
+                  placeholder="12.345.678/0001-99"
+                  disabled={isReadOnly}
+                  required
+                  data-oid="ft0hh.o"
+                />
+              </div>
+
+
+              <div className="space-y-2" data-oid="c3hhoay">
                 <Label htmlFor="cpf" data-oid="srk9ani">
                   CPF
                 </Label>
@@ -140,7 +162,7 @@ export function LogistaDialog({
                   id="cpf"
                   value={formData.cpf}
                   onChange={(e) =>
-                  setFormData({ ...formData, cpf: e.target.value })
+                    setFormData({ ...formData, cpf: e.target.value })
                   }
                   placeholder="123.456.789-00"
                   disabled={isReadOnly}
@@ -163,7 +185,7 @@ export function LogistaDialog({
                   type="email"
                   value={formData.email}
                   onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
+                    setFormData({ ...formData, email: e.target.value })
                   }
                   placeholder="joao@email.com"
                   disabled={isReadOnly}
@@ -180,7 +202,7 @@ export function LogistaDialog({
                   id="telefone"
                   value={formData.telefone}
                   onChange={(e) =>
-                  setFormData({ ...formData, telefone: e.target.value })
+                    setFormData({ ...formData, telefone: e.target.value })
                   }
                   placeholder="(11) 98765-4321"
                   disabled={isReadOnly}
@@ -201,7 +223,7 @@ export function LogistaDialog({
                 <Select
                   value={formData.status}
                   onValueChange={(value: "ativo" | "inativo" | "pendente") =>
-                  setFormData({ ...formData, status: value })
+                    setFormData({ ...formData, status: value })
                   }
                   disabled={isReadOnly}
                   data-oid="ynrrpeu">
@@ -232,7 +254,7 @@ export function LogistaDialog({
                   type="date"
                   value={formData.dataRegistro}
                   onChange={(e) =>
-                  setFormData({ ...formData, dataRegistro: e.target.value })
+                    setFormData({ ...formData, dataRegistro: e.target.value })
                   }
                   disabled={isReadOnly}
                   required
@@ -242,18 +264,18 @@ export function LogistaDialog({
             </div>
 
             {mode === "view" &&
-            <div className="space-y-2" data-oid="c3lkwui">
+              <div className="space-y-2" data-oid="c3lkwui">
                 <Label htmlFor="comissaoTotal" data-oid="wsc_nal">
                   Comissão Total
                 </Label>
                 <Input
-                id="comissaoTotal"
-                value={new Intl.NumberFormat("pt-BR", {
-                  style: "currency",
-                  currency: "BRL"
-                }).format(formData.comissaoTotal)}
-                disabled
-                data-oid="9ffpl6v" />
+                  id="comissaoTotal"
+                  value={new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL"
+                  }).format(formData.comissaoTotal)}
+                  disabled
+                  data-oid="9ffpl6v" />
 
               </div>
             }
@@ -269,7 +291,7 @@ export function LogistaDialog({
               {mode === "view" ? "Fechar" : "Cancelar"}
             </Button>
             {mode !== "view" &&
-            <Button type="submit" data-oid="fnyk5_2">
+              <Button type="submit" data-oid="fnyk5_2">
                 {mode === "create" ? "Criar" : "Salvar"}
               </Button>
             }
