@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2, Eye, } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ export type Logista = {
   id: string;
   nome: string;
   cpf: string;
+  cnpj: string;
   email: string;
   telefone: string;
   status: "ativo" | "inativo" | "pendente";
@@ -94,6 +95,14 @@ export const getLogistaColumns = (actions: {
           {logista.cpf}
         </div>
 
+    },
+    {
+      key: "cnpj",
+      header: "CNPJ",
+      cell: (logista: Logista) =>
+        <div className="text-muted-foreground" data-oid="c6-jzwr">
+          {logista.cnpj}
+        </div>
     },
     {
       key: "email",
