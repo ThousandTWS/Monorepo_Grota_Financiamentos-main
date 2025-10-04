@@ -18,9 +18,9 @@ export const navItems: NavItem[] = [
     subItems: [{ name: "Gestão de Veículos", path: "/", pro: false }],
   },
   {
-    name: "Clientes",
+    name: "Logistas",
     icon: <Users />,
-    subItems: [{ name: "Listas de Clientes", path: "/", pro: false }, { name: "Documentos", path: "/", pro: false }],
+    subItems: [{ name: "Listar logistas", path: "/logistas", pro: false }, { name: "Documentos", path: "/", pro: false }],
   },
   {
     name: "Financiamento",
