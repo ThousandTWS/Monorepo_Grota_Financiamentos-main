@@ -37,7 +37,7 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
           { name: "Nossa Historia", href: "/nossa-historia" },
           { name: "Soluções", href: "/solucoes" },
           { name: "Financiamento", href: "#" },
-          { name: "Blog", href: "#" },
+          { name: "Blog", href: "/blog" },
           { name: "Contato", href: "/contato" }
         ].map((item) => (
           <Link
