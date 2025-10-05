@@ -16,6 +16,7 @@ import BoxHero from "@/src/presentation/components/solucoes/Hero/BoxHero";
 import BoxServices from "@/src/presentation/components/solucoes/Services/BoxServices";
 import BoxNewsletter from "@/src/presentation/components/solucoes/Newsletter/BoxNewsletter";
 import BoxTestimonials from "@/src/presentation/components/solucoes/Testimonials/BoxTestimonials";
+import TestimonialSlider from "@/components/testimonial-slider";
 
 function Solucoes() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -58,7 +59,7 @@ function Solucoes() {
         <section className="py-16 w-full mx-auto">
           <BoxServices />
           <BoxNewsletter />
-          <BoxTestimonials />
+          <TestimonialSlider />
         </section>
       </main>
 
