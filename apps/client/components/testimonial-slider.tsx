@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
@@ -158,7 +158,7 @@ const TestimonialSlider: React.FC = () => {
   };
 
   return (
-    <div className="px-4 py-8 sm:py-16 bg-gradient-to-b from-gray-50 to-white dark:from-gray-100 dark:to-gray-100 overflow-hidden">
+    <div className="px-4 py-8 sm:py-16 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
       <div className="max-w-6xl mx-auto">
         {/* Título */}
         <motion.div
@@ -167,28 +167,27 @@ const TestimonialSlider: React.FC = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-8 sm:mb-12 md:mb-16"
         >
-          <span className="inline-block py-1 px-3 rounded-full bg-orange-500 dark:bg-bg-orange-500 text-white font-medium text-xs sm:text-sm uppercase tracking-wider">
+          <span className="inline-block py-1 px-3 rounded-full bg-[#1B4B7C] text-white font-medium text-xs sm:text-sm uppercase tracking-wider">
             Grota Financiamentos
           </span>
-          <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold bg-clip-text text-orange-500 mt-3 sm:mt-4 px-4">
+          <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#1B4B7C] mt-3 sm:mt-4 px-4">
             Comentários dos Clientes
           </h3>
-          <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-primary to-primary/70 mx-auto mt-4 sm:mt-6"></div>
+          <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-[#1B4B7C] to-[#1B4B7C]/70 mx-auto mt-4 sm:mt-6"></div>
         </motion.div>
 
         <div className="relative" ref={containerRef}>
           {/* Carrossel */}
           <div className="overflow-hidden relative px-2 sm:px-0">
             <motion.div
-              className="flex "
+              className="flex"
               animate={{ x: `-${currentIndex * (100 / visibleCount)}%` }}
               transition={{ type: 'spring', stiffness: 70, damping: 20 }}
             >
               {testimonials.map((testimonial) => (
                 <motion.div
                   key={testimonial.id}
-                  className={`flex-shrink-0 w-full ${visibleCount === 3 ? 'md:w-1/3' : visibleCount === 2 ? 'md:w-1/2' : 'w-full'
-                    } p-2`}
+                  className={`flex-shrink-0 w-full ${visibleCount === 3 ? 'md:w-1/3' : visibleCount === 2 ? 'md:w-1/2' : 'w-full'} p-2`}
                   initial={{ opacity: 0.5, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.4 }}
@@ -201,18 +200,17 @@ const TestimonialSlider: React.FC = () => {
                   style={{ cursor: 'grab' }}
                 >
                   <motion.div
-                    className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 h-full bg-gray-50 dark:bg-white border border-gray-100 dark:border-gray-100 shadow-lg shadow-primary/5 dark:shadow-primary-light/5"
+                    className="relative overflow-hidden rounded-xl sm:rounded-2xl p-4 sm:p-6 h-full bg-white border border-gray-200 shadow-lg"
                     whileHover={{
-                      boxShadow:
-                        '0 10px 15px -3px rgba(79, 70, 229, 0.1), 0 4px 6px -2 rgba(79, 70, 229, 0.05)',
+                      boxShadow: '0 10px 15px -3px rgba(27, 75, 124, 0.1), 0 4px 6px -2 rgba(27, 75, 124, 0.05)',
                     }}
                   >
                     <div className="relative z-10 h-full flex flex-col">
-                      <p className="text-sm sm:text-base text-gray-700 dark:text-gray-900 font-medium mb-4 sm:mb-6 leading-relaxed">
+                      <p className="text-sm sm:text-base text-gray-700 font-medium mb-4 sm:mb-6 leading-relaxed">
                         &ldquo;{testimonial.quote}&rdquo;
                       </p>
 
-                      <div className="mt-auto pt-3 sm:pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="mt-auto pt-3 sm:pt-4 border-t border-gray-200">
                         <div className="flex items-center">
                           <div className="relative flex-shrink-0">
                             <Image
@@ -220,20 +218,15 @@ const TestimonialSlider: React.FC = () => {
                               height={48}
                               src={testimonial.avatar}
                               alt={testimonial.name}
-                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white dark:border-gray-800 shadow-sm"
+                              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full object-cover border-2 border-white shadow-sm"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = '/api/placeholder/48/48';
                               }}
                             />
-                            <motion.div
-                              className="absolute inset-0 rounded-full bg-primary/20 dark:bg-primary-light/20"
-                              animate={{ scale: [1, 1.2, 1], opacity: [0, 0.3, 0] }}
-                              transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
-                            />
                           </div>
                           <div className="ml-3">
-                            <h4 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-gray-900">{testimonial.name}</h4>
-                            <p className="text-gray-600 dark:text-gray-900 text-xs sm:text-sm">{testimonial.username}</p>
+                            <h4 className="font-semibold text-sm sm:text-base text-gray-900">{testimonial.name}</h4>
+                            <p className="text-gray-600 text-xs sm:text-sm">{testimonial.username}</p>
                           </div>
                         </div>
                       </div>
@@ -256,14 +249,13 @@ const TestimonialSlider: React.FC = () => {
                 aria-label={`Go to testimonial ${index + 1}`}
               >
                 <motion.div
-                  className={`w-2 h-2 rounded-full ${index === currentIndex ? 'bg-orange-500' : 'bg-gray-300 dark:bg-gray-600'
-                    }`}
+                  className={`w-2 h-2 rounded-full ${index === currentIndex ? 'bg-[#1B4B7C]' : 'bg-gray-300'}`}
                   animate={{ scale: index === currentIndex ? [1, 1.2, 1] : 1 }}
                   transition={{ duration: 1.5, repeat: index === currentIndex ? Infinity : 0, repeatDelay: 1 }}
                 />
                 {index === currentIndex && (
                   <motion.div
-                    className="absolute inset-0 rounded-full bg-orange-500/30"
+                    className="absolute inset-0 rounded-full bg-[#1B4B7C]/30"
                     animate={{ scale: [1, 1.8], opacity: [1, 0] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />

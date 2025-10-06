@@ -24,7 +24,6 @@ import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
 import { AssistantRuntimeProvider } from "@assistant-ui/react";
 import { AssistantModal } from "@/components/assistant-modal";
-import { Feature108Demo } from "@/components/visao";
 import { FeatureGrota } from "@/components/shadcnblocks-com-feature108";
 
 

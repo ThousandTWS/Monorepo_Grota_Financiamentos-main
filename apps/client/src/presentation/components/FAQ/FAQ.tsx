@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 const faqData = [
   {
@@ -39,62 +40,94 @@ export default function FAQ() {
   };
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16">
-          <span className="inline-block px-4 py-2 text-sm font-semibold text-orange-600 bg-orange-100 rounded-full uppercase tracking-wide mb-4">
+    <section className="relative overflow-hidden py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#1B4B7C]/90 to-[#1B4B7C]/70 rounded-tr-[5rem] rounded-bl-[5rem]">
+      {/* Overlay animado */}
+      <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+
+      <div className="relative z-10 max-w-4xl mx-auto flex flex-col gap-12">
+        {/* Section Title */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center"
+        >
+          <span className="inline-block px-4 py-2 text-sm font-semibold text-orange-500 bg-orange-100 rounded-full uppercase tracking-wide mb-4">
             Perguntas Frequentes
           </span>
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-4 leading-tight">
             Tire suas dúvidas sobre financiamentos
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-gray-200 text-lg max-w-2xl mx-auto leading-relaxed">
             Tudo o que você precisa saber sobre aprovação, parcelas e veículos disponíveis.
           </p>
-        </div>
+        </motion.div>
 
+        {/* FAQ Items */}
         <div className="space-y-4">
           {faqData.map((faq, index) => (
-            <div
+            <motion.div
               key={index}
-              className="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: index * 0.1 }}
+              className="bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300"
             >
               <button
                 onClick={() => toggleFAQ(index)}
                 className="w-full px-8 py-6 text-left flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 rounded-2xl"
               >
-                <h3 className="text-lg font-semibold text-gray-900 pr-4">
+                <h3 className="text-white text-lg md:text-xl font-semibold pr-4">
                   {faq.question}
                 </h3>
                 <div className="flex-shrink-0">
                   {openIndex === index ? (
-                    <ChevronUp className="w-5 h-5 text-orange-500 transition-transform duration-300" />
+                    <ChevronUp className="w-5 h-5 text-orange-400 transition-transform duration-300" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-300" />
+                    <ChevronDown className="w-5 h-5 text-gray-300 transition-transform duration-300" />
                   )}
                 </div>
               </button>
 
-              {openIndex === index && (
-                <div className="px-8 pb-6 transition-all duration-500 ease-in-out">
-                  <div className="border-t border-gray-100 pt-6">
-                    <p className="text-gray-600 leading-relaxed">{faq.answer}</p>
-                  </div>
-                </div>
-              )}
-            </div>
+              <AnimatePresence>
+                {openIndex === index && (
+                  <motion.div
+                    key="content"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                    className="px-8 pb-6 overflow-hidden"
+                  >
+                    <div className="border-t border-white/20 pt-6">
+                      <p className="text-gray-200 leading-relaxed">{faq.answer}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ))}
         </div>
 
+        {/* CTA */}
         <div className="text-center mt-12">
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-200 mb-6 text-lg">
             Ainda tem dúvidas? Fale com nossos consultores e receba atendimento personalizado!
           </p>
-          <button className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors duration-200">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="bg-orange-500 hover:bg-orange-600 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-2xl"
+          >
             Fale Conosco
-          </button>
+          </motion.button>
         </div>
       </div>
+
+      {/* Background Effects */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-l from-orange-500/20 to-transparent rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-3xl" />
     </section>
   );
 }

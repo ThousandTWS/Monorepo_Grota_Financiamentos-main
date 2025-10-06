@@ -2,8 +2,9 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@radix-ui/react-tabs";
 import { Badge } from "@/src/presentation/components/ui/badge";
-import { Layout, Eye, HeartHandshake } from "lucide-react";
+import { Layout, Eye, HeartHandshake, PhoneCall, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface TabContent {
   badge: string;
@@ -137,24 +138,31 @@ const FeatureGrota = ({
                     {tab.content.badge}
                   </Badge>
 
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 text-[#2C2C2C] leading-tight">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-semibold mt-4 text-[#1B4B7C] leading-tight">
                     {tab.content.title}
                   </h3>
 
                   {Array.isArray(tab.content.description) ? (
-                    <ul className="list-disc text-left space-y-2 text-[#444] lg:text-lg mt-4 pl-6 sm:pl-8">
+                    <ul className="list-disc text-left space-y-2 text-[#2C2C2C] mb-5 lg:text-lg mt-4 pl-6 sm:pl-8">
                       {tab.content.description.map((item, idx) => (
                         <li key={idx} className="leading-relaxed">{item}</li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-[#444] lg:text-lg mt-4 leading-relaxed">
+                    <p className="text-[#2C2C2C] lg:text-lg mt-4 leading-relaxed mb-5">
                       {tab.content.description}
                     </p>
                   )}
                 </motion.div>
+
               </TabsContent>
             ))}
+            <Link target="_blank" href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos.">
+            <button className="group bg-[#1B4B7C] hover:bg-[#1B4B7C]/90 cursor-pointer text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+              <PhoneCall className="w-6 h-6 animate-phone-ring" />
+              Fale com a nossa equipe
+            </button>
+            </Link>
           </div>
         </Tabs>
       </div>

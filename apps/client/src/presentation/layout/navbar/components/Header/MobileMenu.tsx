@@ -34,7 +34,7 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
             <button
               onClick={onLoginClick}
               type="button"
-              className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-white bg-[#1B4B7C] rounded-full shadow-md transition-colors duration-300 hover:bg-[#1b4b7ce1] hover:text-white border-2 border-white"
+              className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-white bg-[#1B4B7C] rounded-xl shadow-md transition-colors duration-300 hover:bg-[#1b4b7ce1] hover:text-white border-2 border-white"
             >
               <span className="relative z-10">Área do Cliente</span>
             </button>

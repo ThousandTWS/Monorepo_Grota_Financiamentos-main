@@ -1,19 +1,19 @@
 "use client";
 
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, Calculator } from "lucide-react";
 import Image from "next/image";
-import { Button } from "../ui/button";
 import { AspectRatio } from "../ui/aspect-ratio";
 import { Tagline } from "../banners/LogoSection/tagline/tagline";
 
 export function HeroSectionGrota() {
   return (
     <section
-      className="relative overflow-hidden py-16 px-6 lg:px-16 bg-gradient-to-r from-[#1B4B7C] via-[#1B4B7C] to-[#1B4B7C] mt-5 rounded-[2rem] mx-5"
+      className="relative overflow-hidden py-16 px-6 lg:px-16 bg-gradient-to-b from-[#1B4B7C]/90 to-[#1B4B7C]/70 mt-5 rounded-[2rem] mx-5"
       aria-labelledby="hero-heading"
-    >
-      {/* Background Gradient Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-blue-800/40 to-blue-900/30 -z-10 pointer-events-none"></div>
+
+    > {/* Overlay escuro */}
+      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+
 
       <div className="container mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
         {/* Left Column */}
@@ -51,14 +51,9 @@ export function HeroSectionGrota() {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 mt-8 animate-fade-in-up delay-300">
-            <button className="bg-green-500 hover:bg-green-600 text-white flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 hover:scale-105">
-              Simule seu financiamento
-              <ArrowRight className="w-5 h-5" />
-            </button>
-
-            <button className="bg-white text-[#1B4B7C] hover:bg-gray-100 flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-full font-semibold shadow-lg transition-all duration-300 hover:scale-105">
-              Saiba como funciona
-              <ArrowRight className="w-5 h-5" />
+            <button className="group bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+              Simule seu Financiamento
+              <Calculator className="w-6 h-6" />
             </button>
           </div>
         </div>
