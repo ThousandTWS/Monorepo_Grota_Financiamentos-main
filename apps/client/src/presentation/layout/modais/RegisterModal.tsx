@@ -3,54 +3,75 @@
 import { useState } from "react";
 import { X, User, Lock, Mail, Phone, Building, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+const registerSchema = z
+  .object({
+    fullName: z.string().min(2, "Nome é obrigatório"),
+    email: z.string(),
+    phone: z.string(),
+    enterprise: z.string(),
+    password: 
+      z.string()
+      .min(6, 'Senha deve ter pelo menos 6 caracteres')
+      .max(8, 'Senha deve ter no máximo 50 caracteres'),
+    confirmPassword: z.string() 
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Senhas não coincidem",
+    path: ["confirmPassword"],
+});
+
+
+export type RegisterFormData = z.infer<typeof registerSchema>;
+
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    company: "",
-    password: "",
-    confirmPassword: ""
-  });
   const [success, setSuccess] = useState("");
   const { signUp, isLoading, error, clearError } = useAuth();
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
-    setSuccess("");
-    
-    if (formData.password !== formData.confirmPassword) {
-      return;
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+    setError
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+    fullName: "",
+    email: "",
+    phone: "",
+    enterprise: "",
+    password: "",
+    confirmPassword: ""
     }
+  });
 
-    const result = await signUp({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      company: formData.company,
-      password: formData.password
-    });
+  const onSubmit = async (data:RegisterFormData) => {
+   
+    console.log(data);
 
-    if (result.success) {
-      setSuccess(result.message);
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+    const result = await signUp(data);
+
+    if(result.success){
+      console.log(result.message)
+      //Aqui você pode:
+      //Mostrar toast
+      //Fechar modal
+      //Redirecionar usuário
+    } else {
+      console.log(result.message)
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if(!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
@@ -81,20 +102,20 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Nome Completo</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  value={formData.name}
-                  onChange={(e) => handleChange("name", e.target.value)}
+                  {...register("fullName")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="Seu nome completo"
                   required
                   disabled={isLoading}
                 />
+                {errors.fullName && <p className="text-sm text-red-600 mt-1">{errors.fullName.message}</p>}
               </div>
             </div>
             
@@ -104,13 +125,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="email"
-                  value={formData.email}
-                  onChange={(e) => handleChange("email", e.target.value)}
+                  {...register("email")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="seu@email.com"
                   required
                   disabled={isLoading}
                 />
+                {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
               </div>
             </div>
             
@@ -120,13 +141,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleChange("phone", e.target.value)}
+                  {...register("phone")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="+5511999999999"
                   required
                   disabled={isLoading}
                 />
+                {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone.message}</p>}
               </div>
             </div>
             
@@ -136,13 +157,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Building className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="text"
-                  value={formData.company}
-                  onChange={(e) => handleChange("company", e.target.value)}
+                  {...register("enterprise")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="Nome da empresa"
                   required
                   disabled={isLoading}
                 />
+                {errors.enterprise && <p className="text-sm text-red-600 mt-1">{errors.enterprise.message}</p>}
               </div>
             </div>
             
@@ -152,13 +173,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="password"
-                  value={formData.password}
-                  onChange={(e) => handleChange("password", e.target.value)}
+                  {...register("password")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
                 />
+                {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
               </div>
             </div>
             
@@ -168,13 +189,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="password"
-                  value={formData.confirmPassword}
-                  onChange={(e) => handleChange("confirmPassword", e.target.value)}
+                  {...register("confirmPassword")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
                 />
+                {errors.confirmPassword && <p className="text-sm text-red-600 mt-1">{errors.confirmPassword.message}</p>}
               </div>
             </div>
             
