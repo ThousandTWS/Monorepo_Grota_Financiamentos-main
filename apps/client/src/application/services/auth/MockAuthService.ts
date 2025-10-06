@@ -1,7 +1,6 @@
-import { use } from "react";
 import api from "../api";
-import { NextResponse } from "next/server";
-import { cookies } from 'next/headers';
+
+
 
 export interface AuthCredentials {
   email: string;
