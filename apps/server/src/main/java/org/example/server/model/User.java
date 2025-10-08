@@ -1,6 +1,7 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
+import org.example.server.enums.VerifiedUser;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,7 +24,8 @@ public class User implements UserDetails {
     @Column(nullable = false)
     private String password;
 
-    private boolean verified;
+    @Enumerated(EnumType.STRING)
+    private VerifiedUser verified;
 
     private String verificationCode; // Para ativação da conta
     private LocalDateTime codeExpiration; // Expiração da ativação
@@ -48,18 +50,18 @@ public class User implements UserDetails {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = false;
+        this.verified = VerifiedUser.PENDENTE;
     }
 
     public void markAsVerified(){
-        this.verified = true;
+        this.verified = VerifiedUser.ATIVO;
         clearVerificationCode();
     }
 
     public void generateVerificationCode(String code, Duration validity){
         this.verificationCode = code;
         this.codeExpiration = LocalDateTime.now().plus(validity);
-        this.verified = false;
+        this.verified = VerifiedUser.PENDENTE;
     }
 
     public boolean isVerificationCodeValid(String code){
@@ -106,7 +108,7 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public boolean isVerified() {
+    public VerifiedUser isVerified() {
         return verified;
     }
 

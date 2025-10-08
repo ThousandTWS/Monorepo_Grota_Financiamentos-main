@@ -1,6 +1,7 @@
 package org.example.server.service;
 
 import org.example.server.dto.auth.*;
+import org.example.server.enums.VerifiedUser;
 import org.example.server.exception.*;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
@@ -59,7 +60,7 @@ public class UserService {
         var user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
 
-        if (!user.isVerified()) {
+        if (user.isVerified() == VerifiedUser.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
 
@@ -71,7 +72,7 @@ public class UserService {
         User user = userRepository.findByEmail(verificationCodeRequestDTO.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado"));
 
-        if (user.isVerified()) {
+        if (user.isVerified() == VerifiedUser.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
         }
         if (user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {

@@ -19,7 +19,8 @@ public class LogisticMapper {
                 logistic.getFullName(),
                 user != null ? user.getEmail() : null,
                 logistic.getPhone(),
-                logistic.getEnterprise()
+                logistic.getEnterprise(),
+                logistic.getUser().isVerified()
         );
     }
 
