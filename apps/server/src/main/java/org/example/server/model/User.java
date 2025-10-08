@@ -1,15 +1,13 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
-import org.example.server.enums.VerifiedUser;
-import org.springframework.data.annotation.CreatedDate;
+import org.example.server.enums.UserVerificationStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
-import java.util.Objects;
 
 @Entity
 @Table(name = "tb_user")
@@ -25,7 +23,7 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private VerifiedUser verified;
+    private UserVerificationStatus verified;
 
     private String verificationCode; // Para ativação da conta
     private LocalDateTime codeExpiration; // Expiração da ativação
@@ -50,18 +48,18 @@ public class User implements UserDetails {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = VerifiedUser.PENDENTE;
+        this.verified = UserVerificationStatus.PENDENTE;
     }
 
     public void markAsVerified(){
-        this.verified = VerifiedUser.ATIVO;
+        this.verified = UserVerificationStatus.ATIVO;
         clearVerificationCode();
     }
 
     public void generateVerificationCode(String code, Duration validity){
         this.verificationCode = code;
         this.codeExpiration = LocalDateTime.now().plus(validity);
-        this.verified = VerifiedUser.PENDENTE;
+        this.verified = UserVerificationStatus.PENDENTE;
     }
 
     public boolean isVerificationCodeValid(String code){
@@ -108,7 +106,7 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public VerifiedUser isVerified() {
+    public UserVerificationStatus isVerified() {
         return verified;
     }
 

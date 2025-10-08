@@ -1,6 +1,6 @@
 package org.example.server.dto.logistic;
 
-import org.example.server.enums.VerifiedUser;
+import org.example.server.enums.UserVerificationStatus;
 
 public record LogisticResponseDTO(
         Long id,
@@ -8,5 +8,5 @@ public record LogisticResponseDTO(
         String email,
         String phone,
         String enterprise,
-        VerifiedUser status
+        UserVerificationStatus status
 ){}

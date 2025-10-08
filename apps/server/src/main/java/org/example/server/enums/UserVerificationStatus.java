@@ -1,6 +1,6 @@
 package org.example.server.enums;
 
-public enum VerifiedUser {
+public enum UserVerificationStatus {
     ATIVO,
     INATIVO,
     PENDENTE
