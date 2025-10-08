@@ -426,6 +426,9 @@ importers:
       react:
         specifier: ^19.0.0
         version: 19.1.0
+      react-cookie-manager:
+        specifier: ^4.0.3
+        version: 4.0.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       react-day-picker:
         specifier: ^9.8.0
         version: 9.11.0(react@19.1.0)
@@ -4904,6 +4907,12 @@ packages:
     peerDependencies:
       apexcharts: '>=4.0.0'
       react: '>=0.13'
+
+  react-cookie-manager@4.0.3:
+    resolution: {integrity: sha512-JlNeeiBAIiofzm2+vUzFAhOUrZq+nzbAV9o+WcDGr3+/tBKbpJvQn94Mk6tiB6wJ8mbYWNNkWmxQaJXCiVxY3w==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   react-day-picker@9.11.0:
     resolution: {integrity: sha512-L4FYOaPrr3+AEROeP6IG2mCORZZfxJDkJI2df8mv1jyPrNYeccgmFPZDaHyAuPCBCddQFozkxbikj2NhMEYfDQ==}
@@ -10239,6 +10248,11 @@ snapshots:
       apexcharts: 4.7.0
       prop-types: 15.8.1
       react: 19.1.0
+
+  react-cookie-manager@4.0.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0):
+    dependencies:
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   react-day-picker@9.11.0(react@19.1.0):
     dependencies:
