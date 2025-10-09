@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Calculator } from "lucide-react";
+import { Calculator, Search } from "lucide-react";
 
 function BoxCalculator() {
+  const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleValue, setVehicleValue] = useState("50000");
   const [downPayment, setDownPayment] = useState("10000");
   const [months, setMonths] = useState("48");
@@ -29,6 +30,38 @@ function BoxCalculator() {
       currency: "BRL"
     }).format(value);
   };
+
+  const handleVeiculeSearch = async () => {
+    if(vehiclePlate === "") {
+      return;
+    }
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort("Timeout excedido"), 120000);
+    const apiToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2dhdGV3YXkuYXBpYnJhc2lsLmlvL2FwaS92Mi9hdXRoL3JlZ2lzdGVyIiwiaWF0IjoxNzQwMzE4NjYxLCJleHAiOjE3NzE4NTQ2NjEsIm5iZiI6MTc0MDMxODY2MSwianRpIjoiNTBpUDBMZlRScXRMcjJnNyIsInN1YiI6IjEzOTY3IiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dsHtxbpV7o9nANhtEm50YvRtaxYghsNYopwhO8Sr-L4";
+
+    try {
+      const response = await fetch("https://gateway.apibrasil.io/api/v2/vehicles/base/000/dados", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${apiToken}`
+        },
+        body: JSON.stringify({ placa: vehiclePlate, homolog: false }),
+        signal: controller.signal,
+        redirect: "follow",
+        credentials: "include",
+        cache: "no-store"
+      })
+
+      clearTimeout(timeoutId)
+      const data = await response.json()
+      console.log(data)
+    } catch (error) {
+      clearTimeout(timeoutId)
+      console.error("Erro na requisição:", error)
+    }
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-oid="xc5-k:l">
@@ -60,7 +93,35 @@ function BoxCalculator() {
             data-oid="::.1zek">
 
             {/* Inputs */}
-            <div className="space-y-6" data-oid="5y2o:25">
+            <div className="space-y-6 relative" data-oid="5y2o:25">
+              <div className="flex flex-col">
+                <div data-oid="r3:w5y4">
+                  <label
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                    data-oid="6sj4pey">
+
+                    Placa do Veículo
+                  </label>
+                  <input
+                    type="text"
+                    value={vehiclePlate}
+                    onChange={(e) => setVehiclePlate(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                    placeholder="MPA7466"
+                    data-oid="ievfkz-" />
+                </div>
+
+                <button
+                  className="mt-3 w-full flex items-center justify-center gap-3 bg-[#1B4B7C] hover:bg-[#153a5f] text-white py-4 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                  data-oid="fao713q"
+                  onClick={handleVeiculeSearch}
+                >
+
+                  Consultar Veículo
+                  <Search />
+                </button>
+              </div>
+
               <div data-oid="r3:w5y4">
                 <label
                   className="block text-sm font-semibold text-gray-700 mb-2"
