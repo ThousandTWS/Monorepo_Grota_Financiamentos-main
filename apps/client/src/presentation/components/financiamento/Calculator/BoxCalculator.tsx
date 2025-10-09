@@ -1,10 +1,20 @@
 "use client";
 
-import React, { useState } from "react";
-import { Calculator, Search } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Calculator, Loader2, Search } from "lucide-react";
+
+interface vehicleInfo {
+  marca: string;
+  modelo: string;
+  cor: string;
+  ano_modelo: string;
+  logo: string;
+}
 
 function BoxCalculator() {
+  const [loading, setLoading] = useState(false);
   const [vehiclePlate, setVehiclePlate] = useState("");
+  const [vehicleInfo, setVehicleInfo] = useState<vehicleInfo>({} as vehicleInfo);
   const [vehicleValue, setVehicleValue] = useState("50000");
   const [downPayment, setDownPayment] = useState("10000");
   const [months, setMonths] = useState("48");
@@ -31,37 +41,42 @@ function BoxCalculator() {
     }).format(value);
   };
 
-  const handleVeiculeSearch = async () => {
-    if(vehiclePlate === "") {
-      return;
-    }
+  useEffect(() => {
+    const handleVeiculeSearch = setTimeout(async () => {
+      if(vehiclePlate.length !== 7) return;
+      if(vehiclePlate.length === 7) setVehicleInfo({} as vehicleInfo);
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort("Timeout excedido"), 120000);
-    const apiToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2dhdGV3YXkuYXBpYnJhc2lsLmlvL2FwaS92Mi9hdXRoL3JlZ2lzdGVyIiwiaWF0IjoxNzQwMzE4NjYxLCJleHAiOjE3NzE4NTQ2NjEsIm5iZiI6MTc0MDMxODY2MSwianRpIjoiNTBpUDBMZlRScXRMcjJnNyIsInN1YiI6IjEzOTY3IiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dsHtxbpV7o9nANhtEm50YvRtaxYghsNYopwhO8Sr-L4";
+      const apiToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2dhdGV3YXkuYXBpYnJhc2lsLmlvL2FwaS92Mi9hdXRoL3JlZ2lzdGVyIiwiaWF0IjoxNzQwMzE4NjYxLCJleHAiOjE3NzE4NTQ2NjEsIm5iZiI6MTc0MDMxODY2MSwianRpIjoiNTBpUDBMZlRScXRMcjJnNyIsInN1YiI6IjEzOTY3IiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dsHtxbpV7o9nANhtEm50YvRtaxYghsNYopwhO8Sr-L4";
 
-    try {
-      const response = await fetch("https://gateway.apibrasil.io/api/v2/vehicles/base/000/dados", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${apiToken}`
-        },
-        body: JSON.stringify({ placa: vehiclePlate, homolog: false }),
-        signal: controller.signal,
-        redirect: "follow",
-        credentials: "include",
-        cache: "no-store"
-      })
+      try {
+        setLoading(true);
+        const response = await fetch("https://gateway.apibrasil.io/api/v2/vehicles/base/000/dados", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${apiToken}`
+          },
+          body: JSON.stringify({ placa: vehiclePlate, homolog: false }),
+          cache: "no-store"
+        })
+        const data = await response.json()
+        setVehicleInfo(prev => ({
+          ...(prev || {}),
+          marca: data.data.MARCA,
+          modelo: data.data.MODELO,
+          cor: data.data.cor,
+          ano_modelo: data.data.ano_modelo,
+          logo: data.data.logo
+        }));
+      } catch (error) {
+        console.error("Erro na requisição:", error)
+      } finally {
+        setLoading(false);
+      }
+    }, 1500);
 
-      clearTimeout(timeoutId)
-      const data = await response.json()
-      console.log(data)
-    } catch (error) {
-      clearTimeout(timeoutId)
-      console.error("Erro na requisição:", error)
-    }
-  }
+    return () => clearTimeout(handleVeiculeSearch);
+  }, [vehiclePlate])
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-oid="xc5-k:l">
@@ -92,10 +107,72 @@ function BoxCalculator() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             data-oid="::.1zek">
 
-            {/* Inputs */}
             <div className="space-y-6 relative" data-oid="5y2o:25">
-              <div className="flex flex-col">
-                <div data-oid="r3:w5y4">
+              <div className="flex flex-col gap-3">
+                <div
+                  className="space-y-3 bg-white rounded-lg p-5 shadow-md"
+                  data-oid="ohbx_tf">
+                    <div
+                      className="flex justify-between items-center py-2 border-b border-gray-200"
+                      data-oid="a8u_eg6">
+                      <h3 className="text-gray-900 font-bold">Informações do Veículo</h3>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Modelo:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.modelo
+                          ? vehicleInfo.modelo
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Cor:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.cor
+                          ? vehicleInfo.cor
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Ano:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.ano_modelo
+                          ? vehicleInfo.ano_modelo
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                </div>
+                <div data-oid="r3:w5y4" className="relative">
                   <label
                     className="block text-sm font-semibold text-gray-700 mb-2"
                     data-oid="6sj4pey">
@@ -106,20 +183,17 @@ function BoxCalculator() {
                     type="text"
                     value={vehiclePlate}
                     onChange={(e) => setVehiclePlate(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg uppercase focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                     placeholder="MPA7466"
                     data-oid="ievfkz-" />
+                  <div className="absolute top-11 right-3">
+                    {
+                      loading
+                      ? <Loader2 className="animate-spin text-[#1B4B7C]"/>
+                      : <Search />
+                    }
+                  </div>
                 </div>
-
-                <button
-                  className="mt-3 w-full flex items-center justify-center gap-3 bg-[#1B4B7C] hover:bg-[#153a5f] text-white py-4 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-                  data-oid="fao713q"
-                  onClick={handleVeiculeSearch}
-                >
-
-                  Consultar Veículo
-                  <Search />
-                </button>
               </div>
 
               <div data-oid="r3:w5y4">
