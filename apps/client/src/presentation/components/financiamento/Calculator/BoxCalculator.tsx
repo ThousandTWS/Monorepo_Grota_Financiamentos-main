@@ -1,26 +1,41 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Calculator, Loader2, Search } from "lucide-react";
+import { Calculator, Check, Loader2, Search } from "lucide-react";
 
 interface vehicleInfo {
-  marca: string;
   modelo: string;
   cor: string;
   ano_modelo: string;
-  logo: string;
 }
 
 function BoxCalculator() {
   const [loading, setLoading] = useState(false);
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleInfo, setVehicleInfo] = useState<vehicleInfo>({} as vehicleInfo);
-  const [vehicleValue, setVehicleValue] = useState("50000");
-  const [downPayment, setDownPayment] = useState("10000");
+  const [vehicleValue, setVehicleValue] = useState("0");
+  const [downPayment, setDownPayment] = useState("0");
   const [months, setMonths] = useState("48");
 
+  const formatCurrencyInput = (value: string) => {
+    const onlyDigits = value.replace(/\D/g, "");
+
+    const numericValue = Number(onlyDigits) / 100;
+
+    return numericValue.toLocaleString("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    });
+  };
+
+  const parseCurrency = (formatted: string) => {
+    return Number(formatted.replace(/[^\d]/g, "")) / 100;
+  };
+
+  const formatCurrency = (value: number) => { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value); };
+
   const calculateMonthlyPayment = () => {
-    const principal = parseFloat(vehicleValue) - parseFloat(downPayment);
+    const principal = parseCurrency(vehicleValue) - parseCurrency(downPayment);
     const interestRate = 0.015; // 1.5% ao mês (exemplo)
     const n = parseInt(months);
 
@@ -33,13 +48,6 @@ function BoxCalculator() {
   };
 
   const monthlyPayment = calculateMonthlyPayment();
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    }).format(value);
-  };
 
   useEffect(() => {
     const handleVeiculeSearch = setTimeout(async () => {
@@ -62,11 +70,9 @@ function BoxCalculator() {
         const data = await response.json()
         setVehicleInfo(prev => ({
           ...(prev || {}),
-          marca: data.data.MARCA,
           modelo: data.data.MODELO,
           cor: data.data.cor,
           ano_modelo: data.data.ano_modelo,
-          logo: data.data.logo
         }));
       } catch (error) {
         console.error("Erro na requisição:", error)
@@ -183,16 +189,23 @@ function BoxCalculator() {
                     type="text"
                     value={vehiclePlate}
                     onChange={(e) => setVehiclePlate(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg uppercase focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                    className="w-full px-4 py-3 border-2 mb-1 border-gray-300 rounded-lg uppercase focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                     placeholder="MPA7466"
                     data-oid="ievfkz-" />
                   <div className="absolute top-11 right-3">
                     {
                       loading
                       ? <Loader2 className="animate-spin text-[#1B4B7C]"/>
+                      : vehicleInfo.modelo
+                      ? <Check className="text-green-700"/>
                       : <Search />
                     }
                   </div>
+                  {
+                    loading
+                    ? <span className="text-gray-700 text-xs font-semibold">Buscando veículo...</span>
+                    : vehicleInfo.modelo && <span className="text-green-700 text-xs font-semibold">Veículo encontrado!</span>
+                  }
                 </div>
               </div>
 
@@ -204,13 +217,12 @@ function BoxCalculator() {
                   Valor do Veículo
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={vehicleValue}
-                  onChange={(e) => setVehicleValue(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                  onChange={(e) => setVehicleValue(formatCurrencyInput(e.target.value))}
+                  className="w-full px-4 py-3 border-2 mb-1 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                   placeholder="R$ 0,00"
                   data-oid="ievfkz-" />
-
               </div>
 
               <div data-oid="2bjyyil">
@@ -221,9 +233,9 @@ function BoxCalculator() {
                   Valor de Entrada
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={downPayment}
-                  onChange={(e) => setDownPayment(e.target.value)}
+                  onChange={(e) => setDownPayment(formatCurrencyInput(e.target.value))}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                   placeholder="R$ 0,00"
                   data-oid="ubem697" />
@@ -301,7 +313,7 @@ function BoxCalculator() {
                   </span>
                   <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
                     {formatCurrency(
-                      parseFloat(vehicleValue) - parseFloat(downPayment)
+                      parseCurrency(vehicleValue) - parseCurrency(downPayment)
                     )}
                   </span>
                 </div>
