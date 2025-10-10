@@ -11,6 +11,7 @@ interface vehicleInfo {
 
 function BoxCalculator() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleInfo, setVehicleInfo] = useState<vehicleInfo>({} as vehicleInfo);
   const [vehicleValue, setVehicleValue] = useState("");
@@ -68,14 +69,22 @@ function BoxCalculator() {
           cache: "no-store"
         })
         const data = await response.json()
+        if (!data.data || !data.data.MODELO) {
+          setError(true);
+          setVehicleInfo({} as vehicleInfo);
+          return;
+        }
         setVehicleInfo(prev => ({
           ...(prev || {}),
           modelo: data.data.MODELO,
           cor: data.data.cor,
           ano_modelo: data.data.ano_modelo,
         }));
+        setError(false);
       } catch (error) {
-        console.error("Erro na requisição:", error)
+        console.error("Erro na requisição:", error);
+        setError(true);
+        setVehicleInfo({} as vehicleInfo);
       } finally {
         setLoading(false);
       }
@@ -204,7 +213,9 @@ function BoxCalculator() {
                   {
                     loading
                     ? <span className="text-gray-700 text-xs font-semibold">Buscando veículo...</span>
-                    : vehicleInfo.modelo && <span className="text-green-700 text-xs font-semibold">Veículo encontrado!</span>
+                    : vehicleInfo.modelo
+                    ? <span className="text-green-700 text-xs font-semibold">Veículo encontrado!</span>
+                    : error && <span className="text-red-700 text-xs font-semibold">Veículo não encontrado ou placa inválida</span>
                   }
                 </div>
               </div>
