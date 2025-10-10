@@ -7,6 +7,7 @@ interface vehicleInfo {
   modelo: string;
   cor: string;
   ano_modelo: string;
+  // valor_fipe: string;
 }
 
 function BoxCalculator() {
@@ -79,6 +80,7 @@ function BoxCalculator() {
           modelo: data.data.MODELO,
           cor: data.data.cor,
           ano_modelo: data.data.ano_modelo,
+          // valor_fipe: data.data.fipe.valor_fipe,
         }));
         setError(false);
       } catch (error) {
@@ -234,6 +236,7 @@ function BoxCalculator() {
                   className="w-full px-4 py-3 border-2 mb-1 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                   placeholder="R$ 0,00"
                   data-oid="ievfkz-" />
+                  {/* {vehicleInfo.valor_fipe && <span className="text-gray-700 text-xs font-semibold">Valor sugerido pela tabela FIPE: {vehicleInfo.valor_fipe}</span>} */}
               </div>
 
               <div data-oid="2bjyyil">
