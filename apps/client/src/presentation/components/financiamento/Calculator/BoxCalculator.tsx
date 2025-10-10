@@ -13,8 +13,8 @@ function BoxCalculator() {
   const [loading, setLoading] = useState(false);
   const [vehiclePlate, setVehiclePlate] = useState("");
   const [vehicleInfo, setVehicleInfo] = useState<vehicleInfo>({} as vehicleInfo);
-  const [vehicleValue, setVehicleValue] = useState("0");
-  const [downPayment, setDownPayment] = useState("0");
+  const [vehicleValue, setVehicleValue] = useState("");
+  const [downPayment, setDownPayment] = useState("");
   const [months, setMonths] = useState("48");
 
   const formatCurrencyInput = (value: string) => {
