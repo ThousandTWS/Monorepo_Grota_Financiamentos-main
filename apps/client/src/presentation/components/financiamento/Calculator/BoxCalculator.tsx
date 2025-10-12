@@ -1,34 +1,14 @@
 "use client";
 
-import React, { useState } from "react";
-import { Calculator } from "lucide-react";
+import React from "react";
+import { Calculator, Check, Loader2, Search } from "lucide-react";
+import { useBoxCalculator } from "@/src/application/core/hooks/useBoxCalculator";
+import { formatCurrencyInput } from "@/src/application/core/utils/currency/currencyMask";
+import { formatCurrency } from "@/src/application/core/utils/currency/formatCurrency";
+import { parseCurrency } from "@/src/application/core/utils/currency/parseCurrency";
 
 function BoxCalculator() {
-  const [vehicleValue, setVehicleValue] = useState("50000");
-  const [downPayment, setDownPayment] = useState("10000");
-  const [months, setMonths] = useState("48");
-
-  const calculateMonthlyPayment = () => {
-    const principal = parseFloat(vehicleValue) - parseFloat(downPayment);
-    const interestRate = 0.015; // 1.5% ao mês (exemplo)
-    const n = parseInt(months);
-
-    if (principal <= 0 || n <= 0) return 0;
-
-    const monthlyPayment =
-    principal * (interestRate * Math.pow(1 + interestRate, n)) / (
-    Math.pow(1 + interestRate, n) - 1);
-    return monthlyPayment;
-  };
-
-  const monthlyPayment = calculateMonthlyPayment();
-
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL"
-    }).format(value);
-  };
+  const { vehicleInfo, loading, vehiclePlate, setVehiclePlate, error, vehicleValue, setVehicleValue, downPayment, setDownPayment, months, setMonths, monthlyPayment } = useBoxCalculator();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-oid="xc5-k:l">
@@ -59,8 +39,104 @@ function BoxCalculator() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-8"
             data-oid="::.1zek">
 
-            {/* Inputs */}
-            <div className="space-y-6" data-oid="5y2o:25">
+            <div className="space-y-6 relative" data-oid="5y2o:25">
+              <div className="flex flex-col gap-3">
+                <div
+                  className="space-y-3 bg-white rounded-lg p-5 shadow-md"
+                  data-oid="ohbx_tf">
+                    <div
+                      className="flex justify-between items-center py-2 border-b border-gray-200"
+                      data-oid="a8u_eg6">
+                      <h3 className="text-gray-900 font-bold">Informações do Veículo</h3>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Modelo:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.modelo
+                          ? vehicleInfo.modelo
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Cor:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.cor
+                          ? vehicleInfo.cor
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                    <div
+                      className="flex justify-between items-center py-2"
+                      data-oid="a8u_eg6">
+                      <span
+                        className="text-gray-700 font-medium"
+                        data-oid=":rleid.">
+
+                        Ano:
+                      </span>
+                      <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
+                        {vehicleInfo?.ano_modelo
+                          ? vehicleInfo.ano_modelo
+                          : loading
+                          ? <Loader2 className="animate-spin text-[#1B4B7C]"/> 
+                          : "-"
+                        }
+                      </span>
+                    </div>
+                </div>
+                <div data-oid="r3:w5y4" className="relative">
+                  <label
+                    className="block text-sm font-semibold text-gray-700 mb-2"
+                    data-oid="6sj4pey">
+
+                    Placa do Veículo
+                  </label>
+                  <input
+                    type="text"
+                    value={vehiclePlate}
+                    onChange={(e) => setVehiclePlate(e.target.value)}
+                    className="w-full px-4 py-3 border-2 mb-1 border-gray-300 rounded-lg uppercase focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                    placeholder="MPA7466"
+                    data-oid="ievfkz-" />
+                  <div className="absolute top-11 right-3">
+                    {
+                      loading
+                      ? <Loader2 className="animate-spin text-[#1B4B7C]"/>
+                      : vehicleInfo.modelo
+                      ? <Check className="text-green-700"/>
+                      : <Search />
+                    }
+                  </div>
+                  {
+                    loading
+                    ? <span className="text-gray-700 text-xs font-semibold">Buscando veículo...</span>
+                    : vehicleInfo.modelo
+                    ? <span className="text-green-700 text-xs font-semibold">Veículo encontrado!</span>
+                    : error && <span className="text-red-700 text-xs font-semibold">Veículo não encontrado ou placa inválida</span>
+                  }
+                </div>
+              </div>
+
               <div data-oid="r3:w5y4">
                 <label
                   className="block text-sm font-semibold text-gray-700 mb-2"
@@ -69,13 +145,13 @@ function BoxCalculator() {
                   Valor do Veículo
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={vehicleValue}
-                  onChange={(e) => setVehicleValue(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
+                  onChange={(e) => setVehicleValue(formatCurrencyInput(e.target.value))}
+                  className="w-full px-4 py-3 border-2 mb-1 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                   placeholder="R$ 0,00"
                   data-oid="ievfkz-" />
-
+                  {/* {vehicleInfo.valor_fipe && <span className="text-gray-700 text-xs font-semibold">Valor sugerido pela tabela FIPE: {vehicleInfo.valor_fipe}</span>} */}
               </div>
 
               <div data-oid="2bjyyil">
@@ -86,9 +162,9 @@ function BoxCalculator() {
                   Valor de Entrada
                 </label>
                 <input
-                  type="number"
+                  type="text"
                   value={downPayment}
-                  onChange={(e) => setDownPayment(e.target.value)}
+                  onChange={(e) => setDownPayment(formatCurrencyInput(e.target.value))}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all text-gray-800 font-medium text-lg"
                   placeholder="R$ 0,00"
                   data-oid="ubem697" />
@@ -166,7 +242,7 @@ function BoxCalculator() {
                   </span>
                   <span className="text-gray-900 font-bold" data-oid=":w8rnkn">
                     {formatCurrency(
-                      parseFloat(vehicleValue) - parseFloat(downPayment)
+                      parseCurrency(vehicleValue) - parseCurrency(downPayment)
                     )}
                   </span>
                 </div>

@@ -1,4 +1,3 @@
-/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { type FC, forwardRef, useEffect, useRef, useState } from "react";
