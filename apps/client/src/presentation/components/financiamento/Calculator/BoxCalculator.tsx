@@ -1,99 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Calculator, Check, Loader2, Search } from "lucide-react";
-
-interface vehicleInfo {
-  modelo: string;
-  cor: string;
-  ano_modelo: string;
-  // valor_fipe: string;
-}
+import { useBoxCalculator } from "@/src/application/core/hooks/useBoxCalculator";
+import { formatCurrencyInput } from "@/src/application/core/utils/currency/currencyMask";
+import { formatCurrency } from "@/src/application/core/utils/currency/formatCurrency";
+import { parseCurrency } from "@/src/application/core/utils/currency/parseCurrency";
 
 function BoxCalculator() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [vehiclePlate, setVehiclePlate] = useState("");
-  const [vehicleInfo, setVehicleInfo] = useState<vehicleInfo>({} as vehicleInfo);
-  const [vehicleValue, setVehicleValue] = useState("");
-  const [downPayment, setDownPayment] = useState("");
-  const [months, setMonths] = useState("48");
-
-  const formatCurrencyInput = (value: string) => {
-    const onlyDigits = value.replace(/\D/g, "");
-
-    const numericValue = Number(onlyDigits) / 100;
-
-    return numericValue.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
-  };
-
-  const parseCurrency = (formatted: string) => {
-    return Number(formatted.replace(/[^\d]/g, "")) / 100;
-  };
-
-  const formatCurrency = (value: number) => { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value); };
-
-  const calculateMonthlyPayment = () => {
-    const principal = parseCurrency(vehicleValue) - parseCurrency(downPayment);
-    const interestRate = 0.015; // 1.5% ao mês (exemplo)
-    const n = parseInt(months);
-
-    if (principal <= 0 || n <= 0) return 0;
-
-    const monthlyPayment =
-    principal * (interestRate * Math.pow(1 + interestRate, n)) / (
-    Math.pow(1 + interestRate, n) - 1);
-    return monthlyPayment;
-  };
-
-  const monthlyPayment = calculateMonthlyPayment();
-
-  useEffect(() => {
-    const handleVeiculeSearch = setTimeout(async () => {
-      if(vehiclePlate.length !== 7) return;
-      if(vehiclePlate.length === 7) setVehicleInfo({} as vehicleInfo);
-
-      const apiToken = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2dhdGV3YXkuYXBpYnJhc2lsLmlvL2FwaS92Mi9hdXRoL3JlZ2lzdGVyIiwiaWF0IjoxNzQwMzE4NjYxLCJleHAiOjE3NzE4NTQ2NjEsIm5iZiI6MTc0MDMxODY2MSwianRpIjoiNTBpUDBMZlRScXRMcjJnNyIsInN1YiI6IjEzOTY3IiwicHJ2IjoiMjNiZDVjODk0OWY2MDBhZGIzOWU3MDFjNDAwODcyZGI3YTU5NzZmNyJ9.dsHtxbpV7o9nANhtEm50YvRtaxYghsNYopwhO8Sr-L4";
-
-      try {
-        setLoading(true);
-        const response = await fetch("https://gateway.apibrasil.io/api/v2/vehicles/base/000/dados", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiToken}`
-          },
-          body: JSON.stringify({ placa: vehiclePlate, homolog: false }),
-          cache: "no-store"
-        })
-        const data = await response.json()
-        if (!data.data || !data.data.MODELO) {
-          setError(true);
-          setVehicleInfo({} as vehicleInfo);
-          return;
-        }
-        setVehicleInfo(prev => ({
-          ...(prev || {}),
-          modelo: data.data.MODELO,
-          cor: data.data.cor,
-          ano_modelo: data.data.ano_modelo,
-          // valor_fipe: data.data.fipe.valor_fipe,
-        }));
-        setError(false);
-      } catch (error) {
-        console.error("Erro na requisição:", error);
-        setError(true);
-        setVehicleInfo({} as vehicleInfo);
-      } finally {
-        setLoading(false);
-      }
-    }, 1500);
-
-    return () => clearTimeout(handleVeiculeSearch);
-  }, [vehiclePlate])
+  const { vehicleInfo, loading, vehiclePlate, setVehiclePlate, error, vehicleValue, setVehicleValue, downPayment, setDownPayment, months, setMonths, monthlyPayment } = useBoxCalculator();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" data-oid="xc5-k:l">
