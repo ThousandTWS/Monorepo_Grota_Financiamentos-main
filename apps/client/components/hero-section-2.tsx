@@ -1,6 +1,7 @@
 import React from 'react';
 import { cn } from "@/src/application/core/lib/utils";
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 //@ts-ignore
 interface HeroSectionProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -74,7 +75,7 @@ const HeroSection = React.forwardRef<HTMLDivElement, HeroSectionProps>(
                  variants={itemVariants}>
                     {logo && (
                         <div className="flex items-center">
-                            <img src={logo.url} alt={logo.alt} className="mr-2 h-20 filter brightness-0 invert" />
+                            <Image src={logo.url} alt={logo.alt} className="mr-2 h-20 filter brightness-0 invert" />
                             <div>
                                 {logo.text && <p className="text-lg font-bold text-white">{logo.text}</p>}
                                 {slogan && <p className="text-xs tracking-wider text-white">{slogan}</p>}
