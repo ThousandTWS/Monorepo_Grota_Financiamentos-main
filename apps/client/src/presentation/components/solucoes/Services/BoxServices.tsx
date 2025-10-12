@@ -3,67 +3,93 @@ import { Car, CreditCard, Shield } from "lucide-react";
 
 function BoxServices() {
   return (
-    <div className="max-w-7xl mx-auto" data-oid="sh7.rpr">
-      <h1
-        className="text-3xl font-bold text-center mb-12 text-gray-800"
-        data-oid="lpjx7i7">
+    <section
+      className="max-w-7xl mx-auto py-20 px-6 text-center"
+      data-oid="grota-services"
+    >
+      <div className="mb-12">
+        <h1
+          className="text-4xl font-extrabold text-[#002B5B] mb-4 tracking-tight"
+          data-oid="grota-title"
+        >
+          Nossas Soluções Financeiras
+        </h1>
 
-        Nossas Soluções
-      </h1>
-      <p
-        className="text-center text-gray-800 text-lg max-w-3xl mx-auto"
-        data-oid="xt96zmt">
+        <p
+          className="text-lg text-gray-600 max-w-3xl mx-auto leading-relaxed"
+          data-oid="grota-subtitle"
+        >
+          A <span className="font-semibold text-[#002B5B]">Grota Financiamentos</span> oferece soluções completas para você adquirir seu
+          veículo com segurança, flexibilidade e total transparência.
+        </p>
+      </div>
 
-        Oferecemos uma gama completa de serviços em financiamento veicular,
-        sempre com foco em qualidade, transparência e satisfação do cliente.
-      </p>
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8"
-        data-oid="6e35dm_">
-
+        className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-10"
+        data-oid="grota-grid"
+      >
+        {/* Financiamento de Veículos */}
         <div
-          className="text-gray-800 flex flex-col gap-y-3 items-center text-center border-gray-300 border rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300 min-h-[200px]"
-          data-oid="k_n2o1-">
-
-          <Car size={48} className="text-[#1B4B7C]" data-oid="lt0y.qx" />
-          <h3 className="font-semibold text-lg" data-oid="ze_na7:">
+          className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+          data-oid="grota-card1"
+        >
+          <div className="flex justify-center mb-4">
+            <Car size={56} className="text-[#002B5B]" data-oid="icon-car" />
+          </div>
+          <h3
+            className="text-xl font-bold text-[#002B5B] mb-3"
+            data-oid="title-car"
+          >
             Financiamento de Veículos
           </h3>
-          <p className="text-sm" data-oid="-9q._y-">
-            Financie carros novos e seminovos com as melhores taxas do mercado e
-            condições personalizadas.
+          <p className="text-gray-600 text-base leading-relaxed" data-oid="desc-car">
+            Financie carros novos ou seminovos com as melhores taxas do mercado
+            e planos personalizados conforme seu perfil.
           </p>
         </div>
+
+        {/* Condições Flexíveis */}
         <div
-          className="text-gray-800 flex flex-col gap-y-3 items-center text-center border-gray-300 border rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300 min-h-[200px]"
-          data-oid="wdz0g_m">
-
-          <CreditCard size={48} className="text-[#1B4B7C]" data-oid="nemq.b:" />
-
-          <h3 className="font-semibold text-lg" data-oid="di9k1jy">
+          className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+          data-oid="grota-card2"
+        >
+          <div className="flex justify-center mb-4">
+            <CreditCard size={56} className="text-[#002B5B]" data-oid="icon-credit" />
+          </div>
+          <h3
+            className="text-xl font-bold text-[#002B5B] mb-3"
+            data-oid="title-credit"
+          >
             Condições Flexíveis
           </h3>
-          <p className="text-sm" data-oid="v57f5hh">
-            Parcelas que cabem no seu bolso com prazos de 12 até 72 meses e
-            entrada facilitada.
+          <p className="text-gray-600 text-base leading-relaxed" data-oid="desc-credit">
+            Parcelas acessíveis e prazos de até 72 meses. Escolha o plano ideal
+            e conquiste seu carro com tranquilidade.
           </p>
         </div>
-        <div
-          className="text-gray-800 flex flex-col gap-y-3 items-center text-center border-gray-300 border rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300 min-h-[200px]"
-          data-oid="iwe.4sa">
 
-          <Shield size={48} className="text-[#1B4B7C]" data-oid="gci0h-h" />
-          <h3 className="font-semibold text-lg" data-oid="tn4:424">
+        {/* Segurança e Transparência */}
+        <div
+          className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-1"
+          data-oid="grota-card3"
+        >
+          <div className="flex justify-center mb-4">
+            <Shield size={56} className="text-[#002B5B]" data-oid="icon-shield" />
+          </div>
+          <h3
+            className="text-xl font-bold text-[#002B5B] mb-3"
+            data-oid="title-shield"
+          >
             Segurança e Transparência
           </h3>
-          <p className="text-sm" data-oid=".jbmpft">
-            Processo 100% seguro com contratos claros e total transparência nas
-            condições.
+          <p className="text-gray-600 text-base leading-relaxed" data-oid="desc-shield">
+            Trabalhamos com total clareza em cada etapa do processo, garantindo
+            confiança e segurança em todas as suas negociações.
           </p>
         </div>
       </div>
-    </div>);
-
+    </section>
+  );
 }
 
 export default BoxServices;

@@ -31,7 +31,7 @@ function BoxHero() {
           data-oid="4pxdivb">
 
           Soluções Completas{" "}
-          <span className="text-blue-300 block" data-oid="dgp_q:v">
+          <span className="text-white block" data-oid="dgp_q:v">
             em Financiamento
           </span>
         </h1>
@@ -51,13 +51,7 @@ function BoxHero() {
             className="bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
             data-oid=":qqus:s">
 
-            Conhecer Soluções
-          </button>
-          <button
-            className="border-2 border-white/30 text-white hover:bg-white/10 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 backdrop-blur-sm"
-            data-oid="9do.d:2">
-
-            Falar com Especialista
+             Falar com Especialista
           </button>
         </div>
       </div>

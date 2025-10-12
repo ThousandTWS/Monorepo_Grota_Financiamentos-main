@@ -32,7 +32,7 @@ function BoxHero() {
           data-oid="kjmi6q7">
 
           Financiamento{" "}
-          <span className="text-blue-300 block" data-oid="cxxs08p">
+          <span className="text-white block" data-oid="cxxs08p">
             Sob Medida para Você
           </span>
         </h1>
@@ -52,14 +52,9 @@ function BoxHero() {
             className="bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
             data-oid="0kf6yrt">
 
-            Simular Financiamento
+           Falar com Especialista
           </button>
-          <button
-            className="border-2 border-white/30 text-white hover:bg-white/10 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 backdrop-blur-sm"
-            data-oid="yk96jh-">
-
-            Falar com Especialista
-          </button>
+          
         </div>
       </div>
     </section>);

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function BoxHero() {
@@ -31,8 +32,8 @@ function BoxHero() {
           className="text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight"
           data-oid="e2rxw22">
 
-          Blog{" "}
-          <span className="text-blue-300 block" data-oid="p0tdesd">
+          Blog
+          <span className="text-white block" data-oid="p0tdesd">
             Grota Financiamentos
           </span>
         </h1>
@@ -47,18 +48,20 @@ function BoxHero() {
           className="flex flex-col sm:flex-row gap-6 justify-center"
           data-oid="1.r0z90">
 
-          <button
+          <Link
+          href="/blog/artigo"
             className="bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
             data-oid="_jeya57">
 
             Ver Últimos Posts
-          </button>
-          <button
+          </Link>
+          <Link
+          href="/blog/categoria"
             className="border-2 border-white/30 text-white hover:bg-white/10 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 backdrop-blur-sm"
             data-oid="mnu1oc9">
 
             Categorias
-          </button>
+          </Link>
         </div>
       </div>
     </section>);
