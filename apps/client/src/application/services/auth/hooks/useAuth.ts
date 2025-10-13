@@ -6,6 +6,8 @@ export function useAuth() {
   const [error, setError] = useState<string | null>(null);
   const authService = new MockAuthService();
 
+
+
   const signIn = async (credentials: AuthCredentials): Promise<AuthResult> => {
     setIsLoading(true);
     setError(null);
@@ -16,6 +18,7 @@ export function useAuth() {
         setError(result.message);
       }
       return result;
+
     } catch (err) {
       const errorMessage = 'Erro de conexão. Tente novamente.';
       setError(errorMessage);

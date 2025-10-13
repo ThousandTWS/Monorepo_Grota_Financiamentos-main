@@ -15,13 +15,13 @@ import { StatusBadge } from "./status-badge";
 
 export type Logista = {
   id: string;
-  nome: string;
+  fullName: string;
   cpf: string;
   cnpj: string;
   email: string;
-  telefone: string;
+  phone: string;
   status: "ativo" | "inativo" | "pendente";
-  dataRegistro: string;
+  createdAt: string;
   comissaoTotal: number;
 };
 
@@ -79,11 +79,11 @@ export const getLogistaColumns = (actions: {
   onDelete: (logista: Logista) => void;
 }) => [
     {
-      key: "nome",
+      key: "fullName",
       header: "Nome",
       cell: (logista: Logista) =>
         <div className="font-medium" data-oid="prv:wgx">
-          {logista.nome}
+          {logista.fullName}
         </div>
 
     },
@@ -118,7 +118,7 @@ export const getLogistaColumns = (actions: {
       header: "Telefone",
       cell: (logista: Logista) =>
         <div className="text-muted-foreground" data-oid="ao67jhu">
-          {logista.telefone}
+          {logista.phone}
         </div>
 
     },
@@ -149,7 +149,7 @@ export const getLogistaColumns = (actions: {
       header: "Data de Registro",
       cell: (logista: Logista) =>
         <div className="text-muted-foreground" data-oid=":_wr2bt">
-          {new Date(logista.dataRegistro).toLocaleDateString("pt-BR")}
+          {new Date(logista.createdAt).toLocaleDateString("pt-BR")}
         </div>
 
     },

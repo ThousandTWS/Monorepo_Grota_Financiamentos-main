@@ -47,7 +47,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
   // Filtrar dados
   const filteredData = data.filter((logista) => {
     const matchesSearch =
-    logista.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    logista.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     logista.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     logista.cpf.includes(searchTerm);
 
@@ -109,7 +109,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
       onUpdate([...data, newLogista]);
       toast({
         title: "Logista criado!",
-        description: `${logista.nome} foi adicionado com sucesso.`
+        description: `${logista.fullName} foi adicionado com sucesso.`
       });
     } else if (dialogMode === "edit") {
       // Atualizar logista existente
@@ -119,7 +119,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
       onUpdate(updatedData);
       toast({
         title: "Logista atualizado!",
-        description: `As informações de ${logista.nome} foram atualizadas.`
+        description: `As informações de ${logista.fullName} foram atualizadas.`
       });
     }
   };
@@ -130,7 +130,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
       onUpdate(updatedData);
       toast({
         title: "Logista excluído!",
-        description: `${selectedLogista.nome} foi removido do sistema.`,
+        description: `${selectedLogista.fullName} foi removido do sistema.`,
         variant: "destructive"
       });
       setDeleteDialogOpen(false);

@@ -1,7 +1,4 @@
-import { use } from "react";
 import api from "../api";
-import { NextResponse } from "next/server";
-import { cookies } from 'next/headers';
 
 export interface AuthCredentials {
   email: string;
@@ -24,17 +21,18 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      const { data } = await api.post("/auth/login",{ email, password });
+      const { data } = await api.post("/auth/login", { email, password });
       return {
         success: true,
         message: "Login realizado com sucesso!",
-        token: data.token,
-      }
-    } catch (error: any) {
+      };
+    } 
+    catch (error: any) {
       console.error("Erro no login:", error.message);
       return {
         success: false,
-        message: error.response?.data?.message || "Erro no servidor. Tente novamente."
+        message:
+          error.response?.data?.message || "Erro no servidor. Tente novamente.",
       };
     }
   }

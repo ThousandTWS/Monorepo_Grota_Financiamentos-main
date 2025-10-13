@@ -35,7 +35,7 @@ export function DeleteDialog({
           <AlertDialogDescription data-oid="eure4p7">
             Tem certeza que deseja excluir o logista{" "}
             <span className="font-semibold text-foreground" data-oid="k3-m1c7">
-              {logista?.nome}
+              {logista?.fullName}
             </span>
             ? Esta ação não pode ser desfeita.
           </AlertDialogDescription>

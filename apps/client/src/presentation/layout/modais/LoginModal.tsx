@@ -3,6 +3,16 @@
 import { useState } from "react";
 import { X, User, Lock, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const loginSchema = z.object({
+  email: z.string(),
+  password: z.string()
+});
+
+type LoginForm = z.infer<typeof loginSchema>
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -10,26 +20,32 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const { signIn, isLoading, error, clearError} = useAuth();
   const [success, setSuccess] = useState("");
-  const { signIn, isLoading, error, clearError } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+
+  const{
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema)
+  })
+
+  const onSubmit = async (data: LoginForm) => {
     clearError();
     setSuccess("");
     
-    if (!email || !password) {
+    if (!data.email || !data.password) {
       return;
     }
 
-    const result = await signIn({ email, password });
+    const result = await signIn(data);
     if (result.success) {
       setSuccess(result.message);
       setTimeout(() => {
         onClose();
-        window.location.href = "/dashboard";
+        //window.location.href = "/dashboard";
       }, 1500);
     }
   };
@@ -65,20 +81,22 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  {...register("email")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="seu@email.com"
                   required
                   disabled={isLoading}
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
+                )}
               </div>
             </div>
             
@@ -88,13 +106,15 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  {...register("password")}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
                   placeholder="••••••••"
                   required
                   disabled={isLoading}
                 />
+                {errors.password && (
+                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
+              )}
               </div>
             </div>
             

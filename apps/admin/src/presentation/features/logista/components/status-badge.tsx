@@ -29,24 +29,25 @@ export function StatusBadge({ status }: StatusBadgeProps) {
     }
   };
 
-  const config = statusConfig[status];
+  const normalizedStatus = status.toLowerCase() as keyof typeof statusConfig;
+  const config = statusConfig[normalizedStatus];
 
   return (
     <span
       className={cn(
         "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md cursor-default",
-        config.className
+        config?.className
       )}
       data-oid="jlxffql">
 
       <span
-        className={cn("relative flex size-2 rounded-full", config.dotClassName)}
+        className={cn("relative flex size-2 rounded-full", config?.dotClassName)}
         data-oid="dtuiar2">
 
         <span
           className={cn(
             "absolute inline-flex h-full w-full rounded-full opacity-75 animate-ping",
-            config.dotClassName
+            config?.dotClassName
           )}
           data-oid="zrxzuad" />
 
@@ -54,12 +55,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
         <span
           className={cn(
             "relative inline-flex size-2 rounded-full shadow-sm",
-            config.dotClassName
+            config?.dotClassName
           )}
           data-oid="toov2_7" />
 
       </span>
-      {config.label}
+      {config?.label}
     </span>
     );
 

@@ -4,9 +4,34 @@ import Link from "next/link";
 import React, { useState } from "react";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
+import { useEffect } from "react";
+import userServices from "../../services/UserServices";
+
 
 export default function UserDropdown() {
+  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    async function fetchUserName() {
+      try {
+        const userData = await userServices.me();
+        console.log("Aquiiii", userData)
+        if (userData && userData.fullName) {
+          setUserName(userData.fullName);
+          setEmail(userData.email);
+        } else {
+          setUserName('Usuário');
+        }
+      } catch (error) {
+        console.error("Erro ao buscar dados do usuário:", error);
+        setUserName('Erro ao carregar'); 
+      }
+    }
+
+    fetchUserName();
+  }, []);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -31,7 +56,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
           />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">user name</span>
+        <span className="block mr-1 font-medium text-theme-sm">{userName}</span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -60,10 +85,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            user name
+            {userName}
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            user email
+            {email}
           </span>
         </div>
 
