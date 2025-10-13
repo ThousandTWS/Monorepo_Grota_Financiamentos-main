@@ -1,12 +1,12 @@
 "use client";
-import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
-import NotificationDropdown from "@/components/header/NotificationDropdown";
-import UserDropdown from "@/components/header/UserDropdown";
-import { Input } from "@/components/ui/input";
-import { useSidebar } from "@/presentation/context/SidebarContext";
+import { ThemeToggleButton } from "@/presentation/layout/common/ThemeToggleButton";
+import NotificationDropdown from "@/presentation/layout/header/components/NotificationDropdown";
+import UserDropdown from "@/presentation/layout/header/components/UserDropdown";
+import { useSidebar } from "@/application/core/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
+import { Input } from "@/presentation/ui/input";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);

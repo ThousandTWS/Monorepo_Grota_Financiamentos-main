@@ -1,4 +1,4 @@
-import { useSidebar } from "@/presentation/context/SidebarContext";
+import { useSidebar } from "@/application/core/context/SidebarContext";
 import React from "react";
 
 const Backdrop: React.FC = () => {

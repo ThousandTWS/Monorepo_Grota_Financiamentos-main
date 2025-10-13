@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { DataTable } from "./components/data-table";
 import { Logista } from "./components/columns";
-import { getAllLogistics } from "@/service/logisticService";
+import { getAllLogistics } from "@/application/services/Logista/logisticService";
 
 export default function LogistasFeature() {
   const [logistas, setLogistas] = useState<Logista[]>([]);

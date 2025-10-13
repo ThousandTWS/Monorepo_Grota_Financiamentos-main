@@ -1,4 +1,4 @@
-import { NavItem } from "../types";
+import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
 import {  Calculator, Car, ChartBar, DollarSign, Users } from "lucide-react";
 
 export const navItems: NavItem[] = [

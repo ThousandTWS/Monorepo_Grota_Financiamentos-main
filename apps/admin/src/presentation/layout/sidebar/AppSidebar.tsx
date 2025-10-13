@@ -3,14 +3,14 @@ import React, { useEffect, useRef, useState,useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSidebar } from "../../context/SidebarContext";
-import { useTheme } from "@/presentation/context/ThemeContext";
-import { NavItem } from "./types";
+import { useSidebar } from "../../../application/core/context/SidebarContext";
+import { useTheme } from "@/application/core/context/ThemeContext";
 import { ChevronDownIcon, LucideGripHorizontal } from "lucide-react";
 import { navItems } from "./links/NavItem";
 import { othersItems } from "./links/OthersItems";
+import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
 
-const AppSidebar: React.FC = () => {
+const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const { theme } = useTheme()

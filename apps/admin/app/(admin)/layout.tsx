@@ -1,5 +1,5 @@
 "use client";
-import { useSidebar } from "@/presentation/context/SidebarContext";
+import { useSidebar } from "@/application/core/context/SidebarContext";
 import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
@@ -22,8 +22,6 @@ export default function AdminLayout({
     <div className="min-h-screen xl:flex">
       <AppSidebar />
       <Backdrop />
-
-
       <div
         className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}
       >

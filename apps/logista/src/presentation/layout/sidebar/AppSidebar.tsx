@@ -1,109 +1,17 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useSidebar } from "../../context/SidebarContext";
-import { Calculator, Car, ChartBar, ChevronDownIcon, DollarSign, Lightbulb, LucideGripHorizontal, PersonStanding, Settings, Users } from "lucide-react";
-import { useTheme } from "@/presentation/context/ThemeContext";
+import { useSidebar } from "../../../application/core/context/SidebarContext";
+import { ChevronDownIcon, LucideGripHorizontal } from "lucide-react";
+import { useTheme } from "@/application/core/context/ThemeContext";
+import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
+import { navItems } from "./links/NavItems";
+import { othersItems } from "./links/OthersItems";
 
-type NavItem = {
-  name: string;
-  icon: React.ReactNode;
-  path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
-};
-
-const navItems: NavItem[] = [
-  {
-    icon: <ChartBar />,
-    name: "Dashboard",
-    subItems: [{ name: "Visao Geral", path: "/visao-geral", pro: false }, { name: "Relatorios", path: "/", pro: false }],
-  },
-  {
-    icon: <DollarSign />,
-    name: "Gestão Clientes",
-    subItems: [
-      {
-        name: "Cadastrar Clientes",
-        path: "/",
-        pro: false
-      },
-      {
-        name: "Listar Clientes",
-        path: "/",
-        pro: false
-      },
-    ],
-  },
-  {
-    name: "Gestao Veículos",
-    icon: <Car />,
-    subItems: [
-      {
-        name: "Cadastrar Veículos",
-        path: "/",
-        pro: false
-      },
-      {
-        name: "Listar Veículos",
-        path: "/",
-        pro: false
-      },
-
-
-
-    ],
-  },
-  {
-    name: "Gestão de Propostas",
-    icon: <Users />,
-    subItems: [
-      {
-        name: "Enviar Propostas",
-        path: "/",
-        pro: false
-      },
-      {
-        name: "Documentos",
-        path: "/",
-        pro: false
-      }
-    ],
-  },
-  {
-    name: "Financiamento",
-    icon: <Calculator />,
-    subItems: [
-      { name: "Simulação", path: "/simulacao", pro: false },
-    ],
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <Settings />,
-    name: "Configurações",
-    path: "/configuracoes",
-  },
-  {
-    icon: <Lightbulb />,
-    name: "Dicas & Tutoriais",
-    subItems: [
-      { name: "Introdução", path: "/", pro: false },
-      { name: "Guia de Funções", path: "/", pro: false },
-      { name: "Personalização", path: "/", pro: false },
-      { name: "Ajuda", path: "/", pro: false },
-    ],
-  },
-  {
-    icon: <PersonStanding />,
-    name: "Acessibilidade",
-    path: "/",
-  },
-];
-
-const AppSidebar: React.FC = () => {
+const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const { theme } = useTheme()
@@ -234,16 +142,15 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => path === pathname;
   const isActive = useCallback((path: string) => path === pathname, [pathname]);
 
   useEffect(() => {
-    // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
       const items = menuType === "main" ? navItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
+          //@ts-ignore
           nav.subItems.forEach((subItem) => {
             if (isActive(subItem.path)) {
               setOpenSubmenu({
@@ -264,7 +171,6 @@ const AppSidebar: React.FC = () => {
   }, [pathname, isActive]);
 
   useEffect(() => {
-    // Set the height of the submenu items when the submenu is opened
     if (openSubmenu !== null) {
       const key = `${openSubmenu.type}-${openSubmenu.index}`;
       if (subMenuRefs.current[key]) {

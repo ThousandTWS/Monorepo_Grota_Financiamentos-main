@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@/presentation/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/presentation/ui/card";
+import { Input } from "@/presentation/ui/input";
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 
 function ConfiguracoesPage() {
   return (

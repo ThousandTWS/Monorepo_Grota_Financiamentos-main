@@ -1,15 +1,15 @@
 "use client";
-import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
-import NotificationDropdown from "@/components/header/NotificationDropdown";
-import UserDropdown from "@/components/header/UserDropdown";
+import { ThemeToggleButton } from "@/presentation/layout/common/ThemeToggleButton";
+import NotificationDropdown from "@/presentation/layout/header/components/NotificationDropdown";
+import UserDropdown from "@/presentation/layout/header/components/UserDropdown";
 
-import { GlobalSearch } from "@/presentation/context/GlobalSearch";
-import { useSidebar } from "@/presentation/context/SidebarContext";
+import { GlobalSearch } from "@/application/core/context/GlobalSearch";
+import { useSidebar } from "@/application/core/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
 
-const AppHeader: React.FC = () => {
+const AppHeader = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();

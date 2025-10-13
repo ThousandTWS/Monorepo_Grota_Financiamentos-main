@@ -1,0 +1,1 @@
+Aqui vou esta listando todas as funcionalidads do modulo de auth do adm

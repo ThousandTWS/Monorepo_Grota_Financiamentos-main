@@ -9,7 +9,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle } from
-"@/components/ui/alert-dialog";
+"@/presentation/layout/components/ui/alert-dialog";
 import { Logista } from "./columns";
 
 interface DeleteDialogProps {

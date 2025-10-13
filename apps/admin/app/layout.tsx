@@ -1,8 +1,8 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
-import { SidebarProvider } from "@/presentation/context/SidebarContext";
-import { ThemeProvider } from "@/presentation/context/ThemeContext";
+import { SidebarProvider } from "@/application/core/context/SidebarContext";
+import { ThemeProvider } from "@/application/core/context/ThemeContext";
 import { Metadata } from "next";
 
 const outfit = Outfit({

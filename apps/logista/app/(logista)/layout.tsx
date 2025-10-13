@@ -1,10 +1,10 @@
 "use client";
 
-import { useSidebar } from "@/presentation/context/SidebarContext";
+import React from "react";
+import { useSidebar } from "@/application/core/context/SidebarContext";
 import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
-import React from "react";
 
 export default function AdminLayout({
   children,

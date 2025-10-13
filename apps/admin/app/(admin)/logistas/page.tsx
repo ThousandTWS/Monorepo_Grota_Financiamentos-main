@@ -6,7 +6,7 @@ import {
     CardHeader,
     CardTitle
 } from
-    "@/components/ui/card";
+    "@/presentation/layout/components/ui/card";
 
 export default function LogistasPage() {
     return (

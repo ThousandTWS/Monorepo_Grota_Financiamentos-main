@@ -9,10 +9,10 @@ import {
   DialogHeader,
   DialogTitle
 } from
-  "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+  "@/presentation/layout/components/ui/dialog";
+import { Input } from "@/presentation/layout/components/ui/input";
+import { Label } from "@/presentation/layout/components/ui/label";
+import { Button } from "@/presentation/layout/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue
 } from
-  "@/components/ui/select";
+  "@/presentation/layout/components/ui/select";
 import { Logista } from "./columns";
 
 interface LogistaDialogProps {

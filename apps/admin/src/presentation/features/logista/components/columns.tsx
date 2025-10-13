@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/presentation/layout/components/ui/button";
 import { MoreHorizontal, Pencil, Trash2, Eye, } from "lucide-react";
 import {
   DropdownMenu,
@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from
-  "@/components/ui/dropdown-menu";
+  "@/presentation/layout/components/ui/dropdown-menu";
 import { StatusBadge } from "./status-badge";
 
 export type Logista = {

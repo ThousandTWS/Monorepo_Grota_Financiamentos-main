@@ -8,9 +8,9 @@ import {
   TableHead,
   TableHeader,
   TableRow } from
-"@/components/ui/table";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+"@/presentation/layout/components/ui/table";
+import { Input } from "@/presentation/layout/components/ui/input";
+import { Button } from "@/presentation/layout/components/ui/button";
 import { Search, Plus, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
@@ -19,10 +19,10 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue } from
-"@/components/ui/select";
+"@/presentation/layout/components/ui/select";
 import { LogistaDialog } from "./logista-dialog";
 import { DeleteDialog } from "./delete-dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/application/core/hooks/use-toast";
 
 interface DataTableProps {
   data: Logista[];

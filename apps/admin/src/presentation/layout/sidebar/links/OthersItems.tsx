@@ -1,5 +1,6 @@
+import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
 import { Lightbulb, PersonStanding, Settings } from "lucide-react";
-import { NavItem } from "../types";
+
 
 export const othersItems: NavItem[] = [
   {
