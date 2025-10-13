@@ -15,6 +15,8 @@ import BoxBenefits from "@/src/presentation/components/financiamento/Benefits/Bo
 import BoxCalculator from "@/src/presentation/components/financiamento/Calculator/BoxCalculator";
 import BoxHero from "@/src/presentation/components/financiamento/Hero/Boxhero";
 import BoxProcess from "@/src/presentation/components/financiamento/Process/BoxProcess";
+import TestimonialSlider from "@/components/testimonial-slider";
+import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
 
 
 function Financiamento() {
@@ -72,8 +74,10 @@ function Financiamento() {
           <BoxProcess data-oid=":iqeih0" />
         </section>
 
+        <TestimonialSlider/>
+        <FaqSection/>
         <section
-          className="py-16 md:py-20 bg-gradient-to-br from-[#1B4B7C] to-[#153a5f]"
+          className="py-16 mt-10 mb-10 mr-10 ml-10 rounded-2xl md:py-20 bg-gradient-to-br from-[#1B4B7C] to-[#153a5f]"
           data-oid="se8yfv5">
 
           <div
@@ -102,12 +106,6 @@ function Financiamento() {
                 data-oid="4riqpwn">
 
                 Falar com Especialista
-              </button>
-              <button
-                className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 backdrop-blur-sm"
-                data-oid="68642o3">
-
-                Ver Veículos Disponíveis
               </button>
             </div>
           </div>

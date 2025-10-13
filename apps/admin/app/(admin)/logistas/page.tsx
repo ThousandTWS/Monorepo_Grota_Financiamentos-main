@@ -15,7 +15,7 @@ export default function LogistasPage() {
                 <h1 className="text-3xl font-bold tracking-tight" data-oid=":n:ayd-">
                     Gerencie os logistas cadastrados no sistema
                 </h1>
-               
+
             </div>
 
             <Card data-oid="m7kc9vb">
