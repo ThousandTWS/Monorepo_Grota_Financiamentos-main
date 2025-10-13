@@ -57,13 +57,11 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
     return matchesSearch && matchesStatus;
   });
 
-  // Paginação
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedData = filteredData.slice(startIndex, endIndex);
 
-  // Resetar para primeira página quando filtros mudarem
   const handleSearchChange = (value: string) => {
     setSearchTerm(value);
     setCurrentPage(1);
