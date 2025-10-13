@@ -36,7 +36,6 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Estados para modais
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLogista, setSelectedLogista] = useState<Logista | null>(null);
@@ -44,7 +43,6 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
     "view"
   );
 
-  // Filtrar dados
   const filteredData = data.filter((logista) => {
     const matchesSearch =
     logista.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
