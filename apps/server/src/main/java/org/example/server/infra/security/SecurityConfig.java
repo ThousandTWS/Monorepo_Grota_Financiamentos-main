@@ -36,20 +36,24 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable()) // libera uso de frames (necessário p/ console H2)
                 )
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/logistics").permitAll()
-
-
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
-                        .requestMatchers(HttpMethod.PUT,"/api/v1/grota-financiamentos/auth/verify").permitAll()
-
-                        .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().permitAll()  //authenticated()
-                )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        // Rotas Abertas (Não exigem Token)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/forgot-password").permitAll()
+                        .requestMatchers(HttpMethod.PUT,"/api/v1/grota-financiamentos/auth/verify-code").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/logistics").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
+
+                        // Rotas Protegidas (Exigem Token)
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/auth/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
+
+                        .requestMatchers("/h2-console/**").permitAll()
+                        .anyRequest().authenticated()  //authenticated()
+                )
                 .httpBasic(Customizer.withDefaults());
 
         return http.build();

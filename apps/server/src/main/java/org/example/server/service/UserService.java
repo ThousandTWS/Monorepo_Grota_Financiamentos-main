@@ -53,7 +53,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public AuthResponseDTO login(AuthRequest request) {
+    public String login(AuthRequest request) {
         manager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
@@ -64,8 +64,7 @@ public class UserService {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
 
-        var jwt = jwtService.generateToken(user);
-        return new AuthResponseDTO(jwt);
+        return jwtService.generateToken(user);
     }
 
     public void verifiUser(VerificationCodeRequestDTO verificationCodeRequestDTO) {
@@ -75,7 +74,7 @@ public class UserService {
         if (user.isVerified() == UserVerificationStatus.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
         }
-        if (user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {
+        if (!user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {
             throw new InvalidVerificationCodeException("Código invádo ou expirado");
         }
 

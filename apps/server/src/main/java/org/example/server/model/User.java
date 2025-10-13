@@ -1,5 +1,6 @@
 package org.example.server.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import org.example.server.enums.UserVerificationStatus;
 import org.springframework.security.core.GrantedAuthority;
@@ -32,6 +33,7 @@ public class User implements UserDetails {
     private LocalDateTime resetCodeExpiration; // Expiração de reset
 
     @Column(name = "created_at", updatable = false, nullable = false)
+    @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
@@ -137,8 +139,6 @@ public class User implements UserDetails {
     public void setLogistic(Logistic logistic) {
         this.logistic = logistic;
     }
-
-
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

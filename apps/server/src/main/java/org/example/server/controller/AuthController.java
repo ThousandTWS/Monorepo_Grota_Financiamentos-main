@@ -5,15 +5,27 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.example.server.dto.Api_Response;
+import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
+import org.example.server.dto.logistic.LogisticResponseDTO;
+import org.example.server.model.Logistic;
+import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
+import org.example.server.service.UserDetailsServiceImp;
 import org.example.server.service.UserService;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
@@ -44,8 +56,38 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public AuthResponseDTO login(@RequestBody @Valid AuthRequest request){
-       return userService.login(request);
+    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request){
+        String token = userService.login(request);
+
+        ResponseCookie cookie = ResponseCookie.from("access_token", token)
+                .httpOnly(true)
+                .secure(false) // <--- DEVE SER FALSE PARA HTTP/LOCALHOST
+                .sameSite("Lax")
+                .domain(".meusite.local")
+                .path("/")
+                .maxAge(Duration.ofHours(1))
+                .build();
+        return
+                ResponseEntity
+                        .ok()
+                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                        .body(Map.of("Message", "Login realizado com sucesso"));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
+        if (user == null){
+            return ResponseEntity.status(401).build();
+        }
+
+        UserResponseDTO userResponseDTO = new UserResponseDTO(
+                user.getId(),
+                user.getEmail(),
+                user.getLogistic().getFullName()
+        );
+
+        return ResponseEntity.ok(userResponseDTO);
+
     }
 
     @PutMapping("/verify-code")
