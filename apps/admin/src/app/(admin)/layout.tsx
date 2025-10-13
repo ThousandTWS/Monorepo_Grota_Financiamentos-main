@@ -1,11 +1,10 @@
 "use client";
-
 import { useSidebar } from "@/presentation/context/SidebarContext";
 import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
 import React from "react";
-import NextTopLoader from 'nextjs-toploader'; // import do NextTopLoader
+
 
 export default function AdminLayout({
   children,
@@ -17,29 +16,20 @@ export default function AdminLayout({
   const mainContentMargin = isMobileOpen
     ? "ml-0"
     : isExpanded || isHovered
-    ? "lg:ml-[290px]"
-    : "lg:ml-[90px]";
+      ? "lg:ml-[290px]"
+      : "lg:ml-[90px]";
 
   return (
     <div className="min-h-screen xl:flex">
-      {/* Barra de carregamento no topo */}
-      <NextTopLoader 
-        color="#f97316"  
-        showSpinner={false} 
-      />
-
-      {/* Sidebar and Backdrop */}
       <AppSidebar />
       <Backdrop />
-      
-      {/* Main Content Area */}
+
+
       <div
         className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}
       >
-        {/* Header */}
         <AppHeader />
 
-        {/* Page Content */}
         <div className="p-4 mx-auto max-w-[var(--breakpoint-2xl)] md:p-6">
           {children}
         </div>

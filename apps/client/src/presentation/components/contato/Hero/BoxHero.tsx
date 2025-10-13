@@ -29,10 +29,9 @@ function BoxHero() {
         <h1
           className="text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight"
           data-oid="co:yg9:">
-
-          Fale{" "}
+          
           <span className="text-blue-300 block" data-oid="l8a6ph_">
-            Conosco
+            Conosco Fale
           </span>
         </h1>
         <p

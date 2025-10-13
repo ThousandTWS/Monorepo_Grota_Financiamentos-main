@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import React from "react";
 
-
 export const metadata: Metadata = {
   title: "Painel Administrativo | Grota - Gestão de Financiamentos de Veículos",
   description: "Painel de administração da Grota para gerenciar financiamentos, clientes, veículos e aprovações de forma eficiente.",

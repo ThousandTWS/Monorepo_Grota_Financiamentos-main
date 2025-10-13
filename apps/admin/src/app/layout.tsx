@@ -3,10 +3,17 @@ import "./globals.css";
 
 import { SidebarProvider } from "@/presentation/context/SidebarContext";
 import { ThemeProvider } from "@/presentation/context/ThemeContext";
+import { Metadata } from "next";
 
 const outfit = Outfit({
   subsets: ["latin"],
 });
+
+export const metadata: Metadata = {
+  title: "Painel Administrativo | Grota - Gestão de Financiamentos de Veículos",
+  description: "Painel de administração da Grota para gerenciar financiamentos, clientes, veículos e aprovações de forma eficiente.",
+};
+
 
 export default function RootLayout({
   children,
