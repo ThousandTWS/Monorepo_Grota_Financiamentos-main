@@ -56,6 +56,7 @@ export default function Sobre() {
               url: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759322731/Artboard_2_copy_10_w5ob1u.svg",
               alt: "Grota Financiamentos Logo",
               text: "Grota Financiamentos",
+             
             }}
             slogan="SOLUÇÕES FINANCEIRAS ÁGEIS E SEGURAS"
             title={
