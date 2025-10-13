@@ -76,10 +76,8 @@ function Financiamento() {
 
         <TestimonialSlider/>
         <FaqSection/>
-          
-
         <section
-          className="py-16 md:py-20 bg-gradient-to-br from-[#1B4B7C] to-[#153a5f]"
+          className="py-16 mt-10 mb-10 mr-10 ml-10 rounded-2xl md:py-20 bg-gradient-to-br from-[#1B4B7C] to-[#153a5f]"
           data-oid="se8yfv5">
 
           <div
