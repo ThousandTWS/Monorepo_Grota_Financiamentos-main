@@ -5,7 +5,6 @@ import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
 import React from "react";
 
-
 export default function AdminLayout({
   children,
 }: {
