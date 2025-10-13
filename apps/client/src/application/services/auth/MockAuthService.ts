@@ -1,9 +1,4 @@
 import api from "../api";
-<<<<<<< HEAD
-=======
-
-
->>>>>>> 6f13521c5710d5be568fd912673f0edaaf35977c
 
 export interface AuthCredentials {
   email: string;

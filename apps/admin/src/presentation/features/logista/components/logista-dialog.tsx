@@ -40,13 +40,13 @@ export function LogistaDialog({
 }: LogistaDialogProps) {
   const [formData, setFormData] = useState<Logista>({
     id: "",
-    nome: "",
+    fullName: "",
     cpf: "",
     cnpj: "",
     email: "",
-    telefone: "",
+    phone: "",
     status: "ativo",
-    dataRegistro: new Date().toISOString().split("T")[0],
+    createdAt: new Date().toISOString().split("T")[0],
     comissaoTotal: 0
   });
 
@@ -56,13 +56,13 @@ export function LogistaDialog({
     } else {
       setFormData({
         id: "",
-        nome: "",
+        fullName: "",
         cpf: "",
         cnpj: "",
         email: "",
-        telefone: "",
+        phone: "",
         status: "ativo",
-        dataRegistro: new Date().toISOString().split("T")[0],
+        createdAt: new Date().toISOString().split("T")[0],
         comissaoTotal: 0
       });
     }
@@ -125,9 +125,9 @@ export function LogistaDialog({
                 </Label>
                 <Input
                   id="nome"
-                  value={formData.nome}
+                  value={formData.fullName}
                   onChange={(e) =>
-                    setFormData({ ...formData, nome: e.target.value })
+                    setFormData({ ...formData, fullName: e.target.value })
                   }
                   placeholder="João Silva Santos"
                   disabled={isReadOnly}
@@ -200,9 +200,9 @@ export function LogistaDialog({
                 </Label>
                 <Input
                   id="telefone"
-                  value={formData.telefone}
+                  value={formData.phone}
                   onChange={(e) =>
-                    setFormData({ ...formData, telefone: e.target.value })
+                    setFormData({ ...formData, phone: e.target.value })
                   }
                   placeholder="(11) 98765-4321"
                   disabled={isReadOnly}
@@ -252,9 +252,9 @@ export function LogistaDialog({
                 <Input
                   id="dataRegistro"
                   type="date"
-                  value={formData.dataRegistro}
+                  value={formData.createdAt}
                   onChange={(e) =>
-                    setFormData({ ...formData, dataRegistro: e.target.value })
+                    setFormData({ ...formData, createdAt: e.target.value })
                   }
                   disabled={isReadOnly}
                   required
