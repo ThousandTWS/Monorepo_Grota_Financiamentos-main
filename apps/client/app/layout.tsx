@@ -8,8 +8,10 @@ import CookieProvider from "@/src/presentation/components/providers/CookieProvid
 
 const inter = Inter({ subsets: ["latin"] }); 
 
+
 export const metadata: Metadata = {
-  title: "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
+  title:
+    "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
   description:
     "A Grota Financiamentos conecta pessoas às melhores oportunidades de crédito, financiamento e investimentos. Rapidez, transparência e tecnologia para transformar seus planos em realidade.",
   keywords: [
@@ -24,9 +26,14 @@ export const metadata: Metadata = {
     "simulação de crédito",
     "taxas de juros baixas",
   ],
-  authors: [{ name: "Grota Financiamentos" }],
+  authors: [{ name: "Grota Financiamentos", url: "https://grotafinanciamentos.com.br" }],
+  creator: "Grota Financiamentos",
+  publisher: "Grota Financiamentos",
+  metadataBase: new URL("https://grotafinanciamentos.com.br"),
+
   openGraph: {
-    title: "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
+    title:
+      "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
     description:
       "Transforme seus planos em realidade com a Grota Financiamentos. Crédito rápido, fácil e transparente.",
     url: "https://grotafinanciamentos.com.br",
@@ -42,17 +49,45 @@ export const metadata: Metadata = {
       },
     ],
   },
+
   twitter: {
     card: "summary_large_image",
-    title: "Grota Financiamentos",
-    description:
-      "Soluções modernas em crédito e investimentos com a Grota Financiamentos.",
+    site: "@grotafinanciamentos",
     creator: "@grotafinanciamentos",
+    title: "Grota Financiamentos | Crédito e Investimentos Inteligentes",
+    description:
+      "Soluções modernas e rápidas em crédito e investimentos com a Grota Financiamentos.",
     images: [
       "https://res.cloudinary.com/dx1659yxu/image/upload/v1760450462/ChatGPT_Image_14_de_out._de_2025_10_59_26_tdmlaf.png",
     ],
   },
+
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+
+  alternates: {
+    canonical: "https://grotafinanciamentos.com.br",
+  },
+
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
+
+  category: "Finanças e Crédito",
+  applicationName: "Grota Financiamentos",
 };
+
 
 
 
