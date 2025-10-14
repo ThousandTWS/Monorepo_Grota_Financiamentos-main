@@ -56,11 +56,13 @@ export default function Home() {
         <DesktopHeader
           isScrolled={isScrolled}
           onLoginClick={modalManager.openLoginModal}
+          data-testid="desktop-header"
         />
 
         <MobileHeader
           isMobileMenuOpen={isMobileMenuOpen}
           onMenuToggle={toggleMobileMenu}
+          data-testid="mobile-header"
         />
 
         <MobileMenu
@@ -80,7 +82,7 @@ export default function Home() {
           <CTA />
         </main>
         <AssistantModal />
-        <Footer />
+        <Footer data-testid="footer" />
         <ModalContainer {...modalManager} />
       </div>
     </AssistantRuntimeProvider>
