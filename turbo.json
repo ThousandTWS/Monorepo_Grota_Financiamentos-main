@@ -11,6 +11,10 @@
       "dependsOn": [],
       "outputs": []
     },
+      "test:e2e": {
+      "dependsOn": ["grota-website#build"],
+      "outputs": []
+    },
     "lint": {
       "dependsOn": ["^lint"]
     },
