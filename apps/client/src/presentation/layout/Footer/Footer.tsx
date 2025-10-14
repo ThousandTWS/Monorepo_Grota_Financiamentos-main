@@ -78,15 +78,15 @@ export default function Footer() {
     <footer className={`${bgColor} ${textColor} pt-16`}>
       <div className="container mx-auto px-6">
         <div className="bg-white p-8 rounded-lg mb-12 shadow-2xl flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0 lg:space-x-8">
-          <div className="max-w-xl">
-            <h3 className="text-2xl font-bold text-[#1B4B7C] mb-2">
+          <div className="max-w-6xl">
+            <h3 className="text-3xl font-bold text-[#1B4B7C] mb-2">
               Não Perca Nossas Ofertas Exclusivas!
             </h3>
-            <p className="text-[#1B4B7C] text-md">
+            <p className="text-[#1B4B7C] text-lg">
               Cadastre seu e-mail e receba em primeira mão as melhores taxas de financiamento do mercado.
             </p>
           </div>
-          <div className="w-full lg:w-96 flex items-center rounded-xl overflow-hidden shadow-md bg-white/90 backdrop-blur-sm border border-zinc-200">
+          <div className="w-full lg:w-[30rem] flex items-center rounded-xl overflow-hidden shadow-md bg-white/90 backdrop-blur-sm border border-zinc-200">
             <input
               type="email"
               placeholder="Seu melhor e-mail corporativo"
