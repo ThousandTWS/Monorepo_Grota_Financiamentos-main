@@ -77,7 +77,6 @@ export default function Footer() {
   return (
     <footer className={`${bgColor} ${textColor} pt-16`}>
       <div className="container mx-auto px-6">
-
         <div className="bg-white p-8 rounded-lg mb-12 shadow-2xl flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0 lg:space-x-8">
           <div className="max-w-xl">
             <h3 className="text-2xl font-bold text-[#1B4B7C] mb-2">
