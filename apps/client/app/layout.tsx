@@ -26,7 +26,12 @@ export const metadata: Metadata = {
     "simulação de crédito",
     "taxas de juros baixas",
   ],
-  authors: [{ name: "Grota Financiamentos", url: "https://grotafinanciamentos.com.br" }],
+  authors: [
+    {
+      name: "Grota Financiamentos",
+      url: "https://grotafinanciamentos.com.br",
+    },
+  ],
   creator: "Grota Financiamentos",
   publisher: "Grota Financiamentos",
   metadataBase: new URL("https://grotafinanciamentos.com.br"),
@@ -52,11 +57,11 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    site: "@grotafinanciamentos",
-    creator: "@grotafinanciamentos",
-    title: "Grota Financiamentos | Crédito e Investimentos Inteligentes",
+    title: "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
     description:
-      "Soluções modernas e rápidas em crédito e investimentos com a Grota Financiamentos.",
+      "A Grota Financiamentos conecta pessoas às melhores oportunidades de crédito, financiamento e investimentos. Rapidez, transparência e tecnologia para transformar seus planos em realidade.",
+    creator: "@grotafinanciamentos",
+    site: "@grotafinanciamentos",
     images: [
       "https://res.cloudinary.com/dx1659yxu/image/upload/v1760450462/ChatGPT_Image_14_de_out._de_2025_10_59_26_tdmlaf.png",
     ],
@@ -87,6 +92,7 @@ export const metadata: Metadata = {
   category: "Finanças e Crédito",
   applicationName: "Grota Financiamentos",
 };
+
 
 
 
