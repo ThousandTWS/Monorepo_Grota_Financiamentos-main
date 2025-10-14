@@ -3,9 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useEffect } from "react";
-import UserServices from "@/application/services/UserServices/UserServices";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
+import userServices from "@/application/services/UserServices/userServices";
 
 
 export default function UserDropdown() {
@@ -16,7 +16,7 @@ export default function UserDropdown() {
 useEffect(() => {
   async function fetchUserName() {
     try {
-      const userData = await UserServices.me();
+      const userData = await userServices.me();
       console.log("Usuário retornado:", userData);
 
       if (userData && userData.fullName) {
