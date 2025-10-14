@@ -1,35 +1,60 @@
-import Link from "next/link"
+"use client";
+
+import Link from "next/link";
 
 interface MobileMenuProps {
-  isOpen: boolean
-  onLoginClick: () => void
+  isOpen: boolean;
+  onLoginClick: () => void;
 }
 
+interface NavItem {
+  name: string;
+  href: string;
+  children?: NavItem[];
+}
+
+// Estrutura de dados do menu
+const navItems: NavItem[] = [
+  { name: "Inicio", href: "/" },
+  {
+    name: "Nossa Historia",
+    href: "/nossa-historia",
+    children: [],
+  },
+  { name: "Soluções", href: "/solucoes" },
+  { name: "Financiamento", href: "#" },
+  { name: "Blog", href: "#" },
+  { name: "Contato", href: "/contato" },
+];
+
 export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
-  if (!isOpen) return null
+  if (!isOpen) return null;
+
+  const renderNavItems = (items: NavItem[], level = 0) => {
+    return items.map((item) => (
+      <div key={item.name} className={`pl-${level * 4}`}>
+        <Link
+          href={item.href}
+          className="relative px-4 py-2 text-[#2C2C2C] text-[1.2rem] transition-colors cursor-pointer
+          after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-[#1B4B7C]
+          after:transition-all after:duration-300 hover:after:w-40"
+        >
+          <span className="relative z-20">{item.name}</span>
+        </Link>
+        {item.children && (
+          <div className="flex flex-col ml-4 mt-1">
+            {renderNavItems(item.children, level + 1)}
+          </div>
+        )}
+      </div>
+    ));
+  };
 
   return (
     <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm md:hidden">
       <div className="absolute top-20 left-4 right-4 mt-10 bg-[#F8FAFC] backdrop-blur-md border border-border/50 rounded-2xl shadow-2xl p-6">
         <nav className="flex flex-col space-y-4">
-          {[
-            { name: "Inicio", href: "/" },
-            { name: "Nossa Historia", href: "/nossa-historia" },
-            { name: "Soluções", href: "/solucoes" },
-            { name: "Financiamento", href: "#" },
-            { name: "Blog", href: "#" },
-            { name: "Contato", href: "/contato" }
-          ].map((item) => (
-            <Link
-              key={item.name}
-              href={item.href}
-              className="relative px-4 py-2 text-[#2C2C2C] transition-colors cursor-pointer text-[1.2rem] 
-             after:absolute after:left-0 after:bottom-0 after:h-[2px] after:w-0 after:bg-[#1B4B7C] 
-             after:transition-all after:duration-300 hover:after:w-40"
-            >
-              <span className="relative z-20">{item.name}</span>
-            </Link>
-          ))}
+          {renderNavItems(navItems)}
           <div className="border-t border-border/50 pt-4 mt-4 flex flex-col space-y-3">
             <button
               onClick={onLoginClick}
@@ -38,10 +63,9 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
             >
               <span className="relative z-10">Área do Cliente</span>
             </button>
-
           </div>
         </nav>
       </div>
     </div>
-  )
-}
+  );
+};

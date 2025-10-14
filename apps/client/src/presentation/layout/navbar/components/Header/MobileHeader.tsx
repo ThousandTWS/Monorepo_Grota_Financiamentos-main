@@ -28,7 +28,7 @@ export const MobileHeader = ({ isMobileMenuOpen, onMenuToggle }: MobileHeaderPro
       <Button
         onClick={onMenuToggle}
         aria-label="Toggle menu"
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md cursor-pointer hover:bg-orange-50 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
+        className="flex items-center justify-center w-10 h-10 rounded-full bg-white shadow-md cursor-pointer hover:bg-white transition-colors focus:outline-none focus:ring-2 focus:ring-white"
       >
         <div className="flex flex-col items-center justify-center w-6 h-6 space-y-1.5 ">
           <span

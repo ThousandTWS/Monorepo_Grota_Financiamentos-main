@@ -1,5 +1,4 @@
-﻿
-services:
+﻿services:
   agent:
     container_name: newrelic-infra
     build:
