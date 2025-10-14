@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function BoxHero() {
@@ -46,13 +47,14 @@ function BoxHero() {
         <div
           className="flex flex-col sm:flex-row gap-6 justify-center"
           data-oid="g0-zlwl">
+          <Link href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos." target="_blank">
+            <button
+              className="bg-white cursor-pointer hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+              data-oid=":qqus:s">
 
-          <button
-            className="bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-            data-oid=":qqus:s">
-
-             Falar com Especialista
-          </button>
+              Falar com Especialista
+            </button>
+          </Link>
         </div>
       </div>
     </section>);

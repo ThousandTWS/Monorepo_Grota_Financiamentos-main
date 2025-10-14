@@ -9,25 +9,25 @@ export function BentoGrid6() {
     {
       title: "Aprovação Rápida",
       description: "Seu financiamento aprovado em tempo recorde, sem burocracia.",
-      image: "https://images.unsplash.com/photo-1604152135912-04a26f40b5aa?auto=format&fit=crop&w=1950&q=80",
+      image: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760451097/homem-escolhendo-um-carro-em-um-salao-de-carros_demghk.jpg",
       colSpan: "lg:col-span-2",
     },
     {
       title: "Segurança e Transparência",
       description: "Todo o processo é seguro e transparente, sem surpresas na hora da compra.",
-      image: "https://images.unsplash.com/photo-1581090700227-ef88a6a0631b?auto=format&fit=crop&w=1950&q=80",
+      image: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760451243/linda-mulher-comprando-um-carro_lp9oo0.jpg",
       colSpan: "lg:col-span-1",
     },
     {
       title: "Parcelas Flexíveis",
       description: "Escolha o plano que melhor se adapta ao seu orçamento e ao seu carro.",
-      image: "https://images.unsplash.com/photo-1612021564231-d5b3f66ef6a0?auto=format&fit=crop&w=1950&q=80",
+      image: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760451707/casal-feliz-em-concessionaria-de-showroom-de-carros_aoifki.jpg",
       colSpan: "lg:col-span-1",
     },
     {
       title: "Suporte Personalizado",
       description: "Equipe dedicada para ajudá-lo em cada etapa do financiamento.",
-      image: "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=1950&q=80",
+      image: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760451898/clientes-satisfeitos-na-concessionaria-de-automoveis_x3sao9.jpg",
       colSpan: "lg:col-span-2",
     },
   ];

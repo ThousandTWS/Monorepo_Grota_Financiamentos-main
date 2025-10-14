@@ -76,9 +76,9 @@ export default function CTABanner() {
           initial={{ opacity: 0, y: 50 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="bg-gradient-to-b from-[#1B4B7C]/90 to-[#1B4B7C]/70 rounded-3xl p-12 text-center relative overflow-hidden"
+          className="bg-gradient-to-b from-[#1B4B7C] to-[#1B4B7C] rounded-3xl p-12 text-center relative overflow-hidden"
         >
-          <div className="absolute inset-0 bg-black/30 pointer-events-none" />
+          <div className="absolute inset-0 bg-black/10 pointer-events-none" />
           <div className="relative z-10">
             <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4 leading-snug">
               Realize seu sonho de ter um carro novo!
@@ -89,7 +89,7 @@ export default function CTABanner() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link target="_blank" href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos.">
-              <button className="group bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+              <button className="group bg-white cursor-pointer hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
                 <PhoneCall className="w-6 h-6 animate-phone-ring" />
                 Fale com a nossa equipe
                

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import React from "react";
 
 function BoxHero() {
@@ -29,9 +30,9 @@ function BoxHero() {
         <h1
           className="text-6xl lg:text-7xl font-bold text-white mb-8 leading-tight"
           data-oid="co:yg9:">
-          
-          <span className="text-blue-300 block" data-oid="l8a6ph_">
-            Conosco Fale
+
+          <span className="text-white block" data-oid="l8a6ph_">
+            Fale Conosco
           </span>
         </h1>
         <p
@@ -45,19 +46,15 @@ function BoxHero() {
         <div
           className="flex flex-col sm:flex-row gap-6 justify-center"
           data-oid="63bcpk2">
+          <Link href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos." target='_blank'>
+            <button
+              className="bg-white cursor-pointer hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
+              data-oid="adm9bik">
 
-          <button
-            className="bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
-            data-oid="adm9bik">
+              Falar com Especialista
+            </button>
+          </Link>
 
-            Enviar Mensagem
-          </button>
-          <button
-            className="border-2 border-white/30 text-white hover:bg-white/10 px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 backdrop-blur-sm"
-            data-oid="hp9-tqv">
-
-            Ver Localização
-          </button>
         </div>
       </div>
     </section>);

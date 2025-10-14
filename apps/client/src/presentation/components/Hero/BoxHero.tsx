@@ -50,7 +50,7 @@ const HeroSection = () => {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-6">
-            <Link href="">
+            <Link href="/financiamento">
             <button className="cursor-pointer group bg-white hover:bg-gray-100 text-[#1B4B7C] px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
               Simular Financiamento
               <Calculator className="w-6 h-6" />
