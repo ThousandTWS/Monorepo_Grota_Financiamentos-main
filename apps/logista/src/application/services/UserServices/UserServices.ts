@@ -1,13 +1,10 @@
-import api from "@/application/services/server/api";
+import api from "../server/api";
 
-export const AuthService = {
+const userServices = {
   async me() {
-    try {
-      const { data } = await api.get("/auth/me");
-      return data;
-    } catch (error) {
-      console.error("Erro ao buscar usuário autenticado:", error);
-      throw error;
-    }
+    const { data } = await api.get("/auth/me");
+    return data;
   },
 };
+
+export default userServices;

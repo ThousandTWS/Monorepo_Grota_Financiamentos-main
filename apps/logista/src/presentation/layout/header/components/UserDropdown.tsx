@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
 import { useEffect } from "react";
-import userServices from "../../../../application/services/UserServices/UserServices";
+import UserServices from "@/application/services/UserServices/UserServices";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
 
@@ -13,25 +13,29 @@ export default function UserDropdown() {
   const [email, setEmail] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    async function fetchUserName() {
-      try {
-        const userData = await userServices.me();
-        console.log("Aquiiii", userData)
-        if (userData && userData.fullName) {
-          setUserName(userData.fullName);
-          setEmail(userData.email);
-        } else {
-          setUserName('Usuário');
-        }
-      } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-        setUserName('Erro ao carregar'); 
-      }
-    }
+useEffect(() => {
+  async function fetchUserName() {
+    try {
+      const userData = await UserServices.me();
+      console.log("Usuário retornado:", userData);
 
-    fetchUserName();
-  }, []);
+      if (userData && userData.fullName) {
+        setUserName(userData.fullName);
+        setEmail(userData.email || "");
+      } else {
+        setUserName("Usuário");
+        setEmail("");
+      }
+    } catch (error) {
+      console.error("Erro ao buscar dados do usuário:", error);
+      setUserName("Erro ao carregar");
+      setEmail("");
+    }
+  }
+
+  fetchUserName();
+}, []);
+
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
