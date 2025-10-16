@@ -7,8 +7,8 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "run-java": "cd apps/server && mvnw.cmd spring-boot:run"
-    
+    "run-java": "cd apps/server && mvnw.cmd spring-boot:run",
+    "gen": "node generators/package/index.js"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

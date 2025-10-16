@@ -14,7 +14,7 @@ import org.thymeleaf.context.Context;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final SpringTemplateEngine springTemplateEngine;
+    private final SpringTemplateEngine springTemplateEngine; 
 
     public EmailService(JavaMailSender mailSender, SpringTemplateEngine springTemplateEngine) {
         this.mailSender = mailSender;
