@@ -85,7 +85,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         <div className="p-8 sm:p-10">
           
           <div className="text-center mb-8">
-            <div className="mx-auto h-2 w-10 bg-blue-700 rounded-full mb-3"></div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
               Cadastre sua Revenda
             </h2>
