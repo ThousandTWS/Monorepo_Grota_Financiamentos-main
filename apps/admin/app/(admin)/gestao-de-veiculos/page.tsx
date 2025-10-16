@@ -141,7 +141,7 @@ export default function VehiclesPage() {
         inFinancingCount={stats.inFinancing}
         soldCount={stats.sold}
         reservedCount={stats.reserved}
-        maintenanceCount={stats.maintenance}
+       
         totalValue={stats.totalValue}
         data-oid="ws9x.t8"
       />

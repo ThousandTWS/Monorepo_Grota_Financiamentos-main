@@ -1,5 +1,5 @@
-export { DocumentsTable } from "./DocumentsTable";
-export { DocumentFilters } from "./DocumentFilters";
-export { DocumentStats } from "./DocumentStats";
-export { DocumentPreviewDialog } from "./DocumentPreviewDialog";
-export { DocumentReviewDialog } from "./DocumentReviewDialog";
+export { DocumentsTable } from "./components/DocumentsTable";
+export { DocumentFilters } from "./components/DocumentFilters";
+export { DocumentStats } from "./components/DocumentStats";
+export { DocumentPreviewDialog } from "./components/DocumentPreviewDialog";
+export { DocumentReviewDialog } from "./components/DocumentReviewDialog";
