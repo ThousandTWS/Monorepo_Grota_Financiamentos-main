@@ -56,6 +56,9 @@ public class Vehicle {
         this.price = price;
     }
 
+    public Long getId() {
+        return id;
+    }
     public String getName() {
         return name;
     }
@@ -140,4 +143,5 @@ public class Vehicle {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }

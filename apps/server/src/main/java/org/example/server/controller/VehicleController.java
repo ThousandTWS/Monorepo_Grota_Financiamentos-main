@@ -30,5 +30,11 @@ public class VehicleController {
         List<VehicleResponseDTO> vehicleResponseDTO = vehicleService.findAll();
         return ResponseEntity.ok().body(vehicleResponseDTO);
     }
+
+    @GetMapping("/{vehicleId}")
+    public ResponseEntity<VehicleResponseDTO> findById(@PathVariable Long vehicleId){
+        VehicleResponseDTO vehicleResponseDTO = vehicleService.findById(vehicleId);
+        return ResponseEntity.ok().body(vehicleResponseDTO);
+    }
 }
 

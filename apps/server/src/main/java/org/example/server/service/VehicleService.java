@@ -42,4 +42,11 @@ public class VehicleService {
        return vehicleRepository.findAll().stream()
                .map(vehicle -> vehicleMapper.toDTO(vehicle)).collect(Collectors.toList());
     }
+
+    public VehicleResponseDTO findById(Long vehicleId) {
+        Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RecordNotFoundException("Veiculo não encontrado com o id: " + vehicleId));
+
+        return vehicleMapper.toDTO(vehicle);
+    }
 }

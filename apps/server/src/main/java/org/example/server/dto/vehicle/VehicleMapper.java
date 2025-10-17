@@ -17,6 +17,7 @@ public class VehicleMapper {
         if (vehicle == null) return null;
 
         return new VehicleResponseDTO(
+                vehicle.getId(),
                 vehicle.getName(),
                 vehicle.getColor(),
                 vehicle.getPlate(),
