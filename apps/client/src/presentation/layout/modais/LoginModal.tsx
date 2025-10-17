@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { X, User, Lock, AlertCircle, Loader2 } from "lucide-react";
+import { X, User, Lock, AlertCircle, Loader2, Mail } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { InputGroup } from "../shared/InputGroups";
 
 const loginSchema = z.object({
   email: z.string(),
@@ -27,7 +28,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   const{
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid, isDirty }, 
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema)
   })
@@ -52,20 +53,35 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
 
   if (!isOpen) return null;
 
+  const inputStyle = `w-full pl-10 pr-4 py-3 
+    border-2 rounded-xl 
+    transition-all duration-200
+    placeholder:text-gray-400 
+    focus:outline-none focus:ring-2
+    focus:border-blue-700 focus:ring-blue-200 
+    disabled:bg-gray-50 disabled:cursor-not-allowed
+    ${Object.keys(errors).length > 0 ? 'border-red-400' : 'border-gray-200'}
+  `;
+
   return (
-    <div className="fixed inset-0 z-[10000] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md relative">
+    <div className="fixed inset-0 z-[10000] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative max-h-[95vh] overflow-y-auto transform transition-all duration-300 scale-100 opacity-100">
         <button
           onClick={onClose}
-          className="absolute cursor-pointer right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
+          className="absolute right-5 top-5 text-gray-500 hover:text-blue-700 transition-colors z-10 p-2 rounded-full hover:bg-gray-100 hover:cursor-pointer"
+          aria-label="Fechar Modal de Cadastro"
         >
           <X size={24} />
         </button>
         
-        <div className="p-8">
+        <div className="p-8 sm:p-10">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Área do Lojista</h2>
-            <p className="text-gray-600">Acesse sua conta para continuar</p>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
+              Área do Logista
+            </h2>
+            <p className="text-md text-gray-600">
+              Informe suas credencias para continuar.
+            </p>
           </div>
           
           {error && (
@@ -82,46 +98,44 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
           )}
           
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <InputGroup 
+              id="email" 
+              label="E-mail" 
+              icon={<Mail size={20} />}
+              error={errors.email}
+            >
                 <input
                   type="email"
+                  id="email"
                   {...register("email")}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  placeholder="seu@email.com"
-                  required
+                  className={inputStyle}
+                  placeholder="seuemail@empresa.com.br"
                   disabled={isLoading}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500 mt-1">{errors.email.message}</p>
-                )}
-              </div>
-            </div>
+              </InputGroup>
             
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Senha</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                <input
-                  type="password"
-                  {...register("password")}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
-                  placeholder="••••••••"
-                  required
-                  disabled={isLoading}
-                />
-                {errors.password && (
-                <p className="text-sm text-red-500 mt-1">{errors.password.message}</p>
-              )}
-              </div>
-            </div>
-            
+            <InputGroup 
+              id="password" 
+              label="Senha" 
+              icon={<Lock size={20} />}
+              error={errors.password}
+            >
+              <input
+                type="password"
+                id="password"
+                {...register("password")}
+                className={inputStyle}
+                placeholder="••••••••"
+                disabled={isLoading}
+              />
+            </InputGroup>
+
             <button
               type="submit"
-              disabled={isLoading}
-              className="w-full cursor-pointer bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              disabled={isLoading || !isDirty || !isValid}
+              className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white py-3 rounded-xl font-bold text-lg 
+                transition-all duration-300 ease-in-out shadow-lg shadow-blue-200/50 
+                flex items-center justify-center gap-3 mt-8"
             >
               {isLoading ? (
                 <>
@@ -144,7 +158,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 }, 100);
               }}
               disabled={isLoading}
-              className="block text-sm cursor-pointer text-orange-500 hover:text-orange-600 disabled:text-orange-300 text-center w-full"
+              className="block text-sm cursor-pointer text-blue-700 hover:text-blue-800 hover:underline disabled:text-blue-500 text-center w-full"
             >
               Esqueceu sua senha?
             </button>
@@ -159,7 +173,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                   }, 100);
                 }}
                 disabled={isLoading}
-                className="text-orange-500 hover:text-orange-600 disabled:text-orange-300 font-medium cursor-pointer"
+                className="text-blue-700 hover:text-blue-800 hover:underline disabled:text-blue-500 font-medium cursor-pointer"
               >
                 Cadastre-se
               </button>
