@@ -13,7 +13,7 @@ function BoxContatoForm() {
         <div data-oid="4eu3x:a">
           <label
             htmlFor="nome"
-            className="block text-sm font-medium text-gray-700"
+            className="block text-sm font-medium text-gray-800"
             data-oid="i12ba2n">
 
             Nome
@@ -22,7 +22,7 @@ function BoxContatoForm() {
             type="text"
             id="nome"
             name="nome"
-            className="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
+            className="mt-1 block w-full px-4 py-3 border-2 text-black border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
             placeholder="Digite seu nome completo"
             required
             data-oid="ti2iwg:" />
@@ -40,7 +40,7 @@ function BoxContatoForm() {
             type="email"
             id="email"
             name="email"
-            className="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
+            className="mt-1 block w-full px-4 py-3 border-2 border-gray-300 text-black rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
             placeholder="seu.email@exemplo.com"
             required
             data-oid="ggunazp" />
@@ -58,7 +58,7 @@ function BoxContatoForm() {
             type="tel"
             id="telefone"
             name="telefone"
-            className="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
+            className="mt-1 block w-full px-4 py-3 border-2 text-black border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all"
             placeholder="(11) 98765-4321"
             data-oid="we4pxlh" />
 
@@ -75,7 +75,7 @@ function BoxContatoForm() {
             id="mensagem"
             name="mensagem"
             rows={5}
-            className="mt-1 block w-full px-4 py-3 border-2 border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all resize-none"
+            className="mt-1 block w-full px-4 py-3 border-2 text-black border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#1B4B7C] focus:border-transparent transition-all resize-none"
             placeholder="Digite sua mensagem aqui..."
             required
             data-oid="fovnk:t">

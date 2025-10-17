@@ -6,21 +6,22 @@ function BoxContactInfo() {
   {
     icon: Phone,
     title: "Telefone",
-    content: "(11) 1234-5678",
-    subContent: "(11) 98765-4321"
+    content: "(19) 3722-0914",
+    subContent: "(19)99283-7133"
   },
   {
     icon: Mail,
     title: "E-mail",
     content: "contato@grotafinanciamentos.com.br",
-    subContent: "suporte@grotafinanciamentos.com.br"
+    subContent: "SAC@grotafinanciamentos.com.br"
   },
   {
     icon: MapPin,
     title: "Endereço",
-    content: "Av. Paulista, 1234 - Bela Vista",
-    subContent: "São Paulo - SP, 01310-100"
+    content: "R. Ferdinando Panattoni, 411 - Sala 03",
+    subContent: "Jardim Pauliceia, Campinas - SP"
   },
+  
   {
     icon: Clock,
     title: "Horário de Atendimento",
@@ -60,7 +61,7 @@ function BoxContactInfo() {
                   {item.content}
                 </p>
                 {item.subContent &&
-                <p className="text-gray-600 text-sm mt-1" data-oid="2awdjd7">
+                <p className="text-gray-600 text-md mt-1" data-oid="2awdjd7">
                     {item.subContent}
                   </p>
                 }

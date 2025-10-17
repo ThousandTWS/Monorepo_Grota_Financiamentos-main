@@ -18,35 +18,35 @@ const testimonials: Testimonial[] = [
     quote: "Consegui financiar meu carro com rapidez e condições que não encontrei em nenhum outro lugar. Atendimento nota 10!",
     name: "Carlos Mendes",
     username: "@carluxo",
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg"
+    avatar: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760451996/32_rxh1p3.jpg"
   },
   {
     id: 2,
     quote: "A Grota me ajudou a realizar o sonho do meu primeiro carro. Processo simples e sem burocracia!",
     name: "Fernanda Silva",
     username: "@fernandasilva",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg"
+    avatar: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760452036/44_tvy0ss.jpg"
   },
   {
     id: 3,
     quote: "Equipe muito profissional. Explicaram cada detalhe do financiamento de forma clara e transparente.",
     name: "João Pereira",
     username: "@joaop",
-    avatar: "https://randomuser.me/api/portraits/men/18.jpg"
+    avatar: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760452060/18_o9texi.jpg"
   },
   {
     id: 4,
     quote: "Excelente atendimento! Consegui um ótimo financiamento para meu veículo sem complicação.",
     name: "Mariana Costa",
     username: "@maricosta",
-    avatar: "https://randomuser.me/api/portraits/women/55.jpg"
+    avatar: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760452088/55_sbcqj0.jpg"
   },
   {
     id: 5,
     quote: "Muito satisfeito com a Grota! Resolveram tudo rápido e com ótimas condições de pagamento.",
     name: "Ricardo Alves",
     username: "@ricardoalves",
-    avatar: "https://randomuser.me/api/portraits/men/27.jpg"
+    avatar: "https://res.cloudinary.com/dx1659yxu/image/upload/v1760452115/27_bc3fad.jpg"
   },
 ];
 

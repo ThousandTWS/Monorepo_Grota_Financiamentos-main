@@ -6,6 +6,7 @@ import { useBoxCalculator } from "@/src/application/core/hooks/useBoxCalculator"
 import { formatCurrencyInput } from "@/src/application/core/utils/currency/currencyMask";
 import { formatCurrency } from "@/src/application/core/utils/currency/formatCurrency";
 import { parseCurrency } from "@/src/application/core/utils/currency/parseCurrency";
+import Link from "next/link";
 
 function BoxCalculator() {
   const { vehicleInfo, loading, vehiclePlate, setVehiclePlate, error, vehicleValue, setVehicleValue, downPayment, setDownPayment, months, setMonths, monthlyPayment } = useBoxCalculator();
@@ -275,13 +276,15 @@ function BoxCalculator() {
                   </span>
                 </div>
               </div>
-
+              <Link href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos." target="_blank">
+             
               <button
-                className="mt-6 w-full bg-[#1B4B7C] hover:bg-[#153a5f] text-white py-4 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+                className="mt-6 w-full bg-[#1B4B7C] hover:bg-[#153a5f] text-white py-4 rounded-lg font-bold text-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 cursor-pointer"
                 data-oid="fao713q">
 
                 Solicitar Proposta
               </button>
+               </Link>
             </div>
           </div>
 

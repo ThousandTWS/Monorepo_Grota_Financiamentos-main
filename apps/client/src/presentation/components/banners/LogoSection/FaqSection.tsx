@@ -17,9 +17,9 @@ export function FaqSection() {
     <section
       id="faq"
       aria-labelledby="faq-heading"
-      className="relative overflow-hidden border-b py-24 bg-gradient-to-b from-[#1B4B7C]/90 to-[#1B4B7C]/70 rounded-tl-[5rem] rounded-br-[5rem]"
+      className="relative overflow-hidden border-b py-24 bg-[#1B4B7C] rounded-tl-[5rem] rounded-br-[5rem]"
     >
-      <div className="absolute inset-0 bg-black/50 pointer-events-none" />
+      <div className="absolute inset-0 bg-black/10 pointer-events-none" />
 
       <div className="container mx-auto px-6 lg:px-12 relative z-10">
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-20">
@@ -175,7 +175,7 @@ export function FaqSection() {
         {/* CTA */}
         <div className="text-center mt-16">
           <Link target="_blank" href="https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos.">
-          <button className="group cursor bg-white hover:bg-gray-100 text-[#1B4B7C]  px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+          <button className="group cursor-pointer bg-white hover:bg-gray-100 text-[#1B4B7C]  px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
             <PhoneCallIcon className="w-6 h-6 animate-phone-ring" />
             Fale com a nossa equipe
           </button>
