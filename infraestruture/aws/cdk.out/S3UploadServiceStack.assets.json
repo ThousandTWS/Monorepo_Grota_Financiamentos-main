@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "4fec3389212e9c1506ebea35914c4510153b0ea545bb67ccca1143a74e24861a": {
+      "displayName": "S3UploadServiceStack Template",
+      "source": {
+        "path": "S3UploadServiceStack.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "011547836055-us-east-1-3eee2cfb": {
+          "bucketName": "cdk-hnb659fds-assets-011547836055-us-east-1",
+          "objectKey": "4fec3389212e9c1506ebea35914c4510153b0ea545bb67ccca1143a74e24861a.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::011547836055:role/cdk-hnb659fds-file-publishing-role-011547836055-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}
