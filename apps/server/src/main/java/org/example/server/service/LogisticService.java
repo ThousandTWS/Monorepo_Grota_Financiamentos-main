@@ -52,7 +52,7 @@ public class LogisticService {
         userRepository.save(user);
         logisticRepository.save(logistic);
 
-        sendVerificationEmail(user);
+        //sendVerificationEmail(user);
         return logisticMapper.toDTO(logistic);
     }
 

@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
 
                         .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()  //authenticated()
+                        .anyRequest().permitAll()//.authenticated()  //authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
 

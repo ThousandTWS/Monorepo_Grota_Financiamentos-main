@@ -2,6 +2,7 @@ package org.example.server.model;
 
 import jakarta.persistence.*;
 
+import java.util.List;
 import java.util.Objects;
 
 @Entity
@@ -24,6 +25,9 @@ public class Logistic {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @OneToMany(mappedBy = "logistic", fetch = FetchType.LAZY)
+    private List<Vehicle> vehicles;
+
     public Logistic() {
     }
 
@@ -32,6 +36,10 @@ public class Logistic {
         this.phone = phone;
         this.enterprise = enterprise;
         this.user = user;
+    }
+
+    public void addVehicle(Vehicle vehicle){
+        this.vehicles.add(vehicle);
     }
 
     public Long getId() {
@@ -69,4 +77,6 @@ public class Logistic {
     public void setUser(User user) {
         this.user = user;
     }
+
+
 }
