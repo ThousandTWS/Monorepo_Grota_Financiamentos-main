@@ -6,13 +6,20 @@ import { useEffect } from "react";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
 import userServices from "@/application/services/UserServices/UserServices";
+import { useRouter } from "next/navigation";
 
 
 
 export default function UserDropdown() {
+  const router = useRouter();
+
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [isOpen, setIsOpen] = useState(false);
+
+  const handleLogout = async () => {
+    //chamar rota de logout e manda para o client
+  }
 
 useEffect(() => {
   async function fetchUserName() {
@@ -174,8 +181,8 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
             </DropdownItem>
           </li>
         </ul>
-        <Link
-          href="/signin"
+        <button
+          onClick={handleLogout()}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
@@ -194,7 +201,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
             />
           </svg>
           String
-        </Link>
+        </button>
       </Dropdown>
     </div>
   );
