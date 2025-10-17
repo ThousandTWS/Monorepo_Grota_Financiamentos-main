@@ -8,7 +8,6 @@ import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
 import userServices from "@/application/services/UserServices/UserServices";
 
 
-
 export default function UserDropdown() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");

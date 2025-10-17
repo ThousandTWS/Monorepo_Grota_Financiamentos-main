@@ -76,7 +76,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg relative max-h-[95vh] overflow-y-auto transform transition-all duration-300 scale-100 opacity-100">
         <button
           onClick={onClose}
-          className="absolute right-5 top-5 text-gray-500 hover:text-blue-700 transition-colors z-10 p-2 rounded-full hover:bg-gray-100"
+          className="absolute right-5 top-5 text-gray-500 hover:text-blue-700 transition-colors z-10 p-2 rounded-full hover:bg-gray-100 hover:cursor-pointer"
           aria-label="Fechar Modal de Cadastro"
         >
           <X size={24} />
@@ -85,7 +85,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         <div className="p-8 sm:p-10">
           
           <div className="text-center mb-8">
-            <div className="mx-auto h-2 w-10 bg-blue-700 rounded-full mb-3"></div>
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
               Cadastre sua Revenda
             </h2>
@@ -226,6 +225,25 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               )}
             </button>
           </form>
+
+          <div className="mt-6 text-center space-y-2">
+            <p className="text-sm text-gray-600">
+              Já possui sua conta?{" "}
+              <button 
+                onClick={() => {
+                  onClose();
+                  setTimeout(() => {
+                    const event = new CustomEvent('openLoginModal');
+                    window.dispatchEvent(event);
+                  }, 100);
+                }}
+                disabled={isLoading}
+                className="text-blue-700 hover:text-blue-800 hover:underline disabled:text-blue-500 font-medium cursor-pointer"
+              >
+                Voltar para login
+              </button>
+            </p>
+          </div>
         </div>
       </div>
     </div>
