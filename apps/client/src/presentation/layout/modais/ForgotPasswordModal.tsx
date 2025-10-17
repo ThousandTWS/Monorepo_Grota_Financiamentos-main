@@ -54,7 +54,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
               <span className="text-sm">{error}</span>
             </div>
           )}
-          
+
           {success && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
               <span className="text-sm">{success}</span>
@@ -63,14 +63,14 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
           
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-md font-medium text-gray-700 mb-5">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-600 text-black"
                   placeholder="seu@email.com"
                   required
                   disabled={isLoading}
@@ -81,7 +81,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full bg-orange-500 hover:bg-orange-600 disabled:bg-orange-300 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-blue-500 hover:bg-blue-400 cursor-pointer disabled:bg-blue-300 text-white py-3 rounded-lg font-semibold transition-colors flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -104,7 +104,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
                 }, 100);
               }}
               disabled={isLoading}
-              className="text-sm text-orange-500 hover:text-orange-600 disabled:text-orange-300"
+              className="text-md text-blue-500 hover:text-blue-600 cursor-pointer disabled:text-orange-300"
             >
               Voltar ao login
             </button>
