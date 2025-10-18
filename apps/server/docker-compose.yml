@@ -1,0 +1,12 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: grota-server
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    environment:
+      JWT_SECRET_KEY: "jwt.secret=VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw=="
+      JWT_EXPIRATION_TIME:CHAVE_DE_DEV_DEFAULT: "86400000"
