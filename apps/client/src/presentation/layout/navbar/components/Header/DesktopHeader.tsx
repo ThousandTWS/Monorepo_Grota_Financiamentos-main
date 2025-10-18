@@ -19,21 +19,26 @@ const navItems: NavItem[] = [
   {
     name: "Nossa Historia",
     href: "/nossa-historia",
-    children: []
+    children: [],
   },
   { name: "Soluções", href: "/solucoes" },
   { name: "Financiamento", href: "/financiamento" },
-  { name: "Contato", href: "/contato" }
+  { name: "Contato", href: "/contato" },
 ];
 
-export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) => {
+export const DesktopHeader = ({
+  isScrolled,
+  onLoginClick,
+}: DesktopHeaderProps) => {
   const renderNavItems = (items: NavItem[]) => {
     return items.map((item) => (
       <div key={item.name} className="relative group">
         <Link
           href={item.href}
           className={`relative px-4 py-1 whitespace-nowrap transition-colors duration-300 ${
-            isScrolled ? "text-[#1B4B7C] hover:text-[#1B4B7C]" : "text-white hover:text-white"
+            isScrolled
+              ? "text-[#1B4B7C] hover:text-[#1B4B7C]"
+              : "text-white hover:text-white"
           }`}
         >
           <span className="relative z-10">{item.name}</span>
@@ -69,7 +74,10 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
       }`}
     >
       {/* Logo */}
-      <Link href="/" className="flex items-center justify-center gap-2 transition-all duration-500">
+      <Link
+        href="/"
+        className="flex items-center justify-center gap-2 transition-all duration-500"
+      >
         <Image
           src="https://res.cloudinary.com/dx1659yxu/image/upload/v1759322731/Artboard_1_copy_mskwp8.svg"
           alt="Logo"
@@ -86,7 +94,7 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
 
       {/* CTA Button */}
       <div className="flex items-center gap-4">
-        <Link
+        {/* <Link
           href="https://fichaveiculo.com.br/financ/stan/fichaVeiculo"
           target="_blank"
           type="button"
@@ -104,7 +112,28 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
             Área do cliente
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-        </Link>
+        </Link> */}
+
+        <button
+          onClick={onLoginClick}
+          type="button"
+          className={`relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300 ${
+            isScrolled
+              ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]"
+              : "bg-white border-2 border-gray-200 hover:bg-[#1b4b7cda]"
+          }`}
+        >
+          <span
+            className={`relative z-10 transition-colors duration-300 ${
+              isScrolled
+                ? "text-white"
+                : "text-[#1B4B7C] hover:text-white cursor-pointer"
+            }`}
+          >
+            Área do cliente
+          </span>
+          <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
+        </button>
       </div>
     </header>
   );
