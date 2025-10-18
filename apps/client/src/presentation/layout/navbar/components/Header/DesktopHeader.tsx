@@ -101,7 +101,7 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
               isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"
             }`}
           >
-            Área do cliente
+            Área do Parceiro
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
         </Link>
