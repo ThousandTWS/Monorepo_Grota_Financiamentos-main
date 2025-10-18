@@ -5,8 +5,8 @@ export default function AdminLayout({
 }) {
 
   return (
-   <main>
-    {children}
-   </main>
+    <main>
+      {children}
+    </main>
   );
 }

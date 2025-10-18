@@ -9,7 +9,6 @@ import userServices from "@/application/services/UserServices/UserServices";
 import { useRouter } from "next/navigation";
 
 
-
 export default function UserDropdown() {
   const router = useRouter();
 
