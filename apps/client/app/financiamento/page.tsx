@@ -12,7 +12,6 @@ import Footer from "@/src/presentation/layout/Footer/Footer";
 import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
 import BoxBenefits from "@/src/presentation/components/financiamento/Benefits/BoxBenefits";
-import BoxCalculator from "@/src/presentation/components/financiamento/Calculator/BoxCalculator";
 import BoxHero from "@/src/presentation/components/financiamento/Hero/Boxhero";
 import BoxProcess from "@/src/presentation/components/financiamento/Process/BoxProcess";
 import TestimonialSlider from "@/components/testimonial-slider";
@@ -63,19 +62,22 @@ function Financiamento() {
           <BoxBenefits data-oid=".0da_.f" />
         </section>
 
-        <section
+        {/*
+         <section
           className="py-16 md:py-20 bg-gradient-to-b from-gray-50 to-white"
           data-oid="0ext2ew">
 
           <BoxCalculator data-oid="nuyhmp7" />
         </section>
+        */}
+
 
         <section className="py-16 md:py-20 bg-white" data-oid="n8oqk76">
           <BoxProcess data-oid=":iqeih0" />
         </section>
 
-        <TestimonialSlider/>
-        <FaqSection/>
+        <TestimonialSlider />
+        <FaqSection />
         <section
           className="py-16 mt-10 mb-10 mr-10 ml-10 rounded-2xl md:py-20 bg-gradient-to-br from-[#1B4B7C] to-[#153a5f]"
           data-oid="se8yfv5">
