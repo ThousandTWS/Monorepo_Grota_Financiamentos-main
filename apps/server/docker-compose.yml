@@ -1,4 +1,7 @@
+version: "3.9"
+
 services:
+  # App principal
   app:
     build:
       context: .
@@ -8,5 +11,43 @@ services:
       - "8080:8080"
     restart: unless-stopped
     environment:
-      JWT_SECRET_KEY: "jwt.secret=VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw=="
-      JWT_EXPIRATION_TIME:CHAVE_DE_DEV_DEFAULT: "86400000"
+      JWT_SECRET_KEY: "VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw=="
+      JWT_EXPIRATION_TIME: "86400000"
+      # Configs de DB
+      DATABASE_URL_PROD: "postgresql://prod_user:prod_pass@postgres_prod:5432/prod_db"
+      DATABASE_URL_DEV: "postgresql://dev_user:dev_pass@postgres_dev:5432/dev_db"
+    depends_on:
+      - postgres_prod
+      - postgres_dev
+
+  # Postgres Produção
+  postgres_prod:
+    image: postgres:17
+    container_name: postgres_prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: prod_db
+      POSTGRES_USER: prod_user
+      POSTGRES_PASSWORD: prod_pass
+    volumes:
+      - pgdata_prod:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  # Postgres Desenvolvimento
+  postgres_dev:
+    image: postgres:17
+    container_name: postgres_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: dev_db
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_pass
+    volumes:
+      - pgdata_dev:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+
+volumes:
+  pgdata_prod:
+  pgdata_dev:
