@@ -1,24 +1,28 @@
 "use client";
 import Image from "next/image";
-import Link from "next/link";
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
 import userServices from "@/application/services/UserServices/UserServices";
-import { useRouter } from "next/navigation";
 
 
 
 export default function UserDropdown() {
-  const router = useRouter();
-
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
-    //chamar rota de logout e manda para o client
+    try {
+      await fetch("http://localhost:8080/api/v1/grota-financiamentos/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      window.location.href = "https://improved-halibut-6945xv74999355gg-3002.app.github.dev/";
+    } catch (error) {
+      console.error("Erro na requisição:", error);
+    }
   }
 
 useEffect(() => {
@@ -182,7 +186,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
           </li>
         </ul>
         <button
-          onClick={handleLogout()}
+          onClick={() => handleLogout()}
           className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
