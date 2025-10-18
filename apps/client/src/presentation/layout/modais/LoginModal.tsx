@@ -10,10 +10,10 @@ import { InputGroup } from "../shared/InputGroups";
 
 const loginSchema = z.object({
   email: z.string(),
-  password: z.string()
+  password: z.string(),
 });
 
-type LoginForm = z.infer<typeof loginSchema>
+type LoginForm = z.infer<typeof loginSchema>;
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -21,22 +21,21 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { signIn, isLoading, error, clearError} = useAuth();
+  const { signIn, isLoading, error, clearError } = useAuth();
   const [success, setSuccess] = useState("");
 
-
-  const{
+  const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty }, 
+    formState: { errors, isValid, isDirty },
   } = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema)
-  })
+    resolver: zodResolver(loginSchema),
+  });
 
   const onSubmit = async (data: LoginForm) => {
     clearError();
     setSuccess("");
-    
+
     if (!data.email || !data.password) {
       return;
     }
@@ -58,9 +57,9 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     transition-all duration-200
     placeholder:text-gray-400 
     focus:outline-none focus:ring-2
-    focus:border-blue-700 focus:ring-blue-200 
+    focus:border-blue-700 focus:ring-blue-200 focus:text-black
     disabled:bg-gray-50 disabled:cursor-not-allowed
-    ${Object.keys(errors).length > 0 ? 'border-red-400' : 'border-gray-200'}
+    ${Object.keys(errors).length > 0 ? "border-red-400" : "border-gray-200"}
   `;
 
   return (
@@ -73,7 +72,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         >
           <X size={24} />
         </button>
-        
+
         <div className="p-8 sm:p-10">
           <div className="text-center mb-8">
             <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
@@ -83,40 +82,40 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               Informe suas credencias para continuar.
             </p>
           </div>
-          
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
               <AlertCircle size={16} />
               <span className="text-sm">{error}</span>
             </div>
           )}
-          
+
           {success && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
               <span className="text-sm">{success}</span>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <InputGroup 
-              id="email" 
-              label="E-mail" 
+            <InputGroup
+              id="email"
+              label="E-mail"
               icon={<Mail size={20} />}
               error={errors.email}
             >
-                <input
-                  type="email"
-                  id="email"
-                  {...register("email")}
-                  className={inputStyle}
-                  placeholder="seuemail@empresa.com.br"
-                  disabled={isLoading}
-                />
-              </InputGroup>
-            
-            <InputGroup 
-              id="password" 
-              label="Senha" 
+              <input
+                type="email"
+                id="email"
+                {...register("email")}
+                className={inputStyle}
+                placeholder="seuemail@empresa.com.br"
+                disabled={isLoading}
+              />
+            </InputGroup>
+
+            <InputGroup
+              id="password"
+              label="Senha"
               icon={<Lock size={20} />}
               error={errors.password}
             >
@@ -147,13 +146,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               )}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center space-y-2">
-            <button 
+            <button
               onClick={() => {
                 onClose();
                 setTimeout(() => {
-                  const event = new CustomEvent('openForgotPasswordModal');
+                  const event = new CustomEvent("openForgotPasswordModal");
                   window.dispatchEvent(event);
                 }, 100);
               }}
@@ -164,11 +163,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </button>
             <p className="text-sm text-gray-600">
               Não tem conta?{" "}
-              <button 
+              <button
                 onClick={() => {
                   onClose();
                   setTimeout(() => {
-                    const event = new CustomEvent('openRegisterModal');
+                    const event = new CustomEvent("openRegisterModal");
                     window.dispatchEvent(event);
                   }, 100);
                 }}
