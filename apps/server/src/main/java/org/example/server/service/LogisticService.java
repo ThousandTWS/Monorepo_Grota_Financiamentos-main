@@ -94,8 +94,4 @@ public class LogisticService {
         SecureRandom random = new SecureRandom();
         return String.format("%06d", random.nextInt(1_000_000));
     }
-
-    private void sendVerificationEmail(User user) {
-        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
-    }
 }

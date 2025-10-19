@@ -1,21 +1,17 @@
 package org.example.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.example.server.dto.Api_Response;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
-import org.example.server.dto.logistic.LogisticResponseDTO;
-import org.example.server.model.Logistic;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
-import org.example.server.service.UserDetailsServiceImp;
 import org.example.server.service.UserService;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -74,7 +70,44 @@ public class AuthController {
                         .body(Map.of("Message", "Login realizado com sucesso"));
     }
 
+
+    @PostMapping("/logout")
+    @Operation(
+            summary = "Realizar logout",
+            description = "Remover o cookie de autenticação",
+            tags = "Auth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+    })
+    public ResponseEntity<?> logout(){
+        ResponseCookie expiredCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .domain(".meusite.local")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity
+                .ok().
+                header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .body(Map.of("message", "Logout realizado com sucesso"));
+    }
+
     @GetMapping("/me")
+    @Operation(
+            summary = "Obter usuário autenticado",
+            description = "Retorna as informações do usuário atualmente autenticado ",
+            tags = "Auth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lojista autenticado retornado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+    })
     public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
         if (user == null){
             return ResponseEntity.status(401).build();

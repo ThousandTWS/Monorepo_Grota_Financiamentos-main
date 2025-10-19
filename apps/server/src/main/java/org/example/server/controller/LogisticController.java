@@ -6,7 +6,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.example.server.dto.logistic.LogisticRequestDTO;
 import org.example.server.dto.logistic.LogisticResponseDTO;
+import org.example.server.dto.vehicle.VehicleResponseDTO;
+import org.example.server.repository.VehicleRepository;
 import org.example.server.service.LogisticService;
+import org.example.server.service.VehicleService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,16 +21,18 @@ import java.util.List;
 public class LogisticController {
 
     private final LogisticService logisticService;
+    private final VehicleService vehicleService;
 
-    public LogisticController(LogisticService logisticService) {
+    public LogisticController(LogisticService logisticService, VehicleService vehicleService) {
         this.logisticService = logisticService;
+        this.vehicleService = vehicleService;
     }
 
     @PostMapping
     @Operation(
             summary = "Cadastrar Lojista",
             description = "Cadastra um Lojista no banco de dados",
-            tags = "Lojista"
+            tags = "Auth"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Lojista cadastrada com sucesso"),
@@ -68,6 +73,12 @@ public class LogisticController {
     public ResponseEntity<LogisticResponseDTO> findById(@PathVariable Long id){
         LogisticResponseDTO logistic = logisticService.findById(id);
         return ResponseEntity.ok().body(logistic);
+    }
+
+    @GetMapping("/{id}/veiculos")
+    public ResponseEntity<List<VehicleResponseDTO>> getVehicleByLogistic(@PathVariable Long id){
+        List<VehicleResponseDTO> vehiclesDto = vehicleService.getVehicleByLogistic(id);
+        return ResponseEntity.ok().body(vehiclesDto);
     }
 
     @PutMapping("/{id}")

@@ -44,9 +44,36 @@ public class VehicleService {
     }
 
     public VehicleResponseDTO findById(Long vehicleId) {
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RecordNotFoundException("Veiculo não encontrado com o id: " + vehicleId));
+        return vehicleMapper.toDTO(findVehicleById(vehicleId));
+    }
 
-        return vehicleMapper.toDTO(vehicle);
+    public VehicleResponseDTO update(Long vehicleId, VehicleRequestDTO vehicleRequestDTO) {
+
+        Vehicle vehicleUpdate = findVehicleById(vehicleId);
+
+        vehicleUpdate.setName(vehicleRequestDTO.name());
+        vehicleUpdate.setColor(vehicleRequestDTO.color());
+        vehicleUpdate.setKm(vehicleRequestDTO.km());
+        vehicleUpdate.setPlate(vehicleRequestDTO.plate());
+        vehicleUpdate.setModelYear(vehicleRequestDTO.modelYear());
+        vehicleUpdate.setPrice(vehicleRequestDTO.price());
+        vehicleUpdate.setCondition(vehicleRequestDTO.condition());
+        vehicleUpdate.setTransmission(vehicleRequestDTO.transmission());
+
+        return vehicleMapper.toDTO(vehicleRepository.save(vehicleUpdate));
+    }
+
+    private Vehicle findVehicleById(Long vehicleId){
+       Vehicle vehicle = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RecordNotFoundException("Veiculo não encontrado com o id: " + vehicleId));
+       return vehicle;
+    }
+
+    public List<VehicleResponseDTO> getVehicleByLogistic(Long id) {
+       List<Vehicle> vehicles = vehicleRepository.findByLogisticId(id);
+
+      return vehicles.stream()
+              .map(vehicle -> vehicleMapper.toDTO(vehicle))
+              .collect(Collectors.toList());
     }
 }
