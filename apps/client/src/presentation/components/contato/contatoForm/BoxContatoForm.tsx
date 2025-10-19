@@ -105,7 +105,7 @@ function BoxContatoForm() {
           id="email"
           label="Email"
           icon={<Mail size={20} />}
-          error={errors.name}
+          error={errors.email}
         >
           <input
             type="text"
@@ -121,7 +121,7 @@ function BoxContatoForm() {
           id="phone"
           label="Telefone"
           icon={<Phone size={20} />}
-          error={errors.name}
+          error={errors.phone}
         >
           <input
             type="text"
@@ -133,21 +133,23 @@ function BoxContatoForm() {
           />
         </InputGroup>
 
-        <InputGroup id="message" label="Mensagem" error={errors.name}>
+        <InputGroup id="message" label="Mensagem" error={errors.message}>
           <textarea
             id="message"
-            name="message"
+            {...register("message")}
             rows={5}
             className={textareaStyle}
             placeholder="Digite sua mensagem aqui..."
             data-oid="fovnk:t"
           />
         </InputGroup>
+
         <button
           type="submit"
           disabled={isLoading || !isDirty || !isValid}
-          className="w-full bg-[#1B4B7C] text-white py-4 px-6 rounded-lg font-bold text-lg hover:bg-[#153a5f] transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-          data-oid="qm1as36"
+          className="w-full bg-[#1B4B7C] hover:bg-[#153a5f] disabled:bg-blue-400 text-white py-3 rounded-xl font-bold text-lg 
+          transition-all duration-300 ease-in-out shadow-lg shadow-blue-200/50 
+          flex items-center justify-center gap-3 mt-8"
         >
           {isLoading ? (
             <>
