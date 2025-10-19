@@ -22,8 +22,6 @@ import { HeroSectionGrota } from "@/src/presentation/components/HeroCTA";
 import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection/primary";
 
 import { useChatRuntime } from "@assistant-ui/react-ai-sdk";
-import { AssistantRuntimeProvider } from "@assistant-ui/react";
-import { AssistantModal } from "@/components/assistant-modal";
 import { FeatureGrota } from "@/components/shadcnblocks-com-feature108";
 
 
@@ -51,7 +49,6 @@ export default function Home() {
   });
 
   return (
-    <AssistantRuntimeProvider runtime={runtime}>
       <div className="min-h-screen w-full relative bg-white">
         <DesktopHeader
           isScrolled={isScrolled}
@@ -81,10 +78,9 @@ export default function Home() {
           <FaqSection />
           <CTA />
         </main>
-        <AssistantModal />
         <Footer data-testid="footer" />
         <ModalContainer {...modalManager} />
       </div>
-    </AssistantRuntimeProvider>
+    
   );
 }

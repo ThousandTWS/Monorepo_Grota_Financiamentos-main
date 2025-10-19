@@ -7,5 +7,5 @@ export default function CookieProvider({
 }: {
   children: React.ReactNode;
 }) {
-  return <CookieManager enableFloatingButton >{children}</CookieManager>;
+  return <CookieManager cookieKitId="68f3b1a49098e2613ffd79b3">{children}</CookieManager>;
 }

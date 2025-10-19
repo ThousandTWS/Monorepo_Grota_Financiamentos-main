@@ -86,8 +86,9 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
 
       {/* CTA Button */}
       <div className="flex items-center gap-4">
-        <button
-          onClick={onLoginClick}
+        <Link
+          href="https://fichaveiculo.com.br/financ/stan/fichaVeiculo"
+          target="_blank"
           type="button"
           className={`relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300 ${
             isScrolled
@@ -100,10 +101,10 @@ export const DesktopHeader = ({ isScrolled, onLoginClick }: DesktopHeaderProps) 
               isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"
             }`}
           >
-            Área do cliente
+            Área do Parceiro
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-        </button>
+        </Link>
       </div>
     </header>
   );
