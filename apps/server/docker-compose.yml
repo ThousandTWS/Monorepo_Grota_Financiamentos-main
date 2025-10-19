@@ -11,14 +11,24 @@ services:
       - "8080:8080"
     restart: unless-stopped
     environment:
+      SPRING_PROFILES_ACTIVE: dev
+
       JWT_SECRET_KEY: "VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw=="
       JWT_EXPIRATION_TIME: "86400000"
-      # Configs de DB
-      DATABASE_URL_PROD: "postgresql://prod_user:prod_pass@postgres_prod:5432/prod_db"
-      DATABASE_URL_DEV: "postgresql://dev_user:dev_pass@postgres_dev:5432/dev_db"
+
+      # Configs de DB (ambiente de desenvolvimento)
+      DB_URL: "jdbc:postgresql://postgres_dev:5432/dev_db"
+      DB_USER: "dev_user"
+      DB_PASSWORD: "dev_pass"
+
+      # (opcional) Configs de e-mail
+      MAIL_HOST: "smtp.gmail.com"
+      MAIL_PORT: "587"
+      MAIL_USER: "vinicius.nextjs@gmail.com"
+      MAIL_PASSWORD: "senha_aqui"
     depends_on:
-      - postgres_prod
       - postgres_dev
+      - postgres_prod
 
   # Postgres Produção
   postgres_prod:
