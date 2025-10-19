@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record LogisticRequestDTO(
+public record LogisticRegistrationRequestDTO(
 
         @NotBlank(message = "O nome completo é obrigatório")
         @Size(min = 2, max = 100, message = "O nome completo deve ter entre 2 a 100 caracteres")

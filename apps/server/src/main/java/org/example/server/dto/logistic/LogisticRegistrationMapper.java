@@ -5,16 +5,16 @@ import org.example.server.model.User;
 import org.springframework.stereotype.Component;
 
 @Component
-public class LogisticMapper {
+public class LogisticRegistrationMapper {
 
-    public LogisticResponseDTO toDTO(Logistic logistic){
+    public LogisticRegistrationResponseDTO toDTO(Logistic logistic){
         if (logistic == null){
             return null;
         }
 
         User user = logistic.getUser();
 
-        return new LogisticResponseDTO(
+        return new LogisticRegistrationResponseDTO(
                 logistic.getId(),
                 logistic.getFullName(),
                 user != null ? user.getEmail() : null,
@@ -25,7 +25,7 @@ public class LogisticMapper {
         );
     }
 
-    public Logistic toEntity(LogisticRequestDTO dto){
+    public Logistic toEntity(LogisticRegistrationRequestDTO dto){
         if (dto == null){
             return null;
         }

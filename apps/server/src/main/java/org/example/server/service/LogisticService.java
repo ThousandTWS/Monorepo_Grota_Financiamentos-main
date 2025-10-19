@@ -1,9 +1,10 @@
 package org.example.server.service;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.example.server.dto.logistic.LogisticMapper;
-import org.example.server.dto.logistic.LogisticRequestDTO;
-import org.example.server.dto.logistic.LogisticResponseDTO;
+import org.example.server.dto.logistic.LogisticProfileDTO;
+import org.example.server.dto.logistic.LogisticRegistrationMapper;
+import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
+import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
 import org.example.server.exception.EmailAlreadyExistsException;
 import org.example.server.exception.RecordNotFoundException;
 import org.example.server.model.Logistic;
@@ -16,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,25 +25,25 @@ public class LogisticService {
 
     private final LogisticRepository logisticRepository;
     private final UserRepository userRepository;
-    private final LogisticMapper logisticMapper;
+    private final LogisticRegistrationMapper logisticRegistrationMapper;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
 
-    public LogisticService(LogisticRepository logisticRepository, UserRepository userRepository, LogisticMapper logisticMapper, PasswordEncoder passwordEncoder, EmailService emailService) {
+    public LogisticService(LogisticRepository logisticRepository, UserRepository userRepository, LogisticRegistrationMapper logisticRegistrationMapper, PasswordEncoder passwordEncoder, EmailService emailService) {
         this.logisticRepository = logisticRepository;
         this.userRepository = userRepository;
-        this.logisticMapper = logisticMapper;
+        this.logisticRegistrationMapper = logisticRegistrationMapper;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
     }
 
     @Transactional
-    public LogisticResponseDTO create(LogisticRequestDTO logisticRequestDTO) {
-        if (userRepository.existsByEmail(logisticRequestDTO.email())) {
+    public LogisticRegistrationResponseDTO create(LogisticRegistrationRequestDTO logisticRegistrationRequestDTO) {
+        if (userRepository.existsByEmail(logisticRegistrationRequestDTO.email())) {
             throw new EmailAlreadyExistsException("Email já existe");
         }
 
-        Logistic logistic = logisticMapper.toEntity(logisticRequestDTO);
+        Logistic logistic = logisticRegistrationMapper.toEntity(logisticRegistrationRequestDTO);
         User user = logistic.getUser();
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -53,21 +53,27 @@ public class LogisticService {
         logisticRepository.save(logistic);
 
         //sendVerificationEmail(user);
-        return logisticMapper.toDTO(logistic);
+        return logisticRegistrationMapper.toDTO(logistic);
     }
 
-    public List<LogisticResponseDTO> findAll() {
+    public List<LogisticRegistrationResponseDTO> findAll() {
         List<Logistic> logisticList = logisticRepository.findAll();
-        return logisticList.stream().map(logistic -> logisticMapper.toDTO(logistic)).collect(Collectors.toList());
+        return logisticList.stream().map(logistic -> logisticRegistrationMapper.toDTO(logistic)).collect(Collectors.toList());
     }
 
-    public LogisticResponseDTO findById(Long id) {
-        return logisticMapper.toDTO(logisticRepository.findById(id)
+    public LogisticRegistrationResponseDTO findById(Long id) {
+        return logisticRegistrationMapper.toDTO(logisticRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
+//    public LogisticProfileDTO updateProfile(Long id, LogisticProfileDTO logisticProfileDTO) {
+//        Logistic logistic = logisticRepository.findById(id)
+//                .orElseThrow(() -> new RecordNotFoundException("Logista não encontrado com id: " + id));
+//
+//    }
+
     @Transactional
-    public LogisticResponseDTO update(Long id, LogisticRequestDTO logisticRequestDTO) {
+    public LogisticRegistrationResponseDTO update(Long id, LogisticRegistrationRequestDTO logisticRegistrationRequestDTO) {
         Logistic logistic = logisticRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
@@ -76,17 +82,17 @@ public class LogisticService {
             throw new EntityNotFoundException("Usuário vinculado à logística não encontrado");
         }
 
-        logistic.setFullName(logisticRequestDTO.fullName());
-        logistic.setPhone(logisticRequestDTO.phone());
-        logistic.setEnterprise(logisticRequestDTO.enterprise());
+        logistic.setFullName(logisticRegistrationRequestDTO.fullName());
+        logistic.setPhone(logisticRegistrationRequestDTO.phone());
+        logistic.setEnterprise(logisticRegistrationRequestDTO.enterprise());
 
-        user.setEmail(logisticRequestDTO.email());
-        user.setPassword(passwordEncoder.encode(logisticRequestDTO.password()));
+        user.setEmail(logisticRegistrationRequestDTO.email());
+        user.setPassword(passwordEncoder.encode(logisticRegistrationRequestDTO.password()));
 
         userRepository.save(user);
         logisticRepository.save(logistic);
 
-        return logisticMapper.toDTO(logistic);
+        return logisticRegistrationMapper.toDTO(logistic);
     }
 
     // Métodos Auxiliares
@@ -94,4 +100,6 @@ public class LogisticService {
         SecureRandom random = new SecureRandom();
         return String.format("%06d", random.nextInt(1_000_000));
     }
+
+
 }

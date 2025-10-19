@@ -4,10 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.example.server.dto.logistic.LogisticRequestDTO;
-import org.example.server.dto.logistic.LogisticResponseDTO;
+import org.example.server.dto.logistic.LogisticProfileDTO;
+import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
+import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
-import org.example.server.repository.VehicleRepository;
 import org.example.server.service.LogisticService;
 import org.example.server.service.VehicleService;
 import org.springframework.http.HttpStatus;
@@ -39,9 +39,15 @@ public class LogisticController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticResponseDTO> create(@Valid @RequestBody LogisticRequestDTO logisticRequestDTO){
-        LogisticResponseDTO responseDTO = logisticService.create(logisticRequestDTO);
+    public ResponseEntity<LogisticRegistrationResponseDTO> create(@Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
+        LogisticRegistrationResponseDTO responseDTO = logisticService.create(logisticRegistrationRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+    }
+
+    @PutMapping("/{id}/profile")
+    public ResponseEntity<LogisticProfileDTO> updateProfile(@PathVariable Long id, @RequestBody LogisticProfileDTO logisticProfileDTO){
+        LogisticProfileDTO profileDTO = logisticService.updateProfile(id, logisticProfileDTO);
+        return ResponseEntity.ok(profileDTO);
     }
 
     @GetMapping
@@ -54,8 +60,8 @@ public class LogisticController {
             @ApiResponse(responseCode = "200", description = "Lista de Lojistas retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<LogisticResponseDTO>> findAll(){
-        List<LogisticResponseDTO> logisticList = logisticService.findAll();
+    public ResponseEntity<List<LogisticRegistrationResponseDTO>> findAll(){
+        List<LogisticRegistrationResponseDTO> logisticList = logisticService.findAll();
         return ResponseEntity.ok().body(logisticList);
     }
 
@@ -70,8 +76,8 @@ public class LogisticController {
             @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticResponseDTO> findById(@PathVariable Long id){
-        LogisticResponseDTO logistic = logisticService.findById(id);
+    public ResponseEntity<LogisticRegistrationResponseDTO> findById(@PathVariable Long id){
+        LogisticRegistrationResponseDTO logistic = logisticService.findById(id);
         return ResponseEntity.ok().body(logistic);
     }
 
@@ -93,8 +99,8 @@ public class LogisticController {
             @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticResponseDTO> update(@Valid @PathVariable Long id, @RequestBody LogisticRequestDTO logisticRequestDTO){
-        LogisticResponseDTO logistic = logisticService.update(id, logisticRequestDTO);
+    public ResponseEntity<LogisticRegistrationResponseDTO> update(@Valid @PathVariable Long id, @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
+        LogisticRegistrationResponseDTO logistic = logisticService.update(id, logisticRegistrationRequestDTO);
         return ResponseEntity.ok().body(logistic);
     }
 }

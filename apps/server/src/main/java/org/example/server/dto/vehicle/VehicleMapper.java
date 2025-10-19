@@ -1,16 +1,16 @@
 package org.example.server.dto.vehicle;
 
-import org.example.server.dto.logistic.LogisticMapper;
+import org.example.server.dto.logistic.LogisticRegistrationMapper;
 import org.example.server.model.Vehicle;
 import org.springframework.stereotype.Component;
 
 @Component
 public class VehicleMapper {
 
-    private final LogisticMapper logisticMapper;
+    private final LogisticRegistrationMapper logisticRegistrationMapper;
 
-    public VehicleMapper(LogisticMapper logisticMapper) {
-        this.logisticMapper = logisticMapper;
+    public VehicleMapper(LogisticRegistrationMapper logisticRegistrationMapper) {
+        this.logisticRegistrationMapper = logisticRegistrationMapper;
     }
 
     public VehicleResponseDTO toDTO(Vehicle vehicle){

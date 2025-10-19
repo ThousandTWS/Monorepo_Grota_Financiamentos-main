@@ -4,7 +4,7 @@ import org.example.server.enums.UserVerificationStatus;
 
 import java.time.LocalDateTime;
 
-public record LogisticResponseDTO(
+public record LogisticRegistrationResponseDTO(
         Long id,
         String fullName,
         String email,
