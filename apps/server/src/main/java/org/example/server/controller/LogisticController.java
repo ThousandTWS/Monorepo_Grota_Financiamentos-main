@@ -52,7 +52,7 @@ public class LogisticController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista encontrado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<LogisticRegistrationResponseDTO> findById(@PathVariable Long id){
@@ -67,7 +67,7 @@ public class LogisticController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de veiculos retornada com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<List<VehicleResponseDTO>> getVehicleByLogistic(@PathVariable Long id){
@@ -83,10 +83,10 @@ public class LogisticController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticRegistrationResponseDTO> update(@Valid @AuthenticationPrincipal(expression = "id") Long id, @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
+    public ResponseEntity<LogisticRegistrationResponseDTO> update(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
         LogisticRegistrationResponseDTO logistic = logisticService.update(id, logisticRegistrationRequestDTO);
         return ResponseEntity.ok().body(logistic);
     }
@@ -98,9 +98,10 @@ public class LogisticController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil completo com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticProfileDTO> completeProfile(@Valid @AuthenticationPrincipal(expression = "id") Long id, @RequestBody LogisticProfileDTO logisticProfileDTO){
+    public ResponseEntity<LogisticProfileDTO> completeProfile(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody LogisticProfileDTO logisticProfileDTO){
         System.out.println("ID autenticado: " + id);
         LogisticProfileDTO profileDTO = logisticService.completeProfile(id, logisticProfileDTO);
         return ResponseEntity.ok(profileDTO);
@@ -115,7 +116,7 @@ public class LogisticController {
             @ApiResponse(responseCode = "200", description = "Perfil do lojista atualizado com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticProfileDTO> updateProfile(@Valid @AuthenticationPrincipal(expression = "id") Long userId, @RequestBody LogisticProfileDTO dto) {
+    public ResponseEntity<LogisticProfileDTO> updateProfile(@AuthenticationPrincipal(expression = "id") Long userId, @Valid @RequestBody LogisticProfileDTO dto) {
         LogisticProfileDTO updated = logisticService.updateProfile(userId, dto);
         return ResponseEntity.ok(updated);
     }
@@ -127,7 +128,8 @@ public class LogisticController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil completo retornado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
+            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<LogisticDetailsResponseDTO> findDetailsLogistic(@PathVariable Long id){

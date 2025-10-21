@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.logistic.*;
 import org.example.server.exception.EmailAlreadyExistsException;
+import org.example.server.exception.PhoneAlreadyExistsExceptio;
 import org.example.server.exception.RecordNotFoundException;
 import org.example.server.model.Logistic;
 import org.example.server.model.User;
@@ -47,6 +48,10 @@ public class LogisticService {
             throw new EmailAlreadyExistsException("Email já existe");
         }
 
+        if (logisticRepository.existsByPhone(logisticRegistrationRequestDTO.phone())) {
+            throw new PhoneAlreadyExistsExceptio("Telefone já cadastrado");
+        }
+
         Logistic logistic = logisticRegistrationMapper.toEntity(logisticRegistrationRequestDTO);
         User user = logistic.getUser();
 
@@ -55,8 +60,8 @@ public class LogisticService {
 
         userRepository.save(user);
         logisticRepository.save(logistic);
-
         emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+
         return logisticRegistrationMapper.toDTO(logistic);
     }
 
@@ -80,15 +85,14 @@ public class LogisticService {
     @Transactional
     public LogisticProfileDTO completeProfile(Long id, LogisticProfileDTO logisticProfileDTO) {
         Logistic logistic = logisticRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Logista não encontrado com id: " + id));
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado com id: " + id));
 
         logistic.setFullNameEnterprise(logisticProfileDTO.fullNameEnterprise());
         logistic.setBirthData(logisticProfileDTO.birthData());
         logistic.setCnpj(logisticProfileDTO.cnpj());
         logistic.setAddress(addressMapper.toEntity(logisticProfileDTO.address()));
 
-        Logistic logisticUpdate = logisticRepository.save(logistic);
-        return logisticProfileMapper.toDTO(logisticUpdate);
+        return logisticProfileMapper.toDTO(logisticRepository.save(logistic));
     }
 
     @Transactional
@@ -128,8 +132,7 @@ public class LogisticService {
         if (dto.address() != null)
             logistic.setAddress(addressMapper.toEntity(dto.address()));
 
-        Logistic saved = logisticRepository.save(logistic);
-        return logisticProfileMapper.toDTO(saved);
+        return logisticProfileMapper.toDTO(logisticRepository.save(logistic));
     }
 
     // Métodos Auxiliares

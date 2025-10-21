@@ -1,7 +1,6 @@
 package org.example.server.dto.vehicle;
 
 import org.example.server.dto.logistic.LogisticRegistrationMapper;
-import org.example.server.model.Logistic;
 import org.example.server.model.Vehicle;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +26,7 @@ public class VehicleMapper {
                 vehicle.getCondition().name(),
                 vehicle.getTransmission().name(),
                 vehicle.getPrice(),
+                vehicle.getStatus(),
                 vehicle.getLogistic() != null ? vehicle.getLogistic().getId() : null
         );
     }
@@ -40,8 +40,8 @@ public class VehicleMapper {
                 dto.plate(),
                 dto.modelYear(),
                 dto.km(),
-                dto.condition(),
-                dto.transmission(),
+                dto.vehicleCondition(),
+                dto.vehicleTransmission(),
                 dto.price()
         );
         return vehicle;

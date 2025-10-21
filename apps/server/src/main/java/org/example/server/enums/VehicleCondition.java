@@ -1,6 +1,6 @@
 package org.example.server.enums;
 
-public enum Condition {
+public enum VehicleCondition {
     NOVO,
     SEMINOVO,
     USADO,

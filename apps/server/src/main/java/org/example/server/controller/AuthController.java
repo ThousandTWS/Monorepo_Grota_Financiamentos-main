@@ -52,8 +52,7 @@ public class AuthController {
     @PostMapping("/resgister")
     @Operation(
             summary = "Cadastrar Lojista",
-            description = "Cadastra um Lojista no banco de dados",
-            tags = "Auth"
+            description = "Cadastra um Lojista no banco de dados"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Lojista cadastrada com sucesso"),
@@ -68,12 +67,11 @@ public class AuthController {
     @PostMapping("/login")
     @Operation(
             summary = "Login do Lojista",
-            description = "Realiza a autenticação de um lojista no sistema, retornando o token de acesso em caso de sucesso.",
-            tags = "Auth"
+            description = "Realiza a autenticação de um lojista no sistema, retornando o token de acesso em caso de sucesso."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Login realizado com sucesso. Token de autenticação retornado."),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados."),
+            @ApiResponse(responseCode = "200", description = "Login realizado com sucesso. Token de autenticação retornado."),
+            @ApiResponse(responseCode = "401", description = "Credencias inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request){
@@ -98,8 +96,7 @@ public class AuthController {
     @PostMapping("/logout")
     @Operation(
             summary = "Realizar logout",
-            description = "Remover o cookie de autenticação",
-            tags = "Auth"
+            description = "Remover o cookie de autenticação"
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
@@ -124,12 +121,11 @@ public class AuthController {
     @GetMapping("/me")
     @Operation(
             summary = "Obter usuário autenticado",
-            description = "Retorna as informações do usuário atualmente autenticado ",
-            tags = "Auth"
+            description = "Retorna as informações do usuário atualmente autenticado "
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista autenticado retornado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
@@ -142,16 +138,13 @@ public class AuthController {
                 user.getEmail(),
                 user.getLogistic().getFullName()
         );
-
         return ResponseEntity.ok(userResponseDTO);
-
     }
 
     @PutMapping("/verify-code")
     @Operation(
             summary = "Verificar código de autenticação do usuário",
-            description = "Valida o código de verificação enviado por e-mail ao usuário para concluir o processo de login e ativar o acesso ao sistema.",
-            tags = "Auth"
+            description = "Valida o código de verificação enviado por e-mail ao usuário para concluir o processo de login e ativar o acesso ao sistema."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Código verificado com sucesso. usuário autenticado."),
@@ -167,8 +160,7 @@ public class AuthController {
     @PutMapping("/change-password")
     @Operation(
             summary = "Alterar senha do usuário",
-            description = "Permite que o usuário autenticado altere sua senha informando a senha atual e a nova senha desejada.",
-            tags = "Auth"
+            description = "Permite que o usuário autenticado altere sua senha informando a senha atual e a nova senha desejada."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Senha alterada com sucesso."),
@@ -186,14 +178,13 @@ public class AuthController {
     @PostMapping("forgot-password")
     @Operation(
             summary = "Solicitar redefinição de senha do usuário",
-            description = "Permite que o usuário solicite a redefinição de senha. Um código de verificação será enviado para o e-mail cadastrado.",
-            tags = "Auth"
+            description = "Permite que o usuário solicite a redefinição de senha. Um código de verificação será enviado para o e-mail cadastrado."
     )
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Código de redefinição enviado com sucesso para o e-mail do usuário."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique o e-mail informado."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "200", description = "Código de redefinição enviado com sucesso para o e-mail do usuário."),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique o e-mail informado."),
+            @ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
         userService.requestPasswordReset(passwordResetRequestDTO);
@@ -203,15 +194,14 @@ public class AuthController {
     @PostMapping("/reset-password")
     @Operation(
             summary = "Confirmar redefinição de senha do usuário",
-            description = "Permite que o usuario redefina a senha utilizando o código enviado por e-mail e informando a nova senha desejada.",
-            tags = "Auth"
+            description = "Permite que o usuario redefina a senha utilizando o código enviado por e-mail e informando a nova senha desejada."
     )
     @ApiResponses(value = {
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Senha alterada com sucesso."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados, incluindo o código de verificação."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "401", description = "Código de verificação inválido ou expirado."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "200", description = "Senha alterada com sucesso."),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados, incluindo o código de verificação."),
+            @ApiResponse(responseCode = "401", description = "Código de verificação inválido ou expirado."),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
         userService.resetPassword(passwordResetConfirmRequestDTO);

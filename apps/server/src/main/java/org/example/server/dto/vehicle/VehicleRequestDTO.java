@@ -1,8 +1,8 @@
 package org.example.server.dto.vehicle;
 
 import jakarta.validation.constraints.*;
-import org.example.server.enums.Condition;
-import org.example.server.enums.Transmission;
+import org.example.server.enums.VehicleCondition;
+import org.example.server.enums.VehicleTransmission;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,10 +28,10 @@ public record VehicleRequestDTO(
         Integer km,
 
         @NotNull(message = "A condição é obrigatória")
-        Condition condition,
+        VehicleCondition vehicleCondition,
 
         @NotNull(message = "O tipo de transmissão é obrigatório")
-        Transmission transmission,
+        VehicleTransmission vehicleTransmission,
 
         @NotNull(message = "O preço é obrigatório")
         @DecimalMin(value = "0.0", inclusive = false, message = "O preço deve ser maior que zero")
