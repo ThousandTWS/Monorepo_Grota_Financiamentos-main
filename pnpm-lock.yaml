@@ -759,8 +759,6 @@ importers:
         specifier: ^5
         version: 5.9.2
 
-  packages/auth: {}
-
   packages/eslint-config:
     devDependencies:
       '@eslint/js':

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
     const { data, error } = await resend.emails.send({
       from: "Contato Site <onboarding@resend.dev>", // Domínio da GROTA oficial e cadastrado no Resend
-      to: ["marciojorgemedeirosmelofilho@gmail.com"], // Email corporativo da GROTA para receber os contatos
+      to: ["contato@grotafinanciamentos.com.br"], // Email corporativo da GROTA para receber os contatos
       replyTo: email, // Já marca o cliente no e-mail, podendo responder diretamente a ele
       subject: `Nova mensagem de ${name}`,
       html: `
