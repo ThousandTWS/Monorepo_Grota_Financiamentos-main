@@ -1,18 +1,19 @@
 package org.example.server.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.example.server.dto.Api_Response;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
-import org.example.server.dto.logistic.LogisticResponseDTO;
-import org.example.server.model.Logistic;
+import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
+import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
-import org.example.server.service.UserDetailsServiceImp;
+import org.example.server.service.LogisticService;
 import org.example.server.service.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,20 +30,39 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
+@Tag(name = "Auth", description = "Gerenciamento de autenticação")
 public class AuthController {
 
     private final AuthenticationManager manager;
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final UserService userService;
+    private final LogisticService logisticService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, LogisticService logisticService, PasswordEncoder passwordEncoder) {
         this.manager = manager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.userService = userService;
+        this.logisticService = logisticService;
         this.passwordEncoder = passwordEncoder;
+    }
+
+    @PostMapping("/resgister")
+    @Operation(
+            summary = "Cadastrar Lojista",
+            description = "Cadastra um Lojista no banco de dados",
+            tags = "Auth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Lojista cadastrada com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<LogisticRegistrationResponseDTO> create(@Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
+        LogisticRegistrationResponseDTO responseDTO = logisticService.create(logisticRegistrationRequestDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
     @PostMapping("/login")
@@ -74,7 +94,44 @@ public class AuthController {
                         .body(Map.of("Message", "Login realizado com sucesso"));
     }
 
+
+    @PostMapping("/logout")
+    @Operation(
+            summary = "Realizar logout",
+            description = "Remover o cookie de autenticação",
+            tags = "Auth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+    })
+    public ResponseEntity<?> logout(){
+        ResponseCookie expiredCookie = ResponseCookie.from("access_token", "")
+                .httpOnly(true)
+                .secure(false)
+                .sameSite("Lax")
+                .domain(".meusite.local")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity
+                .ok().
+                header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .body(Map.of("message", "Logout realizado com sucesso"));
+    }
+
     @GetMapping("/me")
+    @Operation(
+            summary = "Obter usuário autenticado",
+            description = "Retorna as informações do usuário atualmente autenticado ",
+            tags = "Auth"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lojista autenticado retornado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+    })
     public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
         if (user == null){
             return ResponseEntity.status(401).build();
@@ -138,7 +195,7 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
         userService.requestPasswordReset(passwordResetRequestDTO);
         return ResponseEntity.ok("Código de redefinição enviado para o email");
     }
@@ -156,7 +213,7 @@ public class AuthController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
         userService.resetPassword(passwordResetConfirmRequestDTO);
         return ResponseEntity.ok("Senha alterada com sucesso");
     }

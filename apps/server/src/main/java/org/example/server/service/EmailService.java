@@ -34,14 +34,11 @@ public class EmailService {
     @Async
     protected void sendEmailWithTemplate(String to, String subject, String templateName, String code){
         try {
-            // cria contexto do Thymeleaf
             Context ctx = new Context();
             ctx.setVariable("code", code);
 
-            // processa template
             String html = springTemplateEngine.process(templateName, ctx);
 
-            // prepara e envia o e-mail
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 

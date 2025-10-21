@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.example.server.model.User;
 import org.example.server.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -38,21 +39,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // ROTAS QUE DEVEM SER IGNORADAS (permitAll())
-        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/logistics")) {
-            return true;
-        }
-
-        if (method.equals("GET") && path.equals("/api/v1/grota-financiamentos/logistics")) {
-            return true;
-        }
-
-        if (method.equals("PUT") && path.equals("/api/v1/grota-financiamentos/auth/verify-code")) {
-            return true;
-        }
-
-        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/auth/login")) {
-            return true;
-        }
+        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/logistics")) return true;
+        if (method.equals("GET") && path.equals("/api/v1/grota-financiamentos/logistics")) return true;
+        if (method.equals("PUT") && path.equals("/api/v1/grota-financiamentos/auth/verify-code")) return true;
+        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/auth/login")) return true;
 
         return publicPaths.stream().anyMatch(path::startsWith);
     }
@@ -87,13 +77,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String username = jwtService.extractUsername(jwt);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            User user = (User) userDetailsService.loadUserByUsername(username);
 
-            if (jwtService.isTokenValid(jwt, userDetails)) {
+            if (jwtService.isTokenValid(jwt, user)) {
+
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(
-                                userDetails, null, userDetails.getAuthorities());
+                                user,
+                                null,
+                                user.getAuthorities());
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

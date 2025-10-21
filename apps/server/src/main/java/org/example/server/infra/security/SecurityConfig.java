@@ -40,10 +40,10 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Rotas Abertas (Não exigem Token)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/resgister").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/verify-code").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/logistics").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
 
                         .requestMatchers("/v3/api-docs/**",
@@ -56,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
 
                         .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
+                        .anyRequest().authenticated()  //authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
 

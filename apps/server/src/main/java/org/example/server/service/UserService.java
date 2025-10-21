@@ -60,7 +60,7 @@ public class UserService {
         var user = userRepository.findByEmail(request.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
 
-        if (user.isVerified() == UserVerificationStatus.PENDENTE) {
+        if (user.getVerificationStatus() == UserVerificationStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
 
@@ -71,7 +71,7 @@ public class UserService {
         User user = userRepository.findByEmail(verificationCodeRequestDTO.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado"));
 
-        if (user.isVerified() == UserVerificationStatus.ATIVO) {
+        if (user.getVerificationStatus() == UserVerificationStatus.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
         }
         if (!user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {

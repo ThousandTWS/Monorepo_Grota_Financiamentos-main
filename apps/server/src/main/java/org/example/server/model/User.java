@@ -32,7 +32,7 @@ public class User implements UserDetails {
     private String resetCode; // Para reset de senha
     private LocalDateTime resetCodeExpiration; // Expiração de reset
 
-    @Column(name = "created_at", updatable = false, nullable = false)
+    @Column(updatable = false, nullable = false)
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
@@ -46,7 +46,6 @@ public class User implements UserDetails {
 
     public User() {
     }
-
     public User(String email, String password) {
         this.email = email;
         this.password = password;
@@ -108,24 +107,12 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public UserVerificationStatus isVerified() {
+    public UserVerificationStatus getVerificationStatus() {
         return verified;
     }
 
     public String getVerificationCode() {
         return verificationCode;
-    }
-
-    public LocalDateTime getCodeExpiration() {
-        return codeExpiration;
-    }
-
-    public String getResetCode() {
-        return resetCode;
-    }
-
-    public LocalDateTime getResetCodeExpiration() {
-        return resetCodeExpiration;
     }
 
     public LocalDateTime getCreatedAt() {
