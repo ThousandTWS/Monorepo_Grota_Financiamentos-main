@@ -12,7 +12,7 @@ export const MobileHeader = ({ isMobileMenuOpen, onMenuToggle }: MobileHeaderPro
     <header className="sticky top-4 z-[9999] mx-4 flex w-auto flex-row items-center justify-between rounded-full bg-[#1B4B7C] backdrop-blur-sm border border-border/50 shadow-lg md:hidden px-4 py-3">
       <Link
         className="flex items-center justify-center gap-2"
-        href="https://v0.app"
+        href="https://fichaveiculo.com.br/financ/stan/fichaVeiculo"
         target="_blank"
         rel="noopener noreferrer"
       >

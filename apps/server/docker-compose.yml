@@ -12,6 +12,8 @@ services:
     restart: unless-stopped
     environment:
       SPRING_PROFILES_ACTIVE: dev
+      JWT_SECRET_KEY: "VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw=="
+      JWT_EXPIRATION_TIME: "86400000"
       # Configs de DB (ambiente de desenvolvimento)
       DB_URL: "jdbc:postgresql://postgres_dev:5432/dev_db"
       DB_USER: "dev_user"

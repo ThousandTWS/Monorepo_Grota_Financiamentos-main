@@ -94,7 +94,7 @@ export const DesktopHeader = ({
 
       {/* CTA Button */}
       <div className="flex items-center gap-4">
-        {/* <Link
+        <Link
           href="https://fichaveiculo.com.br/financ/stan/fichaVeiculo"
           target="_blank"
           type="button"
@@ -106,15 +106,17 @@ export const DesktopHeader = ({
         >
           <span
             className={`relative z-10 transition-colors duration-300 ${
-              isScrolled ? "text-white" : "text-[#1B4B7C] hover:text-white cursor-pointer"
+              isScrolled
+                ? "text-white"
+                : "text-[#1B4B7C] hover:text-white cursor-pointer"
             }`}
           >
             Área do Parceiro
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-        </Link> */}
-
-        <button
+        </Link>
+        {/*
+             <button
           onClick={onLoginClick}
           type="button"
           className={`relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300 ${
@@ -134,6 +136,7 @@ export const DesktopHeader = ({
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
         </button>
+            */}
       </div>
     </header>
   );
