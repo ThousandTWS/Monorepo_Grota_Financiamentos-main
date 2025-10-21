@@ -24,8 +24,8 @@ services:
       # (opcional) Configs de e-mail
       MAIL_HOST: "smtp.gmail.com"
       MAIL_PORT: "587"
-      MAIL_USER: "igovieira87@gmail.com"
-      MAIL_PASSWORD: "wjer synk ncvh gdzf"
+      MAIL_USER: ""
+      MAIL_PASSWORD: ""
     depends_on:
       - postgres_dev
       - postgres_prod
