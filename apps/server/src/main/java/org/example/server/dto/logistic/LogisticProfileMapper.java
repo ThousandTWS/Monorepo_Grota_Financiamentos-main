@@ -1,5 +1,6 @@
 package org.example.server.dto.logistic;
 
+import org.example.server.dto.address.AddressDTO;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.model.Logistic;
 import org.springframework.stereotype.Component;
@@ -17,7 +18,7 @@ public class LogisticProfileMapper {
         if (logistic == null) return null;
 
         return new LogisticProfileDTO(
-                logistic.getFullName(),
+                logistic.getFullNameEnterprise(),
                 logistic.getBirthData(),
                 logistic.getCnpj(),
                 addressMapper.toDTO(logistic.getAddress())
@@ -28,7 +29,7 @@ public class LogisticProfileMapper {
         if (dto == null) return null;
 
         Logistic logistic = new Logistic();
-        logistic.setFullName(dto.fullName());
+        logistic.setFullNameEnterprise(dto.fullNameEnterprise());
         logistic.setBirthData(dto.birthData());
         logistic.setCnpj(dto.cnpj());
         logistic.setAddress(addressMapper.toEntity(dto.address()));

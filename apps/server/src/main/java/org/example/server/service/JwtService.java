@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.example.server.model.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
@@ -43,13 +44,21 @@ public class JwtService {
     }
 
     public String generateToken(UserDetails userDetails) {
+        User user = (User) userDetails;
+
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
+                .claim("id", user.getId())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMillis)) // 24h
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
+
+    public Long extractUserId(String token) {
+        return extractClaim(token, claims -> claims.get("id", Long.class));
+    }
+
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);

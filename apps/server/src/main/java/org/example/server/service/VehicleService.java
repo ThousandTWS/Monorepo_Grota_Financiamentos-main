@@ -8,6 +8,7 @@ import org.example.server.model.Logistic;
 import org.example.server.model.Vehicle;
 import org.example.server.repository.LogisticRepository;
 import org.example.server.repository.VehicleRepository;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,12 +27,11 @@ public class VehicleService {
         this.vehicleMapper = vehicleMapper;
     }
 
-    public VehicleResponseDTO create(VehicleRequestDTO vehicleRequestDTO){
-        Logistic logistic = logisticRepository.findById(vehicleRequestDTO.logisticId())
-                .orElseThrow(() -> new RecordNotFoundException("Logista não encontrado com o id: " + vehicleRequestDTO.logisticId()));
+    public VehicleResponseDTO create(Long id, VehicleRequestDTO vehicleRequestDTO){
+        Logistic logistic = logisticRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Logista não encontrado"));
 
         Vehicle vehicle = vehicleMapper.toEntity(vehicleRequestDTO);
-
         vehicle.setLogistic(logistic);
         logistic.addVehicle(vehicle);
 
@@ -47,9 +47,12 @@ public class VehicleService {
         return vehicleMapper.toDTO(findVehicleById(vehicleId));
     }
 
-    public VehicleResponseDTO update(Long vehicleId, VehicleRequestDTO vehicleRequestDTO) {
-
+    public VehicleResponseDTO update(Long userId, Long vehicleId, VehicleRequestDTO vehicleRequestDTO) {
         Vehicle vehicleUpdate = findVehicleById(vehicleId);
+
+        if (!vehicleUpdate.getLogistic().getUser().getId().equals(userId)){
+            throw new AccessDeniedException("Você não tem permissão para alterar este veículo");
+        }
 
         vehicleUpdate.setName(vehicleRequestDTO.name());
         vehicleUpdate.setColor(vehicleRequestDTO.color());

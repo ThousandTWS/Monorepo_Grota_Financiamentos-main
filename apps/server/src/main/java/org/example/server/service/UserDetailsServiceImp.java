@@ -1,5 +1,6 @@
 package org.example.server.service;
 
+import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -16,7 +17,7 @@ public class UserDetailsServiceImp implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public User loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Credenciais inválidas"));
     }

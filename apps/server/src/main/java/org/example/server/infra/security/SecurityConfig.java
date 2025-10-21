@@ -40,16 +40,12 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Rotas Abertas (Não exigem Token)
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/resgister").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/verify-code").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/logistics").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
-<<<<<<< HEAD
-                        .requestMatchers( "/v3/api-docs/**",
-=======
                         .requestMatchers("/v3/api-docs/**",
->>>>>>> 63a2e310e956f7f4a2424f2d648c5602da4c14bf
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
@@ -59,11 +55,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
 
                         .requestMatchers("/h2-console/**").permitAll()
-<<<<<<< HEAD
-                        .anyRequest().permitAll()//.authenticated()  //authenticated()
-=======
-                        .anyRequest().authenticated()
->>>>>>> 63a2e310e956f7f4a2424f2d648c5602da4c14bf
+                        .anyRequest().authenticated()  //authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
 

@@ -1,6 +1,7 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +25,8 @@ public class Logistic {
     @Column(length = 150)
     private String enterprise;
 
+    private String fullNameEnterprise;
+
     private String cnpj;
 
     @Embedded
@@ -39,11 +42,12 @@ public class Logistic {
     public Logistic() {
     }
 
-    public Logistic(String fullName, LocalDate birthData, String phone, String enterprise, String cnpj, Address address, User user) {
+    public Logistic(String fullName, LocalDate birthData, String phone, String enterprise, String fullNameEnterprise, String cnpj, Address address, User user) {
         this.fullName = fullName;
         this.birthData = birthData;
         this.phone = phone;
         this.enterprise = enterprise;
+        this.fullNameEnterprise = fullNameEnterprise;
         this.cnpj = cnpj;
         this.address = address;
         this.user = user;
@@ -87,6 +91,14 @@ public class Logistic {
 
     public void setEnterprise(String enterprise) {
         this.enterprise = enterprise;
+    }
+
+    public String getFullNameEnterprise() {
+        return fullNameEnterprise;
+    }
+
+    public void setFullNameEnterprise(String fullNameEnterprise) {
+        this.fullNameEnterprise = fullNameEnterprise;
     }
 
     public String getCnpj() {
