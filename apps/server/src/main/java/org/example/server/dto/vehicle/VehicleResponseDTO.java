@@ -1,5 +1,7 @@
 package org.example.server.dto.vehicle;
 
+import org.example.server.enums.VehicleStatus;
+
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
@@ -13,5 +15,6 @@ public record VehicleResponseDTO(
         String condition,
         String transmission,
         BigDecimal price,
+        VehicleStatus status,
         Long logistic
 ) {}

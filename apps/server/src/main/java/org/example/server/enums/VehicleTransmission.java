@@ -1,5 +1,5 @@
 package org.example.server.enums;
 
-public enum Transmission {
+public enum VehicleTransmission {
     MANUAL,AUTOMATIC
 }
