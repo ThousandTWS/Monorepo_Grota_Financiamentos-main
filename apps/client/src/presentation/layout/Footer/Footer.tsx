@@ -202,7 +202,7 @@ export default function Footer() {
 
           {/* Disclaimer */}
           <p className="text-md text-white mb-6 leading-relaxed">
-            Grota Financiamentos  S.A. | CNPJ: 07.599.448/0001-12 . **Endereço Sede:  R. Ferdinando Panattoni, 411 - Sala 03, Jardim Pauliceia, Campinas - SP. Aviso Legal:  A Grota Financiamentos atua como correspondente bancário, seguindo as diretrizes do Banco Central do Brasil, sob a resolução nº 3.954/11. A análise de crédito e as condições de financiamento são de responsabilidade da instituição financeira parceira. As taxas de juros, margem consignável e prazo de pagamento praticados podem variar conforme convênio e análise de crédito.
+            Grota Financiamentos  S.A. | CNPJ: 07.599.448/0001-12 . Endereço Sede:  R. Ferdinando Panattoni, 411 - Sala 03, Jardim Pauliceia, Campinas - SP. Aviso Legal:  A Grota Financiamentos atua como correspondente bancário, seguindo as diretrizes do Banco Central do Brasil, sob a resolução nº 3.954/11. A análise de crédito e as condições de financiamento são de responsabilidade da instituição financeira parceira. As taxas de juros, margem consignável e prazo de pagamento praticados podem variar conforme convênio e análise de crédito.
           </p>
 
           {/* 
