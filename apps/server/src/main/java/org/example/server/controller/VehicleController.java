@@ -33,10 +33,11 @@ public class VehicleController {
     )
     @ApiResponses (value = {
             @ApiResponse(responseCode = "201", description = "Veículo cadastrado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida (dados incorretos)"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<VehicleResponseDTO> create(@Valid @AuthenticationPrincipal(expression = "id") Long id, @RequestBody VehicleRequestDTO vehicleRequestDTO){
+    public ResponseEntity<VehicleResponseDTO> create(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody VehicleRequestDTO vehicleRequestDTO){
         VehicleResponseDTO vehicleResponseDTO = vehicleService.create(id, vehicleRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(vehicleResponseDTO);
     }
@@ -48,7 +49,8 @@ public class VehicleController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de veículos retornada com sucesso"),
-            @ApiResponse(responseCode = "204", description = "Nenhum veículo encontrado"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "200", description = "Nenhum veículo encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<List<VehicleResponseDTO>> findAll(){
@@ -63,7 +65,8 @@ public class VehicleController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Veículo encontrado e retornado com sucesso"),
-            @ApiResponse(responseCode = "404", description = "Veículo não encontrado para o ID fornecido"),
+            @ApiResponse(responseCode = "400", description = "Veículo não encontrado para o ID fornecido"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<VehicleResponseDTO> findById(@PathVariable Long vehicleId){
@@ -77,15 +80,15 @@ public class VehicleController {
             description = "Permite a alteração dos dados de um veículo existente, identificado pelo seu ID."
     )
     @ApiResponses(value = {
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
             @ApiResponse(responseCode = "200", description = "Veículo atualizado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida (dados incorretos)"),
-            @ApiResponse(responseCode = "404", description = "Veículo não encontrado para o ID fornecido"),
+            @ApiResponse(responseCode = "400", description = "Veículo não encontrado para o ID fornecido"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<VehicleResponseDTO> update(
-            @Valid
             @AuthenticationPrincipal(expression = "id") Long userId,
             @PathVariable Long vehicleId,
+            @Valid
             @RequestBody VehicleRequestDTO vehicleRequestDTO)
     {
         VehicleResponseDTO vehicleUpdated = vehicleService.update(userId, vehicleId, vehicleRequestDTO);

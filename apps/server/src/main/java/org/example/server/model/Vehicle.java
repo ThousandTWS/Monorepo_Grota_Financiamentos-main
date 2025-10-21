@@ -1,8 +1,9 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
-import org.example.server.enums.Condition;
-import org.example.server.enums.Transmission;
+import org.example.server.enums.VehicleCondition;
+import org.example.server.enums.VehicleStatus;
+import org.example.server.enums.VehicleTransmission;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -22,20 +23,20 @@ public class Vehicle {
     private Integer km;
 
     @Enumerated(EnumType.STRING)
-    private Condition condition;
+    private VehicleCondition vehicleCondition;
 
     @Enumerated(EnumType.STRING)
-    private Transmission transmission;
+    private VehicleTransmission vehicleTransmission;
 
     private BigDecimal price;
+
+    @Enumerated(EnumType.STRING)
+    private VehicleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Logistic logistic;
 
     private LocalDateTime createdAt;
-
-    public Vehicle(String name, String color, String plate, LocalDate localDate, Integer km, Condition condition, Transmission transmission, BigDecimal price, Long logistic) {
-    }
 
     @PrePersist
     protected void onCreate() {
@@ -45,15 +46,16 @@ public class Vehicle {
     public Vehicle() {
     }
 
-    public Vehicle(String name, String color, String plate, LocalDate modelYear, Integer km, Condition condition, Transmission transmission, BigDecimal price) {
+    public Vehicle(String name, String color, String plate, LocalDate modelYear, Integer km, VehicleCondition vehicleCondition, VehicleTransmission vehicleTransmission, BigDecimal price) {
         this.name = name;
         this.color = color;
         this.plate = plate;
         this.modelYear = modelYear;
         this.km = km;
-        this.condition = condition;
-        this.transmission = transmission;
+        this.vehicleCondition = vehicleCondition;
+        this.vehicleTransmission = vehicleTransmission;
         this.price = price;
+        this.status = VehicleStatus.DISPONIVEL;
     }
 
     public Long getId() {
@@ -99,20 +101,20 @@ public class Vehicle {
         this.km = km;
     }
 
-    public Condition getCondition() {
-        return condition;
+    public VehicleCondition getCondition() {
+        return vehicleCondition;
     }
 
-    public void setCondition(Condition condition) {
-        this.condition = condition;
+    public void setCondition(VehicleCondition vehicleCondition) {
+        this.vehicleCondition = vehicleCondition;
     }
 
-    public Transmission getTransmission() {
-        return transmission;
+    public VehicleTransmission getTransmission() {
+        return vehicleTransmission;
     }
 
-    public void setTransmission(Transmission transmission) {
-        this.transmission = transmission;
+    public void setTransmission(VehicleTransmission vehicleTransmission) {
+        this.vehicleTransmission = vehicleTransmission;
     }
 
     public BigDecimal getPrice() {
@@ -121,6 +123,14 @@ public class Vehicle {
 
     public void setPrice(BigDecimal price) {
         this.price = price;
+    }
+
+    public VehicleStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(VehicleStatus status) {
+        this.status = status;
     }
 
     public Logistic getLogistic() {

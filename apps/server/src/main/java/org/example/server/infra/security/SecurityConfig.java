@@ -50,10 +50,6 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**").permitAll()
-                        // Rotas Protegidas (Exigem Token)
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/auth/me").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/change-password").authenticated()
-
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()  //authenticated()
                 )

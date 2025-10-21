@@ -60,8 +60,8 @@ public class VehicleService {
         vehicleUpdate.setPlate(vehicleRequestDTO.plate());
         vehicleUpdate.setModelYear(vehicleRequestDTO.modelYear());
         vehicleUpdate.setPrice(vehicleRequestDTO.price());
-        vehicleUpdate.setCondition(vehicleRequestDTO.condition());
-        vehicleUpdate.setTransmission(vehicleRequestDTO.transmission());
+        vehicleUpdate.setCondition(vehicleRequestDTO.vehicleCondition());
+        vehicleUpdate.setTransmission(vehicleRequestDTO.vehicleTransmission());
 
         return vehicleMapper.toDTO(vehicleRepository.save(vehicleUpdate));
     }
