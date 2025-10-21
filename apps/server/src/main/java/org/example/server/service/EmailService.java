@@ -32,7 +32,7 @@ public class EmailService {
     }
 
     @Async
-    private void sendEmailWithTemplate(String to, String subject, String templateName, String code){
+    protected void sendEmailWithTemplate(String to, String subject, String templateName, String code){
         try {
             // cria contexto do Thymeleaf
             Context ctx = new Context();

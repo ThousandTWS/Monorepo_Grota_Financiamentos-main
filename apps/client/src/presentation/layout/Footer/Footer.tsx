@@ -174,7 +174,7 @@ export default function Footer() {
               <Phone className="w-5 h-5 text-white flex-shrink-0 mt-1" />
               <div>
                 <p className="text-sm font-bold text-white">Ligue Agora</p>
-                <Link href="tel:+551937220914" className={`${linkColor} text-md text-white hover:text-white hover:underline transition-colors`}>(19) 3722-0914</Link>
+                <Link href="tel:+551937220914" className={`${linkColor} text-md text-white hover:text-white hover:underline transition-colors`}>(19) 3722-0914 </Link>
               </div>
             </div>
 
@@ -202,7 +202,7 @@ export default function Footer() {
 
           {/* Disclaimer */}
           <p className="text-md text-white mb-6 leading-relaxed">
-            **Grota Financiamentos** S.A. | CNPJ: **00.000.000/0001-00**. **Endereço Sede:** R. Ferdinando Panattoni, 411 - Sala 03, Jardim Pauliceia, Campinas - SP. **Aviso Legal:** A Grota Financiamentos atua como correspondente bancário, seguindo as diretrizes do Banco Central do Brasil, sob a resolução nº 3.954/11. A análise de crédito e as condições de financiamento são de responsabilidade da instituição financeira parceira. As taxas de juros, margem consignável e prazo de pagamento praticados podem variar conforme convênio e análise de crédito.
+            Grota Financiamentos  S.A. | CNPJ: 07.599.448/0001-12 . **Endereço Sede:  R. Ferdinando Panattoni, 411 - Sala 03, Jardim Pauliceia, Campinas - SP. Aviso Legal:  A Grota Financiamentos atua como correspondente bancário, seguindo as diretrizes do Banco Central do Brasil, sob a resolução nº 3.954/11. A análise de crédito e as condições de financiamento são de responsabilidade da instituição financeira parceira. As taxas de juros, margem consignável e prazo de pagamento praticados podem variar conforme convênio e análise de crédito.
           </p>
 
           {/* 
