@@ -58,7 +58,8 @@ function Solucoes() {
         <BoxHero />
         <section className="py-16 w-full mx-auto">
           <BoxServices />
-          <BoxNewsletter />
+          {/* <BoxNewsletter /> */}
+          
           <TestimonialSlider />
           
         </section>
