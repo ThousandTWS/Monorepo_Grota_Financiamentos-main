@@ -49,7 +49,7 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/resgister")
+    @PostMapping("/register")
     @Operation(
             summary = "Cadastrar Lojista",
             description = "Cadastra um Lojista no banco de dados"
@@ -74,22 +74,12 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Credencias inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request){
+    public ResponseEntity<Api_Response> login(@RequestBody @Valid AuthRequest request){
         String token = userService.login(request);
-
-        ResponseCookie cookie = ResponseCookie.from("access_token", token)
-                .httpOnly(true)
-                .secure(false) // <--- DEVE SER FALSE PARA HTTP/LOCALHOST
-                .sameSite("Lax")
-                .domain(".meusite.local")
-                .path("/")
-                .maxAge(Duration.ofHours(1))
-                .build();
-        return
-                ResponseEntity
-                        .ok()
-                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                        .body(Map.of("Message", "Login realizado com sucesso"));
+        ResponseCookie cookie = createAuthCookie(token, false);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new Api_Response(true,"Login realizado com sucesso"));
     }
 
 
@@ -102,20 +92,11 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<?> logout(){
-        ResponseCookie expiredCookie = ResponseCookie.from("access_token", "")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .domain(".meusite.local")
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return ResponseEntity
-                .ok().
-                header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                .body(Map.of("message", "Logout realizado com sucesso"));
+    public ResponseEntity<Api_Response> logout(){
+        ResponseCookie expiredCookie = createAuthCookie("", true);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .body(new Api_Response(true,"Logout realizado com sucesso"));
     }
 
     @GetMapping("/me")
@@ -186,9 +167,9 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
         userService.requestPasswordReset(passwordResetRequestDTO);
-        return ResponseEntity.ok("Código de redefinição enviado para o email");
+        return ResponseEntity.ok(new Api_Response(true,"Código de redefinição enviado para o email"));
     }
 
     @PostMapping("/reset-password")
@@ -203,8 +184,19 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
         userService.resetPassword(passwordResetConfirmRequestDTO);
-        return ResponseEntity.ok("Senha alterada com sucesso");
+        return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
+    }
+
+    private ResponseCookie createAuthCookie(String token, boolean expire){
+        return ResponseCookie.from("access_token", expire ? "" : token)
+                .httpOnly(true)
+                .secure(false) // ajustar via application.yml em produção
+                .sameSite("Lax")
+                .domain(".meusite.local")
+                .path("/")
+                .maxAge(expire ? Duration.ZERO : Duration.ofHours(1))
+                .build();
     }
 }
