@@ -115,8 +115,8 @@ export const DesktopHeader = ({
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
         </Link>
-        {/*
-             <button
+
+        {/* <button
           onClick={onLoginClick}
           type="button"
           className={`relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300 ${
@@ -135,8 +135,7 @@ export const DesktopHeader = ({
             Área do cliente
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-        </button>
-            */}
+        </button> */}
       </div>
     </header>
   );
