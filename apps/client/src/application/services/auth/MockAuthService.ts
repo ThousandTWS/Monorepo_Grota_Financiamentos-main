@@ -21,13 +21,20 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      const { data } = await api.post("/auth/login", { email, password });
+      await fetch(
+        "http://localhost:8080/api/v1/grota-financiamentos/auth/login",
+        {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
+      );
       return {
         success: true,
         message: "Login realizado com sucesso!",
       };
-    } 
-    catch (error: any) {
+    } catch (error: any) {
       console.error("Erro no login:", error.message);
       return {
         success: false,
