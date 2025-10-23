@@ -1,11 +1,16 @@
 "use client";
+
 import Image from "next/image";
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
-import userServices from "@/application/services/UserServices/UserServices";
 
+interface UserDataProps {
+  id: number;
+  email: string;
+  fullName: string;
+}
 
 export default function UserDropdown() {
   const [userName, setUserName] = useState("");
@@ -18,7 +23,7 @@ export default function UserDropdown() {
         method: "POST",
         credentials: "include",
       });
-      window.location.href = "https://improved-halibut-6945xv74999355gg-3002.app.github.dev/";
+      window.location.href = "http://localhost:3000";
     } catch (error) {
       console.error("Erro na requisição:", error);
     }
@@ -27,12 +32,16 @@ export default function UserDropdown() {
 useEffect(() => {
   async function fetchUserName() {
     try {
-      const userData = await userServices.me();
-      console.log("Usuário retornado:", userData);
+      const response = await fetch("http://localhost:8080/api/v1/grota-financiamentos/auth/me", {
+        method: "GET",
+        credentials: "include"
+      })
 
-      if (userData && userData.fullName) {
+      const userData: UserDataProps = await response.json();
+
+      if (userData) {
         setUserName(userData.fullName);
-        setEmail(userData.email || "");
+        setEmail(userData.email);
       } else {
         setUserName("Usuário");
         setEmail("");
@@ -203,7 +212,7 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
               fill=""
             />
           </svg>
-          String
+          Sair da Conta
         </button>
       </Dropdown>
     </div>
