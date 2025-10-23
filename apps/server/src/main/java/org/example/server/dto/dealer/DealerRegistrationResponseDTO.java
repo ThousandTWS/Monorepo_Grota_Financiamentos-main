@@ -1,10 +1,10 @@
-package org.example.server.dto.logistic;
+package org.example.server.dto.dealer;
 
 import org.example.server.enums.UserVerificationStatus;
 
 import java.time.LocalDateTime;
 
-public record LogisticRegistrationResponseDTO(
+public record DealerRegistrationResponseDTO(
         Long id,
         String fullName,
         String email,

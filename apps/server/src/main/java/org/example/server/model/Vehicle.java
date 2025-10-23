@@ -34,7 +34,7 @@ public class Vehicle {
     private VehicleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Logistic logistic;
+    private Dealer dealer;
 
     private LocalDateTime createdAt;
 
@@ -133,12 +133,12 @@ public class Vehicle {
         this.status = status;
     }
 
-    public Logistic getLogistic() {
-        return logistic;
+    public Dealer getDealer() {
+        return dealer;
     }
 
-    public void setLogistic(Logistic logistic) {
-        this.logistic = logistic;
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
 
     @Override

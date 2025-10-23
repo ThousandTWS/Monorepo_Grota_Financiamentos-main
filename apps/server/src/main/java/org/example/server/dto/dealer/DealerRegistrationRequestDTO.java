@@ -1,10 +1,10 @@
-package org.example.server.dto.logistic;
+package org.example.server.dto.dealer;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record LogisticRegistrationRequestDTO(
+public record DealerRegistrationRequestDTO(
 
         @NotBlank(message = "O nome completo é obrigatório")
         @Size(min = 2, max = 100, message = "O nome completo deve ter entre 2 a 100 caracteres")

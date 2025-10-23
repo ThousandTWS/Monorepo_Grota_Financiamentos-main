@@ -39,8 +39,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String method = request.getMethod();
 
         // ROTAS QUE DEVEM SER IGNORADAS (permitAll())
-        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/logistics")) return true;
-        if (method.equals("GET") && path.equals("/api/v1/grota-financiamentos/logistics")) return true;
+        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/dealers")) return true;
+        if (method.equals("GET") && path.equals("/api/v1/grota-financiamentos/dealers")) return true;
         if (method.equals("PUT") && path.equals("/api/v1/grota-financiamentos/auth/verify-code")) return true;
         if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/auth/login")) return true;
 

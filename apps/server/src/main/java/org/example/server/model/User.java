@@ -37,7 +37,7 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Logistic logistic;
+    private Dealer dealer;
 
     @PrePersist
     protected void onCreate() {
@@ -119,12 +119,12 @@ public class User implements UserDetails {
         return createdAt;
     }
 
-    public Logistic getLogistic() {
-        return logistic;
+    public Dealer getDealer() {
+        return dealer;
     }
 
-    public void setLogistic(Logistic logistic) {
-        this.logistic = logistic;
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
 
     @Override

@@ -8,12 +8,12 @@ import jakarta.validation.Valid;
 import org.example.server.dto.Api_Response;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
-import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
-import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
+import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
+import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
-import org.example.server.service.LogisticService;
+import org.example.server.service.DealerService;
 import org.example.server.service.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
@@ -37,15 +36,15 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final UserService userService;
-    private final LogisticService logisticService;
+    private final DealerService dealerService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, LogisticService logisticService, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, DealerService dealerService, PasswordEncoder passwordEncoder) {
         this.manager = manager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.logisticService = logisticService;
+        this.dealerService = dealerService;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -59,8 +58,8 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticRegistrationResponseDTO> create(@Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
-        LogisticRegistrationResponseDTO responseDTO = logisticService.create(logisticRegistrationRequestDTO);
+    public ResponseEntity<DealerRegistrationResponseDTO> create(@Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){
+        DealerRegistrationResponseDTO responseDTO = dealerService.create(dealerRegistrationRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
@@ -117,7 +116,7 @@ public class AuthController {
         UserResponseDTO userResponseDTO = new UserResponseDTO(
                 user.getId(),
                 user.getEmail(),
-                user.getLogistic().getFullName()
+                user.getDealer().getFullName()
         );
         return ResponseEntity.ok(userResponseDTO);
     }

@@ -1,8 +1,8 @@
 package org.example.server.repository;
 
-import org.example.server.model.Logistic;
+import org.example.server.model.Dealer;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface LogisticRepository extends JpaRepository<Logistic, Long> {
+public interface DealerRepository extends JpaRepository<Dealer, Long> {
     boolean existsByPhone(String phone);
 }
