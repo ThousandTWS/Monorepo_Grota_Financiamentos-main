@@ -14,9 +14,7 @@ import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer"
 
 import BoxHero from "@/src/presentation/components/solucoes/Hero/BoxHero";
 import BoxServices from "@/src/presentation/components/solucoes/Services/BoxServices";
-import BoxNewsletter from "@/src/presentation/components/solucoes/Newsletter/BoxNewsletter";
 import TestimonialSlider from "@/components/testimonial-slider";
-import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
 
 function Solucoes() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);

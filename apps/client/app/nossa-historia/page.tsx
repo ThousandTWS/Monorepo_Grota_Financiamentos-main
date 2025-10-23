@@ -68,7 +68,7 @@ export default function Sobre() {
             subtitle="Com mais de 30 anos de experiência no mercado financeiro, oferecemos soluções personalizadas de financiamento para carros, motos e caminhões, além de expertise em seguros. Credibilidade, ética e excelência no atendimento fazem parte da nossa trajetória."
             callToAction={{
               text: "Fale com a nossa equipe",
-              href: "https://api.whatsapp.com/send?phone=5519992837133&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos.",
+              href: "https://api.whatsapp.com/send?phone=551937220914&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos.",
             }}
             backgroundImage="https://res.cloudinary.com/dqxcs3pwx/image/upload/v1758680425/f1lqg1pf6xrjoqk1sei5.jpg"
             contactInfo={{

@@ -16,6 +16,7 @@ import BoxHero from "@/src/presentation/components/financiamento/Hero/Boxhero";
 import BoxProcess from "@/src/presentation/components/financiamento/Process/BoxProcess";
 import TestimonialSlider from "@/components/testimonial-slider";
 import { FaqSection } from "@/src/presentation/components/banners/LogoSection/FaqSection";
+import Link from "next/link";
 
 
 function Financiamento() {
@@ -103,12 +104,12 @@ function Financiamento() {
               className="flex flex-col sm:flex-row gap-4 justify-center"
               data-oid="zc1g98v">
 
-              <button
+              <Link href="https://api.whatsapp.com/send?phone=551937220914&text=Ol%C3%A1!%20Tudo%20bem%3F%20Gostaria%20de%20mais%20informa%C3%A7%C3%B5es%20sobre%20finaciamento%20de%20ve%C3%ADculos."
                 className="bg-white text-[#1B4B7C] hover:bg-gray-100 px-8 py-4 rounded-xl font-bold text-lg transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
                 data-oid="4riqpwn">
 
                 Falar com Especialista
-              </button>
+              </Link>
             </div>
           </div>
         </section>
