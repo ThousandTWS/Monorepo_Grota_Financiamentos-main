@@ -50,6 +50,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     register,
     handleSubmit,
     formState: { errors, isValid, isDirty },
+    reset,
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
     mode: "onTouched",
@@ -70,7 +71,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
     if (result.success) {
       setSuccess("Conta criada com sucesso! Você será redirecionado.");
-      // Opcional: Adicionar um timer para fechar o modal ou redirecionar
+
+      setTimeout(() => {
+        onClose();
+        setSuccess("");
+        reset();
+        const event = new CustomEvent("openVerificationModal", {
+          detail: { email: result.user.email },
+        });
+        window.dispatchEvent(event);
+      }, 3000);
     }
   };
 
