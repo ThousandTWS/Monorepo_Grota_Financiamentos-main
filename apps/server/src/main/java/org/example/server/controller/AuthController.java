@@ -8,12 +8,12 @@ import jakarta.validation.Valid;
 import org.example.server.dto.Api_Response;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
-import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
-import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
+import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
+import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.JwtService;
-import org.example.server.service.LogisticService;
+import org.example.server.service.DealerService;
 import org.example.server.service.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
@@ -37,19 +36,19 @@ public class AuthController {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final UserService userService;
-    private final LogisticService logisticService;
+    private final DealerService dealerService;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, LogisticService logisticService, PasswordEncoder passwordEncoder) {
+    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, DealerService dealerService, PasswordEncoder passwordEncoder) {
         this.manager = manager;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.userService = userService;
-        this.logisticService = logisticService;
+        this.dealerService = dealerService;
         this.passwordEncoder = passwordEncoder;
     }
 
-    @PostMapping("/resgister")
+    @PostMapping("/register")
     @Operation(
             summary = "Cadastrar Lojista",
             description = "Cadastra um Lojista no banco de dados"
@@ -59,8 +58,8 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticRegistrationResponseDTO> create(@Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
-        LogisticRegistrationResponseDTO responseDTO = logisticService.create(logisticRegistrationRequestDTO);
+    public ResponseEntity<DealerRegistrationResponseDTO> create(@Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){
+        DealerRegistrationResponseDTO responseDTO = dealerService.create(dealerRegistrationRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
@@ -74,22 +73,12 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Credencias inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<?> login(@RequestBody @Valid AuthRequest request){
+    public ResponseEntity<Api_Response> login(@RequestBody @Valid AuthRequest request){
         String token = userService.login(request);
-
-        ResponseCookie cookie = ResponseCookie.from("access_token", token)
-                .httpOnly(true)
-                .secure(false) // <--- DEVE SER FALSE PARA HTTP/LOCALHOST
-                .sameSite("Lax")
-                .domain(null)
-                .path("/")
-                .maxAge(Duration.ofHours(1))
-                .build();
-        return
-                ResponseEntity
-                        .ok()
-                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                        .body(Map.of("Message", "Login realizado com sucesso"));
+        ResponseCookie cookie = createAuthCookie(token, false);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(new Api_Response(true,"Login realizado com sucesso"));
     }
 
 
@@ -102,20 +91,11 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<?> logout(){
-        ResponseCookie expiredCookie = ResponseCookie.from("access_token", "")
-                .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
-                .domain(null)
-                .path("/")
-                .maxAge(0)
-                .build();
-
-        return ResponseEntity
-                .ok().
-                header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                .body(Map.of("message", "Logout realizado com sucesso"));
+    public ResponseEntity<Api_Response> logout(){
+        ResponseCookie expiredCookie = createAuthCookie("", true);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
+                .body(new Api_Response(true,"Logout realizado com sucesso"));
     }
 
     @GetMapping("/me")
@@ -136,7 +116,7 @@ public class AuthController {
         UserResponseDTO userResponseDTO = new UserResponseDTO(
                 user.getId(),
                 user.getEmail(),
-                user.getLogistic().getFullName()
+                user.getDealer().getFullName()
         );
         return ResponseEntity.ok(userResponseDTO);
     }
@@ -186,9 +166,9 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
         userService.requestPasswordReset(passwordResetRequestDTO);
-        return ResponseEntity.ok("Código de redefinição enviado para o email");
+        return ResponseEntity.ok(new Api_Response(true,"Código de redefinição enviado para o email"));
     }
 
     @PostMapping("/reset-password")
@@ -203,8 +183,19 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<String> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
         userService.resetPassword(passwordResetConfirmRequestDTO);
-        return ResponseEntity.ok("Senha alterada com sucesso");
+        return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
+    }
+
+    private ResponseCookie createAuthCookie(String token, boolean expire){
+        return ResponseCookie.from("access_token", expire ? "" : token)
+                .httpOnly(true)
+                .secure(false) // ajustar via application.yml em produção
+                .sameSite("Lax")
+                .domain(".meusite.local")
+                .path("/")
+                .maxAge(expire ? Duration.ZERO : Duration.ofHours(1))
+                .build();
     }
 }
