@@ -193,7 +193,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(false) // ajustar via application.yml em produção
                 .sameSite("Lax")
-                .domain(".meusite.local")
+                .domain(null)
                 .path("/")
                 .maxAge(expire ? Duration.ZERO : Duration.ofHours(1))
                 .build();
