@@ -1,4 +1,4 @@
-package org.example.server.dto.logistic;
+package org.example.server.dto.dealer;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -6,7 +6,7 @@ import org.example.server.dto.address.AddressDTO;
 
 import java.time.LocalDate;
 
-public record LogisticProfileDTO(
+public record DealerProfileDTO(
         @NotBlank(message = "O nome completo da empresa é obrigatório")
         @Size(min = 2, max = 255, message = "O nome da empresa deve ter entre 2 e 255 caracteres")
         String fullNameEnterprise,

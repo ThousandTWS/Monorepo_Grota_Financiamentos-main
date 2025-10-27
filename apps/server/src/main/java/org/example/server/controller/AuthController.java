@@ -81,7 +81,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(false) // <--- DEVE SER FALSE PARA HTTP/LOCALHOST
                 .sameSite("Lax")
-                .domain(null)
+                .domain(".meusite.local")
                 .path("/")
                 .maxAge(Duration.ofHours(1))
                 .build();
@@ -103,11 +103,11 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<?> logout(){
-        ResponseCookie expiredCookie = ResponseCookie.from("access_token", null)
+        ResponseCookie expiredCookie = ResponseCookie.from("access_token", "")
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .domain(null)
+                .domain(".meusite.local")
                 .path("/")
                 .maxAge(0)
                 .build();

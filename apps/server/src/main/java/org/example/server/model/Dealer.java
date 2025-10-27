@@ -1,15 +1,13 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.Valid;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 @Entity
-@Table(name = "tb_logistic")
-public class Logistic {
+@Table(name = "tb_dealer")
+public class Dealer {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -36,13 +34,13 @@ public class Logistic {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @OneToMany(mappedBy = "logistic", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
     private List<Vehicle> vehicles;
 
-    public Logistic() {
+    public Dealer() {
     }
 
-    public Logistic(String fullName, LocalDate birthData, String phone, String enterprise, String fullNameEnterprise, String cnpj, Address address, User user) {
+    public Dealer(String fullName, LocalDate birthData, String phone, String enterprise, String fullNameEnterprise, String cnpj, Address address, User user) {
         this.fullName = fullName;
         this.birthData = birthData;
         this.phone = phone;
