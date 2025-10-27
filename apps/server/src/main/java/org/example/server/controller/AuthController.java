@@ -81,7 +81,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(false) // <--- DEVE SER FALSE PARA HTTP/LOCALHOST
                 .sameSite("Lax")
-                .domain(".meusite.local")
+                .domain(null)
                 .path("/")
                 .maxAge(Duration.ofHours(1))
                 .build();
@@ -107,7 +107,7 @@ public class AuthController {
                 .httpOnly(true)
                 .secure(false)
                 .sameSite("Lax")
-                .domain(".meusite.local")
+                .domain(null)
                 .path("/")
                 .maxAge(0)
                 .build();
