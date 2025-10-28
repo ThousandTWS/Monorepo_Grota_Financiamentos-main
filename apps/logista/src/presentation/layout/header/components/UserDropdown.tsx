@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useEffect } from "react";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
+import { User } from "lucide-react";
 
 interface UserDataProps {
   id: number;
@@ -71,12 +72,9 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         onClick={toggleDropdown} 
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-zinc-400">
-          <Image
-            width={44}
-            height={44}
-            src="/"
-            alt=""
+        <span className="mr-3 overflow-hidden flex justify-center items-center rounded-full h-11 w-11 bg-zinc-400 text-black">
+          <User
+            size={24}
           />
         </span>
 
