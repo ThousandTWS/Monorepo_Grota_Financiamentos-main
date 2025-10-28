@@ -111,6 +111,14 @@ public class User implements UserDetails {
         return verified;
     }
 
+    public UserVerificationStatus getVerified() {
+        return verified;
+    }
+
+    public void setVerified(UserVerificationStatus verified) {
+        this.verified = verified;
+    }
+
     public String getVerificationCode() {
         return verificationCode;
     }

@@ -82,6 +82,20 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public void resendCode(EmailResponseDTO dto) {
+        User user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new EmailNotFoundException("E-mail não cadastrado"));
+
+        if (user.getVerified() == UserVerificationStatus.ATIVO){
+            throw new UserAlreadyVerifiedException("Usuário já verificado. Não é necessário reenviar o código.");
+        }
+
+        String newCode = generateResetCode();
+        user.generateVerificationCode(newCode, Duration.ofMinutes(10));
+        userRepository.save(user);
+        emailService.sendVerificationEmail(user.getEmail(), newCode);
+    }
+
     @Transactional
     public void requestPasswordReset(PasswordResetRequestDTO passwordResetRequestDTO) {
         User user = userRepository.findByEmail(passwordResetRequestDTO.email())
@@ -111,4 +125,5 @@ public class UserService {
     private String generateResetCode() {
         return String.format("%06d", random.nextInt(1_000_000));
     }
+
 }

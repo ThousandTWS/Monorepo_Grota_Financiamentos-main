@@ -34,6 +34,7 @@ public class ApplicationControllerAdvice {
             InvalidVerificationCodeException.class,
             VerificationCodeExpiredException.class,
             EmailAlreadyExistsException.class,
+            EmailNotFoundException.class,
             PhoneAlreadyExistsExceptio.class,
             PasswordResetCodeInvalidException.class,
             PasswordResetCodeExpiredException.class

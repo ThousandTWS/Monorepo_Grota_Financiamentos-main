@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.server.dto.Api_Response;
+import org.example.server.dto.auth.EmailResponseDTO;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
@@ -81,7 +82,6 @@ public class AuthController {
                 .body(new Api_Response(true,"Login realizado com sucesso"));
     }
 
-
     @PostMapping("/logout")
     @Operation(
             summary = "Realizar logout",
@@ -135,6 +135,24 @@ public class AuthController {
     public ResponseEntity<Api_Response> verifyCode(@RequestBody @Valid VerificationCodeRequestDTO verificationCodeRequestDTO){
         userService.verifiUser(verificationCodeRequestDTO);
         return ResponseEntity.ok(new Api_Response(true, "Usuário verificado com sucesso"));
+    }
+
+    @Operation(
+            summary = "Reenviar código de verificação por e-mail",
+            description = "Permite que o usuário solicite o reenvio do código de verificação caso não tenha recebido ou o código anterior tenha expirado. "
+                    + "Um novo código é gerado e enviado para o e-mail cadastrado, com tempo de expiração definido."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Novo código de verificação enviado com sucesso para o e-mail informado."),
+            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique se o e-mail foi informado corretamente."),
+            @ApiResponse(responseCode = "404", description = "E-mail não encontrado no sistema."),
+            @ApiResponse(responseCode = "409", description = "Usuário já verificado. Reenvio não necessário."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+    })
+    @PostMapping("/resend-code")
+    public ResponseEntity<Api_Response> resendCode(@RequestBody EmailResponseDTO dto){
+        userService.resendCode(dto);
+        return ResponseEntity.ok(new Api_Response(true, "Código reenviado som sucesso"));
     }
 
     @PutMapping("/change-password")
