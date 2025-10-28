@@ -1,50 +1,83 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
 export interface ModalState {
-  isLoginModalOpen: boolean
-  isRegisterModalOpen: boolean
-  isForgotPasswordModalOpen: boolean
+  isLoginModalOpen: boolean;
+  isRegisterModalOpen: boolean;
+  isVerificationModalOpen: boolean;
+  verificationEmail: string | null;
+  isForgotPasswordModalOpen: boolean;
 }
 
 export interface ModalActions {
-  openLoginModal: () => void
-  closeLoginModal: () => void
-  openRegisterModal: () => void
-  closeRegisterModal: () => void
-  openForgotPasswordModal: () => void
-  closeForgotPasswordModal: () => void
+  openLoginModal: () => void;
+  closeLoginModal: () => void;
+  openRegisterModal: () => void;
+  closeRegisterModal: () => void;
+  openVerificationModal: () => void;
+  closeVerificationModal: () => void;
+  openForgotPasswordModal: () => void;
+  closeForgotPasswordModal: () => void;
 }
 
 export const useModalManager = (): ModalState & ModalActions => {
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
-  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] = useState(false)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState<string | null>(
+    null
+  );
+  const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
+    useState(false);
 
   useEffect(() => {
-    const handleOpenRegisterModal = () => setIsRegisterModalOpen(true)
-    const handleOpenForgotPasswordModal = () => setIsForgotPasswordModalOpen(true)
-    const handleOpenLoginModal = () => setIsLoginModalOpen(true)
-    
-    window.addEventListener('openRegisterModal', handleOpenRegisterModal)
-    window.addEventListener('openForgotPasswordModal', handleOpenForgotPasswordModal)
-    window.addEventListener('openLoginModal', handleOpenLoginModal)
-    
+    const handleOpenRegisterModal = () => setIsRegisterModalOpen(true);
+    const handleOpenVerificationModal = (event: Event) => {
+      const customEvent = event as CustomEvent<{ email: string }>;
+      setVerificationEmail(customEvent.detail.email);
+      setIsVerificationModalOpen(true);
+    };
+    const handleOpenForgotPasswordModal = () =>
+      setIsForgotPasswordModalOpen(true);
+    const handleOpenLoginModal = () => setIsLoginModalOpen(true);
+
+    window.addEventListener("openRegisterModal", handleOpenRegisterModal);
+    window.addEventListener(
+      "openForgotPasswordModal",
+      handleOpenForgotPasswordModal
+    );
+    window.addEventListener("openLoginModal", handleOpenLoginModal);
+    window.addEventListener(
+      "openVerificationModal",
+      handleOpenVerificationModal
+    );
+
     return () => {
-      window.removeEventListener('openRegisterModal', handleOpenRegisterModal)
-      window.removeEventListener('openForgotPasswordModal', handleOpenForgotPasswordModal)
-      window.removeEventListener('openLoginModal', handleOpenLoginModal)
-    }
-  }, [])
+      window.removeEventListener("openRegisterModal", handleOpenRegisterModal);
+      window.removeEventListener(
+        "openForgotPasswordModal",
+        handleOpenForgotPasswordModal
+      );
+      window.removeEventListener("openLoginModal", handleOpenLoginModal);
+      window.removeEventListener(
+        "openVerificationModal",
+        handleOpenVerificationModal
+      );
+    };
+  }, []);
 
   return {
     isLoginModalOpen,
     isRegisterModalOpen,
     isForgotPasswordModalOpen,
+    isVerificationModalOpen,
+    verificationEmail,
     openLoginModal: () => setIsLoginModalOpen(true),
     closeLoginModal: () => setIsLoginModalOpen(false),
     openRegisterModal: () => setIsRegisterModalOpen(true),
     closeRegisterModal: () => setIsRegisterModalOpen(false),
+    openVerificationModal: () => setIsVerificationModalOpen(true),
+    closeVerificationModal: () => setIsVerificationModalOpen(false),
     openForgotPasswordModal: () => setIsForgotPasswordModalOpen(true),
-    closeForgotPasswordModal: () => setIsForgotPasswordModalOpen(false)
-  }
-}
+    closeForgotPasswordModal: () => setIsForgotPasswordModalOpen(false),
+  };
+};
