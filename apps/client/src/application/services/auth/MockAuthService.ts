@@ -52,7 +52,7 @@ export class MockAuthService {
     enterprise,
   }: RegisterData): Promise<AuthResult> {
     try {
-      const { data } = await api.post("/logistics", {
+      const { data } = await api.post("/auth/resgister", {
         email,
         password,
         fullName,

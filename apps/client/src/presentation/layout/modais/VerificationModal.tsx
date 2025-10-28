@@ -1,46 +1,72 @@
 "use client";
 
 import { useState } from "react";
-import { X, Mail, CheckCircle, Loader2, AlertCircle } from "lucide-react";
+import {
+  X,
+  Mail,
+  CheckCircle,
+  Loader2,
+  AlertCircle,
+  RefreshCcw,
+} from "lucide-react";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSeparator,
+  InputOTPSlot,
+} from "@/presentation/components/ui/input-otp";
+import api from "@/application/services/server/api";
 
 interface VerificationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: () => void; 
-  email: string; 
+  email: string | null;
 }
 
-export function VerificationModal({ isOpen, onClose, onSuccess, email }: VerificationModalProps) {
+export function VerificationModal({
+  isOpen,
+  onClose,
+  email,
+}: VerificationModalProps) {
   const [token, setToken] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   const handleVerifyToken = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (token.length !== 6) { 
+    if (token.length !== 6) {
       setError("O código deve ter 6 dígitos.");
       return;
     }
-    
+
     setIsLoading(true);
     setError(null);
 
-    // --- LÓGICA REAL DE BACKEND AQUI ---
     try {
-      
-      // const response = await api.post('/auth/verify-token', { email, token });
-      
-      // Simulação de sucesso após 2 segundos
-      await new Promise(resolve => setTimeout(resolve, 2000)); 
+      const response = await api.put("/auth/verify-code", {
+        email,
+        code: token,
+      });
 
-      // if (response.data.success) {
-      if (token === "123456") { 
-        onSuccess(); 
+      if (response.data.success) {
+        setSuccess("Código validado! Você será redirecionado.");
+
+        setTimeout(() => {
+          onClose();
+          setSuccess("");
+          setToken("");
+          const event = new CustomEvent("openLoginModal");
+          window.dispatchEvent(event);
+        }, 3000);
       } else {
         setError("Código inválido. Por favor, verifique sua caixa de entrada.");
       }
     } catch (apiError: any) {
-      setError(apiError.response?.data?.message || "Erro ao verificar o código. Tente novamente.");
+      setError(
+        apiError.response?.data?.message ||
+          "Erro ao verificar o código. Tente novamente."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -59,17 +85,26 @@ export function VerificationModal({ isOpen, onClose, onSuccess, email }: Verific
         >
           <X size={24} />
         </button>
-        
+
         <div className="text-center mb-8">
           <Mail size={40} className="mx-auto text-blue-700 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verificação por E-mail</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Verificação por E-mail
+          </h2>
           <p className="text-gray-600 text-sm">
-            Enviamos um código de 6 dígitos para <span className="font-semibold text-gray-800">{email}</span>.
+            Enviamos um código de 6 dígitos para{" "}
+            <span className="font-semibold text-gray-800">{email}</span>.
             Insira-o abaixo para ativar sua conta.
           </p>
         </div>
-        
-        {error && (
+
+        {success && (
+          <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg text-green-800 font-medium text-sm">
+            {success}
+          </div>
+        )}
+
+        {error && token.length !== 0 && (
           <div className="mb-6 p-3 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3 text-red-800">
             <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
             <span className="text-sm font-medium">{error}</span>
@@ -77,22 +112,36 @@ export function VerificationModal({ isOpen, onClose, onSuccess, email }: Verific
         )}
 
         <form onSubmit={handleVerifyToken} className="space-y-6">
-          <div className="relative">
-            <input
-              type="text"
+          <div className="flex flex-col items-end relative">
+            <InputOTP
               maxLength={6}
               value={token}
-              onChange={(e) => {
-                setToken(e.target.value.replace(/\D/g, '')); // Aceita apenas números
-                setError(null);
-              }}
-              className="w-full text-center text-xl font-mono tracking-widest p-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-200 transition-all disabled:bg-gray-50"
-              placeholder="CÓDIGO (6 dígitos)"
+              onChange={(value) => setToken(value)}
               disabled={isLoading}
-              required
-            />
+            >
+              <InputOTPGroup>
+                <InputOTPSlot index={0} />
+                <InputOTPSlot index={1} />
+                <InputOTPSlot index={2} />
+              </InputOTPGroup>
+              <InputOTPSeparator />
+              <InputOTPGroup>
+                <InputOTPSlot index={3} />
+                <InputOTPSlot index={4} />
+                <InputOTPSlot index={5} />
+              </InputOTPGroup>
+            </InputOTP>
+
+            <button
+              type="button"
+              className="mt-4 mr-2 flex items-center gap-2 text-sm md:text-base text-blue-700 hover:text-blue-800 font-medium hover:cursor-pointer disabled:opacity-50"
+              disabled={isLoading}
+            >
+              <RefreshCcw size={18} />
+              Reenviar Código
+            </button>
           </div>
-          
+
           <button
             type="submit"
             disabled={isLoading || token.length !== 6}
@@ -110,14 +159,6 @@ export function VerificationModal({ isOpen, onClose, onSuccess, email }: Verific
               </>
             )}
           </button>
-          
-          {/* Opcional: Link para reenviar o código */}
-          <p className="text-center text-sm text-gray-500 mt-4">
-            Não recebeu o código? 
-            <button type="button" className="text-blue-700 hover:text-blue-800 font-medium ml-1 disabled:opacity-50" disabled={isLoading}>
-              Reenviar
-            </button>
-          </p>
         </form>
       </div>
     </div>
