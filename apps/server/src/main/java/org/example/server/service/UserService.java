@@ -1,6 +1,10 @@
 package org.example.server.service;
 
 import org.example.server.dto.auth.*;
+import org.example.server.dto.user.UserMapper;
+import org.example.server.dto.user.UserRequestDTO;
+import org.example.server.dto.user.UserResponseDTO;
+import org.example.server.enums.UserRole;
 import org.example.server.enums.UserVerificationStatus;
 import org.example.server.exception.*;
 import org.example.server.model.User;
@@ -13,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -22,18 +28,25 @@ public class UserService {
     private final JwtService jwtService;
     private final AuthenticationManager manager;
     private final EmailService emailService;
+    private final UserMapper userMapper;
     private final SecureRandom random = new SecureRandom();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager manager, EmailService emailService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager manager, EmailService emailService, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.manager = manager;
         this.emailService = emailService;
+        this.userMapper = userMapper;
     }
 
-    public User create(User user) {
-        return userRepository.save(user);
+    public UserResponseDTO create(UserRequestDTO userRequestDTO) {
+        if (userRepository.existsByEmail(userRequestDTO.email())){
+            throw new RecordNotFoundException("E-mail já cadastrado");
+        }
+        User user = userMapper.toEntity(userRequestDTO);
+        user.setRole(UserRole.ADMIN);
+        return userMapper.toDto(userRepository.save(user));
     }
 
     @Transactional
@@ -108,7 +121,15 @@ public class UserService {
         userRepository.save(user);
     }
 
+    public List<UserResponseDTO> findAll() {
+        List<User> usersDtos = userRepository.findAll();
+        return usersDtos.stream()
+                .map(userResponseDTO -> userMapper.toDto(userResponseDTO))
+                .collect(Collectors.toList());
+    }
+
     private String generateResetCode() {
         return String.format("%06d", random.nextInt(1_000_000));
     }
+
 }

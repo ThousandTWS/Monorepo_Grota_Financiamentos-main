@@ -3,6 +3,7 @@ package org.example.server.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.logistic.*;
+import org.example.server.enums.UserRole;
 import org.example.server.exception.EmailAlreadyExistsException;
 import org.example.server.exception.PhoneAlreadyExistsExceptio;
 import org.example.server.exception.RecordNotFoundException;
@@ -55,6 +56,7 @@ public class LogisticService {
         Logistic logistic = logisticRegistrationMapper.toEntity(logisticRegistrationRequestDTO);
         User user = logistic.getUser();
 
+        user.setRole(UserRole.LOJISTA);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.generateVerificationCode(generateVerificationCode(), Duration.ofMinutes(10));
 

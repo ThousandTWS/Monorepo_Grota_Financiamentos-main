@@ -15,7 +15,7 @@ public class OpenAPIConfig {
                 .title("API Grota Financiamentos")
                 .description("")
                 .contact(new Contact().name("Grota Financiamentos").email(""))
-                .version("1.0.0")
+                .version("1.0.1")
         );
     }
 }
