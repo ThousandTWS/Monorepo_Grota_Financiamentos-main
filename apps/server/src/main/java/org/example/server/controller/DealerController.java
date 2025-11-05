@@ -20,7 +20,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/dealers")
-@Tag(name = "Lojista", description = "Gerenciamento de lojistas")
+@Tag(name = "Dealer", description = "Dealer management")
 public class DealerController {
 
     private final DealerService dealerService;
@@ -60,7 +60,7 @@ public class DealerController {
         return ResponseEntity.ok().body(dealer);
     }
 
-    @GetMapping("/{id}/veiculos")
+    @GetMapping("/{id}/vehicles")
     @Operation(
             summary = "Lista de de veiculos do lojista",
             description = "Retorna a lista de todos os veiculos do lojista."
@@ -75,7 +75,7 @@ public class DealerController {
         return ResponseEntity.ok().body(vehiclesDto);
     }
 
-    @PutMapping("/lojista-update")
+    @PutMapping("/me")
     @Operation(
             summary = "Atualizar Lojista por ID",
             description = "Atualiza os dados de um Lojista com base no ID informado."
@@ -83,7 +83,6 @@ public class DealerController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<DealerRegistrationResponseDTO> update(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){

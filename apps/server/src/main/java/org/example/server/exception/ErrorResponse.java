@@ -1,4 +1,4 @@
-package org.example.server.controller;
+package org.example.server.exception;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;

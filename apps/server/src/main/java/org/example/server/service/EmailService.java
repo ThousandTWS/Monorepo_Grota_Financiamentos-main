@@ -2,6 +2,7 @@ package org.example.server.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -14,7 +15,11 @@ import org.thymeleaf.context.Context;
 public class EmailService {
 
     private final JavaMailSender mailSender;
-    private final SpringTemplateEngine springTemplateEngine; 
+    private final SpringTemplateEngine springTemplateEngine;
+
+    @Value("${app.mail.from}")
+    private String fromEmail;
+
 
     public EmailService(JavaMailSender mailSender, SpringTemplateEngine springTemplateEngine) {
         this.mailSender = mailSender;
@@ -45,7 +50,7 @@ public class EmailService {
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(html, true);
-            helper.setFrom("grotafinanciamentos@gmail.com");
+            helper.setFrom(fromEmail);
 
             mailSender.send(mimeMessage);
 

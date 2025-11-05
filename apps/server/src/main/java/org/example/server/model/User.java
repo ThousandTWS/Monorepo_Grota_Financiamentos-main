@@ -2,13 +2,15 @@ package org.example.server.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
-import org.example.server.enums.UserVerificationStatus;
+import org.example.server.enums.UserRole;
+import org.example.server.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "tb_user")
@@ -17,6 +19,8 @@ public class User implements UserDetails {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String fullName;
+
     @Column(nullable = false, unique = true, length = 150)
     private String email;
 
@@ -24,7 +28,10 @@ public class User implements UserDetails {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private UserVerificationStatus verified;
+    private UserRole role;
+
+    @Enumerated(EnumType.STRING)
+    private UserStatus verified;
 
     private String verificationCode; // Para ativação da conta
     private LocalDateTime codeExpiration; // Expiração da ativação
@@ -39,6 +46,9 @@ public class User implements UserDetails {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Dealer dealer;
 
+    public User(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    }
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -49,18 +59,18 @@ public class User implements UserDetails {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = UserVerificationStatus.PENDENTE;
+        this.verified = UserStatus.PENDENTE;
     }
 
     public void markAsVerified(){
-        this.verified = UserVerificationStatus.ATIVO;
+        this.verified = UserStatus.ATIVO;
         clearVerificationCode();
     }
 
     public void generateVerificationCode(String code, Duration validity){
         this.verificationCode = code;
         this.codeExpiration = LocalDateTime.now().plus(validity);
-        this.verified = UserVerificationStatus.PENDENTE;
+        this.verified = UserStatus.PENDENTE;
     }
 
     public boolean isVerificationCodeValid(String code){
@@ -91,6 +101,14 @@ public class User implements UserDetails {
         return id;
     }
 
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -103,12 +121,28 @@ public class User implements UserDetails {
         return this.password;
     }
 
+    public UserRole getRole() {
+        return role;
+    }
+
+    public void setRole(UserRole role) {
+        this.role = role;
+    }
+
     public void setPassword(String password) {
         this.password = password;
     }
 
-    public UserVerificationStatus getVerificationStatus() {
+    public UserStatus getVerificationStatus() {
         return verified;
+    }
+
+    public UserStatus getVerified() {
+        return verified;
+    }
+
+    public void setVerified(UserStatus verified) {
+        this.verified = verified;
     }
 
     public String getVerificationCode() {
@@ -129,7 +163,7 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return null;
+        return List.of(this.role);
     }
 
     @Override

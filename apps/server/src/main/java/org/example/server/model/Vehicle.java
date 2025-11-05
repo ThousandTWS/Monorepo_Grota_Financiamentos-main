@@ -16,21 +16,35 @@ public class Vehicle {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String color;
+
+    @Column(nullable = false, unique = true, length = 8)
     private String plate;
+
+    @Column(nullable = false)
     private LocalDate modelYear;
+
+    @Column(nullable = false)
     private Integer km;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private VehicleCondition vehicleCondition;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private VehicleTransmission vehicleTransmission;
 
+    @Column(nullable = false)
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private VehicleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,7 +1,7 @@
 package org.example.server.dto.dealer;
 
 import org.example.server.dto.address.AddressDTO;
-import org.example.server.enums.UserVerificationStatus;
+import org.example.server.enums.UserStatus;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -12,7 +12,7 @@ public record DealerDetailsResponseDTO(
         String email,
         String phone,
         String enterprise,
-        UserVerificationStatus status,
+        UserStatus status,
         String fullNameEnterprise,
         LocalDate birthData,
         String cnpj,

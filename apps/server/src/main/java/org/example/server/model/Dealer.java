@@ -12,9 +12,6 @@ public class Dealer {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 100)
-    private String fullName;
-
     private LocalDate birthData;
 
     @Column(nullable = false, unique = true, length = 50)
@@ -30,8 +27,8 @@ public class Dealer {
     @Embedded
     private Address address;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(cascade = CascadeType.ALL, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
@@ -40,8 +37,7 @@ public class Dealer {
     public Dealer() {
     }
 
-    public Dealer(String fullName, LocalDate birthData, String phone, String enterprise, String fullNameEnterprise, String cnpj, Address address, User user) {
-        this.fullName = fullName;
+    public Dealer(LocalDate birthData, String phone, String enterprise, String fullNameEnterprise, String cnpj, Address address, User user) {
         this.birthData = birthData;
         this.phone = phone;
         this.enterprise = enterprise;
@@ -57,14 +53,6 @@ public class Dealer {
 
     public Long getId() {
         return id;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     public LocalDate getBirthData() {

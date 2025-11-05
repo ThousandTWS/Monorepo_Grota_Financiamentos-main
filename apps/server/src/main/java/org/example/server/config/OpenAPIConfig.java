@@ -8,14 +8,17 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenAPIConfig {
-
     @Bean
     public OpenAPI openAPI() {
         return new OpenAPI().info(new Info()
-                .title("API Grota Financiamentos")
+                .title("Grota Financiamentos - API")
                 .description("")
-                .contact(new Contact().name("Grota Financiamentos").email(""))
-                .version("1.0.0")
+                .version("1.0.1")
+                .contact(new Contact()
+                        .name("Suporte Grota Financiamentos")
+                        .email("")
+                        .url("")
+                )
         );
     }
 }

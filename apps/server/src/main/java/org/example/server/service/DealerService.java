@@ -3,18 +3,19 @@ package org.example.server.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.dealer.*;
-import org.example.server.exception.EmailAlreadyExistsException;
-import org.example.server.exception.PhoneAlreadyExistsExceptio;
-import org.example.server.exception.RecordNotFoundException;
+import org.example.server.enums.UserRole;
+import org.example.server.enums.UserStatus;
+import org.example.server.exception.generic.DataAlreadyExistsException;
+import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.UserRepository;
+import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -30,8 +31,19 @@ public class DealerService {
     private final DealerProfileMapper dealerProfileMapper;
     private final AddressMapper addressMapper;
     private final DealerDetailsMapper dealerDetailsMapper;
+    private final VerificationCodeGenerator codeGenerator;
 
-    public DealerService(DealerRepository dealerRepository, UserRepository userRepository, DealerRegistrationMapper dealerRegistrationMapper, PasswordEncoder passwordEncoder, EmailService emailService, DealerProfileMapper dealerProfileMapper, AddressMapper addressMapper, DealerDetailsMapper dealerDetailsMapper) {
+    public DealerService(
+            DealerRepository dealerRepository,
+            UserRepository userRepository,
+            DealerRegistrationMapper dealerRegistrationMapper,
+            PasswordEncoder passwordEncoder,
+            EmailService emailService,
+            DealerProfileMapper dealerProfileMapper,
+            AddressMapper addressMapper,
+            DealerDetailsMapper dealerDetailsMapper,
+            VerificationCodeGenerator codeGenerator
+    ) {
         this.dealerRepository = dealerRepository;
         this.userRepository = userRepository;
         this.dealerRegistrationMapper = dealerRegistrationMapper;
@@ -40,26 +52,37 @@ public class DealerService {
         this.dealerProfileMapper = dealerProfileMapper;
         this.addressMapper = addressMapper;
         this.dealerDetailsMapper = dealerDetailsMapper;
+        this.codeGenerator = codeGenerator;
     }
 
     @Transactional
     public DealerRegistrationResponseDTO create(DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
         if (userRepository.existsByEmail(dealerRegistrationRequestDTO.email())) {
-            throw new EmailAlreadyExistsException("Email já existe");
+            throw new DataAlreadyExistsException("Email já existe");
         }
 
         if (dealerRepository.existsByPhone(dealerRegistrationRequestDTO.phone())) {
-            throw new PhoneAlreadyExistsExceptio("Telefone já cadastrado");
+            throw new DataAlreadyExistsException("Telefone já cadastrado");
         }
 
-        Dealer dealer = dealerRegistrationMapper.toEntity(dealerRegistrationRequestDTO);
-        User user = dealer.getUser();
+        User user = new User();
+        user.setFullName(dealerRegistrationRequestDTO.fullName());
+        user.setEmail(dealerRegistrationRequestDTO.email());
+        user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
+        user.setRole(UserRole.LOJISTA);
+        user.setVerified(UserStatus.PENDENTE);
+        user.generateVerificationCode(codeGenerator.generate(),Duration.ofMinutes(10));
 
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.generateVerificationCode(generateVerificationCode(), Duration.ofMinutes(10));
+        Dealer dealer = new Dealer();
+        dealer.setUser(user);
+        dealer.setPhone(dealerRegistrationRequestDTO.phone());
+        dealer.setEnterprise(dealerRegistrationRequestDTO.enterprise());
+        dealer.setUser(user);
 
-        userRepository.save(user);
+        user.setDealer(dealer);
+
         dealerRepository.save(dealer);
+
         emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
 
         return dealerRegistrationMapper.toDTO(dealer);
@@ -98,19 +121,18 @@ public class DealerService {
     @Transactional
     public DealerRegistrationResponseDTO update(Long id, DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
         Dealer dealer = dealerRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException(id));
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado com id: " + id));
 
         User user = dealer.getUser();
         if (user == null) {
             throw new EntityNotFoundException("Usuário vinculado à logística não encontrado");
         }
 
-        dealer.setFullName(dealerRegistrationRequestDTO.fullName());
+        user.setFullName(dealerRegistrationRequestDTO.fullName());
+        user.setEmail(dealerRegistrationRequestDTO.email());
+
         dealer.setPhone(dealerRegistrationRequestDTO.phone());
         dealer.setEnterprise(dealerRegistrationRequestDTO.enterprise());
-
-        user.setEmail(dealerRegistrationRequestDTO.email());
-        user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
 
         userRepository.save(user);
         dealerRepository.save(dealer);
@@ -119,25 +141,16 @@ public class DealerService {
     }
 
     @Transactional
-    public DealerProfileDTO updateProfile(Long userId, DealerProfileDTO dto) {
-        Dealer dealer = dealerRepository.findById(userId)
+    public DealerProfileDTO updateProfile(Long dealerId, DealerProfileDTO dto) {
+        Dealer dealer = dealerRepository.findById(dealerId)
                 .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado"));
 
-        if (dto.fullNameEnterprise() != null)
-            dealer.setFullNameEnterprise(dto.fullNameEnterprise());
-        if (dto.birthData() != null)
-            dealer.setBirthData(dto.birthData());
-        if (dto.cnpj() != null)
-            dealer.setCnpj(dto.cnpj());
-        if (dto.address() != null)
-            dealer.setAddress(addressMapper.toEntity(dto.address()));
+        if (dto.fullNameEnterprise() != null) dealer.setFullNameEnterprise(dto.fullNameEnterprise());
+        if (dto.birthData() != null) dealer.setBirthData(dto.birthData());
+        if (dto.cnpj() != null) dealer.setCnpj(dto.cnpj());
+        if (dto.address() != null) dealer.setAddress(addressMapper.toEntity(dto.address()));
 
         return dealerProfileMapper.toDTO(dealerRepository.save(dealer));
     }
 
-    // Métodos Auxiliares
-    private String generateVerificationCode() {
-        SecureRandom random = new SecureRandom();
-        return String.format("%06d", random.nextInt(1_000_000));
-    }
 }
