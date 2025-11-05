@@ -16,25 +16,39 @@ public class Vehicle {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false)
     private String color;
+
+    @Column(nullable = false, unique = true, length = 8)
     private String plate;
+
+    @Column(nullable = false)
     private LocalDate modelYear;
+
+    @Column(nullable = false)
     private Integer km;
 
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private VehicleCondition vehicleCondition;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private VehicleTransmission vehicleTransmission;
 
+    @Column(nullable = false)
     private BigDecimal price;
 
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private VehicleStatus status;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    private Logistic logistic;
+    private Dealer dealer;
 
     private LocalDateTime createdAt;
 
@@ -133,12 +147,12 @@ public class Vehicle {
         this.status = status;
     }
 
-    public Logistic getLogistic() {
-        return logistic;
+    public Dealer getDealer() {
+        return dealer;
     }
 
-    public void setLogistic(Logistic logistic) {
-        this.logistic = logistic;
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
 
     @Override

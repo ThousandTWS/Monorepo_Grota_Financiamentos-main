@@ -1,16 +1,16 @@
 package org.example.server.dto.vehicle;
 
-import org.example.server.dto.logistic.LogisticRegistrationMapper;
+import org.example.server.dto.dealer.DealerRegistrationMapper;
 import org.example.server.model.Vehicle;
 import org.springframework.stereotype.Component;
 
 @Component
 public class VehicleMapper {
 
-    private final LogisticRegistrationMapper logisticRegistrationMapper;
+    private final DealerRegistrationMapper dealerRegistrationMapper;
 
-    public VehicleMapper(LogisticRegistrationMapper logisticRegistrationMapper) {
-        this.logisticRegistrationMapper = logisticRegistrationMapper;
+    public VehicleMapper(DealerRegistrationMapper dealerRegistrationMapper) {
+        this.dealerRegistrationMapper = dealerRegistrationMapper;
     }
 
     public VehicleResponseDTO toDTO(Vehicle vehicle){
@@ -27,7 +27,7 @@ public class VehicleMapper {
                 vehicle.getTransmission().name(),
                 vehicle.getPrice(),
                 vehicle.getStatus(),
-                vehicle.getLogistic() != null ? vehicle.getLogistic().getId() : null
+                vehicle.getDealer() != null ? vehicle.getDealer().getId() : null
         );
     }
 

@@ -5,12 +5,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.example.server.dto.logistic.LogisticDetailsResponseDTO;
-import org.example.server.dto.logistic.LogisticProfileDTO;
-import org.example.server.dto.logistic.LogisticRegistrationRequestDTO;
-import org.example.server.dto.logistic.LogisticRegistrationResponseDTO;
+import org.example.server.dto.dealer.DealerDetailsResponseDTO;
+import org.example.server.dto.dealer.DealerProfileDTO;
+import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
+import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
-import org.example.server.service.LogisticService;
+import org.example.server.service.DealerService;
 import org.example.server.service.VehicleService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,15 +19,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/grota-financiamentos/logistics")
-@Tag(name = "Lojista", description = "Gerenciamento de lojistas")
-public class LogisticController {
+@RequestMapping("/api/v1/grota-financiamentos/dealers")
+@Tag(name = "Dealer", description = "Dealer management")
+public class DealerController {
 
-    private final LogisticService logisticService;
+    private final DealerService dealerService;
     private final VehicleService vehicleService;
 
-    public LogisticController(LogisticService logisticService, VehicleService vehicleService) {
-        this.logisticService = logisticService;
+    public DealerController(DealerService dealerService, VehicleService vehicleService) {
+        this.dealerService = dealerService;
         this.vehicleService = vehicleService;
     }
 
@@ -40,9 +40,9 @@ public class LogisticController {
             @ApiResponse(responseCode = "200", description = "Lista de Lojistas retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<LogisticRegistrationResponseDTO>> findAll(){
-        List<LogisticRegistrationResponseDTO> logisticList = logisticService.findAll();
-        return ResponseEntity.ok().body(logisticList);
+    public ResponseEntity<List<DealerRegistrationResponseDTO>> findAll(){
+        List<DealerRegistrationResponseDTO> dealerList = dealerService.findAll();
+        return ResponseEntity.ok().body(dealerList);
     }
 
     @GetMapping("/{id}")
@@ -55,12 +55,12 @@ public class LogisticController {
             @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticRegistrationResponseDTO> findById(@PathVariable Long id){
-        LogisticRegistrationResponseDTO logistic = logisticService.findById(id);
-        return ResponseEntity.ok().body(logistic);
+    public ResponseEntity<DealerRegistrationResponseDTO> findById(@PathVariable Long id){
+        DealerRegistrationResponseDTO dealer = dealerService.findById(id);
+        return ResponseEntity.ok().body(dealer);
     }
 
-    @GetMapping("/{id}/veiculos")
+    @GetMapping("/{id}/vehicles")
     @Operation(
             summary = "Lista de de veiculos do lojista",
             description = "Retorna a lista de todos os veiculos do lojista."
@@ -70,12 +70,12 @@ public class LogisticController {
             @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<VehicleResponseDTO>> getVehicleByLogistic(@PathVariable Long id){
-        List<VehicleResponseDTO> vehiclesDto = vehicleService.getVehicleByLogistic(id);
+    public ResponseEntity<List<VehicleResponseDTO>> getVehicleByDealer(@PathVariable Long id){
+        List<VehicleResponseDTO> vehiclesDto = vehicleService.getVehicleByDealer(id);
         return ResponseEntity.ok().body(vehiclesDto);
     }
 
-    @PutMapping("/lojista-update")
+    @PutMapping("/me")
     @Operation(
             summary = "Atualizar Lojista por ID",
             description = "Atualiza os dados de um Lojista com base no ID informado."
@@ -83,12 +83,11 @@ public class LogisticController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista atualizado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticRegistrationResponseDTO> update(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody LogisticRegistrationRequestDTO logisticRegistrationRequestDTO){
-        LogisticRegistrationResponseDTO logistic = logisticService.update(id, logisticRegistrationRequestDTO);
-        return ResponseEntity.ok().body(logistic);
+    public ResponseEntity<DealerRegistrationResponseDTO> update(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){
+        DealerRegistrationResponseDTO dealer = dealerService.update(id, dealerRegistrationRequestDTO);
+        return ResponseEntity.ok().body(dealer);
     }
 
     @PutMapping("/profile/complete")
@@ -101,9 +100,9 @@ public class LogisticController {
             @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticProfileDTO> completeProfile(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody LogisticProfileDTO logisticProfileDTO){
+    public ResponseEntity<DealerProfileDTO> completeProfile(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody DealerProfileDTO dealerProfileDTO){
         System.out.println("ID autenticado: " + id);
-        LogisticProfileDTO profileDTO = logisticService.completeProfile(id, logisticProfileDTO);
+        DealerProfileDTO profileDTO = dealerService.completeProfile(id, dealerProfileDTO);
         return ResponseEntity.ok(profileDTO);
     }
 
@@ -116,8 +115,8 @@ public class LogisticController {
             @ApiResponse(responseCode = "200", description = "Perfil do lojista atualizado com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticProfileDTO> updateProfile(@AuthenticationPrincipal(expression = "id") Long userId, @Valid @RequestBody LogisticProfileDTO dto) {
-        LogisticProfileDTO updated = logisticService.updateProfile(userId, dto);
+    public ResponseEntity<DealerProfileDTO> updateProfile(@AuthenticationPrincipal(expression = "id") Long userId, @Valid @RequestBody DealerProfileDTO dto) {
+        DealerProfileDTO updated = dealerService.updateProfile(userId, dto);
         return ResponseEntity.ok(updated);
     }
 
@@ -132,9 +131,9 @@ public class LogisticController {
             @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<LogisticDetailsResponseDTO> findDetailsLogistic(@PathVariable Long id){
-        LogisticDetailsResponseDTO logisticDetails = logisticService.findDetailLogistic(id);
-        return ResponseEntity.ok(logisticDetails);
+    public ResponseEntity<DealerDetailsResponseDTO> findDetailsDealer(@PathVariable Long id){
+        DealerDetailsResponseDTO dealerDetails = dealerService.findDetailDealer(id);
+        return ResponseEntity.ok(dealerDetails);
     }
 
 }

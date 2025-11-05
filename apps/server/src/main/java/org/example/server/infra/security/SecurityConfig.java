@@ -45,14 +45,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/forgot-password").permitAll()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/verify-code").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
-
                         .requestMatchers("/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-resources/**",
                                 "/webjars/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().permitAll() //.authenticated()  //authenticated()
+                        .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());
 

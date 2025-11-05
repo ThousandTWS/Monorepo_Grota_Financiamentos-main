@@ -16,5 +16,5 @@ public record VehicleResponseDTO(
         String transmission,
         BigDecimal price,
         VehicleStatus status,
-        Long logistic
+        Long dealer
 ) {}

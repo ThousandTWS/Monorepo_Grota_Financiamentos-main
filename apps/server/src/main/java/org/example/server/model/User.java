@@ -3,7 +3,7 @@ package org.example.server.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import org.example.server.enums.UserRole;
-import org.example.server.enums.UserVerificationStatus;
+import org.example.server.enums.UserStatus;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -31,7 +31,7 @@ public class User implements UserDetails {
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
-    private UserVerificationStatus verified;
+    private UserStatus verified;
 
     private String verificationCode; // Para ativação da conta
     private LocalDateTime codeExpiration; // Expiração da ativação
@@ -44,7 +44,10 @@ public class User implements UserDetails {
     private LocalDateTime createdAt;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
-    private Logistic logistic;
+    private Dealer dealer;
+
+    public User(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    }
 
     @PrePersist
     protected void onCreate() {
@@ -56,18 +59,18 @@ public class User implements UserDetails {
     public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = UserVerificationStatus.PENDENTE;
+        this.verified = UserStatus.PENDENTE;
     }
 
     public void markAsVerified(){
-        this.verified = UserVerificationStatus.ATIVO;
+        this.verified = UserStatus.ATIVO;
         clearVerificationCode();
     }
 
     public void generateVerificationCode(String code, Duration validity){
         this.verificationCode = code;
         this.codeExpiration = LocalDateTime.now().plus(validity);
-        this.verified = UserVerificationStatus.PENDENTE;
+        this.verified = UserStatus.PENDENTE;
     }
 
     public boolean isVerificationCodeValid(String code){
@@ -130,8 +133,16 @@ public class User implements UserDetails {
         this.password = password;
     }
 
-    public UserVerificationStatus getVerificationStatus() {
+    public UserStatus getVerificationStatus() {
         return verified;
+    }
+
+    public UserStatus getVerified() {
+        return verified;
+    }
+
+    public void setVerified(UserStatus verified) {
+        this.verified = verified;
     }
 
     public String getVerificationCode() {
@@ -142,12 +153,12 @@ public class User implements UserDetails {
         return createdAt;
     }
 
-    public Logistic getLogistic() {
-        return logistic;
+    public Dealer getDealer() {
+        return dealer;
     }
 
-    public void setLogistic(Logistic logistic) {
-        this.logistic = logistic;
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
 
     @Override

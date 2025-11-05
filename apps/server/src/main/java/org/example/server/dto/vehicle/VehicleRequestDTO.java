@@ -17,6 +17,7 @@ public record VehicleRequestDTO(
         String color,
 
         @NotBlank(message = "A placa é obrigatória")
+        @Size(min=7, max=8, message = "A placa deve ter entre 7 e 8 caracteres")
         String plate,
 
         @NotNull(message = "O ano do modelo é obrigatório")
