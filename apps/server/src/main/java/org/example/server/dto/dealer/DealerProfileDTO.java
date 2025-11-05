@@ -22,5 +22,4 @@ public record DealerProfileDTO(
         @NotNull(message = "O endereço é obrigatório")
         @Valid
         AddressDTO address
-) {
-}
+) {}

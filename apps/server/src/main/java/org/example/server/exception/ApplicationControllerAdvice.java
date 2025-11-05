@@ -1,6 +1,10 @@
-package org.example.server.controller;
+package org.example.server.exception;
 
-import org.example.server.exception.*;
+import org.example.server.exception.auth.*;
+import org.example.server.exception.generic.DataAlreadyExistsException;
+import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.exception.user.UserAlreadyVerifiedException;
+import org.example.server.exception.user.UserNotVerifiedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,12 +35,8 @@ public class ApplicationControllerAdvice {
     @ExceptionHandler({
             RecordNotFoundException.class,
             UserAlreadyVerifiedException.class,
-            InvalidVerificationCodeException.class,
-            VerificationCodeExpiredException.class,
-            EmailAlreadyExistsException.class,
-            PhoneAlreadyExistsExceptio.class,
-            PasswordResetCodeInvalidException.class,
-            PasswordResetCodeExpiredException.class
+            CodeExpiredException.class,
+            DataAlreadyExistsException.class,
     })
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleBadRequestExceptions(RuntimeException ex){
@@ -57,6 +57,15 @@ public class ApplicationControllerAdvice {
     public ErrorResponse handleInvalidPasswordException(InvalidPasswordException ex){
         return new ErrorResponse(
                 HttpStatus.BAD_REQUEST,
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleAccessDeniedException(AccessDeniedException ex) {
+        return new ErrorResponse(
+                HttpStatus.FORBIDDEN,
                 ex.getMessage()
         );
     }

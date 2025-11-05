@@ -16,7 +16,7 @@ public class DealerRegistrationMapper {
 
         return new DealerRegistrationResponseDTO(
                 dealer.getId(),
-                dealer.getFullName(),
+                dealer.getUser().getFullName(),
                 user != null ? user.getEmail() : null,
                 dealer.getPhone(),
                 dealer.getEnterprise(),
@@ -26,20 +26,11 @@ public class DealerRegistrationMapper {
     }
 
     public Dealer toEntity(DealerRegistrationRequestDTO dto){
-        if (dto == null){
-            return null;
-        }
-
-        User user = new User();
-        user.setEmail(dto.email());
-        user.setPassword(dto.password());
+        if (dto == null) return null;
 
         Dealer dealer = new Dealer();
-        dealer.setFullName(dto.fullName());
         dealer.setPhone(dto.phone());
         dealer.setEnterprise(dto.enterprise());
-        dealer.setUser(user);
-
         return dealer;
     }
 }

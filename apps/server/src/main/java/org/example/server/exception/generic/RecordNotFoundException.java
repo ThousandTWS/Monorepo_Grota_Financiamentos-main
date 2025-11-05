@@ -1,4 +1,4 @@
-package org.example.server.exception;
+package org.example.server.exception.generic;
 
 public class RecordNotFoundException extends RuntimeException{
     public RecordNotFoundException(Long id){

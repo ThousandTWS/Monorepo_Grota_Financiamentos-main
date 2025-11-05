@@ -21,16 +21,16 @@ public class DealerDetailsMapper {
 
         return new DealerDetailsResponseDTO(
                 dealer.getId(),
-                dealer.getFullName(),
-                dealer.getUser().getEmail(),
+                user != null ? user.getFullName() : null,
+                user != null ? user.getEmail() : null,
                 dealer.getPhone(),
                 dealer.getEnterprise(),
-                dealer.getUser().getVerificationStatus(),
+                user != null ? user.getVerified() : null,
                 dealer.getFullNameEnterprise(),
                 dealer.getBirthData(),
                 dealer.getCnpj(),
                 addressMapper.toDTO(dealer.getAddress()),
-                dealer.getUser().getCreatedAt()
+                user != null ? user.getCreatedAt() : null
         );
     }
 }

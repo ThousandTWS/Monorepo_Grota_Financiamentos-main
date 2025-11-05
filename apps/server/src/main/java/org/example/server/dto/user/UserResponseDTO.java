@@ -1,15 +1,14 @@
-package org.example.server.dto.dealer;
+package org.example.server.dto.user;
 
 import org.example.server.enums.UserStatus;
 
 import java.time.LocalDateTime;
 
-public record DealerRegistrationResponseDTO(
+public record UserResponseDTO(
         Long id,
         String fullName,
         String email,
-        String phone,
-        String enterprise,
         UserStatus status,
+        String role,
         LocalDateTime createdAt
-){}
+) {}

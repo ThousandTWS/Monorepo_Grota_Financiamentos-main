@@ -1,10 +1,20 @@
 package org.example.server.service;
 
 import org.example.server.dto.auth.*;
-import org.example.server.enums.UserVerificationStatus;
-import org.example.server.exception.*;
+import org.example.server.dto.user.UserMapper;
+import org.example.server.dto.user.UserRequestDTO;
+import org.example.server.dto.user.UserResponseDTO;
+import org.example.server.enums.UserRole;
+import org.example.server.enums.UserStatus;
+import org.example.server.exception.auth.InvalidPasswordException;
+import org.example.server.exception.auth.CodeInvalidException;
+import org.example.server.exception.generic.DataAlreadyExistsException;
+import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.exception.user.UserAlreadyVerifiedException;
+import org.example.server.exception.user.UserNotVerifiedException;
 import org.example.server.model.User;
 import org.example.server.repository.UserRepository;
+import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -13,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -22,24 +34,51 @@ public class UserService {
     private final JwtService jwtService;
     private final AuthenticationManager manager;
     private final EmailService emailService;
+    private final UserMapper userMapper;
+    private final VerificationCodeGenerator codeGenerator;
     private final SecureRandom random = new SecureRandom();
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager manager, EmailService emailService) {
+    public UserService(
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuthenticationManager manager,
+            EmailService emailService,
+            UserMapper userMapper,
+            VerificationCodeGenerator codeGenerator
+    ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.manager = manager;
         this.emailService = emailService;
+        this.userMapper = userMapper;
+        this.codeGenerator = codeGenerator;
     }
 
-    public User create(User user) {
-        return userRepository.save(user);
+    public UserResponseDTO create(UserRequestDTO userRequestDTO) {
+        if (userRepository.existsByEmail(userRequestDTO.email())){
+            throw new DataAlreadyExistsException("E-mail já cadastrado");
+        }
+        User user = userMapper.toEntity(userRequestDTO);
+
+        user.setRole(UserRole.ADMIN);
+        user.setVerified(UserStatus.PENDENTE);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
+
+        userRepository.save(user);
+
+        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+
+        return userMapper.toDto(user);
     }
 
     @Transactional
     public void changePassword(String email, ChangePasswordDTO changePasswordDTO) {
         var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com o id: " + email));
 
         if (!passwordEncoder.matches(changePasswordDTO.oldPassword(), user.getPassword())) {
             throw new InvalidPasswordException("Senha atual incorreta");
@@ -58,9 +97,9 @@ public class UserService {
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
         var user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com id: " + request.email()));
 
-        if (user.getVerificationStatus() == UserVerificationStatus.PENDENTE) {
+        if (user.getVerificationStatus() == UserStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
 
@@ -69,25 +108,39 @@ public class UserService {
 
     public void verifiUser(VerificationCodeRequestDTO verificationCodeRequestDTO) {
         User user = userRepository.findByEmail(verificationCodeRequestDTO.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado com o id: " + verificationCodeRequestDTO.email()));
 
-        if (user.getVerificationStatus() == UserVerificationStatus.ATIVO) {
+        if (user.getVerificationStatus() == UserStatus.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
         }
         if (!user.isVerificationCodeValid(verificationCodeRequestDTO.code())) {
-            throw new InvalidVerificationCodeException("Código invádo ou expirado");
+            throw new CodeInvalidException("Código invádo ou expirado");
         }
 
         user.markAsVerified();
         userRepository.save(user);
     }
 
+    public void resendCode(EmailResponseDTO dto) {
+        User user = userRepository.findByEmail(dto.email())
+                .orElseThrow(() -> new RecordNotFoundException("E-mail não cadastrado"));
+
+        if (user.getVerified() == UserStatus.ATIVO){
+            throw new UserAlreadyVerifiedException("Usuário já verificado. Não é necessário reenviar o código.");
+        }
+
+        String newCode = codeGenerator.generate();
+        user.generateVerificationCode(newCode, Duration.ofMinutes(10));
+        userRepository.save(user);
+        emailService.sendVerificationEmail(user.getEmail(), newCode);
+    }
+
     @Transactional
     public void requestPasswordReset(PasswordResetRequestDTO passwordResetRequestDTO) {
         User user = userRepository.findByEmail(passwordResetRequestDTO.email())
-                .orElseThrow(() -> new EmailAlreadyExistsException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com email: " + passwordResetRequestDTO.email()));
 
-        String resetCode = generateResetCode();
+        String resetCode = codeGenerator.generate();
         user.generateResetCode(resetCode, Duration.ofMinutes(10));
 
         userRepository.save(user);
@@ -97,10 +150,10 @@ public class UserService {
     @Transactional
     public void resetPassword(PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO) {
         User user = userRepository.findByEmail(passwordResetConfirmRequestDTO.email())
-                .orElseThrow(() -> new EmailAlreadyExistsException("Usuário não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com email: " + passwordResetConfirmRequestDTO.email()));
 
         if (user.isResetCodeValid(passwordResetConfirmRequestDTO.code())) {
-            throw new PasswordResetCodeExpiredException("Código inválido ou expirado");
+            throw new CodeInvalidException("Código inválido ou expirado");
         }
 
         user.setPassword(passwordResetConfirmRequestDTO.newPassword());
@@ -108,7 +161,10 @@ public class UserService {
         userRepository.save(user);
     }
 
-    private String generateResetCode() {
-        return String.format("%06d", random.nextInt(1_000_000));
+    public List<UserResponseDTO> findAll() {
+        List<User> usersDtos = userRepository.findAll();
+        return usersDtos.stream()
+                .map(userResponseDTO -> userMapper.toDto(userResponseDTO))
+                .collect(Collectors.toList());
     }
 }
