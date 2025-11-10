@@ -70,7 +70,6 @@ public class DealerService {
         user.setEmail(dealerRegistrationRequestDTO.email());
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
-        user.setVerified(UserStatus.PENDENTE);
         user.generateVerificationCode(codeGenerator.generate(),Duration.ofMinutes(10));
 
         Dealer dealer = new Dealer();
@@ -90,7 +89,9 @@ public class DealerService {
 
     public List<DealerRegistrationResponseDTO> findAll() {
         List<Dealer> dealerList = dealerRepository.findAll();
-        return dealerList.stream().map(dealer -> dealerRegistrationMapper.toDTO(dealer)).collect(Collectors.toList());
+        return dealerList.stream()
+                .map(dealer -> dealerRegistrationMapper.toDTO(dealer))
+                .collect(Collectors.toList());
     }
 
     public DealerRegistrationResponseDTO findById(Long id) {
@@ -100,7 +101,7 @@ public class DealerService {
 
     public DealerDetailsResponseDTO findDetailDealer(Long id) {
         Dealer dealer = dealerRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado com id: " + id));
+                .orElseThrow(() -> new RecordNotFoundException(id));
 
         return dealerDetailsMapper.toDTO(dealer);
     }
@@ -108,7 +109,7 @@ public class DealerService {
     @Transactional
     public DealerProfileDTO completeProfile(Long id, DealerProfileDTO dealerProfileDTO) {
         Dealer dealer = dealerRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado com id: " + id));
+                .orElseThrow(() -> new RecordNotFoundException(id));
 
         dealer.setFullNameEnterprise(dealerProfileDTO.fullNameEnterprise());
         dealer.setBirthData(dealerProfileDTO.birthData());
@@ -121,7 +122,7 @@ public class DealerService {
     @Transactional
     public DealerRegistrationResponseDTO update(Long id, DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
         Dealer dealer = dealerRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado com id: " + id));
+                .orElseThrow(() -> new RecordNotFoundException(id));
 
         User user = dealer.getUser();
         if (user == null) {
@@ -143,7 +144,7 @@ public class DealerService {
     @Transactional
     public DealerProfileDTO updateProfile(Long dealerId, DealerProfileDTO dto) {
         Dealer dealer = dealerRepository.findById(dealerId)
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException(dealerId));
 
         if (dto.fullNameEnterprise() != null) dealer.setFullNameEnterprise(dto.fullNameEnterprise());
         if (dto.birthData() != null) dealer.setBirthData(dto.birthData());

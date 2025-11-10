@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
 import org.example.server.service.UserService;
@@ -28,50 +29,25 @@ public class UserController {
     }
 
     @PostMapping
-    @Operation(
-            summary = "Criar Usuário",
-            description = "Cria um novo usuário no sistema"
-    )
+    @Operation(summary = "Criar Usuário", description = "Cria um novo usuário no sistema")
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Usúario criado com sucesso",
-                    content = @Content(schema = @Schema(implementation = UserResponseDTO.class))
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Dados inválidos fornecidos"
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "Usuário já existe"
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Erro interno no servidor"
-            )
+            @ApiResponse(responseCode = "201", description = "Usúario criado com sucesso", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos"),
+            @ApiResponse(responseCode = "404", description = "E-mail já cadastrado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
 
     })
-    public ResponseEntity<UserResponseDTO> create(@RequestBody UserRequestDTO userRequestDTO){
+    public ResponseEntity<UserResponseDTO> create(@Valid @RequestBody UserRequestDTO userRequestDTO){
         UserResponseDTO userResponseDTO =  userService.create(userRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(userResponseDTO);
     }
 
     @GetMapping
-    @Operation(
-            summary = "Listar Usuários",
-            description = "Retorna uma lista com todos os usuários do sistema"
-    )
+    @Operation(summary = "Listar Usuários", description = "Retorna uma lista com todos os usuários do sistema")
     @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Lista de usuários retornada com sucesso",
-                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))
-            ),
-            @ApiResponse(
-                    responseCode = "500",
-                    description = "Erro interno no servidor"
-            )
+            @ApiResponse(responseCode = "200", description = "Lista de usuários retornada com sucesso", content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class)))),
+            @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<List<UserResponseDTO>> findAll(){
         List<UserResponseDTO> userResponseDTOs = userService.findAll();

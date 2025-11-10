@@ -11,12 +11,14 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "tb_user")
 public class User implements UserDetails {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String fullName;
@@ -31,23 +33,22 @@ public class User implements UserDetails {
     private UserRole role;
 
     @Enumerated(EnumType.STRING)
-    private UserStatus verified;
+    private UserStatus status = UserStatus.PENDENTE;
 
-    private String verificationCode; // Para ativação da conta
-    private LocalDateTime codeExpiration; // Expiração da ativação
+    private String verificationCode;
 
-    private String resetCode; // Para reset de senha
-    private LocalDateTime resetCodeExpiration; // Expiração de reset
+    private LocalDateTime codeExpiration;
+
+    private String resetCode;
+
+    private LocalDateTime resetCodeExpiration;
 
     @Column(updatable = false, nullable = false)
     @JsonFormat(pattern = "dd/MM/yyyy HH:mm:ss")
     private LocalDateTime createdAt;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Dealer dealer;
-
-    public User(Long id, String email, String password, Collection<? extends GrantedAuthority> authorities) {
-    }
 
     @PrePersist
     protected void onCreate() {
@@ -56,28 +57,29 @@ public class User implements UserDetails {
 
     public User() {
     }
+
     public User(String email, String password) {
         this.email = email;
         this.password = password;
-        this.verified = UserStatus.PENDENTE;
     }
 
-    public void markAsVerified(){
-        this.verified = UserStatus.ATIVO;
+    public void markAsVerified() {
+        this.status = UserStatus.ATIVO;
         clearVerificationCode();
     }
 
-    public void generateVerificationCode(String code, Duration validity){
+    public void generateVerificationCode(String code, Duration validity) {
         this.verificationCode = code;
         this.codeExpiration = LocalDateTime.now().plus(validity);
-        this.verified = UserStatus.PENDENTE;
+        this.status = UserStatus.PENDENTE;
     }
 
-    public boolean isVerificationCodeValid(String code){
-        return  this.verificationCode != null &&
-                this.verificationCode.equalsIgnoreCase(code) &&
-                this.codeExpiration != null &&
-                LocalDateTime.now().isBefore(this.codeExpiration);
+    public boolean isVerificationCodeExpired() {
+        return this.verificationCode != null && LocalDateTime.now().isAfter(this.codeExpiration);
+    }
+
+    public boolean doesVerificationCodeMatch(String code) {
+        return this.verificationCode != null && this.verificationCode.equalsIgnoreCase(code);
     }
 
     public void clearVerificationCode() {
@@ -85,16 +87,22 @@ public class User implements UserDetails {
         this.codeExpiration = null;
     }
 
-    public void generateResetCode(String code, Duration validity){
+    public void clearResetCode() {
+        this.resetCode = null;
+        this.resetCodeExpiration = null;
+    }
+
+    public void generateResetCode(String code, Duration validity) {
         this.resetCode = code;
         this.resetCodeExpiration = LocalDateTime.now().plus(validity);
     }
 
-    public boolean isResetCodeValid(String code){
-        return  this.resetCode != null &&
-                this.resetCode.equalsIgnoreCase(code) &&
-                this.resetCodeExpiration != null &&
-                LocalDateTime.now().isBefore(this.resetCodeExpiration);
+    public boolean isResetCodeExpired() {
+        return this.resetCode != null && LocalDateTime.now().isAfter(this.resetCodeExpiration);
+    }
+
+    public boolean doesResetCodeMatch(String code) {
+        return this.resetCode != null && this.resetCode.equalsIgnoreCase(code);
     }
 
     public Long getId() {
@@ -134,15 +142,11 @@ public class User implements UserDetails {
     }
 
     public UserStatus getVerificationStatus() {
-        return verified;
+        return status;
     }
 
-    public UserStatus getVerified() {
-        return verified;
-    }
-
-    public void setVerified(UserStatus verified) {
-        this.verified = verified;
+    public void setStatus(UserStatus status) {
+        this.status = status;
     }
 
     public String getVerificationCode() {
@@ -189,5 +193,18 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return UserDetails.super.isEnabled();
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (object == null || getClass() != object.getClass()) return false;
+        User user = (User) object;
+        return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

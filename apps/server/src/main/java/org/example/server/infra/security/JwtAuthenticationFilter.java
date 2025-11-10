@@ -9,7 +9,6 @@ import org.example.server.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -29,9 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Autowired
     private UserDetailsService userDetailsService;
 
-    private final List<String> publicPaths = List.of(
-            "/h2-console" // Console H2
-    );
+    private final List<String> publicPaths = List.of("/h2-console");
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -48,10 +45,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
         String jwt = null;
         String authHeader = request.getHeader("Authorization");
@@ -80,21 +78,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             User user = (User) userDetailsService.loadUserByUsername(username);
 
             if (jwtService.isTokenValid(jwt, user)) {
-
-                UsernamePasswordAuthenticationToken authToken =
-                        new UsernamePasswordAuthenticationToken(
+                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 user,
                                 null,
-                                user.getAuthorities());
+                                user.getAuthorities()
+                );
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }
-
         filterChain.doFilter(request, response);
-
     }
-
 }
 

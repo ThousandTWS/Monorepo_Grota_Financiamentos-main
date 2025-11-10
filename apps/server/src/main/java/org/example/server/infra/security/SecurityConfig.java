@@ -40,17 +40,12 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Rotas Abertas (Não exigem Token)
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/resgister").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/auth/forgot-password").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/grota-financiamentos/auth/verify-code").permitAll()
+                        .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/grota-financiamentos/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
-                        .requestMatchers("/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/swagger-resources/**",
-                                "/webjars/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html","/swagger-resources/**","/webjars/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults());

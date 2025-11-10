@@ -10,6 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
+import java.time.Instant;
 import java.util.Date;
 import java.util.function.Function;
 
@@ -21,6 +22,9 @@ public class JwtService {
 
     @Value("${jwt.expiration}")
     private long jwtExpirationMillis;
+
+    @Value("${jwt.refresh-token.expiration}")
+    private long refreshTokenExpirationMillis;
 
     private Key getSigningKey(){
         return Keys.hmacShaKeyFor(scretKey.getBytes());
@@ -45,7 +49,6 @@ public class JwtService {
 
     public String generateToken(UserDetails userDetails) {
         User user = (User) userDetails;
-
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
                 .claim("id", user.getId())
@@ -55,10 +58,21 @@ public class JwtService {
                 .compact();
     }
 
+    public String generateRefreshToken(UserDetails userDetails){
+        User user = (User) userDetails;
+        return Jwts.builder()
+                .setSubject(userDetails.getUsername())
+                .claim("id", user.getId())
+                .claim("type","refresh")
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + refreshTokenExpirationMillis))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
+                .compact();
+    }
+
     public Long extractUserId(String token) {
         return extractClaim(token, claims -> claims.get("id", Long.class));
     }
-
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
@@ -67,5 +81,9 @@ public class JwtService {
 
     private boolean isTokenExpired(String token) {
         return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    public Instant getExpirationDateFromToken(String token) {
+        return extractClaim(token, Claims::getExpiration).toInstant();
     }
 }

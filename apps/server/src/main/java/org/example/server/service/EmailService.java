@@ -20,7 +20,6 @@ public class EmailService {
     @Value("${app.mail.from}")
     private String fromEmail;
 
-
     public EmailService(JavaMailSender mailSender, SpringTemplateEngine springTemplateEngine) {
         this.mailSender = mailSender;
         this.springTemplateEngine = springTemplateEngine;

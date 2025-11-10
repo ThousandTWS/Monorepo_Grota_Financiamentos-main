@@ -14,7 +14,8 @@ import java.util.Objects;
 @Table(name = "tb_vehicle")
 public class Vehicle {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(nullable = false)
@@ -45,7 +46,7 @@ public class Vehicle {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private VehicleStatus status;
+    private VehicleStatus status = VehicleStatus.DISPONIVEL;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Dealer dealer;
@@ -69,12 +70,12 @@ public class Vehicle {
         this.vehicleCondition = vehicleCondition;
         this.vehicleTransmission = vehicleTransmission;
         this.price = price;
-        this.status = VehicleStatus.DISPONIVEL;
     }
 
     public Long getId() {
         return id;
     }
+
     public String getName() {
         return name;
     }

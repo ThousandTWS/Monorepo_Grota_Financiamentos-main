@@ -38,7 +38,7 @@ public class DealerController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de Lojistas retornada com sucesso"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
     public ResponseEntity<List<DealerRegistrationResponseDTO>> findAll(){
         List<DealerRegistrationResponseDTO> dealerList = dealerService.findAll();
@@ -52,7 +52,8 @@ public class DealerController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista encontrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado para o ID fornecido"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<DealerRegistrationResponseDTO> findById(@PathVariable Long id){
@@ -67,7 +68,8 @@ public class DealerController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lista de veiculos retornada com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<List<VehicleResponseDTO>> getVehicleByDealer(@PathVariable Long id){
@@ -82,10 +84,15 @@ public class DealerController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista atualizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<DealerRegistrationResponseDTO> update(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){
+    public ResponseEntity<DealerRegistrationResponseDTO> update(
+            @AuthenticationPrincipal(expression = "id") Long id,
+            @Valid
+            @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO)
+    {
         DealerRegistrationResponseDTO dealer = dealerService.update(id, dealerRegistrationRequestDTO);
         return ResponseEntity.ok().body(dealer);
     }
@@ -100,8 +107,10 @@ public class DealerController {
             @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<DealerProfileDTO> completeProfile(@AuthenticationPrincipal(expression = "id") Long id, @Valid @RequestBody DealerProfileDTO dealerProfileDTO){
-        System.out.println("ID autenticado: " + id);
+    public ResponseEntity<DealerProfileDTO> completeProfile(
+            @AuthenticationPrincipal(expression = "id") Long id,
+            @Valid @RequestBody DealerProfileDTO dealerProfileDTO)
+    {
         DealerProfileDTO profileDTO = dealerService.completeProfile(id, dealerProfileDTO);
         return ResponseEntity.ok(profileDTO);
     }
@@ -127,14 +136,13 @@ public class DealerController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Perfil completo retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado para o ID fornecido"),
             @ApiResponse(responseCode = "401", description = "Não Autorizado"),
-            @ApiResponse(responseCode = "400", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
     public ResponseEntity<DealerDetailsResponseDTO> findDetailsDealer(@PathVariable Long id){
         DealerDetailsResponseDTO dealerDetails = dealerService.findDetailDealer(id);
         return ResponseEntity.ok(dealerDetails);
     }
-
 }
 
