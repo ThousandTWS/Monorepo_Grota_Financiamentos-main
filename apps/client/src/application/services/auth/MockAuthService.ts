@@ -22,7 +22,7 @@ export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
       await fetch(
-        "http://localhost:8080/api/v1/grota-financiamentos/auth/login",
+        "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/login",
         {
           method: "POST",
           credentials: "include",
@@ -52,7 +52,7 @@ export class MockAuthService {
     enterprise,
   }: RegisterData): Promise<AuthResult> {
     try {
-      const { data } = await api.post("/auth/resgister", {
+      const { data } = await api.post("/auth/register", {
         email,
         password,
         fullName,
@@ -86,11 +86,22 @@ export class MockAuthService {
   }
 
   async forgotPassword(email: string): Promise<AuthResult> {
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      await api.post("/auth/forgot-password", {
+        email,
+      });
 
-    return {
-      success: true,
-      message: "Instruções enviadas para seu email!",
-    };
+      return {
+        success: true,
+        message: "Instruções enviadas para seu email!",
+      };
+    } catch (error: any) {
+      console.log("Deu erro", error.response.data);
+
+      return {
+        success: false,
+        message: "Erro ao enviar instruções para email",
+      };
+    }
   }
 }
