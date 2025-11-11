@@ -39,7 +39,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas(Não exigem Token)
+                        // Rotas(Não Token)
                         .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v1/grota-financiamentos/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
