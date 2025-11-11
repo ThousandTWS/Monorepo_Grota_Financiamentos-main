@@ -1,5 +1,8 @@
 package org.example.server.service;
 
+import org.example.server.exception.auth.InvalidRefreshTokenException;
+import org.example.server.exception.auth.RefreshTokenExpiredException;
+import org.example.server.exception.auth.RefreshTokenRevokedException;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.RefreshToken;
 import org.example.server.model.User;
@@ -54,12 +57,23 @@ public class RefreshTokenService {
     public RefreshToken verifyExpiration(RefreshToken refreshToken){
         if (refreshToken.getExpiryDate().compareTo(Instant.now()) < 0){
             refreshTokenRepository.delete(refreshToken);
-            throw new RuntimeException("Refresh token expirado. Faça login novamente.");
+            throw new RefreshTokenExpiredException("Refresh token expirado. Faça login novamente.");
         }
         if (refreshToken.isRevoked()){
-            throw new RuntimeException("Refresh token revogado.");
+            throw new RefreshTokenRevokedException("Refresh token revogado.");
         }
         return refreshToken;
+    }
+
+    @Transactional
+    public String refreshAccessToken(String refreshAccessTokenValue, JwtService jwtService){
+        RefreshToken refreshToken = findByToken(refreshAccessTokenValue)
+                .orElseThrow(() -> new InvalidRefreshTokenException("Refresh token inválido."));
+
+        verifyExpiration(refreshToken);
+
+        User user = refreshToken.getUser();
+        return jwtService.generateRefreshToken(user);
     }
 
     @Transactional

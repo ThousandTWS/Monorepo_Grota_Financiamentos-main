@@ -42,7 +42,7 @@ public class SecurityConfig {
                         // Rotas Abertas (Não exigem Token)
                         .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST,"/api/v1/grota-financiamentos/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/dealers").permitAll()
                         .requestMatchers("/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html","/swagger-resources/**","/webjars/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
 
