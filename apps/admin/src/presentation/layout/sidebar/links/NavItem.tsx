@@ -15,6 +15,6 @@ export const navItems: NavItem[] = [
   {
     name: "Logistas",
     icon: <Users />,
-    subItems: [{ name: "Gestão de Logistas", path: "/logistas", pro: false }, { name: "Gestão de Documentos", path: "/gestao-documentos", pro: false }],
+    subItems: [{ name: "Gestão de Logistas", path: "/logistas", pro: false }, { name: "Gestão de Documentos", path: "/gestao-documentos", pro: false }, { name: "Gestão de Propostas", path: "/esteira-de-propostas", pro: false }],
   },
 ];

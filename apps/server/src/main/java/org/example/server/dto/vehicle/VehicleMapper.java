@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class VehicleMapper {
 
+    @SuppressWarnings("unused")
     private final DealerRegistrationMapper dealerRegistrationMapper;
 
     public VehicleMapper(DealerRegistrationMapper dealerRegistrationMapper) {
