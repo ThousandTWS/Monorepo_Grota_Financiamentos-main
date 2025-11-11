@@ -1,3 +1,4 @@
+import { VerificationType } from "@/application/core/@types/verification.type";
 import { useState, useEffect } from "react";
 
 export interface ModalState {
@@ -5,6 +6,7 @@ export interface ModalState {
   isRegisterModalOpen: boolean;
   isVerificationModalOpen: boolean;
   verificationEmail: string | null;
+  verificationType: VerificationType | null;
   isForgotPasswordModalOpen: boolean;
 }
 
@@ -26,14 +28,20 @@ export const useModalManager = (): ModalState & ModalActions => {
   const [verificationEmail, setVerificationEmail] = useState<string | null>(
     null
   );
+  const [verificationType, setVerificationType] =
+    useState<VerificationType | null>(null);
   const [isForgotPasswordModalOpen, setIsForgotPasswordModalOpen] =
     useState(false);
 
   useEffect(() => {
     const handleOpenRegisterModal = () => setIsRegisterModalOpen(true);
     const handleOpenVerificationModal = (event: Event) => {
-      const customEvent = event as CustomEvent<{ email: string }>;
+      const customEvent = event as CustomEvent<{
+        email: string;
+        verification_type: VerificationType;
+      }>;
       setVerificationEmail(customEvent.detail.email);
+      setVerificationType(customEvent.detail.verification_type);
       setIsVerificationModalOpen(true);
     };
     const handleOpenForgotPasswordModal = () =>
@@ -71,6 +79,7 @@ export const useModalManager = (): ModalState & ModalActions => {
     isForgotPasswordModalOpen,
     isVerificationModalOpen,
     verificationEmail,
+    verificationType,
     openLoginModal: () => setIsLoginModalOpen(true),
     closeLoginModal: () => setIsLoginModalOpen(false),
     openRegisterModal: () => setIsRegisterModalOpen(true),
