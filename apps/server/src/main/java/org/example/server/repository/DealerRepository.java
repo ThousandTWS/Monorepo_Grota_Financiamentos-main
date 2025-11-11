@@ -1,7 +1,6 @@
 package org.example.server.repository;
 
 import org.example.server.model.Dealer;
-import org.example.server.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

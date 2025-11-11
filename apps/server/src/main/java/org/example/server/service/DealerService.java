@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.dealer.*;
 import org.example.server.enums.UserRole;
-import org.example.server.enums.UserStatus;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;

@@ -51,6 +51,7 @@ public class Vehicle {
     @ManyToOne(fetch = FetchType.LAZY)
     private Dealer dealer;
 
+    @SuppressWarnings("unused")
     private LocalDateTime createdAt;
 
     @PrePersist

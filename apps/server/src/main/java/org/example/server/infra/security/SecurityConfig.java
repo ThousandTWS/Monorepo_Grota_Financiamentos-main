@@ -29,6 +29,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
+        @SuppressWarnings("unused")
         HttpSecurity httpSecurity = http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
