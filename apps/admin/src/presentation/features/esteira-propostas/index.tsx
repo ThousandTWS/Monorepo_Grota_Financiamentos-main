@@ -1,3 +1,4 @@
+/* eslint-disable turbo/no-undeclared-env-vars */
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 

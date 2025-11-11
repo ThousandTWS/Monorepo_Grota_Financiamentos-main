@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unknown-property */
 import Link from "next/link";
 import React from "react";
 import { BreadcrumbProps } from "../@types/Props/BreadcrumbProps";
