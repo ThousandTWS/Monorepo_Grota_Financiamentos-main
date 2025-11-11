@@ -3,6 +3,7 @@ package org.example.server.service;
 import org.example.server.dto.vehicle.VehicleMapper;
 import org.example.server.dto.vehicle.VehicleRequestDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
+import org.example.server.enums.UserRole;
 import org.example.server.enums.VehicleStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.RecordNotFoundException;
@@ -47,13 +48,18 @@ public class VehicleService {
     }
 
     public VehicleResponseDTO findById(Long id) {
-        return vehicleMapper.toDTO(findVehicleById(id));
+        return vehicleMapper.toDTO(vehicleRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
     public VehicleResponseDTO update(User user, Long vehicleId, VehicleRequestDTO vehicleRequestDTO) {
-        Vehicle vehicleUpdate = findVehicleById(vehicleId);
+        Vehicle vehicleUpdate = vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RecordNotFoundException(vehicleId));
 
-        if (!vehicleUpdate.getDealer().getUser().getId().equals(user.getId())){
+        boolean isOwner = vehicleUpdate.getDealer().getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+
+        if (!isOwner && !isAdmin){
             throw new AccessDeniedException("Você não tem permissão para alterar este veículo");
         }
 
@@ -79,7 +85,10 @@ public class VehicleService {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
-        if (!vehicle.getDealer().getUser().getId().equals(user.getId())){
+        boolean isOwner = vehicle.getDealer().getUser().getId().equals(user.getId());
+        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+
+        if (!isAdmin && !isOwner){
             throw new AccessDeniedException("Você não tem permissão para alterar este veículo");
         }
 
@@ -87,8 +96,4 @@ public class VehicleService {
         return vehicleMapper.toDTO(vehicleRepository.save(vehicle));
     }
 
-    private Vehicle findVehicleById(Long vehicleId){
-        return vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RecordNotFoundException(vehicleId));
-    }
 }

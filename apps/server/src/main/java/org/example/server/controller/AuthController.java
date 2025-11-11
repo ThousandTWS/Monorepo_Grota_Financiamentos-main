@@ -55,7 +55,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<DealerRegistrationResponseDTO> create(@Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO){
+    public ResponseEntity<DealerRegistrationResponseDTO> create(@Valid @RequestBody DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
         DealerRegistrationResponseDTO responseDTO = dealerService.create(dealerRegistrationRequestDTO);
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
@@ -70,7 +70,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Não autorizado. Credencias inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequest request){
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequest request) {
         String accessToken = userService.login(request);
         UserDetails userDetails = userService.loadUserByUsername(request.email());
 
@@ -101,22 +101,17 @@ public class AuthController {
             description = "Gera um novo access token usando o refresh token"
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Token atualizado com sucesso"),
-            @ApiResponse(responseCode = "401", description = "Refresh token inválido"),
+            @ApiResponse(responseCode = "200", description = "Token atualizado com sucesso."),
+            @ApiResponse(responseCode = "401", description = "Refresh token inválido ou expirado."),
+            @ApiResponse(responseCode = "403", description = "Refresh token revogado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<AuthResponseDTO> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
 
-        RefreshToken storedToken = refreshTokenService.findByToken(refreshToken)
-                .orElseThrow(() -> new RuntimeException("Refresh token inválido"));
-
-        refreshTokenService.verifyExpiration(storedToken);
-
-        User user = storedToken.getUser();
-        String newAccessToken = jwtService.generateToken(user);
+        String newAccessToken = refreshTokenService.refreshAccessToken(refreshToken, jwtService);
+        Instant expiresAt = jwtService.getExpirationDateFromToken(newAccessToken);
 
         ResponseCookie newAccessTokenCookie = createAuthCookie(newAccessToken, false);
-        Instant expiresAt = jwtService.getExpirationDateFromToken(newAccessToken);
 
         AuthResponseDTO response = new AuthResponseDTO(
                 newAccessToken,
@@ -136,10 +131,11 @@ public class AuthController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado. Credencias inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
-        if (refreshToken != null) {
+    public ResponseEntity<Api_Response> logout(@CookieValue(name = "refresh_token", required = false) String refreshToken) {
+        if (refreshToken != null && !refreshToken.isBlank()) {
             refreshTokenService.revokeRefreshToken(refreshToken);
         }
 
@@ -162,8 +158,8 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Não Autorizado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
-        if (user == null){
+    public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user) {
+        if (user == null) {
             return ResponseEntity.status(401).build();
         }
 
@@ -188,7 +184,7 @@ public class AuthController {
             @ApiResponse(responseCode = "410", description = "Código expirado. Solicite um novo código."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> verifyCode(@RequestBody @Valid VerificationCodeRequestDTO verificationCodeRequestDTO){
+    public ResponseEntity<Api_Response> verifyCode(@RequestBody @Valid VerificationCodeRequestDTO verificationCodeRequestDTO) {
         userService.verifiUser(verificationCodeRequestDTO);
         return ResponseEntity.ok(new Api_Response(true, "Usuário verificado com sucesso"));
     }
@@ -205,7 +201,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     @PostMapping("/resend-code")
-    public ResponseEntity<Api_Response> resendCode(@RequestBody EmailResponseDTO dto){
+    public ResponseEntity<Api_Response> resendCode(@RequestBody EmailResponseDTO dto) {
         userService.resendCode(dto);
         return ResponseEntity.ok(new Api_Response(true, "Código reenviado som sucesso"));
     }
@@ -221,7 +217,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Não autorizado. É necessário estar autenticado para alterar a senha."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Authentication authentication){
+    public ResponseEntity<Api_Response> changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Authentication authentication) {
         String email = authentication.getName();
         userService.changePassword(email, changePasswordDTO);
         return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
@@ -238,9 +234,9 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO) {
         userService.requestPasswordReset(passwordResetRequestDTO);
-        return ResponseEntity.ok(new Api_Response(true,"Código de redefinição enviado para o email"));
+        return ResponseEntity.ok(new Api_Response(true, "Código de redefinição enviado para o email"));
     }
 
     @PostMapping("/reset-password")
@@ -255,12 +251,12 @@ public class AuthController {
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
+    public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO) {
         userService.resetPassword(passwordResetConfirmRequestDTO);
         return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
     }
 
-    private ResponseCookie createAuthCookie(String token, boolean expire){
+    private ResponseCookie createAuthCookie(String token, boolean expire) {
         return ResponseCookie.from("access_token", expire ? "" : token)
                 .httpOnly(true)
                 .secure(false) // ajustar
@@ -271,7 +267,7 @@ public class AuthController {
                 .build();
     }
 
-    private ResponseCookie createRefreshCookie(String token, boolean expire){
+    private ResponseCookie createRefreshCookie(String token, boolean expire) {
         return ResponseCookie.from("refresh_token", expire ? "" : token)
                 .httpOnly(true)
                 .secure(false) // ajustar

@@ -113,11 +113,9 @@ public class UserService {
             throw new CodeInvalidException("Código expirado. Solicite um novo código");
         }
         if (user.doesVerificationCodeMatch(verificationCodeRequestDTO.code())) {
-            throw new CodeInvalidException("Código inválido.");
+            user.markAsVerified();
+            userRepository.save(user);
         }
-
-        user.markAsVerified();
-        userRepository.save(user);
     }
 
     public void resendCode(EmailResponseDTO dto) {

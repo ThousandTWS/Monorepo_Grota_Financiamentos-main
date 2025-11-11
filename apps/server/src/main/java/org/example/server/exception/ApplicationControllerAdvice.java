@@ -6,6 +6,7 @@ import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.exception.user.UserAlreadyVerifiedException;
 import org.example.server.exception.user.UserNotVerifiedException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -81,5 +82,37 @@ public class ApplicationControllerAdvice {
                 HttpStatus.FORBIDDEN,
                 ex.getMessage()
         );
+    }
+
+    @ExceptionHandler(RefreshTokenExpiredException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleRefreshTokenExpiredException(RefreshTokenExpiredException ex){
+        return new ErrorResponse(
+                HttpStatus.UNAUTHORIZED,
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(RefreshTokenRevokedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    public ErrorResponse handleRefreshTokenRevokedException(RefreshTokenRevokedException ex){
+        return new ErrorResponse(
+                HttpStatus.FORBIDDEN,
+                ex.getMessage()
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleJsonParseError(HttpMessageNotReadableException ex) {
+        return new ErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Valor inválido para o campo 'status'. Use DISPONIVEL ou INDISPONIVEL.");
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleGenericError(Exception ex) {
+        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor.");
     }
 }
