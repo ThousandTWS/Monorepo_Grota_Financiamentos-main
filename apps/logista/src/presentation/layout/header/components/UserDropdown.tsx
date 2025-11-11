@@ -20,7 +20,7 @@ export default function UserDropdown() {
 
   const handleLogout = async () => {
     try {
-      await fetch("http://localhost:8080/api/v1/grota-financiamentos/auth/logout", {
+      await fetch("https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/logout", {
         method: "POST",
         credentials: "include",
       });
@@ -33,7 +33,7 @@ export default function UserDropdown() {
 useEffect(() => {
   async function fetchUserName() {
     try {
-      const response = await fetch("http://localhost:8080/api/v1/grota-financiamentos/auth/me", {
+      const response = await fetch("https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/me", {
         method: "GET",
         credentials: "include"
       })
