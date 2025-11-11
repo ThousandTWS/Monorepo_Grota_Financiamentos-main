@@ -19,7 +19,7 @@ public class UserMapper {
                 user.getId(),
                 user.getFullName(),
                 user.getEmail(),
-                user.getVerified(),
+                user.getVerificationStatus(),
                 user.getRole().name(),
                 user.getCreatedAt()
         );

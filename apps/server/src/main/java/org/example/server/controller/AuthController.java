@@ -6,47 +6,43 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.server.dto.Api_Response;
-import org.example.server.dto.auth.EmailResponseDTO;
 import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.auth.*;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
+import org.example.server.model.RefreshToken;
 import org.example.server.model.User;
-import org.example.server.repository.UserRepository;
-import org.example.server.service.JwtService;
 import org.example.server.service.DealerService;
+import org.example.server.service.JwtService;
+import org.example.server.service.RefreshTokenService;
 import org.example.server.service.UserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/auth")
 @Tag(name = "Auth", description = "Authentication management")
 public class AuthController {
 
-    private final AuthenticationManager manager;
     private final JwtService jwtService;
-    private final UserRepository userRepository;
     private final UserService userService;
     private final DealerService dealerService;
-    private final PasswordEncoder passwordEncoder;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthController(AuthenticationManager manager, JwtService jwtService, UserRepository userRepository, UserService userService, DealerService dealerService, PasswordEncoder passwordEncoder) {
-        this.manager = manager;
+    public AuthController(JwtService jwtService, UserService userService, DealerService dealerService, RefreshTokenService refreshTokenService) {
         this.jwtService = jwtService;
-        this.userRepository = userRepository;
         this.userService = userService;
         this.dealerService = dealerService;
-        this.passwordEncoder = passwordEncoder;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/register")
@@ -71,15 +67,66 @@ public class AuthController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Login realizado com sucesso. Token de autenticação retornado."),
-            @ApiResponse(responseCode = "401", description = "Credencias inválidas"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "401", description = "Não autorizado. Credencias inválidas"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> login(@RequestBody @Valid AuthRequest request){
-        String token = userService.login(request);
-        ResponseCookie cookie = createAuthCookie(token, false);
+    public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequest request){
+        String accessToken = userService.login(request);
+        UserDetails userDetails = userService.loadUserByUsername(request.email());
+
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(
+                ((User) userDetails).getId()
+        );
+
+        ResponseCookie accessTokenCookie = createAuthCookie(accessToken, false);
+        ResponseCookie refreshTokenCookie = createRefreshCookie(refreshToken.getTokenHash(), false);
+
+        Instant expiresAt = jwtService.getExpirationDateFromToken(accessToken);
+
+        AuthResponseDTO response = new AuthResponseDTO(
+                accessToken,
+                refreshToken.getTokenHash(),
+                expiresAt
+        );
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new Api_Response(true,"Login realizado com sucesso"));
+                .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString())
+                .body(response);
+    }
+
+    @PostMapping("/refresh")
+    @Operation(
+            summary = "Refresh Token",
+            description = "Gera um novo access token usando o refresh token"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Token atualizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Refresh token inválido"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
+    })
+    public ResponseEntity<AuthResponseDTO> refreshToken(@CookieValue(name = "refresh_token") String refreshToken) {
+
+        RefreshToken storedToken = refreshTokenService.findByToken(refreshToken)
+                .orElseThrow(() -> new RuntimeException("Refresh token inválido"));
+
+        refreshTokenService.verifyExpiration(storedToken);
+
+        User user = storedToken.getUser();
+        String newAccessToken = jwtService.generateToken(user);
+
+        ResponseCookie newAccessTokenCookie = createAuthCookie(newAccessToken, false);
+        Instant expiresAt = jwtService.getExpirationDateFromToken(newAccessToken);
+
+        AuthResponseDTO response = new AuthResponseDTO(
+                newAccessToken,
+                refreshToken,
+                expiresAt
+        );
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, newAccessTokenCookie.toString())
+                .body(response);
     }
 
     @PostMapping("/logout")
@@ -89,13 +136,20 @@ public class AuthController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Logout realizado com sucesso"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<Api_Response> logout(){
-        ResponseCookie expiredCookie = createAuthCookie("", true);
+    public ResponseEntity<Api_Response> logout(@CookieValue(name = "refreshToken", required = false) String refreshToken) {
+        if (refreshToken != null) {
+            refreshTokenService.revokeRefreshToken(refreshToken);
+        }
+
+        ResponseCookie expiredAccessCookie = createAuthCookie("", true);
+        ResponseCookie expiredRefreshCookie = createRefreshCookie("", true);
+
         return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, expiredCookie.toString())
-                .body(new Api_Response(true,"Logout realizado com sucesso"));
+                .header(HttpHeaders.SET_COOKIE, expiredAccessCookie.toString())
+                .header(HttpHeaders.SET_COOKIE, expiredRefreshCookie.toString())
+                .body(new Api_Response(true, "Logout realizado com sucesso"));
     }
 
     @GetMapping("/me")
@@ -106,7 +160,7 @@ public class AuthController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Lojista autenticado retornado com sucesso"),
             @ApiResponse(responseCode = "401", description = "Não Autorizado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<?> getAuthenticatedUser(@AuthenticationPrincipal User user){
         if (user == null){
@@ -128,9 +182,11 @@ public class AuthController {
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Código verificado com sucesso. usuário autenticado."),
-            @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados."),
-            @ApiResponse(responseCode = "401", description = "Código inválido ou expirado."),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "400", description = "Código inválido ou usuário já verificado."),
+            @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
+            @ApiResponse(responseCode = "410", description = "Código expirado. Solicite um novo código."),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<Api_Response> verifyCode(@RequestBody @Valid VerificationCodeRequestDTO verificationCodeRequestDTO){
         userService.verifiUser(verificationCodeRequestDTO);
@@ -138,16 +194,15 @@ public class AuthController {
     }
 
     @Operation(
-            summary = "Reenviar código de verificação por e-mail",
+            summary = "Reenvia o código de verificação para o e-mail",
             description = "Permite que o usuário solicite o reenvio do código de verificação caso não tenha recebido ou o código anterior tenha expirado. "
                     + "Um novo código é gerado e enviado para o e-mail cadastrado, com tempo de expiração definido."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Novo código de verificação enviado com sucesso para o e-mail informado."),
+            @ApiResponse(responseCode = "200", description = "Novo código de verificação enviado com sucesso"),
             @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique se o e-mail foi informado corretamente."),
-            @ApiResponse(responseCode = "404", description = "E-mail não encontrado no sistema."),
             @ApiResponse(responseCode = "409", description = "Usuário já verificado. Reenvio não necessário."),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     @PostMapping("/resend-code")
     public ResponseEntity<Api_Response> resendCode(@RequestBody EmailResponseDTO dto){
@@ -164,8 +219,7 @@ public class AuthController {
             @ApiResponse(responseCode = "200", description = "Senha alterada com sucesso."),
             @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados."),
             @ApiResponse(responseCode = "401", description = "Não autorizado. É necessário estar autenticado para alterar a senha."),
-            @ApiResponse(responseCode = "403", description = "Senha atual incorreta."),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<Api_Response> changePassword(@RequestBody @Valid ChangePasswordDTO changePasswordDTO, Authentication authentication){
         String email = authentication.getName();
@@ -173,16 +227,16 @@ public class AuthController {
         return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
     }
 
-    @PostMapping("forgot-password")
+    @PostMapping("/forgot-password")
     @Operation(
             summary = "Solicitar redefinição de senha do usuário",
             description = "Permite que o usuário solicite a redefinição de senha. Um código de verificação será enviado para o e-mail cadastrado."
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Código de redefinição enviado com sucesso para o e-mail do usuário."),
+            @ApiResponse(responseCode = "200", description = "Código de redefinição enviado com sucesso."),
             @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique o e-mail informado."),
             @ApiResponse(responseCode = "404", description = "E-mail não encontrado."),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetRequestDTO passwordResetRequestDTO){
         userService.requestPasswordReset(passwordResetRequestDTO);
@@ -199,7 +253,7 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Requisição inválida. Verifique os dados informados, incluindo o código de verificação."),
             @ApiResponse(responseCode = "401", description = "Código de verificação inválido ou expirado."),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado."),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<Api_Response> resetPassword(@Valid @RequestBody PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO){
         userService.resetPassword(passwordResetConfirmRequestDTO);
@@ -213,7 +267,17 @@ public class AuthController {
                 .sameSite("Lax")
                 .domain(null)
                 .path("/")
-                .maxAge(expire ? Duration.ZERO : Duration.ofHours(1))
+                .maxAge(expire ? Duration.ZERO : Duration.ofMinutes(15)) // 15 minutos para access token
+                .build();
+    }
+
+    private ResponseCookie createRefreshCookie(String token, boolean expire){
+        return ResponseCookie.from("refresh_token", expire ? "" : token)
+                .httpOnly(true)
+                .secure(false) // ajustar
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(expire ? Duration.ZERO : Duration.ofDays(7)) // 7 dias para refresh token
                 .build();
     }
 }

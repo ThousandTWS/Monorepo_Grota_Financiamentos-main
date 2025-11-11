@@ -9,7 +9,8 @@ import java.util.List;
 @Table(name = "tb_dealer")
 public class Dealer {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private LocalDate birthData;
@@ -47,7 +48,7 @@ public class Dealer {
         this.user = user;
     }
 
-    public void addVehicle(Vehicle vehicle){
+    public void addVehicle(Vehicle vehicle) {
         this.vehicles.add(vehicle);
     }
 
@@ -110,6 +111,5 @@ public class Dealer {
     public void setUser(User user) {
         this.user = user;
     }
-
 
 }

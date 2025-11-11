@@ -32,14 +32,27 @@ public class ApplicationControllerAdvice {
         );
     }
 
-    @ExceptionHandler({
-            RecordNotFoundException.class,
-            UserAlreadyVerifiedException.class,
-            CodeExpiredException.class,
-            DataAlreadyExistsException.class,
-    })
+    @ExceptionHandler(RecordNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ErrorResponse handleNotFoundRequestExceptions(RuntimeException ex){
+        return new ErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(DataAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleAlreadyExists(DataAlreadyExistsException ex){
+        return new ErrorResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(CodeExpiredException.class)
+    @ResponseStatus(HttpStatus.GONE)
+    public ErrorResponse handleCodeExpired(CodeExpiredException ex) {
+        return new ErrorResponse(HttpStatus.GONE, ex.getMessage());
+    }
+
+    @ExceptionHandler(UserAlreadyVerifiedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleBadRequestExceptions(RuntimeException ex){
+    public ErrorResponse handleUserAlreadyVerified(UserAlreadyVerifiedException ex) {
         return new ErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

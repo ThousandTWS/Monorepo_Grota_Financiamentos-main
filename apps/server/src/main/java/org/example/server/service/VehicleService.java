@@ -31,18 +31,19 @@ public class VehicleService {
 
     public VehicleResponseDTO create(User user, VehicleRequestDTO vehicleRequestDTO){
         Dealer dealer = dealerRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado"));
+                .orElseThrow(() -> new RecordNotFoundException(user.getId()));
 
         Vehicle vehicle = vehicleMapper.toEntity(vehicleRequestDTO);
         vehicle.setDealer(dealer);
         dealer.addVehicle(vehicle);
 
-       return vehicleMapper.toDTO(vehicleRepository.save(vehicle));
+        return vehicleMapper.toDTO(vehicleRepository.save(vehicle));
     }
 
     public List<VehicleResponseDTO> findAll() {
-       return vehicleRepository.findAll().stream()
-               .map(vehicle -> vehicleMapper.toDTO(vehicle)).collect(Collectors.toList());
+        return vehicleRepository.findAll().stream()
+                .map(vehicle -> vehicleMapper.toDTO(vehicle))
+                .collect(Collectors.toList());
     }
 
     public VehicleResponseDTO findById(Long id) {
@@ -69,18 +70,16 @@ public class VehicleService {
     }
 
     public List<VehicleResponseDTO> getVehicleByDealer(Long id) {
-       List<Vehicle> vehicles = vehicleRepository.findByDealerId(id);
-
-      return vehicles.stream()
-              .map(vehicle -> vehicleMapper.toDTO(vehicle))
-              .collect(Collectors.toList());
+        return vehicleRepository.findByDealerId(id).stream()
+                .map(vehicle -> vehicleMapper.toDTO(vehicle))
+                .collect(Collectors.toList());
     }
 
     public VehicleResponseDTO updateStatus(User user, Long id, VehicleStatus status) {
         Vehicle vehicle = vehicleRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException("Veiculo não encontrado com o id: " + id));
+                .orElseThrow(() -> new RecordNotFoundException(id));
 
-        if (!vehicle.getDealer().getId().equals(user.getId())){
+        if (!vehicle.getDealer().getUser().getId().equals(user.getId())){
             throw new AccessDeniedException("Você não tem permissão para alterar este veículo");
         }
 
@@ -89,8 +88,7 @@ public class VehicleService {
     }
 
     private Vehicle findVehicleById(Long vehicleId){
-        Vehicle vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new RecordNotFoundException("Veiculo não encontrado com o id: " + vehicleId));
-        return vehicle;
+        return vehicleRepository.findById(vehicleId)
+                .orElseThrow(() -> new RecordNotFoundException(vehicleId));
     }
 }

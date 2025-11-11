@@ -25,7 +25,7 @@ public class DealerDetailsMapper {
                 user != null ? user.getEmail() : null,
                 dealer.getPhone(),
                 dealer.getEnterprise(),
-                user != null ? user.getVerified() : null,
+                user != null ? user.getVerificationStatus() : null,
                 dealer.getFullNameEnterprise(),
                 dealer.getBirthData(),
                 dealer.getCnpj(),
