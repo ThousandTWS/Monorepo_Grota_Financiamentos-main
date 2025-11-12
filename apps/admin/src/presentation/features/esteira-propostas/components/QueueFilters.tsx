@@ -162,7 +162,7 @@ export function QueueFilters({
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch gap-2 justify-end w-full lg:w-auto" data-oid="f0m9auy">
+          <div className="flex flex-col sm:flex-row items-stretch gap-2 justify-end w-full lg:w-auto mt-6" data-oid="f0m9auy">
             <Button
               variant="outline"
               className="gap-2"

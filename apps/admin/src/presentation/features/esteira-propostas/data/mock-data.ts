@@ -8,7 +8,7 @@ export const mockProposals: ProposalQueueItem[] = [
 ];
 
 export const mockSummary: ProposalSummaryPayload = {
-  overallTotal: 90,
+  overallTotal: 0,
   myTickets: [
     { label: "Fichas na análise", value: 0, total: 0 },
     { label: "Espera Digitação", value: 0 },

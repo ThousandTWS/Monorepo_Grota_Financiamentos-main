@@ -134,6 +134,12 @@ export default function EsteiraDePropostasFeature() {
 
   return (
     <div className="space-y-6" data-oid="qnyp7p0">
+      
+
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]" data-oid="knyqnfc">
+        <QueueStats summary={summary} isLoading={isLoading} />
+        <StatusLegend summary={summary} />
+      </div>
       <QueueFilters
         filters={filters}
         operators={availableOperators}
@@ -145,11 +151,6 @@ export default function EsteiraDePropostasFeature() {
         onCreate={handleCreateProposal}
         isRefreshing={isRefreshing}
       />
-
-      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]" data-oid="knyqnfc">
-        <QueueStats summary={summary} isLoading={isLoading} />
-        <StatusLegend summary={summary} />
-      </div>
 
       <ProposalsTable proposals={proposals} isLoading={isLoading} />
 
