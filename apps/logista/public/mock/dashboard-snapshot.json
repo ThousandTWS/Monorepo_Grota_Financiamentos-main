@@ -1,0 +1,474 @@
+{
+  "7d": {
+    "meta": {
+      "lastUpdateLabel": "Atualizado às 07h35",
+      "timeframeLabel": "Últimos 7 dias",
+      "activePortfolioLabel": "Carteira ativa • 86 propostas",
+      "slaLabel": "SLA médio 3h02 • Squad Daycoval",
+      "goalLabel": "Meta semanal",
+      "goalValue": "R$ 3,4 mi",
+      "goalDeltaLabel": "+4,1% sobre cenário base",
+      "portfolioMonitorLabel": "Carteira em acompanhamento",
+      "portfolioValue": "R$ 8,7 mi",
+      "portfolioDetail": "18 contratos • inadimplência em 0,65%",
+      "portfolioInsight": "Compactos 29% • SUVs 41%",
+      "complianceInsight": "Auditoria LGPD concluída em 48h"
+    },
+    "kpis": [
+      {
+        "label": "Volume financiado (7 dias)",
+        "value": "R$ 3,8 mi",
+        "delta": "+4,1%",
+        "helper": "Execução vs. meta semanal",
+        "detail": "Meta semanal R$ 3,6 mi",
+        "trend": "up",
+        "icon": "wallet"
+      },
+      {
+        "label": "Ticket médio aprovado",
+        "value": "R$ 136,2 mil",
+        "delta": "+2,4%",
+        "helper": "Carteira padrão",
+        "detail": "Ticket alvo R$ 130 mil",
+        "trend": "up",
+        "icon": "trending"
+      },
+      {
+        "label": "Taxa de aprovação",
+        "value": "83,4%",
+        "delta": "+1,8 p.p.",
+        "helper": "Meta Daycoval: 80%",
+        "detail": "Conversão média semanal",
+        "trend": "up",
+        "icon": "approvals"
+      },
+      {
+        "label": "SLAs cumpridos",
+        "value": "91%",
+        "delta": "-0,9 p.p.",
+        "helper": "Últimas 60 propostas",
+        "detail": "SLA regulatório: 96%",
+        "trend": "down",
+        "icon": "sla"
+      }
+    ],
+    "executiveHighlights": [
+      {
+        "label": "Novos lojistas ativos",
+        "value": "12",
+        "helper": "+2 vs. planejamento"
+      },
+      {
+        "label": "Tempo médio de análise",
+        "value": "2h 11min",
+        "helper": "Meta < 3h"
+      },
+      {
+        "label": "NPS concessionárias",
+        "value": "81",
+        "helper": "Faixa saudável 70-90"
+      }
+    ],
+    "partnerDealers": [
+      {
+        "name": "AutoPrime Motors",
+        "city": "Curitiba • PR",
+        "volume": "R$ 510 mil",
+        "variation": "+6%",
+        "progress": 78
+      },
+      {
+        "name": "VivaCar Multimarcas",
+        "city": "Londrina • PR",
+        "volume": "R$ 405 mil",
+        "variation": "+3%",
+        "progress": 64
+      },
+      {
+        "name": "Capital Veículos",
+        "city": "Joinville • SC",
+        "volume": "R$ 352 mil",
+        "variation": "+10%",
+        "progress": 59
+      }
+    ],
+    "governanceAlerts": [
+      {
+        "title": "Auditoria LGPD",
+        "status": "Concluída",
+        "tone": "success",
+        "description": "Checklist validado pelo jurídico."
+      },
+      {
+        "title": "Credenciamento regional",
+        "status": "Atenção",
+        "tone": "warning",
+        "description": "2 parceiros aguardam assinatura digital."
+      }
+    ],
+    "monthlyPerformance": [
+      { "month": "Jan", "volume": 1.15, "approvals": 76 },
+      { "month": "Fev", "volume": 1.32, "approvals": 78 },
+      { "month": "Mar", "volume": 1.28, "approvals": 79 },
+      { "month": "Abr", "volume": 1.41, "approvals": 82 },
+      { "month": "Mai", "volume": 1.46, "approvals": 83 },
+      { "month": "Jun", "volume": 1.39, "approvals": 82 }
+    ],
+    "channelMix": [
+      { "key": "direto", "label": "Direto concessionária", "value": 48 },
+      { "key": "marketplace", "label": "Marketplaces parceiros", "value": 24 },
+      { "key": "digital", "label": "Digital / inbound", "value": 18 },
+      { "key": "indicacao", "label": "Indicações Daycoval", "value": 10 }
+    ],
+    "pipeline": [
+      {
+        "id": "GF-2024-1012",
+        "client": "Paulo da Silva",
+        "vehicle": "Compass Série S",
+        "amount": "R$ 198.400",
+        "status": "Em análise",
+        "updatedAt": "Hoje • 07h10"
+      },
+      {
+        "id": "GF-2024-1008",
+        "client": "Helena Bressan",
+        "vehicle": "Corolla Cross",
+        "amount": "R$ 154.900",
+        "status": "Aprovada",
+        "updatedAt": "Ontem • 22h18"
+      },
+      {
+        "id": "GF-2024-1002",
+        "client": "Ricardo Amaral",
+        "vehicle": "Ranger Limited",
+        "amount": "R$ 268.000",
+        "status": "Pendente documentação",
+        "updatedAt": "Ontem • 17h02"
+      }
+    ]
+  },
+  "30d": {
+    "meta": {
+      "lastUpdateLabel": "Atualizado às 10h45",
+      "timeframeLabel": "Ciclo fiscal 2024",
+      "activePortfolioLabel": "Carteira ativa • 312 propostas",
+      "slaLabel": "SLA médio 3h48 • Squad Daycoval",
+      "goalLabel": "Meta trimestral",
+      "goalValue": "R$ 12,5 mi",
+      "goalDeltaLabel": "+6,2% sobre cenário base",
+      "portfolioMonitorLabel": "Carteira em acompanhamento",
+      "portfolioValue": "R$ 21,8 mi",
+      "portfolioDetail": "42 contratos • inadimplência em 0,92%",
+      "portfolioInsight": "Top mix: SUVs (37%) • Picapes (33%).",
+      "complianceInsight": "0 ocorrências críticas nos últimos 45 dias."
+    },
+    "kpis": [
+      {
+        "label": "Volume financiado (30 dias)",
+        "value": "R$ 4,3 mi",
+        "delta": "+18,5%",
+        "helper": "Executado vs. período anterior",
+        "detail": "Meta Q1: R$ 4,0 mi / 30 dias",
+        "trend": "up",
+        "icon": "wallet"
+      },
+      {
+        "label": "Ticket médio aprovado",
+        "value": "R$ 142,8 mil",
+        "delta": "+6,1%",
+        "helper": "Carteira premium",
+        "detail": "Ticket alvo R$ 135 mil",
+        "trend": "up",
+        "icon": "trending"
+      },
+      {
+        "label": "Taxa de aprovação",
+        "value": "82%",
+        "delta": "+3,2 p.p.",
+        "helper": "Meta Daycoval: 80%",
+        "detail": "Conversão média do trimestre",
+        "trend": "up",
+        "icon": "approvals"
+      },
+      {
+        "label": "SLAs cumpridos",
+        "value": "94%",
+        "delta": "-1,4 p.p.",
+        "helper": "Últimas 200 propostas",
+        "detail": "SLA regulatório: 96%",
+        "trend": "down",
+        "icon": "sla"
+      }
+    ],
+    "executiveHighlights": [
+      {
+        "label": "Novos lojistas ativos",
+        "value": "38",
+        "helper": "+5 vs. meta semanal"
+      },
+      {
+        "label": "Tempo médio de análise",
+        "value": "2h 42min",
+        "helper": "SLA Daycoval 3h"
+      },
+      {
+        "label": "NPS concessionárias",
+        "value": "78",
+        "helper": "Faixa saudável 70-90"
+      }
+    ],
+    "partnerDealers": [
+      {
+        "name": "AutoPrime Motors",
+        "city": "Curitiba • PR",
+        "volume": "R$ 890 mil",
+        "variation": "+12%",
+        "progress": 82
+      },
+      {
+        "name": "VivaCar Multimarcas",
+        "city": "Londrina • PR",
+        "volume": "R$ 720 mil",
+        "variation": "+9%",
+        "progress": 67
+      },
+      {
+        "name": "Golden Drive",
+        "city": "Maringá • PR",
+        "volume": "R$ 615 mil",
+        "variation": "+4%",
+        "progress": 58
+      },
+      {
+        "name": "Capital Veículos",
+        "city": "Joinville • SC",
+        "volume": "R$ 580 mil",
+        "variation": "+15%",
+        "progress": 55
+      }
+    ],
+    "governanceAlerts": [
+      {
+        "title": "Auditoria LGPD",
+        "status": "Concluída",
+        "tone": "success",
+        "description": "Checklist validado pelo jurídico em 05/03."
+      },
+      {
+        "title": "Credenciamento regional",
+        "status": "Atenção",
+        "tone": "warning",
+        "description": "4 parceiras aguardam assinatura digital."
+      },
+      {
+        "title": "Incentivos ESG",
+        "status": "Insight",
+        "tone": "info",
+        "description": "Proposta verde Q2 em revisão com Produto."
+      }
+    ],
+    "monthlyPerformance": [
+      { "month": "Jan", "volume": 1.1, "approvals": 74 },
+      { "month": "Fev", "volume": 1.45, "approvals": 77 },
+      { "month": "Mar", "volume": 1.32, "approvals": 79 },
+      { "month": "Abr", "volume": 1.58, "approvals": 81 },
+      { "month": "Mai", "volume": 1.71, "approvals": 83 },
+      { "month": "Jun", "volume": 1.64, "approvals": 82 },
+      { "month": "Jul", "volume": 1.86, "approvals": 84 },
+      { "month": "Ago", "volume": 1.93, "approvals": 85 }
+    ],
+    "channelMix": [
+      { "key": "direto", "label": "Direto concessionária", "value": 42 },
+      { "key": "marketplace", "label": "Marketplaces parceiros", "value": 28 },
+      { "key": "digital", "label": "Digital / inbound", "value": 19 },
+      { "key": "indicacao", "label": "Indicações Daycoval", "value": 11 }
+    ],
+    "pipeline": [
+      {
+        "id": "GF-2024-0981",
+        "client": "Marcos Padilha",
+        "vehicle": "Compass Limited",
+        "amount": "R$ 142.500",
+        "status": "Em análise",
+        "updatedAt": "Hoje • 10h40"
+      },
+      {
+        "id": "GF-2024-0976",
+        "client": "Iara Gomes",
+        "vehicle": "T-Cross Highline",
+        "amount": "R$ 118.900",
+        "status": "Aprovada",
+        "updatedAt": "Ontem • 18h20"
+      },
+      {
+        "id": "GF-2024-0968",
+        "client": "Leandro Akira",
+        "vehicle": "Ranger Limited",
+        "amount": "R$ 228.400",
+        "status": "Pendente documentação",
+        "updatedAt": "Ontem • 15h05"
+      },
+      {
+        "id": "GF-2024-0961",
+        "client": "Bianca Silveira",
+        "vehicle": "Pulse Audace",
+        "amount": "R$ 98.700",
+        "status": "Recusada",
+        "updatedAt": "06/03 • 12h17"
+      },
+      {
+        "id": "GF-2024-0953",
+        "client": "Lúcio Andrade",
+        "vehicle": "Corolla Cross",
+        "amount": "R$ 166.200",
+        "status": "Em liquidação",
+        "updatedAt": "05/03 • 19h50"
+      }
+    ]
+  },
+  "quarter": {
+    "meta": {
+      "lastUpdateLabel": "Atualizado às 08h15",
+      "timeframeLabel": "Último trimestre fiscal",
+      "activePortfolioLabel": "Carteira ativa • 927 propostas",
+      "slaLabel": "SLA médio 3h55 • Squad Daycoval",
+      "goalLabel": "Meta trimestral",
+      "goalValue": "R$ 34,9 mi",
+      "goalDeltaLabel": "+3,4% vs. cenário base",
+      "portfolioMonitorLabel": "Carteira em acompanhamento",
+      "portfolioValue": "R$ 62,7 mi",
+      "portfolioDetail": "126 contratos • inadimplência em 1,12%",
+      "portfolioInsight": "SUVs 39% • Comerciais leves 28%",
+      "complianceInsight": "2 alertas mitigados em 72h"
+    },
+    "kpis": [
+      {
+        "label": "Volume financiado (90 dias)",
+        "value": "R$ 13,4 mi",
+        "delta": "+9,8%",
+        "helper": "Execução trimestral",
+        "detail": "Meta Q1: R$ 12,2 mi / 90 dias",
+        "trend": "up",
+        "icon": "wallet"
+      },
+      {
+        "label": "Ticket médio aprovado",
+        "value": "R$ 147,5 mil",
+        "delta": "+2,1%",
+        "helper": "Carteira premium",
+        "detail": "Ticket alvo R$ 140 mil",
+        "trend": "up",
+        "icon": "trending"
+      },
+      {
+        "label": "Taxa de aprovação",
+        "value": "80,4%",
+        "delta": "+0,8 p.p.",
+        "helper": "Meta Daycoval: 80%",
+        "detail": "Conversão média trimestral",
+        "trend": "up",
+        "icon": "approvals"
+      },
+      {
+        "label": "SLAs cumpridos",
+        "value": "92%",
+        "delta": "-2,3 p.p.",
+        "helper": "Últimas 600 propostas",
+        "detail": "SLA regulatório: 96%",
+        "trend": "down",
+        "icon": "sla"
+      }
+    ],
+    "executiveHighlights": [
+      {
+        "label": "Novos lojistas ativos",
+        "value": "94",
+        "helper": "+12 vs. trimestre anterior"
+      },
+      {
+        "label": "Tempo médio de análise",
+        "value": "3h 08min",
+        "helper": "SLA Daycoval 3h"
+      },
+      {
+        "label": "NPS concessionárias",
+        "value": "75",
+        "helper": "Faixa saudável 70-90"
+      }
+    ],
+    "partnerDealers": [
+      {
+        "name": "Premium Motors",
+        "city": "Porto Alegre • RS",
+        "volume": "R$ 1,24 mi",
+        "variation": "+8%",
+        "progress": 88
+      },
+      {
+        "name": "DriveMax",
+        "city": "Florianópolis • SC",
+        "volume": "R$ 1,08 mi",
+        "variation": "+6%",
+        "progress": 74
+      },
+      {
+        "name": "VivaCar Multimarcas",
+        "city": "Londrina • PR",
+        "volume": "R$ 940 mil",
+        "variation": "+12%",
+        "progress": 69
+      }
+    ],
+    "governanceAlerts": [
+      {
+        "title": "Auditoria ESG fornecedores",
+        "status": "Insight",
+        "tone": "info",
+        "description": "Checklist em execução com Procurement."
+      },
+      {
+        "title": "Revisão contrato regional",
+        "status": "Concluída",
+        "tone": "success",
+        "description": "Aditivos homologados em 12/04."
+      }
+    ],
+    "monthlyPerformance": [
+      { "month": "Jan", "volume": 3.6, "approvals": 77 },
+      { "month": "Fev", "volume": 3.9, "approvals": 79 },
+      { "month": "Mar", "volume": 4.0, "approvals": 81 }
+    ],
+    "channelMix": [
+      { "key": "direto", "label": "Direto concessionária", "value": 44 },
+      { "key": "marketplace", "label": "Marketplaces parceiros", "value": 26 },
+      { "key": "digital", "label": "Digital / inbound", "value": 20 },
+      { "key": "indicacao", "label": "Indicações Daycoval", "value": 10 }
+    ],
+    "pipeline": [
+      {
+        "id": "GF-2024-0911",
+        "client": "Marina Coelho",
+        "vehicle": "Volvo XC60",
+        "amount": "R$ 326.800",
+        "status": "Em análise",
+        "updatedAt": "14/04 • 08h22"
+      },
+      {
+        "id": "GF-2024-0879",
+        "client": "Leonardo Braga",
+        "vehicle": "Hilux GR-S",
+        "amount": "R$ 298.500",
+        "status": "Em liquidação",
+        "updatedAt": "12/04 • 19h05"
+      },
+      {
+        "id": "GF-2024-0842",
+        "client": "Aline Castro",
+        "vehicle": "Audi Q3",
+        "amount": "R$ 256.700",
+        "status": "Aprovada",
+        "updatedAt": "11/04 • 16h18"
+      }
+    ]
+  }
+}
