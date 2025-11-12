@@ -109,13 +109,14 @@ public class UserService {
         if (user.getVerificationStatus() == UserStatus.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
         }
-        if (!user.isVerificationCodeExpired()) {
+        if (user.isVerificationCodeExpired()) {
             throw new CodeInvalidException("Código expirado. Solicite um novo código");
         }
-        if (user.doesVerificationCodeMatch(verificationCodeRequestDTO.code())) {
-            user.markAsVerified();
-            userRepository.save(user);
+        if (!user.doesVerificationCodeMatch(verificationCodeRequestDTO.code())) {
+            throw new CodeInvalidException("Código inválido");
         }
+        user.markAsVerified();
+        userRepository.save(user);
     }
 
     public void resendCode(EmailResponseDTO dto) {
