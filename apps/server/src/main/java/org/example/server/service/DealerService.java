@@ -153,4 +153,8 @@ public class DealerService {
         return dealerProfileMapper.toDTO(dealerRepository.save(dealer));
     }
 
+    public void delete(Long id) {
+        dealerRepository.deleteById(id);
+    }
+
 }

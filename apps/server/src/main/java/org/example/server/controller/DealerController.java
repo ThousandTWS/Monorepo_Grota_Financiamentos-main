@@ -144,5 +144,25 @@ public class DealerController {
         DealerDetailsResponseDTO dealerDetails = dealerService.findDetailDealer(id);
         return ResponseEntity.ok(dealerDetails);
     }
+    
+    
+    @DeleteMapping("/{id}")
+        @Operation(
+            summary = "Deletar logista por ID",
+            description = "Operação de deleção de logistas por ID"
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logista deletado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado para o ID fornecido"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        dealerService.delete(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+
 }
 
