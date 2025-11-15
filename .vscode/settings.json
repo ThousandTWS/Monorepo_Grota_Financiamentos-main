@@ -4,5 +4,6 @@
       "mode": "auto"
     }
   ],
-  "jira-plugin.workingProject": ""
+  "jira-plugin.workingProject": "",
+  "java.compile.nullAnalysis.mode": "automatic"
 }
