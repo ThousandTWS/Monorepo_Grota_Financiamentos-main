@@ -2,6 +2,7 @@ package org.example.server.controller;
 
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
@@ -29,15 +30,12 @@ public class DocumentController {
 
     @PostMapping("/upload")
     public ResponseEntity<DocumentResponseDTO> uploadDocument(
-            @RequestParam("documentType") String documentTypeStr,
-            @RequestParam("file") MultipartFile file,
-            @AuthenticationPrincipal(expression = "dealer") Dealer dealer
-    )
+            @RequestParam @NotNull DocumentType documentType,
+            @RequestParam @NotNull MultipartFile file,
+            @AuthenticationPrincipal Dealer dealer)
     {
-        DocumentType documentType = Enum.valueOf(DocumentType.class, documentTypeStr);
-        DocumentUploadRequestDTO dto = new DocumentUploadRequestDTO(documentType, file);
-
-        DocumentResponseDTO response = documentService.uploadDocument(dto, dealer);
+        DocumentUploadRequestDTO uploadRequest = new DocumentUploadRequestDTO(documentType, file);
+        DocumentResponseDTO response = documentService.uploadDocument(uploadRequest, dealer);
         return ResponseEntity.ok(response);
     }
 
