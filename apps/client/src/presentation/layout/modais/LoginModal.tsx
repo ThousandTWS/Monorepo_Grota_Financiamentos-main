@@ -43,11 +43,11 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     try {
       const result = await signIn(data);
 
-      if (!result.success) {
+      if (result.success) {
         setSuccess(result.message);
         setTimeout(() => {
           onClose();
-          window.location.href = "http://localhost:3001";
+          window.location.href = "http://localhost:3000";
         }, 1500);
       }
     } catch (error) {
