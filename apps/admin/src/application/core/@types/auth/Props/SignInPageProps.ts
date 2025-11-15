@@ -3,6 +3,4 @@ export interface SignInPageProps {
   description?: React.ReactNode
   heroImageSrc?: string
   onSignIn?: (event: React.FormEvent<HTMLFormElement>) => void
-  onResetPassword?: () => void
-  onCreateAccount?: () => void
 }
