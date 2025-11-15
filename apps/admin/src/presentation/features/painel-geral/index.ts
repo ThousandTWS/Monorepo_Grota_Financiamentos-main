@@ -10,3 +10,4 @@ export { ActivityHeatmap } from "./components/ActivityHeatmap";
 export { GoalsProgress } from "./components/GoalsProgress";
 export { MonthlyComparison } from "./components/MonthlyComparison";
 export { ForecastChart } from "./components/ForecastChart";
+export { DealersList } from "./components/DealersList";

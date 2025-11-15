@@ -22,7 +22,7 @@ export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
       await fetch(
-        "http://localhost:8080/api/v1/grota-financiamentos/auth/login",
+        "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/login",
         {
           method: "POST",
           credentials: "include",

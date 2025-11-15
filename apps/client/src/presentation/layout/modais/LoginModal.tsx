@@ -45,7 +45,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setSuccess(result.message);
       setTimeout(() => {
         onClose();
-        window.location.href = "http://localhost:3001";
+        window.location.href = "http://localhost:3000";
       }, 1500);
     }
   };

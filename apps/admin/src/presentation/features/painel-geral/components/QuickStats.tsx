@@ -1,4 +1,5 @@
-import React from "react";
+"use client"
+import React, { useEffect, useState } from "react";
 import {
   TrendingUp,
   DollarSign,
@@ -8,8 +9,34 @@ import {
   Users,
 } from "lucide-react";
 import { StatsCard } from "./StatsCard";
+import { getAllSellers } from "@/application/services/Seller/sellerService";
 
 export function QuickStats() {
+  const [sellersCount, setSellersCount] = useState<number | null>(null);
+  const [sellersError, setSellersError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSellers = async () => {
+      try {
+        const sellers = await getAllSellers();
+        setSellersCount(sellers.length);
+        setSellersError(null);
+      } catch (error) {
+        console.error("Erro ao carregar vendedores:", error);
+        setSellersError("Falha ao carregar vendedores");
+        setSellersCount(null);
+      }
+    };
+
+    loadSellers();
+  }, []);
+
+  const sellersValue =
+    sellersCount !== null ? sellersCount.toString() : "—";
+  const sellersChangeLabel = sellersError
+    ? "falha ao carregar"
+    : "vs. mês anterior";
+
   const stats = [
     {
       title: "Volume Total",
@@ -48,10 +75,10 @@ export function QuickStats() {
       iconBg: "bg-purple-50 dark:bg-purple-950",
     },
     {
-      title: "Consultores Ativos",
-      value: "0",
+      title: "Vendedores Ativos",
+      value: sellersValue,
       change: 0.0,
-      changeLabel: "vs. mês anterior",
+      changeLabel: sellersChangeLabel,
       icon: Users,
       iconColor: "text-orange-600",
       iconBg: "bg-orange-50 dark:bg-orange-950",

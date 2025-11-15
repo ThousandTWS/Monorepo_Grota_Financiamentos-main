@@ -1,7 +1,21 @@
-import { ActivityHeatmap, ConversionFunnel, FinancingChart, ForecastChart, MonthlyComparison, QuickStats, RecentActivity, StatusDistribution } from "@/presentation/features/painel-geral";
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { ActivityHeatmap, ConversionFunnel, DealersList, FinancingChart, ForecastChart, MonthlyComparison, QuickStats, RecentActivity, StatusDistribution } from "@/presentation/features/painel-geral";
+import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 
 export default function Dashboard() {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsLoading(false), 800);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
     <div
       className="space-y-6 animate-in fade-in duration-500"
@@ -43,6 +57,43 @@ export default function Dashboard() {
       </div>
 
       <ActivityHeatmap data-oid="c34tkjn" />
+
+      <DealersList />
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-2">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-4 w-80" />
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        {Array.from({ length: 6 }).map((_, index) => (
+          <Skeleton key={index} className="h-32 rounded-2xl" />
+        ))}
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
+        <Skeleton className="h-80 rounded-2xl" />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-80 rounded-2xl" />
+        <Skeleton className="h-80 rounded-2xl" />
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Skeleton className="h-64 rounded-2xl" />
+        <Skeleton className="h-64 rounded-2xl" />
+      </div>
+
+      <Skeleton className="h-72 rounded-2xl" />
+      <Skeleton className="h-72 rounded-2xl" />
     </div>
   );
 }

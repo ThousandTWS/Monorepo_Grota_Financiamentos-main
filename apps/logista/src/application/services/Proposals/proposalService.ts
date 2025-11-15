@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import api from "../server/api";
 import { z } from "zod";
 import {
@@ -99,7 +100,7 @@ const fetchQueueFromApi = async (
   const response = await api.get(PROPOSALS_QUEUE_ENDPOINT, {
     params: filters,
   });
-
+  //@ts-ignore
   return ProposalQueueResponseSchema.parse(response.data);
 };
 
