@@ -36,6 +36,11 @@ public class EmailService {
     }
 
     @Async
+    public void sendPasswordToEmail(String to, String password){
+        sendEmailWithTemplate(to, "Senha para login", "password-seller", password);
+    }
+
+    @Async
     protected void sendEmailWithTemplate(String to, String subject, String templateName, String code){
         try {
             Context ctx = new Context();
