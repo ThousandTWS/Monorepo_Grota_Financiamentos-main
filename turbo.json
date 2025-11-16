@@ -11,7 +11,7 @@
       "dependsOn": [],
       "outputs": []
     },
-      "test:e2e": {
+    "test:e2e": {
       "dependsOn": ["grota-website#build"],
       "outputs": []
     },
@@ -25,5 +25,6 @@
       "cache": false,
       "persistent": true
     }
-  }
+  },
+  "globalEnv": ["NEXT_PUBLIC_URL_API"]
 }

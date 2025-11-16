@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { FieldError } from "react-hook-form";
 
 interface InputGroupProps {
-  label: string;
+  label?: string;
   id: string;
   icon?: ReactNode;
   children: ReactNode;

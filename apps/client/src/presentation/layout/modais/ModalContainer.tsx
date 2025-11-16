@@ -15,6 +15,7 @@ export const ModalContainer = ({
   isVerificationModalOpen,
   isForgotPasswordModalOpen,
   verificationEmail,
+  verificationType,
   closeLoginModal,
   closeRegisterModal,
   closeVerificationModal,
@@ -31,6 +32,7 @@ export const ModalContainer = ({
         isOpen={isVerificationModalOpen}
         onClose={closeVerificationModal}
         email={verificationEmail}
+        type={verificationType}
       />
       <ForgotPasswordModal
         isOpen={isForgotPasswordModalOpen}

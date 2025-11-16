@@ -3,14 +3,17 @@
 import { useState } from "react";
 import { X, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
-
+import { VerificationType } from "@/application/core/@types/verification.type";
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProps) {
+export function ForgotPasswordModal({
+  isOpen,
+  onClose,
+}: ForgotPasswordModalProps) {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState("");
   const { forgotPassword, isLoading, error, clearError } = useAuth();
@@ -19,7 +22,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
     e.preventDefault();
     clearError();
     setSuccess("");
-    
+
     if (!email) {
       return;
     }
@@ -27,6 +30,18 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
     const result = await forgotPassword(email);
     if (result.success) {
       setSuccess(result.message);
+      setTimeout(() => {
+        onClose();
+        setSuccess("");
+        setEmail("");
+        const event = new CustomEvent("openVerificationModal", {
+          detail: {
+            email,
+            verification_type: VerificationType.REDEFINE_CODE,
+          },
+        });
+        window.dispatchEvent(event);
+      }, 1500);
     }
   };
 
@@ -41,13 +56,17 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
         >
           <X size={24} />
         </button>
-        
+
         <div className="p-8">
           <div className="text-center mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Esqueceu sua senha?</h2>
-            <p className="text-gray-600">Digite seu email para receber as instruções de recuperação</p>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Esqueceu sua senha?
+            </h2>
+            <p className="text-gray-600">
+              Digite seu email para receber as instruções de recuperação
+            </p>
           </div>
-          
+
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
               <AlertCircle size={16} />
@@ -60,12 +79,17 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
               <span className="text-sm">{success}</span>
             </div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-md font-medium text-gray-700 mb-5">Email</label>
+              <label className="block text-md font-medium text-gray-700 mb-5">
+                Email
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Mail
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={20}
+                />
                 <input
                   type="email"
                   value={email}
@@ -77,7 +101,7 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
                 />
               </div>
             </div>
-            
+
             <button
               type="submit"
               disabled={isLoading}
@@ -93,13 +117,13 @@ export function ForgotPasswordModal({ isOpen, onClose }: ForgotPasswordModalProp
               )}
             </button>
           </form>
-          
+
           <div className="mt-6 text-center">
-            <button 
+            <button
               onClick={() => {
                 onClose();
                 setTimeout(() => {
-                  const event = new CustomEvent('openLoginModal');
+                  const event = new CustomEvent("openLoginModal");
                   window.dispatchEvent(event);
                 }, 100);
               }}

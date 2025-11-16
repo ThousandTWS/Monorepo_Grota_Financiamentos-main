@@ -2,8 +2,21 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { SignInPageProps } from "@/application/core/@types/auth/Props/SignInPageProps"
+import z from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { useAuth } from "@/application/services/auth/hooks/useAuth"
+import { useRouter } from "next/navigation"
+import { toast } from "sonner"
+
+const loginSchema = z.object({
+  email: z.email("Email inválido"),
+  password: z.string().length(8, "A senha precisa ter 8 caracteres"),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
   <div className="rounded-2xl border border-[#1B4B7C]/50 transition-colors focus-within:border-[#1B4B7C]/80">
@@ -15,11 +28,42 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   title = <span className="font-light text-[#1B4B7C] tracking-tighter text-4xl md:text-5xl">Bem-vindo</span>,
   description = "Acesse sua conta e continue sua jornada com a Grota Financiamentos",
   heroImageSrc,
-  onSignIn,
-  onResetPassword,
-  onCreateAccount,
 }) => {
+  const { signIn, isLoading, error, clearError } = useAuth();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isDirty },
+  } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: ""
+    }
+  });
+  const router = useRouter()
+
   const [showPassword, setShowPassword] = useState(false)
+
+  const onSubmit = async (data: LoginForm) => {
+    clearError();
+
+    if (!data.email || !data.password) {
+      return;
+    }
+
+    try {
+      const result = await signIn(data);
+
+      if (result.success) {
+        toast.success("Login realizado com sucesso!");
+        router.push("/visao-geral");
+      }
+    } catch (error) {
+      const errorMessage = "Erro de conexão. Tente novamente.";
+      return { success: false, message: errorMessage };
+    }
+  };
 
   return (
     <div className="h-[100dvh] flex flex-col md:flex-row font-sans w-[100dvw] bg-white">
@@ -28,33 +72,42 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           <div className="flex flex-col gap-6">
             <h1 className="animate-element animate-delay-100 font-semibold leading-tight">{title}</h1>
             <p className="animate-element animate-delay-200 text-[#1B4B7C]/80">{description}</p>
-            <form className="space-y-5" onSubmit={onSignIn}>
+            <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
               <div className="animate-element animate-delay-300">
-                <label className="text-md font-medium text-[#1B4B7C]">E-mail</label>
+                <label className="text-md font-medium text-[#1B4B7C]" htmlFor="email">E-mail</label>
                 <GlassInputWrapper>
                   <input
-                    name="email"
+                    id="email"
                     type="email"
+                    {...register("email")}
                     placeholder="Digite seu e-mail"
                     className="w-full bg-white text-[#1B4B7C] placeholder:text-[#1B4B7C]/50 text-sm p-4 rounded-2xl focus:outline-none"
+                    disabled={isLoading}
                   />
                 </GlassInputWrapper>
+                
+                {errors.email && (
+                  <p className="text-red-600 text-sm mt-1">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="animate-element animate-delay-400">
-                <label className="text-md font-medium text-[#1B4B7C]">Senha</label>
+                <label className="text-md font-medium text-[#1B4B7C]" htmlFor="password">Senha</label>
                 <GlassInputWrapper>
                   <div className="relative">
                     <input
-                      name="password"
+                      id="password"
                       type={showPassword ? "text" : "password"}
+                      {...register("password")}
                       placeholder="Digite sua senha"
-                      className="w-full bg-white text-[#1B4B7C] placeholder:text-[#1B4B7C]/50 text-sm p-4 pr-12 rounded-2xl focus:outline-none"
+                      className="w-full bg-white text-[#1B4B7C] placeholder:text-[#1B4B7C]/50 text-sm p-4 rounded-2xl focus:outline-none"
+                      disabled={isLoading}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-3 flex items-center"
+                      disabled={isLoading}
                     >
                       {showPassword ? (
                         <EyeOff className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
@@ -64,18 +117,18 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                     </button>
                   </div>
                 </GlassInputWrapper>
+
+                {errors.password && (
+                  <p className="text-red-600 text-sm mt-1">{errors.password.message}</p>
+                )}
               </div>
 
-              <div className="animate-element animate-delay-500 flex items-center justify-between text-sm">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input type="checkbox" name="rememberMe" className="custom-checkbox" />
-                  <span className="text-[#1B4B7C]/90">Manter-me conectado</span>
-                </label>
+              <div className="animate-element animate-delay-500 flex items-center justify-end text-sm">
                 <a
                   href="#"
                   onClick={(e) => {
                     e.preventDefault()
-                    onResetPassword?.()
+                    router.push("/esqueci-senha")
                   }}
                   className="hover:underline text-[#1B4B7C] transition-colors"
                 >
@@ -85,10 +138,22 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
               <button
                 type="submit"
-                className="animate-element animate-delay-600 w-full rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors"
+                disabled={isLoading || !isDirty}
+                className="animate-element animate-delay-600 w-full rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors flex items-center justify-center gap-3"
               >
-                Entrar
+                {isLoading ? (
+                  <>
+                    <Loader2 size={20} className="animate-spin" />
+                    Entrando...
+                  </>
+                ) : (
+                  "Entrar"
+                )}
               </button>
+
+              {error && (
+                <p className="text-red-600 text-sm text-center">{error}</p>
+              )}
             </form>
 
             <p className="animate-element animate-delay-900 text-center text-sm text-[#1B4B7C]/80">
@@ -97,7 +162,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 href="#"
                 onClick={(e) => {
                   e.preventDefault()
-                  onCreateAccount?.()
+                  router.push("/cadastro")
                 }}
                 className="text-[#1B4B7C] hover:underline transition-colors"
               >

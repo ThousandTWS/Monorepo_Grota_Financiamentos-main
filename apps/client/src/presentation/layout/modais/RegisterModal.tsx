@@ -16,6 +16,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
+import { VerificationType } from "@/application/core/@types/verification.type";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -77,7 +78,10 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
         setSuccess("");
         reset();
         const event = new CustomEvent("openVerificationModal", {
-          detail: { email: result.user.email },
+          detail: {
+            email: result.user.email,
+            verification_type: VerificationType.CONFIRM_CODE,
+          },
         });
         window.dispatchEvent(event);
       }, 3000);

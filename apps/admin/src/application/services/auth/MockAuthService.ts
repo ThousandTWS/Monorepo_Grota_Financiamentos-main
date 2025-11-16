@@ -7,8 +7,6 @@ export interface AuthCredentials {
 
 export interface RegisterData extends AuthCredentials {
   fullName: string;
-  phone: string;
-  enterprise: string;
 }
 
 export interface AuthResult {
@@ -22,7 +20,7 @@ export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
       await fetch(
-        "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/login",
+        `${process.env.NEXT_PUBLIC_URL_API as string}/auth/login`,
         {
           method: "POST",
           credentials: "include",
@@ -48,22 +46,18 @@ export class MockAuthService {
     email,
     password,
     fullName,
-    phone,
-    enterprise,
   }: RegisterData): Promise<AuthResult> {
     try {
-      const { data } = await api.post("/auth/register", {
+      const { data } = await api.post("/users", {
         email,
         password,
         fullName,
-        phone,
-        enterprise,
       });
 
       return {
         success: true,
         message: "Cadastro realizado com sucesso!",
-        user: { id: data.id, email, name: fullName, phone, enterprise },
+        user: { id: data.id, email, name: fullName },
       };
     } catch (error: any) {
       console.log("Deu erro", error.response.data);
