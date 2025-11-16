@@ -19,7 +19,7 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      await fetch(
+      const response = await fetch(
         `${process.env.NEXT_PUBLIC_URL_API as string}/auth/login`,
         {
           method: "POST",
@@ -28,6 +28,17 @@ export class MockAuthService {
           body: JSON.stringify({ email, password }),
         }
       );
+      if (!response.ok) {
+        throw new Error("Credenciais inválidas");
+      }
+      const payload = await response.json().catch(() => ({}));
+      const accessToken = payload?.accessToken ?? "";
+
+      if (typeof window !== "undefined" && accessToken) {
+        document.cookie = `access_token=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+        window.localStorage.setItem("grota:admin:access_token", accessToken);
+      }
+
       return {
         success: true,
         message: "Login realizado com sucesso!",

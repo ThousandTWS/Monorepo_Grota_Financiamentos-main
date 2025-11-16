@@ -4,6 +4,7 @@ import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
 import React from "react";
+import { AuthGuard } from "@/presentation/components/AuthGuard";
 
 export default function AdminLayout({
   children,
@@ -28,7 +29,7 @@ export default function AdminLayout({
         <AppHeader />
 
         <div className="p-4 mx-auto max-w-[var(--breakpoint-2xl)] md:p-6">
-          {children}
+          <AuthGuard>{children}</AuthGuard>
         </div>
       </div>
     </div>
