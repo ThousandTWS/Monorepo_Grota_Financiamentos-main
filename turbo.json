@@ -26,5 +26,11 @@
       "persistent": true
     }
   },
-  "globalEnv": ["NEXT_PUBLIC_URL_API"]
+  "globalEnv": [
+    "NEXT_PUBLIC_URL_API",
+    "LOGISTA_SESSION_SECRET",
+    "LOGISTA_API_BASE_URL",
+    "ADMIN_SESSION_SECRET",
+    "NEXT_PUBLIC_LOGISTA_PANEL_URL"
+  ]
 }
