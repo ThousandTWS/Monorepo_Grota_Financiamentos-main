@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../server/api";
 
 export interface AuthCredentials {
@@ -21,15 +22,24 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      await fetch(
-        "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/login",
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const panelOrigin = (
+        process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3000"
+      ).replace(/\/$/, "");
+      const response = await fetch(`${panelOrigin}/api/auth/login`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        return {
+          success: false,
+          message: error?.error ?? "Credenciais inválidas.",
+        };
+      }
+
       return {
         success: true,
         message: "Login realizado com sucesso!",

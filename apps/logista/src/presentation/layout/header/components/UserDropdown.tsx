@@ -5,11 +5,12 @@ import React, { useState, useEffect } from "react";
 import { Dropdown } from "@/presentation/ui/dropdown/Dropdown";
 import { DropdownItem } from "@/presentation/ui/dropdown/DropdownItem";
 import { User } from "lucide-react";
-import api from "@/application/services/server/api";
 import userServices, {
   type AuthenticatedUser,
 } from "@/application/services/UserServices/UserServices";
-import type { AxiosError } from "axios";
+
+const CLIENT_REDIRECT_URL =
+  process.env.NEXT_PUBLIC_CLIENT_URL ?? "http://localhost:3001";
 
 export default function UserDropdown() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
@@ -19,10 +20,14 @@ export default function UserDropdown() {
   // Logout
   const handleLogout = async () => {
     try {
-      await api.post("/auth/logout", {}, { withCredentials: true });
-      window.location.href = "http://localhost:3001";
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
     } catch (error) {
       console.error("Erro no logout:", error);
+    } finally {
+      window.location.href = CLIENT_REDIRECT_URL;
     }
   };
 
@@ -37,12 +42,14 @@ export default function UserDropdown() {
           setUser(userData);
         }
       } catch (error: unknown) {
-        const axiosError = error as AxiosError<{ message?: string }>;
-        console.error("Erro ao buscar usuário:", axiosError?.message ?? error);
-
+        console.error("Erro ao buscar usuário:", error);
         if (isMounted) {
-          //@ts-ignore
-          setUser({ id: 0, email: "", fullName: "Usuário" });
+          setUser({
+            id: 0,
+            email: "",
+            fullName: "Usuário",
+            role: "",
+          });
         }
       } finally {
         if (isMounted) {

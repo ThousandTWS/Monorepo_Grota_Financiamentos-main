@@ -26,6 +26,7 @@ export function useAuth() {
     } finally {
       setIsLoading(false);
     }
+  
   };
 
   const signUp = async (data: RegisterData): Promise<AuthResult> => {

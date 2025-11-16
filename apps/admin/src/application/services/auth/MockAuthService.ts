@@ -19,18 +19,26 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      await fetch(
-        `${process.env.NEXT_PUBLIC_URL_API as string}/auth/login`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => null);
+        return {
+          success: false,
+          message: error?.error ?? "Credenciais inválidas.",
+        };
+      }
+
+      const payload = await response.json();
       return {
         success: true,
         message: "Login realizado com sucesso!",
+        user: payload?.user,
       };
     } catch (error: any) {
       console.error("Erro no login:", error.message);

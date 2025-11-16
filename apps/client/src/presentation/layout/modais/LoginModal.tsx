@@ -8,6 +8,10 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
 
+const LOGISTA_PORTAL_URL = (
+  process.env.NEXT_PUBLIC_URL_API ?? "http://localhost:8080"
+).replace(/\/$/, "");
+
 const loginSchema = z.object({
   email: z.string(),
   password: z.string(),
@@ -45,7 +49,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setSuccess(result.message);
       setTimeout(() => {
         onClose();
-        window.location.href = "http://localhost:3000";
+        window.location.href = "https://monorepo-grota-financiamentos-main-omega.vercel.app";
       }, 1500);
     }
   };
