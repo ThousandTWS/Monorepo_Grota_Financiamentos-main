@@ -260,9 +260,9 @@ public class AuthController {
     private ResponseCookie createAuthCookie(String token, boolean expire) {
         return ResponseCookie.from("access_token", expire ? "" : token)
                 .httpOnly(true)
-                .secure(false) // ajustar
+                .secure(true) // ajustar
                 .sameSite("Lax")
-                .domain(null)
+                .domain("monorepo-grota-financiamentos-main.vercel.app")
                 .path("/")
                 .maxAge(expire ? Duration.ZERO : Duration.ofMinutes(15)) // 15 minutos para access token
                 .build();
