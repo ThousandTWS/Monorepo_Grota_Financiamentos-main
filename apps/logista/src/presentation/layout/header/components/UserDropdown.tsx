@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -18,34 +19,16 @@ export default function UserDropdown() {
   // Logout
   const handleLogout = async () => {
     try {
-<<<<<<< HEAD
       await api.post("/auth/logout", {}, { withCredentials: true });
       window.location.href = "http://localhost:3001";
-=======
-      await fetch("https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      });
-      window.location.href = "http://localhost:3000";
->>>>>>> 4612d974b2bd64dea31ff96bf82863f89dc1ad45
     } catch (error) {
       console.error("Erro no logout:", error);
     }
   };
 
-<<<<<<< HEAD
   // Fetch do usuário
   useEffect(() => {
     let isMounted = true;
-=======
-useEffect(() => {
-  async function fetchUserName() {
-    try {
-      const response = await fetch("https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos/auth/me", {
-        method: "GET",
-        credentials: "include"
-      })
->>>>>>> 4612d974b2bd64dea31ff96bf82863f89dc1ad45
 
     const fetchUser = async () => {
       try {
@@ -58,6 +41,7 @@ useEffect(() => {
         console.error("Erro ao buscar usuário:", axiosError?.message ?? error);
 
         if (isMounted) {
+          //@ts-ignore
           setUser({ id: 0, email: "", fullName: "Usuário" });
         }
       } finally {

@@ -1,16 +1,16 @@
 import axios, { AxiosInstance } from "axios";
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "http://localhost:8080/api/v1/grota-financiamentos";
+const BASE_URL = process.env.NEXT_PUBLIC_URL_API as string;
+
+const defaultHeaders = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+};
 
 const api: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: defaultHeaders,
   withCredentials: true,
 });
-
 
 export default api;

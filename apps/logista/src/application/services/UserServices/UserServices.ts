@@ -4,6 +4,7 @@ export interface AuthenticatedUser {
   id: number;
   email: string;
   fullName: string;
+  role: string;
 }
 
 const userServices = {

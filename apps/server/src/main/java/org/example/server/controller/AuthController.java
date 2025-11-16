@@ -166,7 +166,8 @@ public class AuthController {
         UserResponseDTO userResponseDTO = new UserResponseDTO(
                 user.getId(),
                 user.getEmail(),
-                user.getDealer().getUser().getFullName()
+                user.getDealer() != null ? user.getDealer().getUser().getFullName() : user.getFullName(),
+                user.getRole()
         );
         return ResponseEntity.ok(userResponseDTO);
     }

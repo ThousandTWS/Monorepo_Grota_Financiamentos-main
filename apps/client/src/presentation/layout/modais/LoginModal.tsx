@@ -40,7 +40,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       return;
     }
 
-<<<<<<< HEAD
     const result = await signIn(data);
     if (result.success) {
       setSuccess(result.message);
@@ -48,21 +47,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
         onClose();
         window.location.href = "http://localhost:3000";
       }, 1500);
-=======
-    try {
-      const result = await signIn(data);
-
-      if (result.success) {
-        setSuccess(result.message);
-        setTimeout(() => {
-          onClose();
-          window.location.href = "http://localhost:3000";
-        }, 1500);
-      }
-    } catch (error) {
-      const errorMessage = "Erro de conexão. Tente novamente.";
-      return { success: false, message: errorMessage };
->>>>>>> 4612d974b2bd64dea31ff96bf82863f89dc1ad45
     }
   };
 
