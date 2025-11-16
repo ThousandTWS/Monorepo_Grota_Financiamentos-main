@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 const PUBLIC_PATHS = new Set([
   "/",
-  "/signin",
+  "/logout",
   "/cadastro",
   "/esqueci-senha",
   "/verificacao-token",

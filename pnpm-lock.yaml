@@ -819,6 +819,9 @@ importers:
 
   packages/ui:
     dependencies:
+      '@grota/realtime-client':
+        specifier: workspace:*
+        version: link:../realtime-client
       react:
         specifier: ^19.1.0
         version: 19.1.0
