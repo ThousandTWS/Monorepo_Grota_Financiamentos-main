@@ -23,6 +23,7 @@ const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const CHANNEL = "admin-logista";
 const IDENTITY = "admin";
 
+
 const statusStyles = {
   connected: {
     label: "Online",
