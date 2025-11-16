@@ -1,51 +1,12 @@
 "use client";
+import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
-import { logout } from "@/application/services/auth/userService";
-import { useAuthenticatedUser } from "@/presentation/hooks/useAuthenticatedUser";
-import { toast } from "sonner";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const router = useRouter();
-  const { user, isLoading, error } = useAuthenticatedUser();
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast.success("Você saiu da conta.");
-      router.push("/signin");
-    } catch (_error) {
-      toast.error("Não foi possível encerrar a sessão.");
-    }
-  };
-
-  const displayName = useMemo(() => {
-    if (user?.fullName) return user.fullName;
-    if (isLoading) return "Carregando...";
-    return "Usuário";
-  }, [user, isLoading]);
-
-  const displayEmail = useMemo(() => {
-    if (user?.email) return user.email;
-    if (error) return error;
-    return isLoading ? "Sincronizando..." : "E-mail não informado";
-  }, [user, error, isLoading]);
-
-  const initials = useMemo(() => {
-    if (user?.fullName) {
-      return user.fullName
-        .split(" ")
-        .map((piece) => piece.charAt(0))
-        .join("")
-        .slice(0, 2)
-        .toUpperCase();
-    }
-    return "US";
-  }, [user]);
 
 function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
   e.stopPropagation();
@@ -61,11 +22,16 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
         onClick={toggleDropdown} 
         className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
       >
-        <span className="mr-3 flex h-11 w-11 items-center justify-center rounded-full bg-zinc-400 text-sm font-semibold uppercase text-white">
-          {initials}
+        <span className="mr-3 overflow-hidden rounded-full h-11 w-11 bg-zinc-400">
+          <Image
+            width={44}
+            height={44}
+            src="/"
+            alt=""
+          />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">{displayName}</span>
+        <span className="block mr-1 font-medium text-theme-sm">user name</span>
 
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
@@ -94,10 +60,10 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
       >
         <div>
           <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            {displayName}
+            user name
           </span>
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            {displayEmail}
+            user email
           </span>
         </div>
 
@@ -178,13 +144,9 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
             </DropdownItem>
           </li>
         </ul>
-        <button
-          type="button"
-          onClick={() => {
-            closeDropdown();
-            handleLogout();
-          }}
-          className="flex w-full items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+        <Link
+          href="/signin"
+          className="flex items-center gap-3 px-3 py-2 mt-3 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
         >
           <svg
             className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
@@ -201,8 +163,8 @@ function toggleDropdown(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
               fill=""
             />
           </svg>
-          Sair
-        </button>
+          String
+        </Link>
       </Dropdown>
     </div>
   );
