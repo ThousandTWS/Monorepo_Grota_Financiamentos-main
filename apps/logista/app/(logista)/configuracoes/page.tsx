@@ -12,7 +12,7 @@ function ConfiguracoesPage() {
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold tracking-tight">Configurações da Conta</h1>
         <p className="text-muted-foreground">
-          Gerencie suas informações, usuários e segurança da sua conta.
+          Gerencie suas informações, usuários e segurança
         </p>
       </div>
 

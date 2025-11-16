@@ -33,6 +33,18 @@ export function getLogistaAllowedOrigins(): string[] {
     .map((entry) => entry.trim())
     .filter(Boolean);
 
+  if (process.env.NODE_ENV !== "production") {
+    return Array.from(
+      new Set([
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        DEFAULT_CLIENT_ORIGIN,
+        ...entries,
+      ]),
+    );
+  }
+
   return Array.from(new Set([DEFAULT_CLIENT_ORIGIN, ...entries]));
 }
 
