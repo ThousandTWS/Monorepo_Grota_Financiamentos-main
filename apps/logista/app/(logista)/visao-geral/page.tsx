@@ -46,6 +46,7 @@ import {
   ChartTooltipContent,
 } from "@/presentation/ui/chart";
 import { Skeleton } from "@/presentation/ui/skeleton";
+import { RealtimeBridgePanel } from "./_components/RealtimeBridgePanel";
 
 const KPI_ICON_MAP = {
   wallet: Wallet,
@@ -451,6 +452,8 @@ export default function Page() {
           </div>
         </div>
       </section>
+
+      <RealtimeBridgePanel />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {kpiCards.length

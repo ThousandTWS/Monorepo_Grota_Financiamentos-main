@@ -1,76 +1,58 @@
-export type ProposalQueueStatus =
-  | "triage"
-  | "awaiting_input"
-  | "analysis"
-  | "filling"
-  | "sent"
-  | "pre_approved"
-  | "rejected"
-  | "awaiting_payment"
-  | "paid";
+export type ProposalStatus = "SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
 
-export interface ProposalAsset {
-  brand: string;
-  model: string;
-  version?: string;
-  year: number;
-  entryValue: number;
+export interface Proposal {
+  id: number;
+  dealerId?: number | null;
+  sellerId?: number | null;
+  customerName: string;
+  customerCpf: string;
+  customerBirthDate: string;
+  customerEmail: string;
+  customerPhone: string;
+  cnhCategory: string;
+  hasCnh: boolean;
+  vehiclePlate: string;
+  fipeCode: string;
+  fipeValue: number;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  downPaymentValue: number;
   financedValue: number;
-  installmentValue: number;
-  termMonths: number;
-}
-
-export interface ProposalProductInfo {
-  bank: string;
-  product: string;
-  modality: string;
-}
-
-export interface ProposalStatusSnapshot {
-  status: ProposalQueueStatus;
-  label: string;
+  status: ProposalStatus;
+  notes?: string | null;
+  createdAt: string;
   updatedAt: string;
-  analyst: string;
-  description?: string;
 }
 
-export interface ProposalQueueItem {
-  id: string;
-  contract: string;
-  clientName: string;
-  clientDocument: string;
-  dealerName: string;
-  dealerCode?: string;
-  operatorName: string;
-  operatorSentAt: string;
-  asset: ProposalAsset;
-  productInfo: ProposalProductInfo;
-  currentStatus: ProposalStatusSnapshot;
-  timelineStatus?: ProposalStatusSnapshot[];
-}
-
-export interface ProposalQueueFilters {
+export interface ProposalFilters {
   search?: string;
-  operatorId?: string;
-  dealerId?: string;
-  dealerCode?: string;
-  status?: ProposalQueueStatus[];
+  dealerId?: number;
+  status?: ProposalStatus;
 }
 
-export interface ProposalSummaryBucket {
-  key: ProposalQueueStatus;
-  label: string;
-  value: number;
-  total?: number;
+export interface CreateProposalPayload {
+  dealerId?: number;
+  sellerId?: number;
+  customerName: string;
+  customerCpf: string;
+  customerBirthDate: string;
+  customerEmail: string;
+  customerPhone: string;
+  cnhCategory: string;
+  hasCnh: boolean;
+  vehiclePlate: string;
+  fipeCode: string;
+  fipeValue: number;
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleYear: number;
+  downPaymentValue: number;
+  financedValue: number;
+  notes?: string;
 }
 
-export interface ProposalSummaryPayload {
-  myTickets: {
-    label: string;
-    value: number;
-    total?: number;
-    color?: string;
-  }[];
-  statusTotals: ProposalSummaryBucket[];
-  overallTotal: number;
+export interface UpdateProposalStatusPayload {
+  status: ProposalStatus;
+  notes?: string;
 }

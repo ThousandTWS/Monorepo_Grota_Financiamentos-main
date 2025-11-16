@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ActivityHeatmap, ConversionFunnel, DealersList, FinancingChart, ForecastChart, MonthlyComparison, QuickStats, RecentActivity, StatusDistribution } from "@/presentation/features/painel-geral";
+import { ActivityHeatmap, ConversionFunnel, DealersList, FinancingChart, ForecastChart, MonthlyComparison, QuickStats, RecentActivity, RealtimeBridgePanel, SellersList, StatusDistribution } from "@/presentation/features/painel-geral";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -58,7 +58,12 @@ export default function Dashboard() {
 
       <ActivityHeatmap data-oid="c34tkjn" />
 
-      <DealersList />
+      <div className="grid gap-6 lg:grid-cols-2">
+        <RealtimeBridgePanel />
+        <DealersList />
+      </div>
+
+      <SellersList />
     </div>
   );
 }

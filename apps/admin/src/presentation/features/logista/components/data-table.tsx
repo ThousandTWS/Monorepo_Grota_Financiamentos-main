@@ -27,9 +27,10 @@ import { useToast } from "@/application/core/hooks/use-toast";
 interface DataTableProps {
   data: Logista[];
   onUpdate: (data: Logista[]) => void;
+  onSync?: (action: "upsert" | "delete", logista?: Logista) => void;
 }
 
-export function DataTable({ data, onUpdate }: DataTableProps) {
+export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todos");
@@ -103,6 +104,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
         comissaoTotal: 0
       };
       onUpdate([...data, newLogista]);
+      onSync?.("upsert", newLogista);
       toast({
         title: "Logista criado!",
         description: `${logista.fullName} foi adicionado com sucesso.`
@@ -113,6 +115,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
       item.id === logista.id ? logista : item
       );
       onUpdate(updatedData);
+      onSync?.("upsert", logista);
       toast({
         title: "Logista atualizado!",
         description: `As informações de ${logista.fullName} foram atualizadas.`
@@ -124,6 +127,7 @@ export function DataTable({ data, onUpdate }: DataTableProps) {
     if (selectedLogista) {
       const updatedData = data.filter((item) => item.id !== selectedLogista.id);
       onUpdate(updatedData);
+      onSync?.("delete", selectedLogista);
       toast({
         title: "Logista excluído!",
         description: `${selectedLogista.fullName} foi removido do sistema.`,

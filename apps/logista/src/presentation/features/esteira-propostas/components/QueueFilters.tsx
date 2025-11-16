@@ -1,4 +1,3 @@
-import { ProposalQueueFilters, ProposalQueueStatus } from "@/application/core/@types/Proposals/Proposal";
 import { Input } from "@/presentation/ui/input";
 import { Button } from "@/presentation/ui/button";
 import {
@@ -9,15 +8,20 @@ import {
   SelectValue,
 } from "@/presentation/ui/select";
 import { Filter, Plus, RefreshCw, Search } from "lucide-react";
-
-type StatusValue = ProposalQueueStatus;
+import { ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 
 type QueueFiltersProps = {
-  filters: ProposalQueueFilters;
-  operators: string[];
-  dealers: string[];
-  statuses: { label: string; value: StatusValue }[];
-  onFiltersChange: (filters: Partial<ProposalQueueFilters>) => void;
+  filters: {
+    search: string;
+    operatorId?: string;
+    dealerId?: string;
+    dealerCode?: string;
+    status: ProposalStatus | "ALL";
+  };
+  operators: { value: string; label: string }[];
+  dealers: { value: string; label: string }[];
+  statuses: { value: ProposalStatus | "ALL"; label: string }[];
+  onFiltersChange: (partial: Partial<QueueFiltersProps["filters"]>) => void;
   onRefresh: () => void;
   onCreate: () => void;
   isRefreshing?: boolean;
@@ -33,15 +37,13 @@ export function QueueFilters({
   onCreate,
   isRefreshing,
 }: QueueFiltersProps) {
-  const statusValue = filters.status?.[0] ?? "all";
-
   const handleResetFilters = () => {
     onFiltersChange({
       search: "",
       operatorId: undefined,
       dealerId: undefined,
-      dealerCode: undefined,
-      status: [],
+      dealerCode: "",
+      status: "ALL",
     });
   };
 
@@ -58,7 +60,7 @@ export function QueueFilters({
               <Input
                 placeholder="Pesquise por nome do cliente ou CPF"
                 value={filters.search ?? ""}
-                onChange={(e) => onFiltersChange({ search: e.target.value })}
+                onChange={(event) => onFiltersChange({ search: event.target.value })}
                 className="pl-9"
               />
             </div>
@@ -71,17 +73,19 @@ export function QueueFilters({
             <Select
               value={filters.operatorId ?? "all"}
               onValueChange={(value) =>
-                onFiltersChange({ operatorId: value === "all" ? undefined : value })
+                onFiltersChange({
+                  operatorId: value === "all" ? undefined : value,
+                })
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder="(todos)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">(todos)</SelectItem>
                 {operators.map((operator) => (
-                  <SelectItem key={operator} value={operator}>
-                    {operator}
+                  <SelectItem key={operator.value} value={operator.value}>
+                    {operator.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -95,17 +99,19 @@ export function QueueFilters({
             <Select
               value={filters.dealerId ?? "all"}
               onValueChange={(value) =>
-                onFiltersChange({ dealerId: value === "all" ? undefined : value })
+                onFiltersChange({
+                  dealerId: value === "all" ? undefined : value,
+                })
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Todos" />
+                <SelectValue placeholder="(todos)" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">(todos)</SelectItem>
                 {dealers.map((dealer) => (
-                  <SelectItem key={dealer} value={dealer}>
-                    {dealer}
+                  <SelectItem key={dealer.value} value={dealer.value}>
+                    {dealer.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -119,10 +125,10 @@ export function QueueFilters({
               Status
             </label>
             <Select
-              value={statusValue}
+              value={filters.status}
               onValueChange={(value) =>
                 onFiltersChange({
-                  status: value === "all" ? [] : [value as StatusValue],
+                  status: value as ProposalStatus | "ALL",
                 })
               }
             >
@@ -130,7 +136,6 @@ export function QueueFilters({
                 <SelectValue placeholder="(todos)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">(todos)</SelectItem>
                 {statuses.map((status) => (
                   <SelectItem key={status.value} value={status.value}>
                     {status.label}
@@ -147,7 +152,9 @@ export function QueueFilters({
             <Input
               placeholder="0000"
               value={filters.dealerCode ?? ""}
-              onChange={(e) => onFiltersChange({ dealerCode: e.target.value })}
+              onChange={(event) =>
+                onFiltersChange({ dealerCode: event.target.value })
+              }
             />
           </div>
 

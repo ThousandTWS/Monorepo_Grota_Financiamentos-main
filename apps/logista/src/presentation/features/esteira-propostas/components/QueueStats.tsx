@@ -1,10 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/presentation/ui/card";
 import { Skeleton } from "@/presentation/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { ProposalSummaryPayload } from "@/application/core/@types/Proposals/Proposal";
+import { ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
+
+export type ProposalsDashboardSummary = {
+  overallTotal: number;
+  myTickets: {
+    label: string;
+    value: number;
+    total?: number;
+    color?: string;
+  }[];
+  statusTotals: {
+    key: ProposalStatus;
+    label: string;
+    value: number;
+    total?: number;
+    color?: string;
+  }[];
+};
 
 type QueueStatsProps = {
-  summary?: ProposalSummaryPayload | null;
+  summary: ProposalsDashboardSummary;
   isLoading?: boolean;
 };
 
@@ -17,7 +34,9 @@ const fallbackColors = [
 ];
 
 export function QueueStats({ summary, isLoading }: QueueStatsProps) {
-  if (isLoading && !summary) {
+  const tickets = summary.myTickets;
+
+  if (isLoading && summary.overallTotal === 0) {
     return (
       <Card className="h-full">
         <CardHeader>
@@ -31,8 +50,6 @@ export function QueueStats({ summary, isLoading }: QueueStatsProps) {
       </Card>
     );
   }
-
-  const tickets = summary?.myTickets ?? [];
 
   return (
     <Card className="h-full">
@@ -51,7 +68,7 @@ export function QueueStats({ summary, isLoading }: QueueStatsProps) {
               Enviadas
             </p>
             <p className="text-lg font-semibold">
-              {summary?.overallTotal ?? tickets[0]?.total ?? 0}
+              {summary.overallTotal ?? tickets[0]?.total ?? 0}
             </p>
           </div>
         </div>

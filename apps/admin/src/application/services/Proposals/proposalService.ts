@@ -1,111 +1,80 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
+import { z } from "zod";
 import api from "../server/api";
 import {
-  ProposalQueueFilters,
-  ProposalQueueItem,
-  ProposalQueueStatus,
-  ProposalSummaryPayload,
+  CreateProposalPayload,
+  Proposal,
+  ProposalFilters,
+  ProposalStatus,
+  UpdateProposalStatusPayload,
 } from "@/application/core/@types/Proposals/Proposal";
-import { z } from "zod";
 
-const PROPOSALS_QUEUE_ENDPOINT = "/workflow/proposals/queue";
-const PROPOSALS_SUMMARY_ENDPOINT = "/workflow/proposals/summary";
+const PROPOSALS_ENDPOINT = "/proposals";
 
-const statusEnum = z.enum([
-  "triage",
-  "awaiting_input",
-  "analysis",
-  "filling",
-  "sent",
-  "pre_approved",
-  "rejected",
-  "awaiting_payment",
-  "paid",
-] satisfies ProposalQueueStatus[]);
+const statusSchema = z.enum(
+  ["SUBMITTED", "PENDING", "APPROVED", "REJECTED"] satisfies ProposalStatus[],
+);
 
-const ProposalStatusSnapshotSchema = z.object({
-  status: statusEnum,
-  label: z.string(),
-  updatedAt: z.string(),
-  analyst: z.string(),
-  description: z.string().optional(),
-});
-
-const ProposalAssetSchema = z.object({
-  brand: z.string(),
-  model: z.string(),
-  version: z.string().nullable().optional(),
-  year: z.coerce.number(),
-  entryValue: z.coerce.number(),
+const ProposalSchema = z.object({
+  id: z.coerce.number(),
+  dealerId: z.coerce.number().nullable().optional(),
+  sellerId: z.coerce.number().nullable().optional(),
+  customerName: z.string(),
+  customerCpf: z.string(),
+  customerBirthDate: z.string(),
+  customerEmail: z.string(),
+  customerPhone: z.string(),
+  cnhCategory: z.string(),
+  hasCnh: z.coerce.boolean().default(false),
+  vehiclePlate: z.string(),
+  fipeCode: z.string(),
+  fipeValue: z.coerce.number(),
+  vehicleBrand: z.string(),
+  vehicleModel: z.string(),
+  vehicleYear: z.coerce.number(),
+  downPaymentValue: z.coerce.number(),
   financedValue: z.coerce.number(),
-  installmentValue: z.coerce.number(),
-  termMonths: z.coerce.number(),
+  status: statusSchema,
+  notes: z.string().nullable().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
 });
 
-const ProposalProductInfoSchema = z.object({
-  bank: z.string(),
-  product: z.string(),
-  modality: z.string(),
-});
+const ProposalListSchema = z.array(ProposalSchema);
 
-const ProposalQueueItemSchema = z.object({
-  id: z.string(),
-  contract: z.string(),
-  clientName: z.string(),
-  clientDocument: z.string(),
-  dealerName: z.string(),
-  dealerCode: z.string().optional().nullable(),
-  operatorName: z.string(),
-  operatorSentAt: z.string(),
-  asset: ProposalAssetSchema,
-  productInfo: ProposalProductInfoSchema,
-  currentStatus: ProposalStatusSnapshotSchema,
-  timelineStatus: z.array(ProposalStatusSnapshotSchema).optional(),
-});
-
-const ProposalQueueResponseSchema = z.array(ProposalQueueItemSchema);
-
-const ProposalSummarySchema = z.object({
-  overallTotal: z.coerce.number().default(0),
-  myTickets: z
-    .array(
-      z.object({
-        label: z.string(),
-        value: z.coerce.number(),
-        total: z.coerce.number().optional(),
-        color: z.string().optional(),
-      }),
-    )
-    .default([]),
-  statusTotals: z
-    .array(
-      z.object({
-        key: statusEnum,
-        label: z.string(),
-        value: z.coerce.number(),
-        total: z.coerce.number().optional(),
-      }),
-    )
-    .default([]),
-});
-
-export const fetchProposalQueue = async (
-  filters: ProposalQueueFilters = {},
-): Promise<ProposalQueueItem[]> => {
-  const response = await api.get(PROPOSALS_QUEUE_ENDPOINT, {
-    params: filters,
-  });
-
-  //@ts-ignore
-  return ProposalQueueResponseSchema.parse(response.data);
+const buildFilters = (filters: ProposalFilters) => {
+  const params: Record<string, unknown> = {};
+  if (typeof filters.dealerId === "number") {
+    params.dealerId = filters.dealerId;
+  }
+  if (filters.status) {
+    params.status = filters.status;
+  }
+  return params;
 };
 
-export const fetchProposalSummary = async (
-  filters: ProposalQueueFilters = {},
-): Promise<ProposalSummaryPayload> => {
-  const response = await api.get(PROPOSALS_SUMMARY_ENDPOINT, {
-    params: filters,
+export const fetchProposals = async (
+  filters: ProposalFilters = {},
+): Promise<Proposal[]> => {
+  const response = await api.get(PROPOSALS_ENDPOINT, {
+    params: buildFilters(filters),
   });
+  return ProposalListSchema.parse(response.data);
+};
 
-  return ProposalSummarySchema.parse(response.data);
+export const createProposal = async (
+  payload: CreateProposalPayload,
+): Promise<Proposal> => {
+  const response = await api.post(PROPOSALS_ENDPOINT, payload);
+  return ProposalSchema.parse(response.data);
+};
+
+export const updateProposalStatus = async (
+  proposalId: number,
+  payload: UpdateProposalStatusPayload,
+): Promise<Proposal> => {
+  const response = await api.patch(
+    `${PROPOSALS_ENDPOINT}/${proposalId}/status`,
+    payload,
+  );
+  return ProposalSchema.parse(response.data);
 };

@@ -1,6 +1,7 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
+import { NotificationProvider } from "@grota/realtime-client";
 import { SidebarProvider } from "@/application/core/context/SidebarContext";
 import { ThemeProvider } from "@/application/core/context/ThemeContext";
 import { Metadata } from "next";
@@ -24,11 +25,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className}`}>
         {/* Loader Global */}
-        <ThemeProvider>
-          <SidebarProvider>
-            {children}
-          </SidebarProvider>
-        </ThemeProvider>
+        <NotificationProvider identity="admin">
+          <ThemeProvider>
+            <SidebarProvider>
+              {children}
+            </SidebarProvider>
+          </ThemeProvider>
+        </NotificationProvider>
       </body>
     </html>
   );

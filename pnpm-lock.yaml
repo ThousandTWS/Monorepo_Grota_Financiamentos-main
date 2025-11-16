@@ -41,6 +41,9 @@ importers:
       '@fullcalendar/timegrid':
         specifier: ^6.1.15
         version: 6.1.19(@fullcalendar/core@6.1.19)
+      '@grota/realtime-client':
+        specifier: workspace:*
+        version: link:../../packages/realtime-client
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.63.0(react@19.1.0))
@@ -541,6 +544,9 @@ importers:
       '@fullcalendar/timegrid':
         specifier: ^6.1.15
         version: 6.1.19(@fullcalendar/core@6.1.19)
+      '@grota/realtime-client':
+        specifier: workspace:*
+        version: link:../../packages/realtime-client
       '@hookform/resolvers':
         specifier: ^5.2.2
         version: 5.2.2(react-hook-form@7.63.0(react@19.1.0))
@@ -796,6 +802,18 @@ importers:
       typescript-eslint:
         specifier: ^8.40.0
         version: 8.40.0(eslint@9.34.0(jiti@2.6.0))(typescript@5.9.2)
+
+  packages/realtime-client:
+    dependencies:
+      react:
+        specifier: '>=18'
+        version: 19.1.0
+
+  packages/realtime-server:
+    dependencies:
+      ws:
+        specifier: ^8.18.0
+        version: 8.18.3
 
   packages/typescript-config: {}
 

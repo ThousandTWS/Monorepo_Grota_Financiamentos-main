@@ -1,4 +1,4 @@
-import { ProposalQueueItem, ProposalQueueStatus } from "@/application/core/@types/Proposals/Proposal";
+import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import {
   Table,
   TableBody,
@@ -13,49 +13,33 @@ import { Clock3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type ProposalsTableProps = {
-  proposals: ProposalQueueItem[];
+  proposals: Proposal[];
   isLoading?: boolean;
 };
 
 const statusStyles: Record<
-  ProposalQueueStatus,
-  { wrapper: string; text: string }
+  ProposalStatus,
+  { wrapper: string; text: string; label: string }
 > = {
-  triage: {
+  SUBMITTED: {
     wrapper: "bg-sky-100 border-l-4 border-sky-500",
     text: "text-sky-700",
+    label: "Enviada",
   },
-  awaiting_input: {
-    wrapper: "bg-slate-100 border-l-4 border-slate-500",
-    text: "text-slate-700",
-  },
-  analysis: {
+  PENDING: {
     wrapper: "bg-amber-100 border-l-4 border-amber-500",
     text: "text-amber-700",
+    label: "Pendente",
   },
-  filling: {
-    wrapper: "bg-cyan-100 border-l-4 border-cyan-500",
-    text: "text-cyan-700",
-  },
-  sent: {
-    wrapper: "bg-violet-100 border-l-4 border-violet-500",
-    text: "text-violet-700",
-  },
-  pre_approved: {
+  APPROVED: {
     wrapper: "bg-emerald-100 border-l-4 border-emerald-500",
     text: "text-emerald-700",
+    label: "Aprovada",
   },
-  rejected: {
+  REJECTED: {
     wrapper: "bg-red-100 border-l-4 border-red-500",
     text: "text-red-700",
-  },
-  awaiting_payment: {
-    wrapper: "bg-orange-100 border-l-4 border-orange-500",
-    text: "text-orange-700",
-  },
-  paid: {
-    wrapper: "bg-green-100 border-l-4 border-green-500",
-    text: "text-green-700",
+    label: "Recusada",
   },
 };
 
@@ -75,16 +59,21 @@ const formatDateTime = (value: string) =>
     minute: "2-digit",
   }).format(new Date(value));
 
+const maskCpf = (cpf: string) => {
+  const digits = cpf.replace(/\D/g, "").padStart(11, "0").slice(-11);
+  return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
+};
+
 export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
   return (
     <div className="rounded-lg border bg-card">
       <ScrollArea className="w-full">
-        <Table className="min-w-[900px]">
+        <Table className="min-w-[950px]">
           <TableHeader>
             <TableRow className="bg-muted/50">
               <TableHead className="w-10" />
               <TableHead className="font-semibold">
-                Nome / CPF / Contrato
+                Nome / CPF / Proposta
               </TableHead>
               <TableHead className="font-semibold">
                 Bem / Valor / Prazo / Parcela
@@ -105,13 +94,14 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                   <TableRow key={`skeleton-${index}`}>
                     {Array.from({ length: 7 }).map((__, colIndex) => (
                       <TableCell key={colIndex}>
-                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-12 w-full" />
                       </TableCell>
                     ))}
                   </TableRow>
                 ))
               : proposals.map((proposal) => {
-                  const statusStyle = statusStyles[proposal.currentStatus.status];
+                  const statusStyle = statusStyles[proposal.status];
+
                   return (
                     <TableRow key={proposal.id} className="align-top">
                       <TableCell className="pt-5">
@@ -124,58 +114,51 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                       <TableCell className="pt-5">
                         <div className="space-y-1">
                           <p className="text-sm font-semibold uppercase tracking-tight">
-                            {proposal.clientName}
+                            {proposal.customerName}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {proposal.clientDocument}
+                            {maskCpf(proposal.customerCpf)}
                           </p>
                           <p className="text-xs font-medium text-sky-600">
-                            Contrato: {proposal.contract}
+                            Proposta #{proposal.id}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1 text-sm">
                           <p className="font-semibold uppercase">
-                            {proposal.asset.brand}
+                            {proposal.vehicleBrand}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {proposal.asset.model} ({proposal.asset.year})
+                            {proposal.vehicleModel} ({proposal.vehicleYear})
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Entrada {formatCurrency(proposal.asset.entryValue)}
+                            Entrada {formatCurrency(proposal.downPaymentValue)}
                           </p>
-                          <p
-                            className={cn(
-                              "text-xs font-semibold",
-                              proposal.asset.financedValue > 0
-                                ? "text-emerald-600"
-                                : "text-muted-foreground",
-                            )}
-                          >
-                            {formatCurrency(proposal.asset.financedValue)} em{" "}
-                            {proposal.asset.termMonths}x de{" "}
-                            {formatCurrency(proposal.asset.installmentValue)}
+                          <p className="text-xs font-semibold text-emerald-600">
+                            {formatCurrency(proposal.financedValue)} financiado
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="text-sm">
-                          <p className="font-medium">{proposal.dealerName}</p>
-                          {proposal.dealerCode ? (
+                          <p className="font-medium">
+                            Dealer #{proposal.dealerId ?? "—"}
+                          </p>
+                          {proposal.vehiclePlate ? (
                             <p className="text-xs text-muted-foreground">
-                              Código {proposal.dealerCode}
+                              Placa {proposal.vehiclePlate}
                             </p>
                           ) : null}
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
-                        <div className="space-y-1 text-sm">
-                          <p className="font-semibold uppercase text-muted-foreground">
-                            {proposal.productInfo.bank}
+                        <div className="space-y-1 text-sm text-muted-foreground">
+                          <p>Banco parceiro</p>
+                          <p>Produto personalizado</p>
+                          <p className="text-xs">
+                            FIPE {proposal.fipeCode || "N/D"}
                           </p>
-                          <p className="text-xs">{proposal.productInfo.product}</p>
-                          <p className="text-xs">{proposal.productInfo.modality}</p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
@@ -187,23 +170,23 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                           )}
                         >
                           <p className="font-semibold">
-                            {proposal.currentStatus.label}
+                            {statusStyle.label}
                           </p>
                           <p className="text-xs">
-                            {formatDateTime(proposal.currentStatus.updatedAt)}
+                            Atualizado em {formatDateTime(proposal.updatedAt)}
                           </p>
                           <p className="text-xs font-semibold uppercase">
-                            {proposal.currentStatus.analyst}
+                            Equipe Grota
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1 text-sm">
                           <p className="font-semibold">
-                            {formatDateTime(proposal.operatorSentAt)}
+                            {formatDateTime(proposal.createdAt)}
                           </p>
                           <p className="text-xs font-medium uppercase text-muted-foreground">
-                            {proposal.operatorName}
+                            Seller #{proposal.sellerId ?? "—"}
                           </p>
                         </div>
                       </TableCell>

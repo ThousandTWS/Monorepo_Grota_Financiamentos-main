@@ -41,7 +41,7 @@ public class SellerService {
 
     public SellerResponseDTO create(User user, SellerRequestDTO sellerRequestDTO) {
 
-        if (!user.getRole().equals("ADMIN")) {
+        if (!user.getRole().equals(UserRole.ADMIN)) {
             throw new AccessDeniedException("Apenas ADMIN pode cadastrar vendedor.");
         }
 

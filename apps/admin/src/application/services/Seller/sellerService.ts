@@ -1,8 +1,9 @@
 import api from "../server/api";
 
 export type Seller = {
+  createdAt: string;
   id: number;
-  name?: string;
+  fullName?: string;
   email?: string;
   phone?: string;
   status?: string;

@@ -1,24 +1,20 @@
-import { ProposalSummaryPayload, ProposalQueueStatus } from "@/application/core/@types/Proposals/Proposal";
 import { cn } from "@/lib/utils";
+import { ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
+import { ProposalsDashboardSummary } from "./QueueStats";
 
-type StatusLegendProps = {
-  summary?: ProposalSummaryPayload | null;
+const statusColors: Record<ProposalStatus, string> = {
+  SUBMITTED: "bg-sky-500",
+  PENDING: "bg-amber-400",
+  APPROVED: "bg-emerald-500",
+  REJECTED: "bg-red-500",
 };
 
-const statusColors: Record<ProposalQueueStatus, string> = {
-  triage: "bg-blue-300",
-  awaiting_input: "bg-purple-500",
-  analysis: "from-amber-500/80 to-yellow-400/80",
-  filling: "bg-slate-300",
-  sent: "from-violet-500/80 to-violet-400/80",
-  pre_approved: "bg-lime-500",
-  rejected: "from-red-600/80 to-red-500/80",
-  awaiting_payment: "bg-green-700",
-  paid: "bg-cyan-300",
+type StatusLegendProps = {
+  summary: ProposalsDashboardSummary;
 };
 
 export function StatusLegend({ summary }: StatusLegendProps) {
-  const items = summary?.statusTotals ?? [];
+  const items = summary.statusTotals;
 
   return (
     <div className="space-y-3 rounded-lg border bg-card p-4">
@@ -27,7 +23,7 @@ export function StatusLegend({ summary }: StatusLegendProps) {
           Status geral
         </p>
         <span className="text-sm text-muted-foreground">
-          Total {summary?.overallTotal ?? 0}
+          Total {summary.overallTotal}
         </span>
       </div>
 
@@ -39,18 +35,19 @@ export function StatusLegend({ summary }: StatusLegendProps) {
         ) : (
           items.map((item) => (
             <div key={item.key} className="space-y-1">
-              <div
-                className={cn(
-                  "flex items-center justify-between rounded-md bg-gradient-to-r px-3 py-1.5 text-sm font-semibold text-white",
-                  statusColors[item.key],
-                )}
-              >
+              <div className="flex items-center justify-between text-sm font-semibold">
                 <span>{item.label}</span>
                 <span>
                   {item.value}
                   {item.total ? ` / ${item.total}` : ""}
                 </span>
               </div>
+              <div
+                className={cn(
+                  "h-3 rounded-full bg-gradient-to-r",
+                  statusColors[item.key],
+                )}
+              />
             </div>
           ))
         )}
