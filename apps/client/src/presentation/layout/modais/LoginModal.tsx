@@ -49,7 +49,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setSuccess(result.message);
       setTimeout(() => {
         onClose();
-        window.location.href = "https://monorepo-grota-financiamentos-main-omega.vercel.app";
+        window.location.href = LOGISTA_PORTAL_URL;
       }, 1500);
     }
   };
