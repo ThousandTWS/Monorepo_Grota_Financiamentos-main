@@ -104,8 +104,6 @@ export default function Footer() {
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8 pb-12">
-
-          {/* Coluna 1: Branding e Redes Sociais */}
           <div className="lg:col-span-1 space-y-7">
             <Image
               src="https://res.cloudinary.com/dx1659yxu/image/upload/v1759322892/Artboard_1_copy_2_www9bf.png" 
