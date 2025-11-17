@@ -26,7 +26,7 @@ function ConfiguracoesPage() {
             <Input placeholder="Razão Social" />
             <Input placeholder="CNPJ" />
             <Input placeholder="Endereço" />
-            <div className="col-span-1 md:col-span-3">
+            <div className="col-span-1 md:col-span-3"> 
               <Button className="w-full md:w-auto">Salvar Alterações</Button>
             </div>
           </form>

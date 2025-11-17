@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_URL_API as string;
+const BASE_URL =
+  process.env.NEXT_PUBLIC_URL_API ??
+  "http://localhost:8080/api/v1/grota-financiamentos";
 
 const defaultHeaders = {
   "Content-Type": "application/json",

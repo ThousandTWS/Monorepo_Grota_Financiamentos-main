@@ -8,8 +8,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
 
-const LOGISTA_PORTAL_URL = (
-  process.env.NEXT_PUBLIC_URL_API ?? "http://localhost:8080"
+const LOGISTA = (
+  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3002"
 ).replace(/\/$/, "");
 
 const loginSchema = z.object({
@@ -49,7 +49,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
       setSuccess(result.message);
       setTimeout(() => {
         onClose();
-        window.location.href = LOGISTA_PORTAL_URL;
+        window.location.href = LOGISTA;
       }, 1500);
     }
   };

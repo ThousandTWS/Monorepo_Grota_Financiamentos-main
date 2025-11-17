@@ -8,7 +8,8 @@ import {
   UpdateProposalStatusPayload,
 } from "@/application/core/@types/Proposals/Proposal";
 
-const PROPOSALS_ENDPOINT = "/proposals";
+const PROPOSALS_ENDPOINT = "/api/proposals";
+const DIRECT_ENDPOINT = "/proposals";
 
 const statusSchema = z.enum(
   ["SUBMITTED", "PENDING", "APPROVED", "REJECTED"] satisfies ProposalStatus[],
@@ -41,13 +42,10 @@ const ProposalSchema = z.object({
 
 const ProposalListSchema = z.array(ProposalSchema);
 
-const buildFilters = (filters: ProposalFilters) => {
-  const params: Record<string, unknown> = {};
-  if (typeof filters.dealerId === "number") {
-    params.dealerId = filters.dealerId;
-  }
-  if (filters.status) {
-    params.status = filters.status;
+const buildQuery = (filters: ProposalFilters) => {
+  const params = new URLSearchParams();
+  if (filters.status && statusSchema.safeParse(filters.status).success) {
+    params.set("status", filters.status);
   }
   return params;
 };
@@ -55,17 +53,54 @@ const buildFilters = (filters: ProposalFilters) => {
 export const fetchProposals = async (
   filters: ProposalFilters = {},
 ): Promise<Proposal[]> => {
-  const response = await api.get(PROPOSALS_ENDPOINT, {
-    params: buildFilters(filters),
+  const query = buildQuery(filters);
+  const url =
+    query.toString().length > 0
+      ? `${PROPOSALS_ENDPOINT}?${query.toString()}`
+      : PROPOSALS_ENDPOINT;
+
+  const response = await fetch(url, {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
   });
-  return ProposalListSchema.parse(response.data);
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (payload as { error?: string })?.error ??
+      "Não foi possível carregar suas propostas.";
+    throw new Error(message);
+  }
+
+  const normalized = Array.isArray(payload) ? payload : [];
+  return ProposalListSchema.parse(normalized);
 };
 
 export const createProposal = async (
   payload: CreateProposalPayload,
 ): Promise<Proposal> => {
-  const response = await api.post(PROPOSALS_ENDPOINT, payload);
-  return ProposalSchema.parse(response.data);
+  const response = await fetch(PROPOSALS_ENDPOINT, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  const payloadResponse = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (payloadResponse as { error?: string })?.error ??
+      "Não foi possível enviar a proposta.";
+    throw new Error(message);
+  }
+
+  return ProposalSchema.parse(payloadResponse);
 };
 
 export const updateProposalStatus = async (
@@ -73,7 +108,7 @@ export const updateProposalStatus = async (
   payload: UpdateProposalStatusPayload,
 ): Promise<Proposal> => {
   const response = await api.patch(
-    `${PROPOSALS_ENDPOINT}/${proposalId}/status`,
+    `${DIRECT_ENDPOINT}/${proposalId}/status`,
     payload,
   );
   return ProposalSchema.parse(response.data);

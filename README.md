@@ -27,7 +27,7 @@ Este repositório é um **starter Turborepo** adaptado para o projeto **Grota Fi
 ```
 ┌────────────┐        ┌─────────────────────┐        ┌──────────────┐
 │  client    │  HTTP  │  logista (BFF Next) │  HTTP  │ Spring API    │
-│ (Next 15)  │ ─────▶ │ /api/auth/*         │ ─────▶ │ /api/v1/grota │
+│    ─────▶ │ /api/auth/*         │ ─────▶ │ /api/v1/grota │
 └────────────┘        └─────────┬───────────┘        └──────────────┘
                                  │
                                  │ WS + REST
@@ -80,8 +80,15 @@ Foi adicionado um canal WebSocket compartilhado para permitir que o painel admin
 1. **Suba o servidor** dedicado no workspace:
 
    ```bash
+   Websocks
    pnpm realtime
    pnpm --filter @grota/realtime-server dev
+   
+   Apps
+   pnpm dev --filter grota-website
+   pnpm dev --filter grota-painel-logista
+   pnpm dev --filter grota-painel-admin
+
    ```
 
    > O servidor usa `ws://localhost:4545` por padrão (configurável via `WS_PORT`).

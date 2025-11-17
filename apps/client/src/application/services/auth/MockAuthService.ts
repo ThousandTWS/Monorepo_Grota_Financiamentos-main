@@ -1,6 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import api from "../server/api";
 
+const LOGISTA_PANEL_ORIGIN = (
+  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3002"
+).replace(/\/$/, "");
+
 export interface AuthCredentials {
   email: string;
   password: string;
@@ -22,10 +26,7 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      const panelOrigin = (
-        process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3000"
-      ).replace(/\/$/, "");
-      const response = await fetch(`${panelOrigin}/api/auth/login`, {
+      const response = await fetch(`${LOGISTA_PANEL_ORIGIN}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -76,18 +77,24 @@ export class MockAuthService {
         user: { id: data.id, email, name: fullName, phone, enterprise },
       };
     } catch (error: any) {
-      console.log("Deu erro", error.response.data);
+      const apiResponse = error?.response;
+      console.log("Deu erro", apiResponse?.data);
 
-      if (error.response) {
-        const { status, data } = error.response;
+      if (apiResponse) {
+        const { status, data } = apiResponse;
+        const apiMessage =
+          data?.message ||
+          data?.error ||
+          "Não foi possível concluir seu cadastro.";
 
-        if (status == 400) {
+        if (status === 400 || status === 409 || status === 422) {
           return {
             success: false,
-            message: data.message,
+            message: apiMessage,
           };
         }
       }
+
       return {
         success: false,
         message: "Erro inesperado ao cadastrar. Tente novamente mais tarde.",
