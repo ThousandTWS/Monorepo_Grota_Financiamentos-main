@@ -2,6 +2,7 @@ package org.example.server.service;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
+import org.example.server.exception.EmailException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -58,8 +59,8 @@ public class EmailService {
 
             mailSender.send(mimeMessage);
 
-        } catch (MessagingException e) {
-            throw new RuntimeException("Erro ao enviar e-mail", e);
+        } catch (Exception e) {
+            throw new EmailException("Não foi possível enviar e-mail", e);
         }
     }
 }
