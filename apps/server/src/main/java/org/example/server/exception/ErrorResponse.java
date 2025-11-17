@@ -1,6 +1,5 @@
 package org.example.server.exception;
 
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.http.HttpStatus;
 
@@ -15,14 +14,14 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private List<String> errors;
 
-    public ErrorResponse(HttpStatus status, String message, List<String> errors){
+    public ErrorResponse(HttpStatus status, String message, List<String> errors) {
         this.status = status.value();
         this.message = message;
         this.timestamp = LocalDateTime.now();
         this.errors = errors != null ? errors : Collections.emptyList();
     }
 
-    public ErrorResponse(HttpStatus status, String message){
+    public ErrorResponse(HttpStatus status, String message) {
         this(status, message, List.of());
     }
 

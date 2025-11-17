@@ -18,6 +18,7 @@ import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager manager;
@@ -38,7 +40,7 @@ public class UserService {
     private final VerificationCodeGenerator codeGenerator;
 
     public UserService(
-            UserRepository userRepository,
+            UserRepository userRepository, UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager manager,
@@ -47,6 +49,7 @@ public class UserService {
             VerificationCodeGenerator codeGenerator
     ) {
         this.userRepository = userRepository;
+        this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.manager = manager;
@@ -92,8 +95,8 @@ public class UserService {
         manager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.email(), request.password())
         );
-        var user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com e-mail: " + request.email()));
+
+        User user = (User) userDetailsService.loadUserByUsername(request.email());
 
         if (user.getVerificationStatus() == UserStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");

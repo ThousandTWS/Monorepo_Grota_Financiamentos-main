@@ -1,9 +1,7 @@
 package org.example.server.dto.seller;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import org.example.server.dto.address.AddressDTO;
 
 import java.time.LocalDate;
@@ -24,7 +22,11 @@ public record SellerRequestDTO(
         @Size(min = 6, max = 8, message = "A senha deve ter entre 6 e 8 caracteres")
         String password,
 
+        @NotBlank(message = "O CPF é obrigatório")
+        @Size(min = 11, max = 14, message = "O CPF deve ter entre 11 ou 14 caracteres")
         String CPF,
+
+        @Past(message = "A data de nascimento deve ser uma data no passado")
         LocalDate birthData,
 
         @Valid

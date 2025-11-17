@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.example.server.dto.seller.SellerRequestDTO;
 import org.example.server.dto.seller.SellerResponseDTO;
 import org.example.server.model.User;
@@ -35,7 +36,7 @@ public class SellerController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<SellerResponseDTO> create(@AuthenticationPrincipal User user, @RequestBody SellerRequestDTO sellerRequestDTO) {
+    public ResponseEntity<SellerResponseDTO> create(@AuthenticationPrincipal User user, @Valid @RequestBody SellerRequestDTO sellerRequestDTO) {
         SellerResponseDTO seller = sellerService.create(user, sellerRequestDTO);
         return ResponseEntity.ok(seller);
     }
@@ -81,7 +82,7 @@ public class SellerController {
             @ApiResponse(responseCode = "400", description = "Dados inválidos"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<SellerResponseDTO> update(@PathVariable Long id, @RequestBody SellerRequestDTO sellerRequestDTO){
+    public ResponseEntity<SellerResponseDTO> update(@PathVariable Long id, @Valid @RequestBody SellerRequestDTO sellerRequestDTO){
         SellerResponseDTO selle = sellerService.update(id, sellerRequestDTO);
         return ResponseEntity.ok().body(selle);
     }
