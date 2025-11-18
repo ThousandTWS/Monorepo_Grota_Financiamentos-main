@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useMemo, useState } from "react";
+import { ChangeEvent, FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   REALTIME_CHANNELS,
@@ -8,7 +8,7 @@ import {
   dispatchBridgeEvent,
   useRealtimeChannel,
 } from "@grota/realtime-client";
-import { Loader2, CheckCircle2, Zap, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, RefreshCw, FileText } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -34,27 +34,12 @@ import {
   Proposal,
 } from "@/application/core/@types/Proposals/Proposal";
 import { createProposal } from "@/application/services/Proposals/proposalService";
-
-type FormState = {
-  dealerId: string;
-  sellerId: string;
-  customerName: string;
-  customerCpf: string;
-  customerBirthDate: string;
-  customerEmail: string;
-  customerPhone: string;
-  cnhCategory: string;
-  hasCnh: boolean;
-  vehiclePlate: string;
-  fipeCode: string;
-  fipeValue: string;
-  vehicleBrand: string;
-  vehicleModel: string;
-  vehicleYear: string;
-  downPaymentValue: string;
-  financedValue: string;
-  notes: string;
-};
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate } from "@/application/core/utils/masks";
+import { Controller } from "react-hook-form";
+import { formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 
 const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const LOGISTA_SIMULATOR_ID = "logista-simulador";
@@ -64,29 +49,6 @@ const currency = new Intl.NumberFormat("pt-BR", {
   currency: "BRL",
   minimumFractionDigits: 2,
 });
-
-const currentYear = new Date().getFullYear();
-
-const emptyFormState: FormState = {
-  dealerId: "",
-  sellerId: "",
-  customerName: "",
-  customerCpf: "",
-  customerBirthDate: "",
-  customerEmail: "",
-  customerPhone: "",
-  cnhCategory: "B",
-  hasCnh: true,
-  vehiclePlate: "",
-  fipeCode: "",
-  fipeValue: "",
-  vehicleBrand: "",
-  vehicleModel: "",
-  vehicleYear: String(currentYear),
-  downPaymentValue: "",
-  financedValue: "",
-  notes: "",
-};
 
 const KNOWN_PLATES: Record<
   string,
@@ -136,11 +98,62 @@ const sanitizeNumber = (value: string) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
+const simulateProposalSchema = z.object({
+  cpf: z.string().length(14, "CPF inválido"),
+  fullname: z.string().min(4, "Nome completo é obrigatório"),
+  birthday: z.string().length(10, "Data de nascimento é obrigatório"),
+  email: z.email("Formato de email inválido"),
+  phone: z.string().length(14, "Formato de telefone inválido"),
+  haveCNH: z.boolean(),
+  categoryCNH: z.string().optional(),
+  vehiclePlate: z.string().min(8, "Formato de placa inválida"),
+  vehicleBrand: z.string().min(1, "Marca do veículo é necessário"),
+  vehicleModel: z.string().min(1, "Modelo do veículo é necessário"),
+  vehicleYear: z.string().min(1, "Ano do veículo é necessário"),
+  codeFIPE: z.string().length(8, "Formato do código FIPE inválido"),
+  priceFIPE: z.string().min(1, "Valor do veículo é necessário"),
+  entryPrice: z.string().min(1, "Valor de entrada do veículo é necessário"),
+  financedPrice: z.string().min(1, "Valor de financiamento é necessário"),
+  details: z.string().optional()
+})
+
+export type SimulateProposalFormData = z.infer<typeof simulateProposalSchema>;
+
 export default function SimulacaoPage() {
-  const [formState, setFormState] = useState<FormState>(emptyFormState);
   const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastProposal, setLastProposal] = useState<Proposal | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid, isDirty },
+    reset,
+    setValue,
+    control,
+    watch
+  } = useForm<SimulateProposalFormData>({
+    resolver: zodResolver(simulateProposalSchema),
+    mode: "onTouched",
+    defaultValues: {
+      cpf: "",
+      fullname: "",
+      birthday: "",
+      email: "",
+      phone: "",
+      haveCNH: false,
+      categoryCNH: "",
+      vehiclePlate: "",
+      vehicleBrand: "",
+      vehicleModel: "",
+      vehicleYear: "",
+      codeFIPE: "",
+      priceFIPE: "",
+      entryPrice: "",
+      financedPrice: "",
+      details: ""
+    },
+  });
 
   const { sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
@@ -158,107 +171,37 @@ export default function SimulacaoPage() {
     [sendMessage],
   );
 
-  const handleChange =
-    (field: keyof FormState) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const value =
-        field === "vehiclePlate"
-          ? event.target.value.toUpperCase()
-          : event.target.value;
-      setFormState((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    };
-
-  const handleSelectChange = (field: keyof FormState) => (value: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleToggleHasCnh = (checked: boolean) => {
-    setFormState((prev) => ({
-      ...prev,
-      hasCnh: checked,
-      cnhCategory: checked ? prev.cnhCategory : "",
-    }));
-  };
-
-  const handlePlateLookup = async () => {
-    const normalizedPlate = formState.vehiclePlate
-      .replace(/[^A-Za-z0-9]/g, "")
-      .toUpperCase();
-    if (!normalizedPlate) {
-      toast.info("Informe a placa antes de consultar a FIPE.");
-      return;
-    }
-
-    setIsPlateLookupLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    const snapshot = KNOWN_PLATES[normalizedPlate];
-    if (!snapshot) {
-      toast.info(
-        "Não encontramos essa placa em nossa base de demonstração. Preencha os dados manualmente.",
-      );
-      setIsPlateLookupLoading(false);
-      return;
-    }
-
-    setFormState((prev) => ({
-      ...prev,
-      vehiclePlate: normalizedPlate,
-      vehicleBrand: snapshot.vehicleBrand,
-      vehicleModel: snapshot.vehicleModel,
-      vehicleYear: String(snapshot.vehicleYear),
-      fipeCode: snapshot.fipeCode,
-      fipeValue: String(snapshot.fipeValue),
-      downPaymentValue: String(snapshot.downPaymentValue),
-      financedValue: String(snapshot.financedValue),
-    }));
-    toast.success("Consulta FIPE preenchida automaticamente.");
-    setIsPlateLookupLoading(false);
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const onSubmit = async (data: SimulateProposalFormData) => {
     setIsSubmitting(true);
     try {
-      const payload: CreateProposalPayload = {
-        dealerId: formState.dealerId ? Number(formState.dealerId) : undefined,
-        sellerId: formState.sellerId ? Number(formState.sellerId) : undefined,
-        customerName: formState.customerName.trim(),
-        customerCpf: formState.customerCpf.replace(/\D/g, ""),
-        customerBirthDate: formState.customerBirthDate,
-        customerEmail: formState.customerEmail.trim(),
-        customerPhone: formState.customerPhone.replace(/\s/g, ""),
-        cnhCategory: formState.cnhCategory,
-        hasCnh: formState.hasCnh,
-        vehiclePlate: formState.vehiclePlate.trim().toUpperCase(),
-        fipeCode: formState.fipeCode.trim(),
-        fipeValue: sanitizeNumber(formState.fipeValue),
-        vehicleBrand: formState.vehicleBrand.trim(),
-        vehicleModel: formState.vehicleModel.trim(),
-        vehicleYear: Number(formState.vehicleYear || currentYear),
-        downPaymentValue: sanitizeNumber(formState.downPaymentValue),
-        financedValue: sanitizeNumber(formState.financedValue),
-        notes: formState.notes.trim() || undefined,
-      };
+      // const payload: CreateProposalPayload = {
+      //   customerName: formState.customerName.trim(),
+      //   customerCpf: formState.customerCpf.replace(/\D/g, ""),
+      //   customerBirthDate: formState.customerBirthDate,
+      //   customerEmail: formState.customerEmail.trim(),
+      //   customerPhone: formState.customerPhone.replace(/\s/g, ""),
+      //   cnhCategory: formState.cnhCategory,
+      //   hasCnh: formState.hasCnh,
+      //   vehiclePlate: formState.vehiclePlate.trim().toUpperCase(),
+      //   fipeCode: formState.fipeCode.trim(),
+      //   fipeValue: sanitizeNumber(formState.fipeValue),
+      //   vehicleBrand: formState.vehicleBrand.trim(),
+      //   vehicleModel: formState.vehicleModel.trim(),
+      //   vehicleYear: Number(formState.vehicleYear || currentYear),
+      //   downPaymentValue: sanitizeNumber(formState.downPaymentValue),
+      //   financedValue: sanitizeNumber(formState.financedValue),
+      //   notes: formState.notes.trim() || undefined,
+      // };
 
-      const proposal = await createProposal(payload);
-      setLastProposal(proposal);
+      // const proposal = await createProposal(payload);
+      // setLastProposal(proposal);
       toast.success("Ficha enviada para a esteira da Grota.");
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-      });
+      // emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
+      //   proposal,
+      // });
       emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
         reason: "logista-simulator-created",
       });
-      setFormState((prev) => ({
-        ...emptyFormState,
-        dealerId: prev.dealerId,
-        sellerId: prev.sellerId,
-      }));
     } catch (error) {
       console.error("[Simulacao] Falha ao enviar proposta", error);
       toast.error(
@@ -269,143 +212,107 @@ export default function SimulacaoPage() {
     }
   };
 
-  const summary = useMemo(() => {
-    const fipe = sanitizeNumber(formState.fipeValue);
-    const financed = sanitizeNumber(formState.financedValue);
-    const downPayment = sanitizeNumber(formState.downPaymentValue);
-    const difference = fipe - financed - downPayment;
-    return {
-      fipe,
-      financed,
-      downPayment,
-      difference,
-      statusLabel:
-        fipe > 0
-          ? financed + downPayment <= fipe
-            ? "Valor dentro da FIPE"
-            : "Verificar ajuste de valores"
-          : "Aguardando consulta da placa",
-      statusTone:
-        fipe > 0
-          ? financed + downPayment <= fipe
-            ? "text-emerald-600"
-            : "text-amber-600"
-          : "text-muted-foreground",
-    };
-  }, [formState]);
+  useEffect(() => {
+    if (!watch("haveCNH")) {
+      setValue("categoryCNH", "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch("haveCNH")]);
 
   return (
     <div className="space-y-6">
       <div>
         <p className="text-sm font-semibold text-brand-500 flex items-center gap-2">
-          <Zap className="size-4" />
+          <FileText className="size-4" />
           Simulador de Propostas
         </p>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Capture todos os dados da loja em um único fluxo
+          Preencha todos os dados do cliente e do veículo em um único fluxo simples
         </h1>
         <p className="text-sm text-muted-foreground">
-          Consulte o veículo pela placa, puxe a FIPE pré-configurada e gere a
-          ficha que cai automaticamente na esteira do admin.
+          Informe os dados do cliente, consulte automaticamente o veículo pela placa e gere a ficha pronta para análise no sistema administrativo.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Identificação da loja</CardTitle>
+              <CardTitle>Informações do cliente</CardTitle>
               <CardDescription>
-                Informe os códigos da loja e do vendedor conectados neste login.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="dealerId">ID do lojista</Label>
-                <Input
-                  id="dealerId"
-                  type="number"
-                  min={1}
-                  placeholder="Ex: 12"
-                  value={formState.dealerId}
-                  onChange={handleChange("dealerId")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="sellerId">ID do vendedor</Label>
-                <Input
-                  id="sellerId"
-                  type="number"
-                  min={1}
-                  placeholder="Ex: 34"
-                  value={formState.sellerId}
-                  onChange={handleChange("sellerId")}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do cliente</CardTitle>
-              <CardDescription>
-                CPF, nome completo, data de nascimento e contatos entram aqui.
+                Informe o CPF para buscarmos automaticamente os dados do cliente. Os demais campos serão preenchidos quando a consulta retornar.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="customerName">Nome completo</Label>
+                  <Label htmlFor="cpf">CPF (consulta automática)</Label>
                   <Input
-                    id="customerName"
-                    placeholder="Fulano da Silva"
-                    value={formState.customerName}
-                    onChange={handleChange("customerName")}
+                    id="cpf"
+                    inputMode="numeric"
+                    maxLength={14}
+                    placeholder="Digite o CPF para buscar os dados"
+                    {...register("cpf")}
+                    onChange={
+                      (e) => {
+                        const masked = maskCPF(e.target.value);
+                        setValue("cpf", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customerCpf">CPF</Label>
+                  <Label htmlFor="fullname">Nome completo</Label>
                   <Input
-                    id="customerCpf"
-                    inputMode="numeric"
-                    maxLength={14}
-                    placeholder="000.000.000-00"
-                    value={formState.customerCpf}
-                    onChange={handleChange("customerCpf")}
+                    id="fullname"
+                    placeholder="Fulano da Silva"
+                    {...register("fullname")}
+                    type="text"
                     required
                   />
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="customerBirthDate">Data de nascimento</Label>
+                  <Label htmlFor="birthday">Data de nascimento</Label>
                   <Input
-                    id="customerBirthDate"
-                    type="date"
-                    value={formState.customerBirthDate}
-                    onChange={handleChange("customerBirthDate")}
+                    id="birthday"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
+                    {...register("birthday")}
+                    onChange={
+                      (e) => {
+                        const masked = maskDate(e.target.value);
+                        setValue("birthday", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customerEmail">E-mail</Label>
+                  <Label htmlFor="email">E-mail</Label>
                   <Input
-                    id="customerEmail"
+                    id="email"
                     type="email"
                     placeholder="cliente@email.com"
-                    value={formState.customerEmail}
-                    onChange={handleChange("customerEmail")}
+                    {...register("email")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="customerPhone">Celular</Label>
+                  <Label htmlFor="phone">Telefone / Whatsapp</Label>
                   <Input
-                    id="customerPhone"
+                    id="phone"
                     placeholder="(11) 99999-0000"
-                    value={formState.customerPhone}
-                    onChange={handleChange("customerPhone")}
+                    {...register("phone")}
+                    onChange={
+                      (e) => {
+                        const masked = maskPhone(e.target.value);
+                        setValue("phone", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
@@ -415,43 +322,59 @@ export default function SimulacaoPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>CNH e contato</CardTitle>
+              <CardTitle>Informações de Habilitação</CardTitle>
               <CardDescription>
-                Informe se o cliente possui CNH e qual categoria.
+                Informe se o cliente possui CNH e qual é a categoria.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Possui CNH?</Label>
-                <div className="flex items-center gap-3 rounded-md border px-3 py-2">
-                  <Switch
-                    checked={formState.hasCnh}
-                    onCheckedChange={handleToggleHasCnh}
-                    id="hasCnh"
+                <Label htmlFor="haveCNH">Possui CNH?</Label>
+                <Controller
+                    name="haveCNH"
+                    control={control}
+                    defaultValue={false}
+                    render={({ field }) => (
+                      <div className="flex items-center gap-3 rounded-md border px-3 py-2">
+                        <Switch
+                          id="haveCNH"
+                          checked={field.value}
+                          onCheckedChange={(checked) => field.onChange(checked)}
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {field.value ? "Sim" : "Não"}
+                        </span>
+                      </div>
+                    )}
                   />
-                  <span className="text-sm text-muted-foreground">
-                    {formState.hasCnh ? "Sim" : "Não"}
-                  </span>
-                </div>
               </div>
               <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Select
-                  value={formState.cnhCategory}
-                  onValueChange={handleSelectChange("cnhCategory")}
-                  disabled={!formState.hasCnh}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">Categoria A</SelectItem>
-                    <SelectItem value="B">Categoria B</SelectItem>
-                    <SelectItem value="AB">Categoria AB</SelectItem>
-                    <SelectItem value="C">Categoria C</SelectItem>
-                    <SelectItem value="D">Categoria D</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="categoryCNH">Categoria da CNH</Label>
+                
+                <Controller
+                  name="categoryCNH"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a categoria" />
+                      </SelectTrigger>
+
+                      <SelectContent>
+                        <SelectItem value="A">A</SelectItem>
+                        <SelectItem value="B">B</SelectItem>
+                        <SelectItem value="AB">AB</SelectItem>
+                        <SelectItem value="C">C</SelectItem>
+                        <SelectItem value="D">D</SelectItem>
+                        <SelectItem value="E">E</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
               </div>
             </CardContent>
           </Card>
@@ -470,9 +393,16 @@ export default function SimulacaoPage() {
                   <Label htmlFor="vehiclePlate">Placa do veículo</Label>
                   <Input
                     id="vehiclePlate"
-                    placeholder="ABC1D23"
-                    value={formState.vehiclePlate}
-                    onChange={handleChange("vehiclePlate")}
+                    placeholder="ABC-1234 ou ABC1D23"
+                    maxLength={8}
+                    inputMode="text"
+                    {...register("vehiclePlate")}
+                    onChange={
+                      (e) => {
+                        const masked = maskPlate(e.target.value);
+                        setValue("vehiclePlate", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                   <p className="text-xs text-muted-foreground">
@@ -484,7 +414,7 @@ export default function SimulacaoPage() {
                   <Button
                     type="button"
                     className="w-full gap-2"
-                    onClick={handlePlateLookup}
+                    // onClick={handlePlateLookup}
                     disabled={isPlateLookupLoading}
                   >
                     {isPlateLookupLoading ? (
@@ -505,8 +435,7 @@ export default function SimulacaoPage() {
                   <Input
                     id="vehicleBrand"
                     placeholder="Marca"
-                    value={formState.vehicleBrand}
-                    onChange={handleChange("vehicleBrand")}
+                    {...register("vehicleBrand")}
                     required
                   />
                 </div>
@@ -515,30 +444,56 @@ export default function SimulacaoPage() {
                   <Input
                     id="vehicleModel"
                     placeholder="Modelo"
-                    value={formState.vehicleModel}
-                    onChange={handleChange("vehicleModel")}
+                    {...register("vehicleModel")}
                     required
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vehicleYear">Ano</Label>
-                  <Input
-                    id="vehicleYear"
-                    type="number"
-                    min={1990}
-                    max={currentYear + 1}
-                    value={formState.vehicleYear}
-                    onChange={handleChange("vehicleYear")}
-                    required
+                  <Controller
+                    name="vehicleYear"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => {
+                      const currentYear = new Date().getFullYear();
+                      const years = Array.from(
+                        { length: currentYear - 1990 + 2 },
+                        (_, i) => String(1990 + i)
+                      );
+
+                      return (
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o ano" />
+                          </SelectTrigger>
+
+                          <SelectContent>
+                            {years.map((year) => (
+                              <SelectItem key={year} value={year}>
+                                {year}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      );
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="fipeCode">Código FIPE</Label>
+                  <Label htmlFor="codeFIPE">Código FIPE</Label>
                   <Input
-                    id="fipeCode"
+                    id="codeFIPE"
                     placeholder="000000-0"
-                    value={formState.fipeCode}
-                    onChange={handleChange("fipeCode")}
+                    {...register("codeFIPE")}
+                    onChange={
+                      (e) => {
+                        const masked = maskFipeCode(e.target.value);
+                        setValue("codeFIPE", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
@@ -546,34 +501,48 @@ export default function SimulacaoPage() {
 
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
-                  <Label htmlFor="fipeValue">Valor FIPE</Label>
+                  <Label htmlFor="priceFIPE">Valor FIPE</Label>
                   <Input
-                    id="fipeValue"
+                    id="priceFIPE"
                     type="number"
-                    min={0}
-                    value={formState.fipeValue}
-                    onChange={handleChange("fipeValue")}
+                    {...register("priceFIPE")}
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("priceFIPE", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="downPaymentValue">Entrada</Label>
+                  <Label htmlFor="entryPrice">Entrada</Label>
                   <Input
-                    id="downPaymentValue"
+                    id="entryPrice"
                     type="number"
                     min={0}
-                    value={formState.downPaymentValue}
-                    onChange={handleChange("downPaymentValue")}
+                    {...register("entryPrice")}
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("entryPrice", masked, { shouldValidate: true })
+                      }
+                    }
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="financedValue">Valor financiado</Label>
+                  <Label htmlFor="financedPrice">Valor financiado</Label>
                   <Input
-                    id="financedValue"
+                    id="financedPrice"
                     type="number"
                     min={0}
-                    value={formState.financedValue}
-                    onChange={handleChange("financedValue")}
+                    {...register("financedPrice")}
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("financedPrice", masked, { shouldValidate: true })
+                      }
+                    }
                     required
                   />
                 </div>
@@ -594,8 +563,8 @@ export default function SimulacaoPage() {
                 id="notes"
                 placeholder="CNH vence em 30 dias, cliente aceita portabilidade, etc."
                 rows={4}
-                value={formState.notes}
-                onChange={handleChange("notes")}
+                className="max-h-60"
+                {...register("details")}
               />
               <Button
                 type="submit"
@@ -625,21 +594,21 @@ export default function SimulacaoPage() {
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Cliente</p>
                 <p className="font-semibold text-gray-900 dark:text-gray-50">
-                  {formState.customerName || "—"}
+                  {watch("fullname") || "—"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  {formState.customerCpf || "CPF em branco"}
+                  {watch("cpf") || "CPF em branco"}
                 </p>
               </div>
               <Separator />
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">Veículo</p>
                 <p className="font-semibold">
-                  {formState.vehicleBrand || "—"} {formState.vehicleModel}
+                  {watch("vehicleBrand") || "—"} {watch("vehicleModel")}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Ano {formState.vehicleYear || "—"} • Placa{" "}
-                  {formState.vehiclePlate || "—"}
+                  Ano {watch("vehicleYear") || "—"} • Placa{" "}
+                  {watch("vehiclePlate") || "—"}
                 </p>
               </div>
               <Separator />
@@ -647,25 +616,25 @@ export default function SimulacaoPage() {
                 <div className="flex justify-between text-muted-foreground">
                   <span>Valor FIPE</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.fipe)}
+                    {watch("priceFIPE") || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Entrada</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.downPayment)}
+                    {watch("entryPrice") || "—"}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Valor financiado</span>
                   <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.financed)}
+                    {watch("financedPrice") || "—"}
                   </span>
                 </div>
-                <p className={`text-xs font-semibold ${summary.statusTone}`}>
-                  {summary.statusLabel}
+                <p className={`text-xs font-semibold`}>
+                  {/* {summary.statusLabel} */}
                   <span className="block text-muted-foreground">
-                    Diferença: {currency.format(summary.difference)}
+                    Diferença: {formatNumberToBRL(parseBRL(watch("financedPrice")) - parseBRL(watch("entryPrice")))}
                   </span>
                 </p>
               </div>
