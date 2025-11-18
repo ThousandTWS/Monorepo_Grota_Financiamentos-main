@@ -39,17 +39,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/dealers").permitAll()
-<<<<<<< HEAD
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/proposals").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/proposals").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/grota-financiamentos/proposals/**").permitAll()
-                        .requestMatchers("/api/v1/grota-financiamentos/notifications/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html","/swagger-resources/**","/webjars/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
-
-=======
+                        .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
->>>>>>> b0da6449bac43f944f870840d8ed7ef8a88a9efb
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
