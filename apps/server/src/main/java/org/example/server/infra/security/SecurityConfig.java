@@ -29,30 +29,27 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
+        HttpSecurity httpSecurity = http
                 .cors(Customizer.withDefaults())
                 .csrf(csrf -> csrf.disable())
+                .headers(headers -> headers
+                        .frameOptions(frame -> frame.disable())
+                )
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         // Rotas(Não Token)
                         .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/users").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/dealers").permitAll()
-<<<<<<< HEAD
-                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/proposals").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/proposals").permitAll()
-                        .requestMatchers(HttpMethod.PATCH, "/api/v1/grota-financiamentos/proposals/**").permitAll()
-                        .requestMatchers("/api/v1/grota-financiamentos/notifications/**").permitAll()
+                        .requestMatchers(HttpMethod.POST,"/api/v1/grota-financiamentos/users").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/logistics").permitAll()
                         .requestMatchers("/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html","/swagger-resources/**","/webjars/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
 
-=======
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
->>>>>>> b0da6449bac43f944f870840d8ed7ef8a88a9efb
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .httpBasic(Customizer.withDefaults());
+
         return http.build();
     }
 
@@ -62,7 +59,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
 }

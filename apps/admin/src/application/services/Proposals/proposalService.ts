@@ -1,5 +1,4 @@
 import { z } from "zod";
-import api from "../server/api";
 import {
   CreateProposalPayload,
   Proposal,
@@ -8,7 +7,7 @@ import {
   UpdateProposalStatusPayload,
 } from "@/application/core/@types/Proposals/Proposal";
 
-const PROPOSALS_ENDPOINT = "/proposals";
+const PROPOSALS_ENDPOINT = "/api/proposals";
 
 const statusSchema = z.enum(
   ["SUBMITTED", "PENDING", "APPROVED", "REJECTED"] satisfies ProposalStatus[],
@@ -41,40 +40,81 @@ const ProposalSchema = z.object({
 
 const ProposalListSchema = z.array(ProposalSchema);
 
-const buildFilters = (filters: ProposalFilters) => {
-  const params: Record<string, unknown> = {};
+const buildQueryString = (filters: ProposalFilters) => {
+  const params = new URLSearchParams();
   if (typeof filters.dealerId === "number") {
-    params.dealerId = filters.dealerId;
+    params.set("dealerId", String(filters.dealerId));
   }
   if (filters.status) {
-    params.status = filters.status;
+    params.set("status", filters.status);
   }
-  return params;
+  const query = params.toString();
+  return query ? `?${query}` : "";
 };
+
+async function handleResponse<T>(response: Response): Promise<T> {
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (payload as { error?: string })?.error ??
+      "Falha ao comunicar com o servidor.";
+    throw new Error(message);
+  }
+
+  return (payload ?? {}) as T;
+}
 
 export const fetchProposals = async (
   filters: ProposalFilters = {},
 ): Promise<Proposal[]> => {
-  const response = await api.get(PROPOSALS_ENDPOINT, {
-    params: buildFilters(filters),
-  });
-  return ProposalListSchema.parse(response.data);
+  const response = await fetch(
+    `${PROPOSALS_ENDPOINT}${buildQueryString(filters)}`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  const payload = await handleResponse<unknown[]>(response);
+  return ProposalListSchema.parse(payload);
 };
 
 export const createProposal = async (
   payload: CreateProposalPayload,
 ): Promise<Proposal> => {
-  const response = await api.post(PROPOSALS_ENDPOINT, payload);
-  return ProposalSchema.parse(response.data);
+  const response = await fetch(PROPOSALS_ENDPOINT, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+    cache: "no-store",
+  });
+
+  const payloadResponse = await handleResponse<unknown>(response);
+  return ProposalSchema.parse(payloadResponse);
 };
 
 export const updateProposalStatus = async (
   proposalId: number,
   payload: UpdateProposalStatusPayload,
 ): Promise<Proposal> => {
-  const response = await api.patch(
+  const response = await fetch(
     `${PROPOSALS_ENDPOINT}/${proposalId}/status`,
-    payload,
+    {
+      method: "PATCH",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    },
   );
-  return ProposalSchema.parse(response.data);
+
+  const payloadResponse = await handleResponse<unknown>(response);
+  return ProposalSchema.parse(payloadResponse);
 };
