@@ -27,12 +27,14 @@ function unauthorized() {
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   const session = await resolveSession();
   if (!session) {
     return unauthorized();
   }
+
+  const { id } = await params;
 
   let body: unknown;
   try {
@@ -45,7 +47,7 @@ export async function PATCH(
   }
 
   const upstreamResponse = await fetch(
-    `${API_BASE_URL}/proposals/${params.id}/status`,
+    `${API_BASE_URL}/proposals/${id}/status`,
     {
       method: "PATCH",
       headers: {
