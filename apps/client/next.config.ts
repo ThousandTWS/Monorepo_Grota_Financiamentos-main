@@ -9,6 +9,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  /**
+   * Standalone output makes it easier to copy only the runtime
+   * dependencies into the production container image.
+   */
+  output: "standalone",
 };
 
 export default nextConfig;
