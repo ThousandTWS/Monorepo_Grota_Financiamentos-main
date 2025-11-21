@@ -1,93 +1,91 @@
 package org.example.server.infra.security;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.example.server.model.User;
 import org.example.server.service.JwtService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import jakarta.servlet.http.Cookie;
 
-
 import java.io.IOException;
-import java.util.List;
+
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtService jwtService;
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    private final List<String> publicPaths = List.of("/h2-console");
-
-    @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String path = request.getRequestURI();
-        String method = request.getMethod();
-
-        // ROTAS QUE DEVEM SER IGNORADAS (permitAll())
-        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/dealers")) return true;
-        if (method.equals("GET") && path.equals("/api/v1/grota-financiamentos/dealers")) return true;
-        if (method.equals("PUT") && path.equals("/api/v1/grota-financiamentos/auth/verify-code")) return true;
-        if (method.equals("POST") && path.equals("/api/v1/grota-financiamentos/auth/login")) return true;
-
-        return publicPaths.stream().anyMatch(path::startsWith);
+    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+        this.jwtService = jwtService;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
-    protected void doFilterInternal(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-        String jwt = null;
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
-        } else {
-            if (request.getCookies() != null) {
-                for (Cookie cookie : request.getCookies()) {
-                    if ("access_token".equals(cookie.getName())) {
-                        jwt = cookie.getValue();
-                        break;
-                    }
-                }
-            }
-        }
+        String jwt = extractToken(request);
 
         if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        String username = jwtService.extractUsername(jwt);
+        try {
+            String username = jwtService.extractUsername(jwt);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails user;
+                try {
+                    user = userDetailsService.loadUserByUsername(username);
+                } catch (UsernameNotFoundException e) {
+                    // Usuário do token não existe mais
+                    filterChain.doFilter(request, response);
+                    return;
+                }
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            User user = (User) userDetailsService.loadUserByUsername(username);
+                if (jwtService.isTokenValid(jwt, user)) {
+                    UsernamePasswordAuthenticationToken authToken =
+                            new UsernamePasswordAuthenticationToken(
+                                    user,
+                                    null,
+                                    user.getAuthorities()
+                            );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
+            }
+        } catch (ExpiredJwtException ex) {
+            request.setAttribute("exception", ex);
+        } catch (JwtException ex) {
+            request.setAttribute("exception", ex);
+        }
 
-            if (jwtService.isTokenValid(jwt, user)) {
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                                user,
-                                null,
-                                user.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+        filterChain.doFilter(request, response);
+    }
+
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+
+        if (header != null && header.startsWith("Bearer "))
+            return header.substring(7);
+
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (cookie.getName().equals("access_token"))
+                    return cookie.getValue();
             }
         }
-        filterChain.doFilter(request, response);
+        return null;
     }
 }
 

@@ -1,5 +1,3 @@
-import api from "../server/api";
-
 export type Seller = {
   id: number;
   fullName?: string;
@@ -9,12 +7,26 @@ export type Seller = {
 };
 
 export async function fetchAllSellers(): Promise<Seller[]> {
-  const { data } = await api.get("/sellers");
-  if (Array.isArray(data)) {
-    return data as Seller[];
+  const response = await fetch("/api/sellers", {
+    method: "GET",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (payload as { error?: string })?.error ??
+      "Não foi possível carregar os vendedores.";
+    throw new Error(message);
   }
-  if (Array.isArray(data?.content)) {
-    return data.content as Seller[];
+
+  if (Array.isArray(payload)) {
+    return payload as Seller[];
+  }
+  if (Array.isArray((payload as { content?: unknown[] })?.content)) {
+    return (payload as { content: Seller[] }).content;
   }
   return [];
 }
