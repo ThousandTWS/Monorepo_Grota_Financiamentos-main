@@ -157,38 +157,37 @@ export default function SimulacaoPage() {
     //Chamar rota de busca pelo CPF
   }
 
-  const onSubmit = (data: SimulateProposalFormData) => {
+  const onSubmit = async (data: SimulateProposalFormData) => {
     setIsSubmitting(true);
     try {
-      console.log(data);
-      // const payload: CreateProposalPayload = {
-      //   customerName: formState.customerName.trim(),
-      //   customerCpf: formState.customerCpf.replace(/\D/g, ""),
-      //   customerBirthDate: formState.customerBirthDate,
-      //   customerEmail: formState.customerEmail.trim(),
-      //   customerPhone: formState.customerPhone.replace(/\s/g, ""),
-      //   cnhCategory: formState.cnhCategory,
-      //   hasCnh: formState.hasCnh,
-      //   vehiclePlate: formState.vehiclePlate.trim().toUpperCase(),
-      //   fipeCode: formState.fipeCode.trim(),
-      //   fipeValue: sanitizeNumber(formState.fipeValue),
-      //   vehicleBrand: formState.vehicleBrand.trim(),
-      //   vehicleModel: formState.vehicleModel.trim(),
-      //   vehicleYear: Number(formState.vehicleYear || currentYear),
-      //   downPaymentValue: sanitizeNumber(formState.downPaymentValue),
-      //   financedValue: sanitizeNumber(formState.financedValue),
-      //   notes: formState.notes.trim() || undefined,
-      // };
+      const payload: CreateProposalPayload = {
+        customerCpf: data.cpf,
+        customerName: data.fullname,
+        customerBirthDate: data.birthday,
+        customerEmail: data.email,
+        customerPhone: data.phone,
+        hasCnh: data.haveCNH,
+        cnhCategory: data.categoryCNH || "",
+        vehiclePlate: data.vehiclePlate,
+        vehicleBrand: data.vehicleBrand,
+        vehicleModel: data.vehicleModel,
+        vehicleYear: Number(data.vehicleYear),
+        fipeCode: data.codeFIPE,
+        fipeValue: parseBRL(data.priceFIPE),
+        downPaymentValue: parseBRL(data.entryPrice),
+        financedValue: parseBRL(data.financedPrice),
+        notes: data.details
+      };
 
-      // const proposal = await createProposal(payload);
+      const proposal = await createProposal(payload);
       // setLastProposal(proposal);
-      // toast.success("Ficha enviada para a esteira da Grota.");
-      // emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-      //   proposal,
-      // });
-      // emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
-      //   reason: "logista-simulator-created",
-      // });
+      toast.success("Ficha enviada para a esteira da Grota.");
+      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
+        proposal,
+      });
+      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
+        reason: "logista-simulator-created",
+      });
     } catch (error) {
       console.error("[Simulacao] Falha ao enviar proposta", error);
       toast.error(
