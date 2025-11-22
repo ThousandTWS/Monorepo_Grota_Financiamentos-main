@@ -46,7 +46,16 @@ public class Document {
     public Document() {
     }
 
-    public Document(DocumentType documentType, String s3Key, String documentName, String contentType, Long sizeBytes, ReviewStatus reviewStatus, Dealer dealer, String reviewComment) {
+    public Document(
+            DocumentType documentType,
+            String s3Key,
+            String documentName,
+            String contentType,
+            Long sizeBytes,
+            ReviewStatus reviewStatus,
+            Dealer dealer,
+            String reviewComment
+    ) {
         this.documentType = documentType;
         this.s3Key = s3Key;
         this.documentName = documentName;
