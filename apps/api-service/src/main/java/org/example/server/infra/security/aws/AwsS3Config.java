@@ -1,4 +1,4 @@
-package org.example.server.config;
+package org.example.server.infra.security.aws;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +15,7 @@ public class AwsS3Config {
     private String awsRegion;
 
     @Bean
-    public S3Client s3Client(){
+    public S3Client s3Client() {
         System.out.println(awsRegion);
         return S3Client.builder()
                 .region(Region.of(awsRegion))
@@ -24,7 +24,7 @@ public class AwsS3Config {
     }
 
     @Bean
-    public S3Presigner s3Presigner(){
+    public S3Presigner s3Presigner() {
         return S3Presigner.builder()
                 .region(Region.of(awsRegion))
                 .credentialsProvider(DefaultCredentialsProvider.create())

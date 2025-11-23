@@ -1,6 +1,5 @@
 package org.example.server.controller;
 
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -9,46 +8,47 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import org.example.server.dto.UserResponseDTO;
 import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
-import org.example.server.dto.user.UserResponseDTO;
 import org.example.server.enums.DocumentType;
 import org.example.server.model.Dealer;
 import org.example.server.model.User;
 import org.example.server.service.DocumentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 import java.util.List;
 
-@RestController
-@Tag(name = "Documents", description = "Documents management")
-@RequestMapping("/api/v1/grota-financiamentos/documents")
+@Controller
+@Tag(name = "Documents", description = "Documents s3")
+@RequestMapping("/api/grota-financiamentos/documents")
 public class DocumentController {
 
     private final DocumentService documentService;
 
     public DocumentController(DocumentService documentService) {
-        this.documentService = documentService;
+       this.documentService = documentService;
     }
 
     @PostMapping("/upload")
-    @Operation(summary = "Upload", description = "Realiza o upload de um documento associado ao dealer autenticado.")
+    @Operation(summary = "Upload", description = "Realiza o upload de um documento associado ao logista autenticadp")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Documento enviado com sucesso", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos ou arquivo ausente"),
-            @ApiResponse(responseCode = "401", description = "Não autorizado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
-
+            @ApiResponse(responseCode = "200", description = "", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = ""),
+            @ApiResponse(responseCode = "401", description = ""),
+            @ApiResponse(responseCode = "500", description = "")
     })
     public ResponseEntity<DocumentResponseDTO> uploadDocument(
-            @RequestParam @NotNull DocumentType documentType,
+            @RequestParam @NotNull DocumentType  documentType,
             @RequestParam @NotNull MultipartFile file,
             @AuthenticationPrincipal Dealer dealer)
+
     {
         DocumentUploadRequestDTO uploadRequest = new DocumentUploadRequestDTO(documentType, file);
         DocumentResponseDTO response = documentService.uploadDocument(uploadRequest, dealer);
@@ -56,14 +56,14 @@ public class DocumentController {
     }
 
     @PutMapping("/{id}/review")
-    @Operation(summary = "Revisar Documento", description = "Atualiza o status e/ou informações de revisão de um documento específico.")
+    @Operation(summary = "Revisar Documento", description = "Atualiza o status e/ou informações de revisao de um documento especifico")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Documento revisado com sucesso", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos fornecidos para a revisão"),
+            @ApiResponse(responseCode = "200", description = "Documento revisado com sucesso", content =  @Content(schema = @Schema(implementation = DocumentResponseDTO.class))),
+            @ApiResponse(responseCode = "400", description = "Dados invalidos fornecidos para a revisão"),
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
-            @ApiResponse(responseCode = "403", description = "Usuário não possui permissão para revisar o documento"),
+            @ApiResponse(responseCode = "403", description = "Usuario não possui permissão para revisar o documento"),
             @ApiResponse(responseCode = "404", description = "Documento não encontrado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+            @ApiResponse(responseCode = "500", description = "Error interno no service")
 
     })
     public ResponseEntity<DocumentResponseDTO> reviewDocument(
@@ -71,17 +71,17 @@ public class DocumentController {
             @RequestBody @Valid DocumentReviewRequestDTO documentReviewRequestDTO,
             @AuthenticationPrincipal User user
     ){
+
         DocumentResponseDTO response = documentService.reviewDocument(id, documentReviewRequestDTO, user);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    @Operation(summary = "Listar Documentos", description = "Retorna a lista de documentos.")
+    @Operation(summary = "Listar Documentos", description = "Retornar a lista de documentos")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de documentos retornada com sucesso", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "Lista de documentos retornados com sucesso", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
-
+            @ApiResponse(responseCode = "500", description = "Error interno no servidor")
     })
     public ResponseEntity<List<DocumentResponseDTO>> listUserDocuments(@AuthenticationPrincipal User user){
         List<DocumentResponseDTO> docs = documentService.listUserDocuments(user);
@@ -89,17 +89,19 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/url")
-    @Operation(summary = "Obter URL Pré-Assinada do Documento", description = "Gera e retorna uma URL pré-assinada para download temporário do documento solicitado.")
+    @Operation(summary = "Obter URL pré -Assinada do Documento", description = "Gera e retorna URL pré-assinada")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "URL pré-assinada gerada com sucesso.", content = @Content(schema = @Schema(implementation = UserResponseDTO.class))),
+            @ApiResponse(responseCode = "200", description = "URL pre-assinada gerada com sucesso", content = @Content(schema = @Schema(implementation = DocumentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
-            @ApiResponse(responseCode = "403", description = "Usuário não possui permissão para acessar este documento"),
-            @ApiResponse(responseCode = "404", description = "Documento não encontrado"),
-            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
-
+            @ApiResponse(responseCode = "403", description = "Usuario não possui permissão para acessar este documento"),
+            @ApiResponse(responseCode = "404", description = "Documento nao encontrado"),
+            @ApiResponse(responseCode = "500", description = "Error interno no servidor")
     })
+
     public ResponseEntity<String> getDocumentPresignedUrl(@PathVariable Long id, @AuthenticationPrincipal User user){
         URL url = documentService.getPresignedUrl(id, user);
         return ResponseEntity.ok(url.toString());
     }
 }
+
+

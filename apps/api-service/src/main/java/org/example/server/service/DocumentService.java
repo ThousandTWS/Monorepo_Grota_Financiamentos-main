@@ -13,7 +13,6 @@ import org.example.server.model.User;
 import org.example.server.repository.DocumentRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -29,7 +28,7 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DocumentMapper mapper;
 
-    private static final long MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+    private static final long MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final String[] ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"};
 
     public DocumentService(S3Service s3Service, DocumentRepository documentRepository, DocumentMapper mapper) {
@@ -37,96 +36,110 @@ public class DocumentService {
         this.documentRepository = documentRepository;
         this.mapper = mapper;
     }
-
     @Transactional
-    public DocumentResponseDTO uploadDocument(DocumentUploadRequestDTO dto, Dealer dealer){
+    public DocumentResponseDTO uploadDocument(DocumentUploadRequestDTO dto, Dealer dealer) {
 
         MultipartFile file = dto.file();
         validateFile(file);
+
         String s3Key = buildS3Key(dealer.getId(), file.getOriginalFilename());
 
         try {
             s3Service.uploadFile(s3Key, file);
         } catch (IOException e) {
-            throw new DocumentUploadException("Falha ao fazer upload para S3", e);
+            throw new DocumentUploadException("Falha ao enviar documento para o servidor", e);
         }
 
         Document document = mapper.toEntity(dto, dealer, s3Key);
-        document.setCreateAt(LocalDateTime.now());
-        Document saved = documentRepository.save(document);
-
-        return mapper.toDTO(saved);
-    }
-
-    @Transactional
-    public java.net.URL getPresignedUrl(Long documentId, User user) {
-        Document doc = documentRepository.findById(documentId)
-                .orElseThrow(() -> new IllegalArgumentException("Documento não encontrado"));
-
-        boolean isAdmin = user.getRole().equals("ADMIN");
-        boolean isDealer = doc.getDealer().getUser().getRole().equals(user.getId());
-
-        if (!isAdmin && !isDealer) {
-            throw new SecurityException("Acesso negado: Você não tem permissão para visualizar este documento.");
-        }
-
-        return s3Service.generatePresignedGetUrl(doc.getS3Key());
-    }
-
-    @Transactional
-    public DocumentResponseDTO reviewDocument(Long id, DocumentReviewRequestDTO documentReviewRequestDTO, User user){
-        if (!user.getRole().equals(UserRole.ADMIN)) {
-            throw new SecurityException("Apenas administradores podem revisar documentos.");
-        }
-
-        Document document = documentRepository.findById(id).orElseThrow(() -> new RecordNotFoundException(id));
-
-        document.setReviewStatus(documentReviewRequestDTO.reviewStatus());
-        document.setReviewComment(documentReviewRequestDTO.reviewComment());
-        document.setUpdateAt(LocalDateTime.now());
+        document.setCreatedAt(LocalDateTime.now());
 
         return mapper.toDTO(documentRepository.save(document));
     }
 
+    @Transactional
+    public java.net.URL getPresignedUrl(Long documentId, User user) {
+
+        Document doc = documentRepository.findById(documentId)
+                .orElseThrow(() -> new IllegalArgumentException("Documento não encontrado"));
+
+        boolean isAdmin = user.getRole() == UserRole.ADMIN;
+        boolean isOwnerDealer = doc.getDealer().getUser().getId().equals(user.getId());
+
+
+        if (!isAdmin && !isOwnerDealer) {
+            throw new SecurityException("Acesso negado: você não tem permissão para visualizar este documento.");
+        }
+
+        return s3Service.generatePresignedUrl(doc.getS3Key());
+    }
+
+    @Transactional
+    public DocumentResponseDTO reviewDocument(Long id, DocumentReviewRequestDTO reviewDTO, User user) {
+
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new SecurityException("Apenas administradores podem revisar documentos.");
+        }
+
+        Document document = documentRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException(id));
+
+        document.setReviewStatus(reviewDTO.reviewStatus());
+        document.setReviewComment(reviewDTO.reviewComment());
+        document.setUpdatedAt(LocalDateTime.now());
+
+        return mapper.toDTO(documentRepository.save(document));
+    }
+
+
     public List<DocumentResponseDTO> listUserDocuments(User user) {
-        if (user.getRole().equals(UserRole.ADMIN)) {
+
+        if (user.getRole() == UserRole.ADMIN) {
             return documentRepository.findAll()
-                    .stream()
-                    .map(document -> mapper.toDTO(document))
+                    .stream().map(mapper::toDTO)
                     .collect(Collectors.toList());
         }
 
-        return documentRepository.findByLojistaUserId(user.getId())
-                .stream()
-                .map(mapper::toDTO)
-                .toList();
+        return documentRepository.findByDealer_UserId(user.getId())
+                .stream().map(mapper::toDTO)
+                .collect(Collectors.toList());
     }
 
+    private String buildS3Key(Long dealerId, String originalFilename) {
 
-    private String buildS3Key(Long dealersId, String originalFilename) {
-        String ext = StringUtils.getFilenameExtension(originalFilename);
-        String uuid = UUID.randomUUID().toString();
-        return String.format("dealers/%d/documents/%s.%s", dealersId, uuid, ext != null ? ext : "bin");
-    }
-
-    public void validateFile(MultipartFile file){
-        if (file == null || file.isEmpty()){
-            throw new IllegalArgumentException("Arquivo não pode estar vazio.");
+        String ext = "bin";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            ext = originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
         }
 
-        if (file.getSize() > MAX_FILE_SIZE_BYTES){
-            throw new IllegalArgumentException("Arquivo não pode ser maior que 10MB.");
+        return String.format(
+                "dealers/%d/documents/%s.%s",
+                dealerId,
+                UUID.randomUUID(),
+                ext
+        );
+    }
+
+    private void validateFile(MultipartFile file) {
+
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("O arquivo não pode estar vazio.");
+        }
+
+        if (file.getSize() > MAX_FILE_BYTES) {
+            throw new IllegalArgumentException("O arquivo não pode ser maior que 10MB.");
         }
 
         String contentType = file.getContentType();
         boolean ok = false;
-        for (String type : ALLOWED_CONTENT_TYPES){
-            if (type.equalsIgnoreCase(contentType)){
+
+        for (String type : ALLOWED_CONTENT_TYPES) {
+            if (type.equalsIgnoreCase(contentType)) {
                 ok = true;
                 break;
             }
         }
-        if (!ok){
+
+        if (!ok) {
             throw new IllegalArgumentException("Tipo de arquivo não permitido. Use JPEG ou PNG.");
         }
     }

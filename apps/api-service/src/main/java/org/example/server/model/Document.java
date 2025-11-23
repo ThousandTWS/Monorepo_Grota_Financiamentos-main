@@ -1,17 +1,19 @@
 package org.example.server.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.example.server.enums.DocumentType;
 import org.example.server.enums.ReviewStatus;
 import org.hibernate.annotations.CreationTimestamp;
-
+import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Entity(name = "tb_document")
 public class Document {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)
@@ -27,6 +29,8 @@ public class Document {
 
     private Long sizeBytes;
 
+
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReviewStatus reviewStatus;
@@ -38,13 +42,12 @@ public class Document {
     private String reviewComment;
 
     @CreationTimestamp
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
-    @CreationTimestamp
-    private LocalDateTime updateAt;
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 
-    public Document() {
-    }
+    public Document() {}
 
     public Document(
             DocumentType documentType,
@@ -70,6 +73,7 @@ public class Document {
         return id;
     }
 
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -78,7 +82,7 @@ public class Document {
         return documentType;
     }
 
-    public void setDocumentType(DocumentType documentType) {
+    public void setDocumentType(@NotNull(message = "O tipo de documento é obrigatório.") DocumentType documentType) {
         this.documentType = documentType;
     }
 
@@ -138,27 +142,27 @@ public class Document {
         this.reviewComment = reviewComment;
     }
 
-    public LocalDateTime getCreateAt() {
-        return createAt;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateAt(LocalDateTime createAt) {
-        this.createAt = createAt;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public LocalDateTime getUpdateAt() {
-        return updateAt;
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setUpdateAt(LocalDateTime updateAt) {
-        this.updateAt = updateAt;
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
-        Document document = (Document) object;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Document document = (Document) o;
         return Objects.equals(id, document.id);
     }
 
