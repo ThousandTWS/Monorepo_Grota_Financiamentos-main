@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Documento</title>
+    <style>
+        body {
+          font-family: Arial, sans-serif;
+          margin: 40px;
+          background-color: #f7f7f7;
+        }
+        .container {
+          max-width: 500px;
+          margin: auto;
+          padding: 20px;
+          background: #fff;
+          border-radius: 8px;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input, select, button {
+          width: 100%;
+          padding: 10px;
+          margin: 10px 0;
+          font-size: 16px;
+        }
+        .result {
+          margin-top: 20px;
+          padding: 10px;
+          background: #e1ffe1;
+          border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Upload de Documento</h2>
+    <form id="uploadForm">
+        <label for="documentType">Tipo de Documento</label>
+        <select id="documentType" required>
+            <option value="">Selecione</option>
+            <option value="RG_FRENTE">RG Frente</option>
+            <option value="RG_VERSO">RG Verso</option>
+            <option value="CPF">CPF</option>
+        </select>
+
+        <label for="fileInput">Escolha o arquivo</label>
+        <input type="file" id="fileInput" required />
+
+        <button type="submit">Enviar Documento</button>
+    </form>
+    <div class="result" id="result"></div>
+</div>
+
+<script src="upload.js"></script>
+</body>
+</html>

@@ -7,7 +7,7 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "run-java": "cd apps/server && mvnw.cmd spring-boot:run",
+    "run-java": "cd apps/api-service && mvnw.cmd spring-boot:run",
     "realtime": "pnpm --filter @grota/realtime-server dev",
     "gen": "node generators/package/index.js"
   },
