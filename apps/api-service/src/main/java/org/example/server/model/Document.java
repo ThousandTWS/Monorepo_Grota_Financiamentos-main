@@ -29,8 +29,6 @@ public class Document {
 
     private Long sizeBytes;
 
-
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private ReviewStatus reviewStatus;

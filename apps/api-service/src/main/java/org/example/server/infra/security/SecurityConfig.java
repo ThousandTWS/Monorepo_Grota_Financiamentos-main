@@ -35,12 +35,17 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(customAuthEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Rotas(Não Token)
+                        // Rotas publicas
                         .requestMatchers("/api/v1/grota-financiamentos/auth/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/users").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/dealers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
+
+                        // Somente ADMIN
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/documents/*/review").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents/*/url").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

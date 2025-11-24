@@ -27,7 +27,7 @@ import java.util.List;
 
 @Controller
 @Tag(name = "Documents", description = "Documents s3")
-@RequestMapping("/api/grota-financiamentos/documents")
+@RequestMapping("/api/v1/grota-financiamentos/documents")
 public class DocumentController {
 
     private final DocumentService documentService;
@@ -47,11 +47,12 @@ public class DocumentController {
     public ResponseEntity<DocumentResponseDTO> uploadDocument(
             @RequestParam @NotNull DocumentType  documentType,
             @RequestParam @NotNull MultipartFile file,
-            @AuthenticationPrincipal Dealer dealer)
+            @RequestParam(required = false) Long dealerId,
+            @AuthenticationPrincipal User user)
 
     {
         DocumentUploadRequestDTO uploadRequest = new DocumentUploadRequestDTO(documentType, file);
-        DocumentResponseDTO response = documentService.uploadDocument(uploadRequest, dealer);
+        DocumentResponseDTO response = documentService.uploadDocument(uploadRequest, user, dealerId);
         return ResponseEntity.ok(response);
     }
 

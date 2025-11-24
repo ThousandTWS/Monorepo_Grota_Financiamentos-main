@@ -3,6 +3,7 @@ package org.example.server.dto.document;
 import org.example.server.enums.ReviewStatus;
 import org.example.server.model.Dealer;
 import org.example.server.model.Document;
+import org.example.server.model.User;
 import org.springframework.stereotype.Component;
 
 
@@ -17,7 +18,6 @@ public class DocumentMapper {
         return new DocumentResponseDTO(
                 document.getId(),
                 document.getDocumentType(),
-                document.getS3Key(),
                 document.getContentType(),
                 document.getSizeBytes(),
                 document.getReviewStatus(),
@@ -27,17 +27,18 @@ public class DocumentMapper {
         );
     }
     
-    public Document toEntity(DocumentUploadRequestDTO dto, Dealer dealer, String s3Key){
+    public Document toEntity(DocumentUploadRequestDTO dto, User user, String s3Key){
         if (dto == null) {
             return null;
         }
         
         Document document = new Document();
         document.setDocumentType(dto.documentType());
-        document.setDocumentName(dto.file().getName());
+        document.setDocumentName(dto.file().getOriginalFilename());
         document.setSizeBytes(dto.file().getSize());
-        document.setDealer(dealer);
+        document.setDealer(user.getDealer());
         document.setS3Key(s3Key);
+        document.setContentType(dto.file().getContentType());
         document.setReviewStatus(ReviewStatus.PENDENTE);
 
         return document;

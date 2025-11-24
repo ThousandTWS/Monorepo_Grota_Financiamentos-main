@@ -3,6 +3,7 @@ package org.example.server.service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.example.server.exception.EmailException;
+import org.example.server.model.Document;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -39,6 +40,31 @@ public class EmailService {
     @Async
     public void sendPasswordToEmail(String to, String password){
         sendEmailWithTemplate(to, "Senha para login", "password-seller", password);
+    }
+
+    @Async
+    public void sendReviewDocument(String to, Document document){
+        try {
+            Context ctx = new Context();
+            ctx.setVariable("documentType", document.getDocumentType());
+            ctx.setVariable("reviewStatus", document.getReviewStatus());
+            ctx.setVariable("reviewComment", document.getReviewComment());
+
+            String html = springTemplateEngine.process("document-review", ctx);
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+
+            helper.setTo(to);
+            helper.setSubject("Atualização no status do seu documento");
+            helper.setText(html, true);
+            helper.setFrom(fromEmail);
+
+            mailSender.send(mimeMessage);
+
+        } catch (Exception e) {
+            throw new EmailException("Não foi possível enviar e-mail de revisão de documento", e);
+        }
     }
 
     @Async

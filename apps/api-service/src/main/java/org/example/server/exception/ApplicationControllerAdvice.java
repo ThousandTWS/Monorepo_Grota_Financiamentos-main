@@ -110,12 +110,4 @@ public class ApplicationControllerAdvice {
                 "Valor inválido para o campo 'status'. Use DISPONIVEL ou INDISPONIVEL.");
     }
 
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleGenericError(Exception ex) {
-        if (ex instanceof org.springframework.security.core.AuthenticationException) {
-            throw (org.springframework.security.core.AuthenticationException) ex;
-        }
-        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno no servidor.");
-    }
 }

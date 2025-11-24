@@ -1,0 +1,48 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body style="font-family: Arial, sans-serif; background:#f4f6f8; padding:20px;">
+<table width="100%" role="presentation">
+    <tr>
+        <td align="center">
+            <table width="600" role="presentation" style="background:#fff; border-radius:8px;">
+                <tr>
+                    <td style="padding:20px; text-align:center; background:#ff6a00; color:#fff;">
+                        <h1>Status do Documento Atualizado</h1>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:20px;">
+                        <p>Olá,</p>
+
+                        <p>O status do seu documento foi atualizado pela equipe da Grota Financiamentos.</p>
+
+                        <p><strong>Tipo do documento:</strong>
+                            <span th:text="${documentType}">RG_FRENTE</span>
+                        </p>
+
+                        <p><strong>Novo status:</strong></p>
+
+                        <div style="text-align:center; margin:20px 0;">
+                            <span style="font-size:24px; padding:10px 18px; background:#ff6a00; color:#fff; border-radius:6px;"
+                                  th:text="${reviewStatus}">APROVADO</span>
+                        </div>
+
+                        <p th:if="${reviewComment != null}">
+                            <strong>Comentário do revisor:</strong><br>
+                            <span th:text="${reviewComment}">Documento legível.</span>
+                        </p>
+
+                        <p>Se tiver dúvidas, entre em contato com nossa equipe de suporte.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:12px; text-align:center; color:#999; background:#fafafa;">Suporte •
+                        grotafinanciamentos.com
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>
