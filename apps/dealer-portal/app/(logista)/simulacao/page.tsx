@@ -1,6 +1,6 @@
 "use client";
 
-import { ChangeEvent, FormEvent, Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
   REALTIME_CHANNELS,
@@ -8,7 +8,7 @@ import {
   dispatchBridgeEvent,
   useRealtimeChannel,
 } from "@grota/realtime-client";
-import { Loader2, CheckCircle2, RefreshCw, FileText, UserCircle2, Car, Info, CircleDollarSign, Search, ScanSearch, Plus } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, UserCircle2, Info, Search, Plus, Coins, Trash2 } from "lucide-react";
 import { GiCarKey, GiReceiveMoney } from "react-icons/gi";
 import {
   Card,
@@ -38,9 +38,9 @@ import { createProposal } from "@/application/services/Proposals/proposalService
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate } from "@/application/core/utils/masks";
+import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF } from "@/application/core/utils/masks";
 import { Controller } from "react-hook-form";
-import { formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
+import { formatName, formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 import clsx from "clsx";
 
 const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
@@ -84,10 +84,16 @@ const simulateProposalSchema = z.object({
 
 export type SimulateProposalFormData = z.infer<typeof simulateProposalSchema>;
 
+interface ExtraProps {
+  value: string;
+  role: string;
+}
+
 export default function SimulacaoPage() {
   const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
   const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [extra, setExtra] = useState<ExtraProps[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [lastProposal, setLastProposal] = useState<Proposal | null>(null);
 
@@ -102,7 +108,7 @@ export default function SimulacaoPage() {
     getValues
   } = useForm<SimulateProposalFormData>({
     resolver: zodResolver(simulateProposalSchema),
-    mode: "onTouched",
+    mode: "onSubmit",
     defaultValues: {
       cpf: "",
       fullname: "",
@@ -129,7 +135,7 @@ export default function SimulacaoPage() {
     },
   });
 
-  const noHaveCPF = !watch("cpf");
+  const noHaveCPF = getValues("cpf").length !== 14;
 
   const noHavePlate = !watch("vehiclePlate");
 
@@ -149,13 +155,88 @@ export default function SimulacaoPage() {
     [sendMessage],
   );
 
-  const handleCPFLookup = (cpf: string) => {
-    //Chamar rota de busca pelo CPF
+  const handleCPFLookup = async (cpfMasked: string) => {
+    if(!cpfMasked) return;
+
+    try {
+      setIsCPFLookupLoading(true);
+
+      const cpf = unmaskCPF(cpfMasked);
+
+      const response = await fetch("/api/searchCPF", {
+        method: "POST",
+        body: JSON.stringify({ cpf }),
+      })
+
+      const data = await response.json();
+      const pessoa = data?.data.response.content;
+
+      console.log(data);
+
+      if(pessoa) {
+        setValue("fullname", formatName(pessoa.nome.conteudo.nome) || "");
+        setValue("birthday", pessoa.nome.conteudo.data_nascimento || "");
+        setValue("email", pessoa.pessoas_contato.conteudo[0].numero || "");
+        setValue("phone", pessoa.emails.conteudo[0].email || "");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar CPF")
+    } finally {
+      setIsCPFLookupLoading(false);
+      toast.success("Busca dados com CPF concluida")
+    }
   }
 
-  const handlePlateLookup = (plate: string) => {
-    //Chamar rota de busca pelo CPF
+  const handlePlateLookup = async (plateMasked: string) => {
+    if(!plateMasked) return;
+
+    try {
+      setIsPlateLookupLoading(true);
+
+      const placa = plateMasked;
+
+      const response = await fetch("/api/searchPlaca", {
+        method: "POST",
+        body: JSON.stringify({ placa }),
+      })
+
+      const data = await response.json();
+      const veiculo = data?.data.response;
+
+      console.log(data);
+
+      if(veiculo) {
+        setValue("vehicleBrand", veiculo.Marca || "");
+        setValue("vehicleModel", formatName(veiculo.Modelo) || "");
+        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() || "");
+        setValue("codeFIPE", veiculo.CodigoFipe || "");
+        setValue("priceFIPE", veiculo.Valor || "");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar placa")
+    } finally {
+      setIsPlateLookupLoading(false);
+      toast.success("Busca dados com placa concluida")
+    }
   }
+
+  const handleAddNewExtra = () => {
+    const newExtra: ExtraProps = {
+      role: "",
+      value: ""
+    }
+
+    setExtra((prev) => [
+      ...prev,
+      newExtra
+    ])
+  }
+
+  const handleDeleteExtra = () => {
+    setExtra([]);
+    setValue("income.extra", []);
+  };
+
 
   const onSubmit = async (data: SimulateProposalFormData) => {
     setIsSubmitting(true);
@@ -274,7 +355,6 @@ export default function SimulacaoPage() {
                               setValue("cpf", masked, { shouldValidate: true })
                             }
                           }
-                          required
                         />
                         {errors.cpf && (
                           <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
@@ -285,7 +365,7 @@ export default function SimulacaoPage() {
                             type="button"
                             className="w-full gap-2"
                             onClick={() => handleCPFLookup(getValues("cpf"))}
-                            disabled={isCPFLookupLoading || !getValues("cpf")}
+                            disabled={isCPFLookupLoading || noHaveCPF}
                           >
                             {isCPFLookupLoading ? (
                               <Loader2 className="size-4 animate-spin" />
@@ -312,7 +392,6 @@ export default function SimulacaoPage() {
                       {...register("fullname")}
                       type="text"
                       disabled={noHaveCPF}
-                      required
                     />
                     {errors.fullname && (
                           <p className="text-red-500 text-xs mt-1">{errors.fullname.message}</p>
@@ -333,7 +412,6 @@ export default function SimulacaoPage() {
                       }
                     }
                     disabled={noHaveCPF}
-                    required
                   />
                   {errors.birthday && (
                     <p className="text-red-500 text-xs mt-1">{errors.birthday.message}</p>
@@ -347,7 +425,6 @@ export default function SimulacaoPage() {
                     placeholder="cliente@email.com"
                     {...register("email")}
                     disabled={noHaveCPF}
-                    required
                   />
                   {errors.email && (
                     <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
@@ -366,7 +443,6 @@ export default function SimulacaoPage() {
                       }
                     }
                     disabled={noHaveCPF}
-                    required
                   />
                 </div>
                 <div className="space-y-3">
@@ -442,46 +518,6 @@ export default function SimulacaoPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* <div className="space-y-3">
-                      <Label htmlFor="vehicleYear" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Ano</Label>
-                      <Controller
-                        name="vehicleYear"
-                        control={control}
-                        defaultValue=""
-                        render={({ field }) => {
-                          const currentYear = new Date().getFullYear();
-                          const years = Array.from(
-                            { length: currentYear - 1990 + 1 },
-                            (_, i) => String(currentYear - i)
-                          );
-
-                          return (
-                            <Fragment>
-                              <Select
-                                value={field.value}
-                                onValueChange={field.onChange}
-                                disabled={noHavePlate}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Selecione o ano" />
-                                </SelectTrigger>
-
-                                <SelectContent className="max-h-40">
-                                  {years.map((year) => (
-                                    <SelectItem key={year} value={year}>
-                                      {year}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              {errors.vehicleYear && (
-                                <p className="text-red-500 text-xs mt-1">{errors.vehicleYear.message}</p>
-                              )}
-                            </Fragment>
-                          );
-                        }}
-                      />
-                  </div> */}
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-3">
                         <Label htmlFor="enterprise">Empresa</Label>
@@ -490,7 +526,6 @@ export default function SimulacaoPage() {
                           placeholder="Informe a empresa que trabalha"
                           {...register("enterprise")}
                           type="text"
-                          required
                         />
                         {errors.enterprise && (
                           <p className="text-red-500 text-xs mt-1">{errors.enterprise.message}</p>
@@ -503,7 +538,6 @@ export default function SimulacaoPage() {
                           placeholder="Informe a função que exerce"
                           {...register("function")}
                           type="text"
-                          required
                         />
                         {errors.function && (
                           <p className="text-red-500 text-xs mt-1">{errors.function.message}</p>
@@ -523,7 +557,6 @@ export default function SimulacaoPage() {
                             setValue("admission", masked, { shouldValidate: true })
                           }
                         }
-                        required
                       />
                       {errors.admission && (
                         <p className="text-red-500 text-xs mt-1">{errors.admission.message}</p>
@@ -542,17 +575,90 @@ export default function SimulacaoPage() {
                             setValue("income.mainValue", masked, { shouldValidate: true })
                           }
                         }
-                        required
                       />
                       {errors.income?.mainValue && (
                         <p className="text-red-500 text-xs mt-1">{errors.income?.mainValue.message}</p>
                       )}
-                      {/* Mostrar mais inputs para ir adicionando */}
-                      <button className="flex items-center gap-2 text-xs text-muted-foreground p-0.5">
+                      <button
+                        className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > 0 ? "hidden" : ""}`}
+                        onClick={handleAddNewExtra}
+                        disabled={extra.length > 0}
+                      >
                         <Plus className="size-4"/>
                         Adicionar renda extra
                       </button>
                     </div>
+                    {
+                       extra.length > 0 && (
+                        <Card className="w-full col-span-2">
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <div className="flex gap-3 items-center">
+                                  <Coins className="h-10 w-10" />
+                                  <aside className="flex flex-col gap-1.5">
+                                    <CardTitle>Renda Extra</CardTitle>
+                                    <CardDescription>
+                                      Adicione informações da(s) renda(s) extra do cliente.
+                                    </CardDescription>
+                                  </aside>
+                                </div>
+                                <Button variant="destructive" size="icon" onClick={handleDeleteExtra}>
+                                  <Trash2 />
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid gap-4 md:grid-cols-2">
+                                {
+                                  extra.map((extraInfo, index) => (
+                                    <Fragment key={index}>
+                                      <div className="space-y-3">
+                                        <Label htmlFor="extraValue">Valor</Label>
+                                        <Input
+                                          id="extraValue"
+                                          type="text"
+                                          {...register(`income.extra.${index}.value`)}
+                                          placeholder="R$50.760"
+                                          onChange={
+                                            (e) => {
+                                              const masked = maskBRL(e.target.value);
+                                              setValue(`income.extra.${index}.value`, masked, { shouldValidate: true })
+                                            }
+                                          }
+                                        />
+                                        {errors.income?.extra?.[index]?.value && (
+                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.value.message}</p>
+                                        )}
+                                      </div>
+
+                                      <div className="space-y-3">
+                                        <Label htmlFor="extraRole">Função exercida</Label>
+                                        <Input
+                                          id="extraRole"
+                                          placeholder="Informe a função que exerce"
+                                          {...register(`income.extra.${index}.role`)}
+                                          type="text"
+                                        />
+                                        {errors.income?.extra?.[index]?.role && (
+                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.role.message}</p>
+                                        )}
+                                        <button
+                                          className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > index + 1 ? "hidden" : ""}`}
+                                          onClick={handleAddNewExtra}
+                                          disabled={extra.length > index + 1}
+                                        >
+                                          <Plus className="size-4"/>
+                                          Adicionar renda extra
+                                        </button>
+                                      </div>
+                                    </Fragment>
+                                  ))
+                                }
+                              </div>
+                            </CardContent>
+                          </Card>
+                      ) 
+                    }
                   </div>
                 </CardContent>
               </Card>
@@ -592,7 +698,6 @@ export default function SimulacaoPage() {
                               setValue("vehiclePlate", masked, { shouldValidate: true })
                             }
                           }
-                          required
                         />
                         {errors.vehiclePlate && (
                           <p className="text-red-500 text-xs mt-1">{errors.vehiclePlate.message}</p>
@@ -631,7 +736,6 @@ export default function SimulacaoPage() {
                     placeholder="Marca"
                     {...register("vehicleBrand")}
                     disabled={noHavePlate}
-                    required
                   />
                   {errors.vehicleBrand && (
                     <p className="text-red-500 text-xs mt-1">{errors.vehicleBrand.message}</p>
@@ -644,7 +748,6 @@ export default function SimulacaoPage() {
                     placeholder="Modelo"
                     {...register("vehicleModel")}
                     disabled={noHavePlate}
-                    required
                   />
                   {errors.vehicleModel && (
                     <p className="text-red-500 text-xs mt-1">{errors.vehicleModel.message}</p>
@@ -703,7 +806,6 @@ export default function SimulacaoPage() {
                       }
                     }
                     disabled={noHavePlate}
-                    required
                   />
                   {errors.codeFIPE && (
                     <p className="text-red-500 text-xs mt-1">{errors.codeFIPE.message}</p>
@@ -726,7 +828,6 @@ export default function SimulacaoPage() {
                       }
                     }
                     disabled={noHavePlate}
-                    required
                   />
                   {errors.priceFIPE && (
                     <p className="text-red-500 text-xs mt-1">{errors.priceFIPE.message}</p>
@@ -763,7 +864,6 @@ export default function SimulacaoPage() {
                         setValue("financedPrice", masked, { shouldValidate: true })
                       }
                     }
-                    required
                   />
                   {errors.financedPrice && (
                     <p className="text-red-500 text-xs mt-1">{errors.financedPrice.message}</p>

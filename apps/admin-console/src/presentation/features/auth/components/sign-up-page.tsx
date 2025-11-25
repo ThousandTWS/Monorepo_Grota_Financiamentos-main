@@ -200,7 +200,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
               <button
                 type="submit"
                 disabled={isLoading || !isDirty || !isValid}
-                className="animate-element animate-delay-800 w-full text-md rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors"
+                className="animate-element animate-delay-800 w-full text-md rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors flex items-center justify-center"
               >
                 {isLoading ? (
                   <>
