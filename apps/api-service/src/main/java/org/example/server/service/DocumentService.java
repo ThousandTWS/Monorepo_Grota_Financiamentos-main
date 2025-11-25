@@ -9,7 +9,6 @@ import org.example.server.exception.DocumentUploadException;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
-import org.example.server.model.Dealer;
 import org.example.server.model.Document;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
@@ -43,27 +42,26 @@ public class DocumentService {
         this.emailService = emailService;
         this.mapper = mapper;
     }
+
     @Transactional
     public DocumentResponseDTO uploadDocument(DocumentUploadRequestDTO dto, User user, Long dealerId) {
 
-        if (user.getRole().equals(UserRole.ADMIN)){
-            if (dealerId == null){
+        if (user.getRole().equals(UserRole.ADMIN)) {
+            if (dealerId == null) {
                 throw new RecordNotFoundException("ADMIN precisa informar o id do lojista.");
             }
             dealerRepository.findById(dealerId)
                     .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
-        }
-        else if (user.getRole().equals(UserRole.LOJISTA)){
+        } else if (user.getRole().equals(UserRole.LOJISTA)) {
             var dealer = user.getDealer();
-            if (dealer == null){
+            if (dealer == null) {
                 throw new AccessDeniedException("Usuário LOJISTA não possui dealer associado.");
             }
-        }
-        else {
+        } else {
             throw new AccessDeniedException("Este usuário não tem permissão para enviar documentos.");
         }
 
-        if (documentRepository.existsByDealerIdAndDocumentType(dealerId, dto.documentType())){
+        if (documentRepository.existsByDealerIdAndDocumentType(dealerId, dto.documentType())) {
             throw new DataAlreadyExistsException("O documento " + dto.documentType() + " já foi enviado para este dealer.");
         }
 
@@ -92,7 +90,6 @@ public class DocumentService {
 
         boolean isAdmin = user.getRole() == UserRole.ADMIN;
         boolean isOwnerDealer = doc.getDealer().getUser().getId().equals(user.getId());
-
 
         if (!isAdmin && !isOwnerDealer) {
             throw new AccessDeniedException("Acesso negado: você não tem permissão para visualizar este documento.");
@@ -172,7 +169,7 @@ public class DocumentService {
         }
 
         if (!ok) {
-            throw new IllegalArgumentException("Tipo de arquivo não permitido. Use JPEG ou PNG.");
+            throw new DocumentUploadException("Tipo de arquivo não permitido. Use JPEG ou PNG.");
         }
     }
 }
