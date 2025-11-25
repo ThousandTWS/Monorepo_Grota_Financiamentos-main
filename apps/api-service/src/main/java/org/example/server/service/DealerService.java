@@ -3,12 +3,14 @@ package org.example.server.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.dealer.*;
+import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
+import org.example.server.repository.DocumentRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,6 +26,7 @@ public class DealerService {
 
     private final DealerRepository dealerRepository;
     private final UserRepository userRepository;
+    private final DocumentRepository documentRepository;
     private final DealerRegistrationMapper dealerRegistrationMapper;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
@@ -35,6 +38,7 @@ public class DealerService {
     public DealerService(
             DealerRepository dealerRepository,
             UserRepository userRepository,
+            DocumentRepository documentRepository,
             DealerRegistrationMapper dealerRegistrationMapper,
             PasswordEncoder passwordEncoder,
             EmailService emailService,
@@ -45,6 +49,7 @@ public class DealerService {
     ) {
         this.dealerRepository = dealerRepository;
         this.userRepository = userRepository;
+        this.documentRepository = documentRepository;
         this.dealerRegistrationMapper = dealerRegistrationMapper;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
@@ -69,7 +74,7 @@ public class DealerService {
         user.setEmail(dealerRegistrationRequestDTO.email());
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
-        user.generateVerificationCode(codeGenerator.generate(),Duration.ofMinutes(10));
+        user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
 
         Dealer dealer = new Dealer();
         dealer.setUser(user);
@@ -96,6 +101,13 @@ public class DealerService {
     public DealerRegistrationResponseDTO findById(Long id) {
         return dealerRegistrationMapper.toDTO(dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id)));
+    }
+
+    public List<DocumentResponseDTO> getDealerDocuments(Long id) {
+        if (!dealerRepository.existsById(id)) {
+            throw new RecordNotFoundException(id);
+        }
+        return documentRepository.findDocumentsByDealerId(id);
     }
 
     public DealerDetailsResponseDTO findDetailDealer(Long id) {

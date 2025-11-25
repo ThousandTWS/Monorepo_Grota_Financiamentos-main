@@ -7,6 +7,5 @@ import java.util.Optional;
 
 public interface DealerRepository extends JpaRepository<Dealer, Long> {
     boolean existsByPhone(String phone);
-
     Optional<Dealer> findByUserId(Long id);
 }

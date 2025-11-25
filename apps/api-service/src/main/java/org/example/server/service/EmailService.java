@@ -1,6 +1,5 @@
 package org.example.server.service;
 
-import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.example.server.exception.EmailException;
 import org.example.server.model.Document;

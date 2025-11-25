@@ -9,6 +9,7 @@ import org.example.server.dto.dealer.DealerDetailsResponseDTO;
 import org.example.server.dto.dealer.DealerProfileDTO;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
+import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
 import org.example.server.service.DealerService;
 import org.example.server.service.VehicleService;
@@ -59,6 +60,22 @@ public class DealerController {
     public ResponseEntity<DealerRegistrationResponseDTO> findById(@PathVariable Long id){
         DealerRegistrationResponseDTO dealer = dealerService.findById(id);
         return ResponseEntity.ok().body(dealer);
+    }
+
+    @GetMapping("/{id}/documents")
+    @Operation(
+            summary = "Obter documentos",
+            description = "Retorna todos os documentos do lojista."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Lista de documentos retornado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado para o ID fornecido"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<List<DocumentResponseDTO>> getDealerDocuments(@PathVariable Long id){
+        List<DocumentResponseDTO> documentsList = dealerService.getDealerDocuments(id);
+        return ResponseEntity.ok().body(documentsList);
     }
 
     @GetMapping("/{id}/vehicles")
