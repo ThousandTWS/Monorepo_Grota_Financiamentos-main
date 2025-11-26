@@ -246,7 +246,7 @@ export default function SimulacaoPage() {
       };
 
       const proposal = await createProposal(payload);
-      setLastProposal(proposal);
+      
       toast.success("Ficha enviada para a esteira da Grota.");
       emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
         proposal,
@@ -254,11 +254,7 @@ export default function SimulacaoPage() {
       emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
         reason: "logista-simulator-created",
       });
-      setFormState((prev) => ({
-        ...emptyFormState,
-        dealerId: prev.dealerId,
-        sellerId: prev.sellerId,
-      }));
+     
     } catch (error) {
       console.error("[Simulacao] Falha ao enviar proposta", error);
       toast.error(
