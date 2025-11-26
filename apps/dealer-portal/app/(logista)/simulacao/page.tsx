@@ -1,14 +1,9 @@
 "use client";
 
-import { ChangeEvent, FormEvent, useCallback, useMemo, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  REALTIME_CHANNELS,
-  REALTIME_EVENT_TYPES,
-  dispatchBridgeEvent,
-  useRealtimeChannel,
-} from "@grota/realtime-client";
-import { Loader2, CheckCircle2, Zap, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, FileText, UserCircle2, Info, Search, Plus, Coins, Trash2 } from "lucide-react";
+import { GiCarKey, GiReceiveMoney } from "react-icons/gi";
 import {
   Card,
   CardContent,
@@ -29,681 +24,833 @@ import {
   SelectValue,
 } from "@/presentation/ui/select";
 import { Separator } from "@/presentation/ui/separator";
-import {
-  CreateProposalPayload,
-  Proposal,
-} from "@/application/core/@types/Proposals/Proposal";
-import { createProposal } from "@/application/services/Proposals/proposalService";
+import z from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF } from "@/lib/masks";
+import { Controller } from "react-hook-form";
+import { formatName, formatNumberToBRL, parseBRL } from "@/lib/formatters";
+import clsx from "clsx";
+import { ConfirmationDialog } from "./components/ConfirmationDialog";
 
-type FormState = {
-  dealerId: string;
-  sellerId: string;
-  customerName: string;
-  customerCpf: string;
-  customerBirthDate: string;
-  customerEmail: string;
-  customerPhone: string;
-  cnhCategory: string;
-  hasCnh: boolean;
-  vehiclePlate: string;
-  fipeCode: string;
-  fipeValue: string;
-  vehicleBrand: string;
-  vehicleModel: string;
-  vehicleYear: string;
-  downPaymentValue: string;
-  financedValue: string;
-  notes: string;
-};
+const simulateProposalSchema = z.object({
+  cpf: z.string().length(14, "CPF inválido"),
+  fullname: z.string().min(4, "Nome completo é obrigatório"),
+  birthday: z.string().length(10, "Data de nascimento é obrigatório"),
+  email: z.email("Formato de email inválido"),
+  phone: z.string().length(15, "Formato de telefone inválido"),
+  enterprise: z.string().min(1, "Nome da empresa é obrigatória"),
+  function: z.string().min(1, "Função exercida é obrigatória"),
+  income: z.object({
+    mainValue: z.string().min(1, "Renda principal é obrigatória"),
+    extra: z.array(
+      z.object({
+        value: z.string().min(1, "Valor da renda extra é obrigatório"),
+        role: z.string().min(1, "Função da renda extra é obrigatória"),
+      })
+    ).optional()
+  }),
+  admission: z.string().min(1, "Renda é obrigatória").optional(),
+  haveCNH: z.boolean(),
+  categoryCNH: z.string().optional(),
+  vehiclePlate: z
+  .string()
+  .regex(
+    /^[A-Z]{3}\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/,
+    "Formato de placa inválida"
+  ),
+  vehicleBrand: z.string().min(1, "Marca do veículo é necessário"),
+  vehicleModel: z.string().min(1, "Modelo do veículo é necessário"),
+  vehicleYear: z.string().min(1, "Ano do veículo é necessário"),
+  codeFIPE: z.string().length(8, "Formato do código FIPE inválido"),
+  priceFIPE: z.string().min(1, "Valor do veículo é necessário"),
+  entryPrice: z.string().min(1, "Valor de entrada do veículo é necessário"),
+  financedPrice: z.string().min(1, "Valor de financiamento é necessário"),
+  details: z.string().optional()
+})
 
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
-const LOGISTA_SIMULATOR_ID = "logista-simulador";
+export type SimulateProposalFormData = z.infer<typeof simulateProposalSchema>;
 
-const currency = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL",
-  minimumFractionDigits: 2,
-});
-
-const currentYear = new Date().getFullYear();
-
-const emptyFormState: FormState = {
-  dealerId: "",
-  sellerId: "",
-  customerName: "",
-  customerCpf: "",
-  customerBirthDate: "",
-  customerEmail: "",
-  customerPhone: "",
-  cnhCategory: "B",
-  hasCnh: true,
-  vehiclePlate: "",
-  fipeCode: "",
-  fipeValue: "",
-  vehicleBrand: "",
-  vehicleModel: "",
-  vehicleYear: String(currentYear),
-  downPaymentValue: "",
-  financedValue: "",
-  notes: "",
-};
-
-const KNOWN_PLATES: Record<
-  string,
-  {
-    vehicleBrand: string;
-    vehicleModel: string;
-    vehicleYear: number;
-    fipeCode: string;
-    fipeValue: number;
-    downPaymentValue: number;
-    financedValue: number;
-  }
-> = {
-  ABC1D23: {
-    vehicleBrand: "Chevrolet",
-    vehicleModel: "Onix LTZ 1.0 Turbo",
-    vehicleYear: 2022,
-    fipeCode: "004567-2",
-    fipeValue: 83690,
-    downPaymentValue: 20000,
-    financedValue: 63690,
-  },
-  BRA2E19: {
-    vehicleBrand: "Volkswagen",
-    vehicleModel: "Nivus Comfortline",
-    vehicleYear: 2021,
-    fipeCode: "005987-4",
-    fipeValue: 118500,
-    downPaymentValue: 35000,
-    financedValue: 83500,
-  },
-  GRT0A10: {
-    vehicleBrand: "Jeep",
-    vehicleModel: "Compass Longitude",
-    vehicleYear: 2020,
-    fipeCode: "006432-1",
-    fipeValue: 149900,
-    downPaymentValue: 45000,
-    financedValue: 104900,
-  },
-};
-
-const sanitizeNumber = (value: string) => {
-  if (!value) return 0;
-  const normalized = value.replace(",", ".").replace(/\s/g, "");
-  const parsed = Number(normalized);
-  return Number.isFinite(parsed) ? parsed : 0;
-};
+export interface ExtraProps {
+  value: string;
+  role: string;
+}
 
 export default function SimulacaoPage() {
-  const [formState, setFormState] = useState<FormState>(emptyFormState);
+  const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
   const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [lastProposal, setLastProposal] = useState<Proposal | null>(null);
+  const [extra, setExtra] = useState<ExtraProps[]>([]);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [resumeProposal, setResumeProposal] = useState<SimulateProposalFormData | null>(null);
+  const [confirmationDialogIsOpen, setConfirmationDialogIsOpen] = useState(false);
 
-  const { sendMessage } = useRealtimeChannel({
-    channel: REALTIME_CHANNELS.PROPOSALS,
-    identity: LOGISTA_SIMULATOR_ID,
-    url: REALTIME_URL,
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    control,
+    reset,
+    watch,
+    getValues
+  } = useForm<SimulateProposalFormData>({
+    resolver: zodResolver(simulateProposalSchema),
+    mode: "onSubmit",
+    defaultValues: {
+      cpf: "",
+      fullname: "",
+      birthday: "",
+      email: "",
+      phone: "",
+      haveCNH: false,
+      categoryCNH: "",
+      enterprise: "",
+      function: "",
+      admission: "",
+      income: {
+        mainValue: "",
+      },
+      vehiclePlate: "",
+      vehicleBrand: "",
+      vehicleModel: "",
+      vehicleYear: "",
+      codeFIPE: "",
+      priceFIPE: "",
+      entryPrice: "",
+      financedPrice: "",
+      details: ""
+    },
   });
 
-  const emitRealtimeEvent = useCallback(
-    (event: string, payload?: Record<string, unknown>) => {
-      dispatchBridgeEvent(sendMessage, event, {
-        source: LOGISTA_SIMULATOR_ID,
-        ...(payload ?? {}),
-      });
-    },
-    [sendMessage],
-  );
+  const noHaveCPF = getValues("cpf").length !== 14;
 
-  const handleChange =
-    (field: keyof FormState) => (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      const value =
-        field === "vehiclePlate"
-          ? event.target.value.toUpperCase()
-          : event.target.value;
-      setFormState((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    };
+  const noHavePlate = !watch("vehiclePlate");
 
-  const handleSelectChange = (field: keyof FormState) => (value: string) => {
-    setFormState((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
+  const handleCPFLookup = async (cpfMasked: string) => {
+    if(!cpfMasked) return;
 
-  const handleToggleHasCnh = (checked: boolean) => {
-    setFormState((prev) => ({
-      ...prev,
-      hasCnh: checked,
-      cnhCategory: checked ? prev.cnhCategory : "",
-    }));
-  };
-
-  const handlePlateLookup = async () => {
-    const normalizedPlate = formState.vehiclePlate
-      .replace(/[^A-Za-z0-9]/g, "")
-      .toUpperCase();
-    if (!normalizedPlate) {
-      toast.info("Informe a placa antes de consultar a FIPE.");
-      return;
-    }
-
-    setIsPlateLookupLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 700));
-    const snapshot = KNOWN_PLATES[normalizedPlate];
-    if (!snapshot) {
-      toast.info(
-        "Não encontramos essa placa em nossa base de demonstração. Preencha os dados manualmente.",
-      );
-      setIsPlateLookupLoading(false);
-      return;
-    }
-
-    setFormState((prev) => ({
-      ...prev,
-      vehiclePlate: normalizedPlate,
-      vehicleBrand: snapshot.vehicleBrand,
-      vehicleModel: snapshot.vehicleModel,
-      vehicleYear: String(snapshot.vehicleYear),
-      fipeCode: snapshot.fipeCode,
-      fipeValue: String(snapshot.fipeValue),
-      downPaymentValue: String(snapshot.downPaymentValue),
-      financedValue: String(snapshot.financedValue),
-    }));
-    toast.success("Consulta FIPE preenchida automaticamente.");
-    setIsPlateLookupLoading(false);
-  };
-
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
     try {
-      const payload: CreateProposalPayload = {
-        dealerId: formState.dealerId ? Number(formState.dealerId) : undefined,
-        sellerId: formState.sellerId ? Number(formState.sellerId) : undefined,
-        customerName: formState.customerName.trim(),
-        customerCpf: formState.customerCpf.replace(/\D/g, ""),
-        customerBirthDate: formState.customerBirthDate,
-        customerEmail: formState.customerEmail.trim(),
-        customerPhone: formState.customerPhone.replace(/\s/g, ""),
-        cnhCategory: formState.cnhCategory,
-        hasCnh: formState.hasCnh,
-        vehiclePlate: formState.vehiclePlate.trim().toUpperCase(),
-        fipeCode: formState.fipeCode.trim(),
-        fipeValue: sanitizeNumber(formState.fipeValue),
-        vehicleBrand: formState.vehicleBrand.trim(),
-        vehicleModel: formState.vehicleModel.trim(),
-        vehicleYear: Number(formState.vehicleYear || currentYear),
-        downPaymentValue: sanitizeNumber(formState.downPaymentValue),
-        financedValue: sanitizeNumber(formState.financedValue),
-        notes: formState.notes.trim() || undefined,
-      };
+      setIsCPFLookupLoading(true);
 
-      const proposal = await createProposal(payload);
-      
-      toast.success("Ficha enviada para a esteira da Grota.");
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-      });
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
-        reason: "logista-simulator-created",
-      });
-     
+      const cpf = unmaskCPF(cpfMasked);
+
+      const response = await fetch("/api/searchCPF", {
+        method: "POST",
+        body: JSON.stringify({ cpf }),
+      })
+
+      const data = await response.json();
+      const pessoa = data?.data.response.content;
+
+      if(pessoa) {
+        setValue("fullname", formatName(pessoa.nome.conteudo.nome) || "");
+        setValue("birthday", pessoa.nome.conteudo.data_nascimento || "");
+        setValue("email", pessoa.pessoas_contato.conteudo[0].numero || "");
+        setValue("phone", pessoa.emails.conteudo[0].email || "");
+      }
     } catch (error) {
-      console.error("[Simulacao] Falha ao enviar proposta", error);
-      toast.error(
-        "Não conseguimos enviar a ficha agora. Tente novamente em instantes.",
-      );
+      toast.error("Erro ao buscar CPF")
     } finally {
-      setIsSubmitting(false);
+      setIsCPFLookupLoading(false);
+      toast.success("Busca dados com CPF concluida")
     }
+  }
+
+  const handlePlateLookup = async (plateMasked: string) => {
+    if(!plateMasked) return;
+
+    try {
+      setIsPlateLookupLoading(true);
+
+      const placa = plateMasked;
+
+      const response = await fetch("/api/searchPlaca", {
+        method: "POST",
+        body: JSON.stringify({ placa }),
+      })
+
+      const data = await response.json();
+      const veiculo = data?.data.response;
+
+      console.log(data);
+
+      if(veiculo) {
+        setValue("vehicleBrand", veiculo.Marca || "");
+        setValue("vehicleModel", formatName(veiculo.Modelo) || "");
+        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() || "");
+        setValue("codeFIPE", veiculo.CodigoFipe || "");
+        setValue("priceFIPE", veiculo.Valor || "");
+      }
+    } catch (error) {
+      toast.error("Erro ao buscar placa")
+    } finally {
+      setIsPlateLookupLoading(false);
+      toast.success("Busca dados com placa concluida")
+    }
+  }
+
+  const handleAddNewExtra = () => {
+    const newExtra: ExtraProps = {
+      role: "",
+      value: ""
+    }
+
+    setExtra((prev) => [
+      ...prev,
+      newExtra
+    ])
+  }
+
+  const handleDeleteExtra = () => {
+    setExtra([]);
+    setValue("income.extra", []);
   };
 
-  const summary = useMemo(() => {
-    const fipe = sanitizeNumber(formState.fipeValue);
-    const financed = sanitizeNumber(formState.financedValue);
-    const downPayment = sanitizeNumber(formState.downPaymentValue);
-    const difference = fipe - financed - downPayment;
-    return {
-      fipe,
-      financed,
-      downPayment,
-      difference,
-      statusLabel:
-        fipe > 0
-          ? financed + downPayment <= fipe
-            ? "Valor dentro da FIPE"
-            : "Verificar ajuste de valores"
-          : "Aguardando consulta da placa",
-      statusTone:
-        fipe > 0
-          ? financed + downPayment <= fipe
-            ? "text-emerald-600"
-            : "text-amber-600"
-          : "text-muted-foreground",
-    };
-  }, [formState]);
+
+  const onSubmit = async (data: SimulateProposalFormData) => {
+    setResumeProposal(data);
+    setConfirmationDialogIsOpen(true);
+  };
+
+  useEffect(() => {
+    if (!watch("haveCNH")) {
+      setValue("categoryCNH", "");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch("haveCNH")]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (getValues("priceFIPE").length > 0 && getValues("entryPrice").length > 0) {
+        try {
+          setIsCalculating(true);
+          const someValue = parseBRL(getValues("priceFIPE")) - parseBRL(getValues("entryPrice"));
+          setValue("financedPrice", maskBRL(formatNumberToBRL(someValue)));
+        } catch (error) {
+          toast.error(
+            "Não conseguimos realizar o cálculo automáticamente. Tente novamente em instantes ou preencha manualmente.",
+          );
+        } finally {
+          setIsCalculating(false);
+        }
+      }
+    }, 750)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watch("priceFIPE"), watch("entryPrice")]);
 
   return (
-    <div className="space-y-6">
+    <Fragment>
+      <div className="space-y-6">
       <div>
         <p className="text-sm font-semibold text-brand-500 flex items-center gap-2">
-          <Zap className="size-4" />
+          <FileText className="size-4" />
           Simulador de Propostas
         </p>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Capture todos os dados da loja em um único fluxo
+          Preencha todos os dados do cliente e do veículo em um único fluxo simples
         </h1>
         <p className="text-sm text-muted-foreground">
-          Consulte o veículo pela placa, puxe a FIPE pré-configurada e gere a
-          ficha que cai automaticamente na esteira do admin.
+          Informe os dados do cliente, consulte automaticamente o veículo pela placa e gere a ficha pronta para análise no sistema administrativo.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-2">
+        <div className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Identificação da loja</CardTitle>
-              <CardDescription>
-                Informe os códigos da loja e do vendedor conectados neste login.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="dealerId">ID do lojista</Label>
-                <Input
-                  id="dealerId"
-                  type="number"
-                  min={1}
-                  placeholder="Ex: 12"
-                  value={formState.dealerId}
-                  onChange={handleChange("dealerId")}
-                />
+              <div className="flex gap-3 items-center">
+                <UserCircle2 className="h-10 w-10" />
+                <aside className="flex flex-col gap-1.5">
+                  <CardTitle>Informações do cliente</CardTitle>
+                  <CardDescription>
+                    Use a placa para buscar as informações pré-configuradas ou
+                    preencha manualmente.
+                  </CardDescription>
+                </aside>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="sellerId">ID do vendedor</Label>
-                <Input
-                  id="sellerId"
-                  type="number"
-                  min={1}
-                  placeholder="Ex: 34"
-                  value={formState.sellerId}
-                  onChange={handleChange("sellerId")}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do cliente</CardTitle>
-              <CardDescription>
-                CPF, nome completo, data de nascimento e contatos entram aqui.
-              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="customerName">Nome completo</Label>
-                  <Input
-                    id="customerName"
-                    placeholder="Fulano da Silva"
-                    value={formState.customerName}
-                    onChange={handleChange("customerName")}
-                    required
-                  />
+              <div className="flex flex-col gap-4">
+                <div className="grid gap-4 items-center">
+                    <div className="space-y-2">
+                      <Label htmlFor="cpf">CPF (consulta automática)</Label>
+                      <div className="flex items-center gap-4">
+                        <Input
+                          id="cpf"
+                          inputMode="numeric"
+                          maxLength={14}
+                          placeholder="Digite o CPF para buscar os dados"
+                          {...register("cpf")}
+                          onChange={
+                            (e) => {
+                              const masked = maskCPF(e.target.value);
+                              setValue("cpf", masked, { shouldValidate: true })
+                            }
+                          }
+                        />
+                        {errors.cpf && (
+                          <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
+                        )}
+
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            className="w-full gap-2"
+                            onClick={() => handleCPFLookup(getValues("cpf"))}
+                            disabled={isCPFLookupLoading || noHaveCPF}
+                          >
+                            {isCPFLookupLoading ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Search className="size-4" />
+                            )}
+                            Buscar dados com CPF
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Preencha o CPF corretamente para preenchimento automático dos demais dados solicitados.
+                      </p>
+                    </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerCpf">CPF</Label>
-                  <Input
-                    id="customerCpf"
-                    inputMode="numeric"
-                    maxLength={14}
-                    placeholder="000.000.000-00"
-                    value={formState.customerCpf}
-                    onChange={handleChange("customerCpf")}
-                    required
-                  />
-                </div>
+                <Separator />
               </div>
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="customerBirthDate">Data de nascimento</Label>
-                  <Input
-                    id="customerBirthDate"
-                    type="date"
-                    value={formState.customerBirthDate}
-                    onChange={handleChange("customerBirthDate")}
-                    required
-                  />
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                    <Label htmlFor="fullname" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Nome completo</Label>
+                    <Input
+                      id="fullname"
+                      placeholder="Fulano da Silva"
+                      {...register("fullname")}
+                      type="text"
+                      disabled={noHaveCPF}
+                    />
+                    {errors.fullname && (
+                          <p className="text-red-500 text-xs mt-1">{errors.fullname.message}</p>
+                    )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerEmail">E-mail</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="birthday" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Data de nascimento</Label>
                   <Input
-                    id="customerEmail"
+                    id="birthday"
+                    inputMode="numeric"
+                    maxLength={10}
+                    placeholder="DD/MM/AAAA"
+                    {...register("birthday")}
+                    onChange={
+                      (e) => {
+                        const masked = maskDate(e.target.value);
+                        setValue("birthday", masked, { shouldValidate: true })
+                      }
+                    }
+                    disabled={noHaveCPF}
+                  />
+                  {errors.birthday && (
+                    <p className="text-red-500 text-xs mt-1">{errors.birthday.message}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="email" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>E-mail</Label>
+                  <Input
+                    id="email"
                     type="email"
                     placeholder="cliente@email.com"
-                    value={formState.customerEmail}
-                    onChange={handleChange("customerEmail")}
-                    required
+                    {...register("email")}
+                    disabled={noHaveCPF}
                   />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  )}
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="customerPhone">Celular</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="phone" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Telefone / Whatsapp</Label>
                   <Input
-                    id="customerPhone"
+                    id="phone"
                     placeholder="(11) 99999-0000"
-                    value={formState.customerPhone}
-                    onChange={handleChange("customerPhone")}
-                    required
+                    {...register("phone")}
+                    onChange={
+                      (e) => {
+                        const masked = maskPhone(e.target.value);
+                        setValue("phone", masked, { shouldValidate: true })
+                      }
+                    }
+                    disabled={noHaveCPF}
                   />
+                </div>
+                <div className="space-y-3">
+                    <Label htmlFor="haveCNH">Possui CNH?</Label>
+                    <Controller
+                        name="haveCNH"
+                        control={control}
+                        defaultValue={false}
+                        render={({ field }) => (
+                          <Fragment>
+                            <div className="flex items-center gap-3 rounded-md border px-3 py-2">
+                              <Switch
+                                id="haveCNH"
+                                checked={field.value}
+                                onCheckedChange={(checked) => field.onChange(checked)}
+                              />
+                              <span className="text-sm text-muted-foreground">
+                                {field.value ? "Sim" : "Não"}
+                              </span>
+                            </div>
+                            {errors.haveCNH && (
+                              <p className="text-red-500 text-xs mt-1">{errors.haveCNH.message}</p>
+                            )}
+                          </Fragment>
+                        )}
+                      />
+                </div>
+                <div className="space-y-3">
+                    <Label htmlFor="categoryCNH">Categoria da CNH</Label>
+                    
+                    <Controller
+                      name="categoryCNH"
+                      control={control}
+                      defaultValue=""
+                      render={({ field }) => (
+                        <Fragment>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={!watch("haveCNH")}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione a categoria" />
+                            </SelectTrigger>
+
+                            <SelectContent>
+                              <SelectItem value="A">A</SelectItem>
+                              <SelectItem value="B">B</SelectItem>
+                              <SelectItem value="AB">AB</SelectItem>
+                              <SelectItem value="C">C</SelectItem>
+                              <SelectItem value="D">D</SelectItem>
+                              <SelectItem value="E">E</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {errors.categoryCNH && (
+                            <p className="text-red-500 text-xs mt-1">{errors.categoryCNH.message}</p>
+                          )}
+                        </Fragment>
+                      )}
+                    />
                 </div>
               </div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader>
+                  <div className="flex gap-3 items-center">
+                    <GiReceiveMoney className="h-10 w-10" />
+                    <aside className="flex flex-col gap-1.5">
+                      <CardTitle>Informações de Renda</CardTitle>
+                      <CardDescription>
+                        Preencha qual os dados quanto a renda do cliente.
+                      </CardDescription>
+                    </aside>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-3">
+                        <Label htmlFor="enterprise">Empresa</Label>
+                        <Input
+                          id="enterprise"
+                          placeholder="Informe a empresa que trabalha"
+                          {...register("enterprise")}
+                          type="text"
+                        />
+                        {errors.enterprise && (
+                          <p className="text-red-500 text-xs mt-1">{errors.enterprise.message}</p>
+                        )}
+                    </div>
+                    <div className="space-y-3">
+                        <Label htmlFor="function">Função exercida</Label>
+                        <Input
+                          id="function"
+                          placeholder="Informe a função que exerce"
+                          {...register("function")}
+                          type="text"
+                        />
+                        {errors.function && (
+                          <p className="text-red-500 text-xs mt-1">{errors.function.message}</p>
+                        )}
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="admission">Data de admissão</Label>
+                      <Input
+                        id="admission"
+                        inputMode="numeric"
+                        maxLength={10}
+                        placeholder="DD/MM/AAAA"
+                        {...register("admission")}
+                        onChange={
+                          (e) => {
+                            const masked = maskDate(e.target.value);
+                            setValue("admission", masked, { shouldValidate: true })
+                          }
+                        }
+                      />
+                      {errors.admission && (
+                        <p className="text-red-500 text-xs mt-1">{errors.admission.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-3">
+                      <Label htmlFor="income.mainValue">Renda</Label>
+                      <Input
+                        id="income.mainValue"
+                        type="text"
+                        {...register("income.mainValue")}
+                        placeholder="R$50.760"
+                        onChange={
+                          (e) => {
+                            const masked = maskBRL(e.target.value);
+                            setValue("income.mainValue", masked, { shouldValidate: true })
+                          }
+                        }
+                      />
+                      {errors.income?.mainValue && (
+                        <p className="text-red-500 text-xs mt-1">{errors.income?.mainValue.message}</p>
+                      )}
+                      <button
+                        className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > 0 ? "hidden" : ""}`}
+                        onClick={handleAddNewExtra}
+                        disabled={extra.length > 0}
+                      >
+                        <Plus className="size-4"/>
+                        Adicionar renda extra
+                      </button>
+                    </div>
+                    {
+                       extra.length > 0 && (
+                        <Card className="w-full col-span-2">
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <div className="flex gap-3 items-center">
+                                  <Coins className="h-10 w-10" />
+                                  <aside className="flex flex-col gap-1.5">
+                                    <CardTitle>Renda Extra</CardTitle>
+                                    <CardDescription>
+                                      Adicione informações da(s) renda(s) extra do cliente.
+                                    </CardDescription>
+                                  </aside>
+                                </div>
+                                <Button variant="destructive" size="icon" onClick={handleDeleteExtra}>
+                                  <Trash2 />
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid gap-4 md:grid-cols-2">
+                                {
+                                  extra.map((extraInfo, index) => (
+                                    <Fragment key={index}>
+                                      <div className="space-y-3">
+                                        <Label htmlFor="extraValue">Valor</Label>
+                                        <Input
+                                          id="extraValue"
+                                          type="text"
+                                          {...register(`income.extra.${index}.value`)}
+                                          placeholder="R$50.760"
+                                          onChange={
+                                            (e) => {
+                                              const masked = maskBRL(e.target.value);
+                                              setValue(`income.extra.${index}.value`, masked, { shouldValidate: true })
+                                            }
+                                          }
+                                        />
+                                        {errors.income?.extra?.[index]?.value && (
+                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.value.message}</p>
+                                        )}
+                                      </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>CNH e contato</CardTitle>
-              <CardDescription>
-                Informe se o cliente possui CNH e qual categoria.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Possui CNH?</Label>
-                <div className="flex items-center gap-3 rounded-md border px-3 py-2">
-                  <Switch
-                    checked={formState.hasCnh}
-                    onCheckedChange={handleToggleHasCnh}
-                    id="hasCnh"
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    {formState.hasCnh ? "Sim" : "Não"}
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Categoria</Label>
-                <Select
-                  value={formState.cnhCategory}
-                  onValueChange={handleSelectChange("cnhCategory")}
-                  disabled={!formState.hasCnh}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="A">Categoria A</SelectItem>
-                    <SelectItem value="B">Categoria B</SelectItem>
-                    <SelectItem value="AB">Categoria AB</SelectItem>
-                    <SelectItem value="C">Categoria C</SelectItem>
-                    <SelectItem value="D">Categoria D</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Dados do veículo</CardTitle>
-              <CardDescription>
-                Use a placa para buscar as informações pré-configuradas ou
-                preencha manualmente.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-[2fr_1fr]">
-                <div className="space-y-2">
-                  <Label htmlFor="vehiclePlate">Placa do veículo</Label>
-                  <Input
-                    id="vehiclePlate"
-                    placeholder="ABC1D23"
-                    value={formState.vehiclePlate}
-                    onChange={handleChange("vehiclePlate")}
-                    required
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Aceitamos placas no padrão Mercosul e antigo. A consulta FIPE
-                    usa uma base local de demonstração.
-                  </p>
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    type="button"
-                    className="w-full gap-2"
-                    onClick={handlePlateLookup}
-                    disabled={isPlateLookupLoading}
-                  >
-                    {isPlateLookupLoading ? (
-                      <Loader2 className="size-4 animate-spin" />
-                    ) : (
-                      <RefreshCw className="size-4" />
-                    )}
-                    Consultar FIPE
-                  </Button>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleBrand">Marca</Label>
-                  <Input
-                    id="vehicleBrand"
-                    placeholder="Marca"
-                    value={formState.vehicleBrand}
-                    onChange={handleChange("vehicleBrand")}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleModel">Modelo</Label>
-                  <Input
-                    id="vehicleModel"
-                    placeholder="Modelo"
-                    value={formState.vehicleModel}
-                    onChange={handleChange("vehicleModel")}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="vehicleYear">Ano</Label>
-                  <Input
-                    id="vehicleYear"
-                    type="number"
-                    min={1990}
-                    max={currentYear + 1}
-                    value={formState.vehicleYear}
-                    onChange={handleChange("vehicleYear")}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="fipeCode">Código FIPE</Label>
-                  <Input
-                    id="fipeCode"
-                    placeholder="000000-0"
-                    value={formState.fipeCode}
-                    onChange={handleChange("fipeCode")}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-2">
-                  <Label htmlFor="fipeValue">Valor FIPE</Label>
-                  <Input
-                    id="fipeValue"
-                    type="number"
-                    min={0}
-                    value={formState.fipeValue}
-                    onChange={handleChange("fipeValue")}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="downPaymentValue">Entrada</Label>
-                  <Input
-                    id="downPaymentValue"
-                    type="number"
-                    min={0}
-                    value={formState.downPaymentValue}
-                    onChange={handleChange("downPaymentValue")}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="financedValue">Valor financiado</Label>
-                  <Input
-                    id="financedValue"
-                    type="number"
-                    min={0}
-                    value={formState.financedValue}
-                    onChange={handleChange("financedValue")}
-                    required
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Observações</CardTitle>
-              <CardDescription>
-                Use este campo para avisar o time administrativo sobre acordos
-                especiais ou documentos pendentes.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Textarea
-                id="notes"
-                placeholder="CNH vence em 30 dias, cliente aceita portabilidade, etc."
-                rows={4}
-                value={formState.notes}
-                onChange={handleChange("notes")}
-              />
-              <Button
-                type="submit"
-                className="w-full gap-2"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="size-4" />
-                )}
-                Enviar ficha para a esteira
-              </Button>
+                                      <div className="space-y-3">
+                                        <Label htmlFor="extraRole">Função exercida</Label>
+                                        <Input
+                                          id="extraRole"
+                                          placeholder="Informe a função que exerce"
+                                          {...register(`income.extra.${index}.role`)}
+                                          type="text"
+                                        />
+                                        {errors.income?.extra?.[index]?.role && (
+                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.role.message}</p>
+                                        )}
+                                        <button
+                                          className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > index + 1 ? "hidden" : ""}`}
+                                          onClick={handleAddNewExtra}
+                                          disabled={extra.length > index + 1}
+                                        >
+                                          <Plus className="size-4"/>
+                                          Adicionar renda extra
+                                        </button>
+                                      </div>
+                                    </Fragment>
+                                  ))
+                                }
+                              </div>
+                            </CardContent>
+                          </Card>
+                      ) 
+                    }
+                  </div>
+                </CardContent>
+              </Card>
             </CardContent>
           </Card>
         </div>
 
         <div className="space-y-6">
-          <Card className="h-fit">
+          <Card>
             <CardHeader>
-              <CardTitle>Resumo da simulação</CardTitle>
-              <CardDescription>
-                Validamos automaticamente se o valor solicitado cabe na FIPE.
-              </CardDescription>
+              <div className="flex gap-3 items-center">
+                <GiCarKey className="h-10 w-10" />
+                <aside className="flex flex-col gap-1.5">
+                  <CardTitle>Dados do veículo</CardTitle>
+                  <CardDescription>
+                    Use a placa para buscar as informações pré-configuradas ou
+                    preencha manualmente.
+                  </CardDescription>
+                </aside>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Cliente</p>
-                <p className="font-semibold text-gray-900 dark:text-gray-50">
-                  {formState.customerName || "—"}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {formState.customerCpf || "CPF em branco"}
-                </p>
+            <CardContent className="space-y-4">
+              <div className="flex flex-col gap-4">
+                <div className="grid gap-4 items-center">
+                    <div className="space-y-2">
+                      <Label htmlFor="vehiclePlate">Placa do veículo</Label>
+                      <div className="flex items-center gap-4">
+                        <Input
+                          id="vehiclePlate"
+                          placeholder="ABC-1234 ou ABC1D23"
+                          maxLength={8}
+                          inputMode="text"
+                          {...register("vehiclePlate")}
+                          onChange={
+                            (e) => {
+                              const masked = maskPlate(e.target.value);
+                              setValue("vehiclePlate", masked, { shouldValidate: true })
+                            }
+                          }
+                        />
+                        {errors.vehiclePlate && (
+                          <p className="text-red-500 text-xs mt-1">{errors.vehiclePlate.message}</p>
+                        )}
+
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            className="w-full gap-2"
+                            onClick={() => handlePlateLookup(getValues("vehiclePlate"))}
+                            disabled={isPlateLookupLoading || !getValues("vehiclePlate")}
+                          >
+                            {isPlateLookupLoading ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Search className="size-4" />
+                            )}
+                            Buscar dados com placa
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Aceitamos placas no padrão Mercosul e antigo. A consulta FIPE
+                        usa uma base local de demonstração.
+                      </p>
+                    </div>
+                </div>
+                <Separator />
               </div>
-              <Separator />
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">Veículo</p>
-                <p className="font-semibold">
-                  {formState.vehicleBrand || "—"} {formState.vehicleModel}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Ano {formState.vehicleYear || "—"} • Placa{" "}
-                  {formState.vehiclePlate || "—"}
-                </p>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3">
+                  <Label htmlFor="vehicleBrand" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Marca</Label>
+                  <Input
+                    id="vehicleBrand"
+                    placeholder="Marca"
+                    {...register("vehicleBrand")}
+                    disabled={noHavePlate}
+                  />
+                  {errors.vehicleBrand && (
+                    <p className="text-red-500 text-xs mt-1">{errors.vehicleBrand.message}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="vehicleModel" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Modelo</Label>
+                  <Input
+                    id="vehicleModel"
+                    placeholder="Modelo"
+                    {...register("vehicleModel")}
+                    disabled={noHavePlate}
+                  />
+                  {errors.vehicleModel && (
+                    <p className="text-red-500 text-xs mt-1">{errors.vehicleModel.message}</p>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="vehicleYear" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Ano</Label>
+                  <Controller
+                    name="vehicleYear"
+                    control={control}
+                    defaultValue=""
+                    render={({ field }) => {
+                      const currentYear = new Date().getFullYear();
+                      const years = Array.from(
+                        { length: currentYear - 1990 + 1 },
+                        (_, i) => String(currentYear - i)
+                      );
+
+                      return (
+                        <Fragment>
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                            disabled={noHavePlate}
+                          >
+                            <SelectTrigger className="w-full">
+                              <SelectValue placeholder="Selecione o ano" />
+                            </SelectTrigger>
+
+                            <SelectContent className="max-h-40">
+                              {years.map((year) => (
+                                <SelectItem key={year} value={year}>
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {errors.vehicleYear && (
+                            <p className="text-red-500 text-xs mt-1">{errors.vehicleYear.message}</p>
+                          )}
+                        </Fragment>
+                      );
+                    }}
+                  />
+                </div>
+                <div className="space-y-3">
+                  <Label htmlFor="codeFIPE" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Código FIPE</Label>
+                  <Input
+                    id="codeFIPE"
+                    placeholder="000000-0"
+                    {...register("codeFIPE")}
+                    onChange={
+                      (e) => {
+                        const masked = maskFipeCode(e.target.value);
+                        setValue("codeFIPE", masked, { shouldValidate: true })
+                      }
+                    }
+                    disabled={noHavePlate}
+                  />
+                  {errors.codeFIPE && (
+                    <p className="text-red-500 text-xs mt-1">{errors.codeFIPE.message}</p>
+                  )}
+                </div>
               </div>
-              <Separator />
-              <div className="space-y-2">
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Valor FIPE</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.fipe)}
-                  </span>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                <div className="space-y-3">
+                  <Label htmlFor="priceFIPE" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Valor FIPE</Label>
+                  <Input
+                    id="priceFIPE"
+                    type="text"
+                    {...register("priceFIPE")}
+                    placeholder="R$69.900"
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("priceFIPE", masked, { shouldValidate: true })
+                      }
+                    }
+                    disabled={noHavePlate}
+                  />
+                  {errors.priceFIPE && (
+                    <p className="text-red-500 text-xs mt-1">{errors.priceFIPE.message}</p>
+                  )}
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Entrada</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.downPayment)}
-                  </span>
+                <div className="space-y-3">
+                  <Label htmlFor="entryPrice">Entrada</Label>
+                  <Input
+                    id="entryPrice"
+                    type="text"
+                    placeholder="R$80.900"
+                    {...register("entryPrice")}
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("entryPrice", masked, { shouldValidate: true })
+                      }
+                    }
+                  />
+                  {errors.entryPrice && (
+                    <p className="text-red-500 text-xs mt-1">{errors.entryPrice.message}</p>
+                  )}
                 </div>
-                <div className="flex justify-between text-muted-foreground">
-                  <span>Valor financiado</span>
-                  <span className="font-semibold text-gray-900 dark:text-gray-50">
-                    {currency.format(summary.financed)}
-                  </span>
+                <div className="space-y-3">
+                  <Label htmlFor="financedPrice">Valor financiado</Label>
+                  <Input
+                    id="financedPrice"
+                    type="text"
+                    placeholder="R$80.980"
+                    disabled={isCalculating}
+                    {...register("financedPrice")}
+                    onChange={
+                      (e) => {
+                        const masked = maskBRL(e.target.value);
+                        setValue("financedPrice", masked, { shouldValidate: true })
+                      }
+                    }
+                  />
+                  {errors.financedPrice && (
+                    <p className="text-red-500 text-xs mt-1">{errors.financedPrice.message}</p>
+                  )}
                 </div>
-                <p className={`text-xs font-semibold ${summary.statusTone}`}>
-                  {summary.statusLabel}
-                  <span className="block text-muted-foreground">
-                    Diferença: {currency.format(summary.difference)}
-                  </span>
-                </p>
               </div>
             </CardContent>
           </Card>
 
-          {lastProposal ? (
-            <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/40 dark:bg-emerald-950/30">
-              <CardHeader>
-                <CardTitle className="text-emerald-700 dark:text-emerald-200 text-base">
-                  Última ficha enviada
-                </CardTitle>
-                <CardDescription>
-                  #{lastProposal.id} • {lastProposal.customerName} ({lastProposal.status})
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
-                <p>
-                  CPF: <span className="font-semibold">{lastProposal.customerCpf}</span>
-                </p>
-                <p>
-                  Veículo:{" "}
-                  <span className="font-semibold">
-                    {lastProposal.vehicleBrand} {lastProposal.vehicleModel} •{" "}
-                    {lastProposal.vehicleYear}
-                  </span>
-                </p>
-                <p>
-                  Valor financiado:{" "}
-                  <span className="font-semibold">
-                    {currency.format(lastProposal.financedValue)}
-                  </span>
-                </p>
-                <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80">
-                  Status inicial: {lastProposal.status}. Acompanhe os andamentos na
-                  esteira de propostas.
-                </p>
-              </CardContent>
-            </Card>
-          ) : null}
+          <Card>
+            <CardHeader>
+              <div className="flex gap-3 items-center">
+                <Info className="h-10 w-10" />
+                <aside className="flex flex-col gap-1.5">
+                  <CardTitle>Observações</CardTitle>
+                  <CardDescription>
+                    Use este campo para avisar o time administrativo sobre acordos
+                    especiais ou documentos pendentes.
+                  </CardDescription>
+                </aside>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <Textarea
+                id="details"
+                placeholder="CNH vence em 30 dias, cliente aceita portabilidade, etc."
+                rows={4}
+                className="h-[118px] resize-none"
+                {...register("details")}
+              />
+              {errors.details && (
+                <p className="text-red-500 text-xs mt-1">{errors.details.message}</p>
+              )}
+              <Button
+                type="submit"
+                className="w-full gap-2"
+              >
+                <CheckCircle2 className="size-4" />
+                Enviar ficha para a esteira
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </form>
     </div>
+
+    <ConfirmationDialog
+      isOpen={confirmationDialogIsOpen}
+      onOpenChange={setConfirmationDialogIsOpen}
+      resumeProposal={resumeProposal}
+      setResumeProposal={setResumeProposal}
+      resetForm={reset}
+      resetExtra={setExtra}
+    />
+    </Fragment>
   );
 }
