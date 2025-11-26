@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import {
   Card,
@@ -9,142 +9,210 @@ import {
   CardTitle,
 } from "@/presentation/layout/components/ui/card";
 import { ApexOptions } from "apexcharts";
+import { fetchProposals } from "@/application/services/Proposals/proposalService";
+import { Proposal } from "@/application/core/@types/Proposals/Proposal";
+import { Loader2 } from "lucide-react";
+import { StatusBadge } from "../../logista/components/status-badge";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
 export function FinancingChart() {
-  const series = [
-    {
-      name: "Financiamentos Aprovados",
-      data: [
-        4800, 5200, 6100, 5800, 6900, 7200, 8100, 7800, 8500, 9200, 10100,
-        11500,
-      ],
-    },
-    {
-      name: "Financiamentos Pendentes",
-      data: [
-        2100, 1900, 2300, 2000, 2400, 2100, 2600, 2300, 2700, 2900, 3100, 3300,
-      ],
-    },
-  ];
+  const [proposals, setProposals] = useState<Proposal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const options: ApexOptions = {
-    chart: {
-      type: "area",
-      height: 350,
-      toolbar: {
-        show: false,
+  useEffect(() => {
+    let mounted = true;
+
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProposals();
+        if (mounted) {
+          setProposals(data);
+          setError(null);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar financiamentos:", err);
+        if (mounted) {
+          setError("Não foi possível carregar os financiamentos.");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadData();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const months = useMemo(
+    () => ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
+    []
+  );
+
+  const { approvedSeries, pendingSeries } = useMemo(() => {
+    const base = Array(12).fill(0);
+    const approved = [...base];
+    const pending = [...base];
+
+    proposals.forEach((proposal) => {
+      const date = new Date(proposal.createdAt);
+      if (Number.isNaN(date.getTime())) return;
+
+      const monthIndex = date.getMonth();
+      const value = proposal.financedValue ?? 0;
+
+      if (proposal.status === "APPROVED") {
+        approved[monthIndex] += value;
+      } else if (proposal.status === "PENDING" || proposal.status === "SUBMITTED") {
+        pending[monthIndex] += value;
+      }
+    });
+
+    return { approvedSeries: approved, pendingSeries: pending };
+  }, [proposals]);
+
+  const series = useMemo(
+    () => [
+      {
+        name: "Financiamentos Aprovados",
+        data: approvedSeries,
       },
-      zoom: {
+      {
+        name: "Financiamentos Pendentes",
+        data: pendingSeries,
+      },
+    ],
+    [approvedSeries, pendingSeries]
+  );
+
+  const hasData = useMemo(
+    () => series.some((s) => s.data.some((v) => v > 0)),
+    [series]
+  );
+
+  const options: ApexOptions = useMemo(
+    () => ({
+      chart: {
+        type: "area",
+        height: 350,
+        toolbar: {
+          show: false,
+        },
+        zoom: {
+          enabled: false,
+        },
+        fontFamily: "Inter, sans-serif",
+      },
+      dataLabels: {
         enabled: false,
       },
-      fontFamily: "Inter, sans-serif",
-    },
-    dataLabels: {
-      enabled: false,
-    },
-    stroke: {
-      curve: "smooth",
-      width: 3,
-    },
-    fill: {
-      type: "gradient",
-      gradient: {
-        shadeIntensity: 1,
-        opacityFrom: 0.4,
-        opacityTo: 0.1,
-        stops: [0, 90, 100],
+      stroke: {
+        curve: "smooth",
+        width: 3,
       },
-    },
-    colors: ["#10B981", "#F59E0B"],
-    xaxis: {
-      categories: [
-        "Jan",
-        "Fev",
-        "Mar",
-        "Abr",
-        "Mai",
-        "Jun",
-        "Jul",
-        "Ago",
-        "Set",
-        "Out",
-        "Nov",
-        "Dez",
-      ],
-
-      labels: {
-        style: {
-          colors: "#64748B",
-          fontSize: "12px",
+      fill: {
+        type: "gradient",
+        gradient: {
+          shadeIntensity: 1,
+          opacityFrom: 0.4,
+          opacityTo: 0.1,
+          stops: [0, 90, 100],
         },
       },
-      axisBorder: {
-        show: false,
-      },
-      axisTicks: {
-        show: false,
-      },
-    },
-    yaxis: {
-      labels: {
-        style: {
-          colors: "#64748B",
-          fontSize: "12px",
-        },
-        formatter: (value) => `R$ ${(value / 1000).toFixed(0)}k`,
-      },
-    },
-    grid: {
-      borderColor: "#E2E8F0",
-      strokeDashArray: 4,
+      colors: ["#10B981", "#F59E0B"],
       xaxis: {
-        lines: {
-          show: true,
+        categories: months,
+        labels: {
+          style: {
+            colors: "#64748B",
+            fontSize: "12px",
+          },
+        },
+        axisBorder: {
+          show: false,
+        },
+        axisTicks: {
+          show: false,
         },
       },
-    },
-    legend: {
-      position: "top",
-      horizontalAlign: "right",
-      fontFamily: "Inter, sans-serif",
-      fontSize: "13px",
-      markers: {
-        size: 5,
-        shape: "circle" as const,
+      yaxis: {
+        labels: {
+          style: {
+            colors: "#64748B",
+            fontSize: "12px",
+          },
+          formatter: (value) => `R$ ${(value / 1000).toFixed(0)}k`,
+        },
       },
-      itemMargin: {
-        horizontal: 16,
+      grid: {
+        borderColor: "#E2E8F0",
+        strokeDashArray: 4,
+        xaxis: {
+          lines: {
+            show: true,
+          },
+        },
       },
-    },
-    tooltip: {
-      theme: "light",
-      y: {
-        formatter: (value) =>
-          `R$ ${value.toLocaleString("pt-BR", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`,
+      legend: {
+        show: false,
       },
-    },
-  };
+      tooltip: {
+        theme: "light",
+        y: {
+          formatter: (value) =>
+            `R$ ${value.toLocaleString("pt-BR", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`,
+        },
+      },
+    }),
+    [months]
+  );
 
   return (
-    <Card data-oid="189d-0k">
-      <CardHeader data-oid="6a3.h_r">
+    <Card className="w-full" data-oid="189d-0k">
+      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-oid="6a3.h_r">
         <CardTitle data-oid="dne3nk2">Volume de Financiamentos</CardTitle>
+        <div className="flex flex-wrap gap-2">
+          <StatusBadge status="ativo" className="shadow-none">
+            Financiamentos Aprovados
+          </StatusBadge>
+          <StatusBadge status="pendente" className="shadow-none">
+            Financiamentos Pendentes
+          </StatusBadge>
+        </div>
       </CardHeader>
-      <CardContent data-oid="km-v1cx">
-        <ReactApexChart
-          options={options}
-          series={series}
-          type="area"
-          height={350}
-          data-oid="16zn695"
-        />
+      <CardContent className="min-h-[380px]" data-oid="km-v1cx">
+        {loading ? (
+          <div className="flex h-full items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" />
+            Carregando financiamentos...
+          </div>
+        ) : error ? (
+          <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
+        ) : hasData ? (
+          <ReactApexChart
+            options={options}
+            series={series}
+            type="area"
+            height={350}
+            data-oid="16zn695"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+            Nenhum financiamento encontrado para exibir.
+          </div>
+        )}
       </CardContent>
     </Card>
   );

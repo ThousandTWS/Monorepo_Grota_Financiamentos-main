@@ -8,37 +8,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/presentation/layout/components/ui/card";
-import { Badge } from "@/presentation/layout/components/ui/badge";
-import { getAllLogistics } from "@/application/services/Logista/logisticService";
+import { getAllSellers, Seller } from "@/application/services/Seller/sellerService";
 import { Loader2 } from "lucide-react";
-
-type Dealer = {
-  id: number;
-  fullName: string;
-  email: string;
-  enterprise: string;
-  phone: string;
-  status?: string;
-  createdAt?: string;
-};
-
-const statusConfig: Record<
-  string,
-  { label: string; className: string }
-> = {
-  ACTIVE: {
-    label: "Ativo",
-    className: "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300",
-  },
-  INACTIVE: {
-    label: "Inativo",
-    className: "bg-gray-100 text-gray-700 dark:bg-gray-500/10 dark:text-gray-300",
-  },
-  PENDING: {
-    label: "Pendente",
-    className: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-200",
-  },
-};
+import { StatusBadge } from "../../logista/components/status-badge";
+import { cn } from "@/lib/utils";
 
 const formatDate = (value?: string) => {
   if (!value) return "--";
@@ -52,25 +25,27 @@ const formatDate = (value?: string) => {
 };
 
 export function DealersList() {
-  const [dealers, setDealers] = useState<Dealer[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   useEffect(() => {
     let mounted = true;
 
-    const fetchDealers = async () => {
+    const fetchSellers = async () => {
       try {
         setLoading(true);
-        const data = await getAllLogistics();
+        const data = await getAllSellers();
         if (mounted) {
-          setDealers(Array.isArray(data) ? data : []);
+          setSellers(Array.isArray(data) ? data : []);
           setError(null);
+          setLastUpdated(new Date());
         }
       } catch (err) {
         if (mounted) {
-          console.error("Erro ao buscar logistas:", err);
-          setError("Não foi possível carregar os lojistas.");
+          console.error("Erro ao buscar vendedores:", err);
+          setError("Não foi possível carregar os vendedores.");
         }
       } finally {
         if (mounted) {
@@ -79,33 +54,49 @@ export function DealersList() {
       }
     };
 
-    fetchDealers();
+    fetchSellers();
 
     return () => {
       mounted = false;
     };
   }, []);
 
-  const displayedDealers = useMemo(() => dealers.slice(0, 10), [dealers]);
+  const displayedSellers = useMemo(() => sellers.slice(0, 10), [sellers]);
+  const visibleCount = displayedSellers.length;
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <CardTitle>Lojistas cadastrados</CardTitle>
+    <Card className="w-full overflow-hidden border border-border/70 shadow-sm">
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/40">
+        <div className="space-y-1">
+          <CardTitle className="text-lg font-semibold">
+            Vendedores ativos
+          </CardTitle>
           <CardDescription>
-            Últimos lojistas sincronizados com a plataforma.
+            Lista sincronizada diretamente com o backend de propostas.
           </CardDescription>
+          <p className="text-xs text-muted-foreground">
+            {lastUpdated
+              ? `Atualizado ${lastUpdated.toLocaleTimeString("pt-BR", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}`
+              : "Sincronizando..."}
+          </p>
         </div>
-        <Badge variant="secondary" className="text-xs font-medium">
-          {dealers.length} lojistas
-        </Badge>
+        <div className="flex items-center gap-2">
+          <div className="text-right text-xs text-muted-foreground">
+            Mostrando {visibleCount} de {sellers.length}
+          </div>
+          <StatusBadge status="ativo" className="shadow-none">
+            {sellers.length} vendedores
+          </StatusBadge>
+        </div>
       </CardHeader>
       <CardContent className="p-0">
         {loading ? (
           <div className="flex items-center gap-2 px-6 py-10 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
-            Carregando lojistas...
+            Carregando vendedores...
           </div>
         ) : error ? (
           <div className="px-6 py-6 text-sm text-red-600 dark:text-red-400">
@@ -116,58 +107,53 @@ export function DealersList() {
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-6 py-3 text-left font-medium">Lojista</th>
-                  <th className="px-6 py-3 text-left font-medium">
-                    Contato
-                  </th>
+                  <th className="px-6 py-3 text-left font-medium">Vendedor</th>
+                  <th className="px-6 py-3 text-left font-medium">Contato</th>
                   <th className="px-6 py-3 text-left font-medium">Status</th>
                   <th className="px-6 py-3 text-left font-medium">Cadastro</th>
                 </tr>
               </thead>
               <tbody>
-                {displayedDealers.length === 0 ? (
+                {displayedSellers.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
                       className="px-6 py-10 text-center text-muted-foreground"
                     >
-                      Nenhum lojista cadastrado até o momento.
+                      Nenhum vendedor cadastrado até o momento.
                     </td>
                   </tr>
                 ) : (
-                  displayedDealers.map((dealer) => {
-                    const status =
-                      statusConfig[dealer.status ?? ""] ??
-                      statusConfig.ACTIVE;
-
+                  displayedSellers.map((seller) => {
                     return (
                       <tr
-                        key={dealer.id}
-                        className="border-t border-border/60 text-sm"
+                        key={seller.id}
+                        className={cn(
+                          "border-t border-border/60 text-sm transition-colors",
+                          "hover:bg-muted/40"
+                        )}
                       >
                         <td className="px-6 py-4">
                           <div className="font-medium text-gray-900 dark:text-gray-50">
-                            {dealer.fullName ?? "--"}
+                            {seller.fullName ?? "--"}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {dealer.enterprise ?? "--"}
+                            ID #{seller.id}
                           </p>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900 dark:text-gray-100">
-                            {dealer.email ?? "--"}
+                            {seller.email ?? "--"}
                           </div>
                           <p className="text-xs text-muted-foreground">
-                            {dealer.phone ?? "--"}
+                            {seller.phone ?? "--"}
                           </p>
                         </td>
                         <td className="px-6 py-4">
-                          <Badge className={status.className}>
-                            {status.label}
-                          </Badge>
+                          <StatusBadge status={seller.status} />
                         </td>
                         <td className="px-6 py-4 text-muted-foreground">
-                          {formatDate(dealer.createdAt)}
+                          {formatDate(seller.createdAt)}
                         </td>
                       </tr>
                     );

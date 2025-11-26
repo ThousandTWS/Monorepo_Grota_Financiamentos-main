@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ActivityHeatmap, ConversionFunnel, DealersList, FinancingChart, ForecastChart, MonthlyComparison, QuickStats, RecentActivity, RealtimeBridgePanel, SellersList, StatusDistribution } from "@/presentation/features/painel-geral";
+import { ConversionFunnel, DealersList, FinancingChart, QuickStats, RecentActivity, SellersList, StatusDistribution } from "@/presentation/features/painel-geral";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -37,29 +37,19 @@ export default function Dashboard() {
 
       <QuickStats data-oid="od:e37m" />
 
-      <div className="grid gap-6 lg:grid-cols-3" data-oid="j5wmoo7">
-        <div className="lg:col-span-2" data-oid="-xo.n7c">
+      <div className="grid gap-6" data-oid="j5wmoo7">
+        <div className="w-full" data-oid="-xo.n7c">
           <FinancingChart data-oid="p_3v5hj" />
         </div>
-        <div className="lg:col-span-1" data-oid="kbp25_c">
-          <StatusDistribution data-oid="m7-15fg" />
-        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2" data-oid="hx2pc8v">
-        <ForecastChart data-oid="iv6tzyo" />
-        <MonthlyComparison data-oid="-hl0-j:" />
-      </div>
-
+     
       <div className="grid gap-6 lg:grid-cols-2" data-oid="c0nd6ji">
         <ConversionFunnel data-oid="mt6yc_-" />
-       <RecentActivity data-oid="m.cymte" />
+        <RecentActivity data-oid="m.cymte" />
       </div>
 
-      <ActivityHeatmap data-oid="c34tkjn" />
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <RealtimeBridgePanel />
+      <div className="grid gap-6">
         <DealersList />
       </div>
 

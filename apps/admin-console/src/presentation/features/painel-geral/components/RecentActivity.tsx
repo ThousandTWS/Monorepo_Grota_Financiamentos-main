@@ -14,12 +14,15 @@ import {
   CardTitle,
 } from "@/presentation/layout/components/ui/card";
 import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
+import { Button } from "@/presentation/layout/components/ui/button";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/presentation/layout/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { StatusBadge } from "../../logista/components/status-badge";
+import { Clock3, Filter } from "lucide-react";
 
 interface SellerActivity {
   id: string;
@@ -33,22 +36,32 @@ interface SellerActivity {
 
 const typeConfig = {
   approval: {
-    color: "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400",
-    dotColor: "bg-green-500",
+    label: "Aprovação",
+    badgeClass:
+      "bg-green-500/10 text-green-700 border-green-500/30 dark:bg-green-500/15 dark:text-green-300 dark:border-green-500/40",
+    dotClass: "bg-green-500",
   },
   submission: {
-    color: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-400",
-    dotColor: "bg-blue-500",
+    label: "Envio",
+    badgeClass:
+      "bg-blue-500/10 text-blue-700 border-blue-500/30 dark:bg-blue-500/15 dark:text-blue-300 dark:border-blue-500/40",
+    dotClass: "bg-blue-500",
   },
   rejection: {
-    color: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
-    dotColor: "bg-red-500",
+    label: "Rejeição",
+    badgeClass:
+      "bg-red-500/10 text-red-700 border-red-500/30 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40",
+    dotClass: "bg-red-500",
   },
   update: {
-    color: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
-    dotColor: "bg-amber-500",
+    label: "Atualização",
+    badgeClass:
+      "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40",
+    dotClass: "bg-amber-500",
   },
-};
+} as const;
+
+type ActivityStatus = keyof typeof typeConfig;
 
 const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const SALES_CHANNEL = REALTIME_CHANNELS.NOTIFICATIONS;
@@ -90,6 +103,7 @@ const deriveInitials = (name: string) => {
 export function RecentActivity() {
   const [activities, setActivities] = useState<SellerActivity[]>([]);
   const [sellersIndex, setSellersIndex] = useState<Record<number, Seller>>({});
+  const [statusFilter, setStatusFilter] = useState<keyof typeof typeConfig | "all">("all");
 
   const { messages } = useRealtimeChannel({
     channel: SALES_CHANNEL,
@@ -148,7 +162,7 @@ export function RecentActivity() {
   }, [lastMessage]);
 
   const displayedActivities = useMemo(() => {
-    return activities.map((activity) => {
+    const withSeller = activities.map((activity) => {
       const seller = sellersIndex[activity.sellerId];
       return {
         ...activity,
@@ -158,78 +172,144 @@ export function RecentActivity() {
           : deriveInitials(activity.sellerName),
       };
     });
-  }, [activities, sellersIndex]);
+
+    if (statusFilter === "all") return withSeller;
+    return withSeller.filter((item) => item.status === statusFilter);
+  }, [activities, sellersIndex, statusFilter]);
+
+  const filterOptions = useMemo(() => ["all"] as const, []);
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <CardTitle>Atividades recentes</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Eventos disparados pelos vendedores em tempo real.
-          </p>
+      <CardHeader className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2">
+              <Filter className="h-4 w-4 text-muted-foreground" />
+              Atividades recentes
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Eventos disparados pelos vendedores em tempo real.
+            </p>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Em tempo real
+              </span>
+              <span>·</span>
+              <span>{activities.length} eventos</span>
+              <span>·</span>
+              <span>
+                {new Set(activities.map((a) => a.sellerId)).size} vendedores
+              </span>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock3 className="h-4 w-4" />
+            <span>
+              Atualizado{" "}
+              {activities[0]
+                ? formatTimeDistance(activities[0].timestamp)
+                : "agora"}
+            </span>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          {filterOptions.map((key) => {
+            const isActive = statusFilter === key;
+            const label =
+              key === "all" ? "Todos" : typeConfig[key as ActivityStatus]?.label;
+            const count =
+              key === "all"
+                ? activities.length
+                : activities.filter((a) => a.status === key).length;
+
+            return (
+              <Button
+                key={key}
+                variant={isActive ? "secondary" : "ghost"}
+                size="sm"
+                className="h-9 px-3 text-xs"
+                onClick={() =>
+                  setStatusFilter(key === "all" ? "all" : (key as ActivityStatus))
+                }
+              >
+                <StatusBadge
+                  className={cn(
+                    "shadow-none px-2 py-0.5 text-[10px]",
+                    key !== "all" ? typeConfig[key as ActivityStatus]?.badgeClass : "",
+                  )}
+                >
+                  {label}
+                </StatusBadge>
+                <span className="ml-2">{count}</span>
+              </Button>
+            );
+          })}
         </div>
       </CardHeader>
       <CardContent>
         <ScrollArea className="h-[400px] pr-4">
           <div className="space-y-4">
-            {displayedActivities.map((activity) => (
-              <div
-                key={activity.id}
-                className="flex items-start gap-4 border-b pb-4 last:border-b-0 last:pb-0"
-              >
-                <div className="relative" data-oid="gw2lcdv">
-                  <Avatar className="h-10 w-10" data-oid="sltmbg6">
-                    <AvatarImage
-                      src={undefined}
-                      data-oid="x_qi9g6"
-                    />
-
-                    <AvatarFallback
-                      className="text-xs font-semibold"
-                      data-oid="2vgmd4:"
-                    >
-                      {activity.sellerInitials}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div
-                    className={cn(
-                      "absolute -bottom-1 -right-1 h-3 w-3 rounded-full border-2 border-white dark:border-gray-950",
-                      typeConfig[activity.status]?.dotColor ??
-                        typeConfig.update.dotColor,
-                    )}
-                    data-oid="dssn6nd"
-                  />
-                </div>
-                <div className="flex-1 space-y-1 min-w-0" data-oid="n4.e553">
-                  <p className="text-sm leading-none" data-oid="dhvzc23">
-                    <span className="font-semibold" data-oid="y4pvo__">
-                      {activity.sellerName}
-                    </span>{" "}
-                    <span className="text-muted-foreground" data-oid="d9hse.-">
-                      {activity.action}
-                    </span>
-                  </p>
-                  <p
-                    className="text-sm font-medium text-foreground truncate"
-                    data-oid="lejhwou"
-                  >
-                    {activity.target}
-                  </p>
-                  <p
-                    className="text-xs text-muted-foreground"
-                    data-oid="y3.doak"
-                  >
-                    {formatTimeDistance(activity.timestamp)}
-                  </p>
-                </div>
-              </div>
-            ))}
             {displayedActivities.length === 0 ? (
               <div className="flex h-40 flex-col items-center justify-center text-sm text-muted-foreground">
                 Nenhuma atividade registrada até o momento.
               </div>
-            ) : null}
+            ) : (
+              displayedActivities.map((activity) => {
+                const dot =
+                  typeConfig[activity.status]?.dotClass ??
+                  typeConfig.update.dotClass;
+
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-3 shadow-sm transition-colors hover:border-border hover:bg-card"
+                  >
+                    <div className="relative">
+                      <Avatar className="h-10 w-10 ring-2 ring-border/60">
+                        <AvatarImage src={undefined} />
+                        <AvatarFallback className="text-xs font-semibold">
+                          {activity.sellerInitials}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span
+                        className={cn(
+                          "absolute -bottom-1 -right-1 h-2.5 w-2.5 rounded-full border-2 border-background",
+                          dot,
+                        )}
+                      />
+                    </div>
+
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm leading-none">
+                          <span className="font-semibold">{activity.sellerName}</span>{" "}
+                          <span className="text-muted-foreground">{activity.action}</span>
+                        </p>
+                        <span className="text-[11px] text-muted-foreground whitespace-nowrap">
+                          {formatTimeDistance(activity.timestamp)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge
+                          className={cn(
+                            "inline-flex text-[11px] font-semibold px-2.5 py-1 border shadow-none",
+                            typeConfig[activity.status]?.badgeClass,
+                          )}
+                        >
+                          {typeConfig[activity.status]?.label}
+                        </StatusBadge>
+                        <span className="text-xs text-muted-foreground truncate">
+                          {activity.target}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </ScrollArea>
       </CardContent>
