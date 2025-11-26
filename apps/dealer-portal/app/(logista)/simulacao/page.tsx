@@ -1,13 +1,7 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-  REALTIME_CHANNELS,
-  REALTIME_EVENT_TYPES,
-  dispatchBridgeEvent,
-  useRealtimeChannel,
-} from "@grota/realtime-client";
 import { Loader2, CheckCircle2, FileText, UserCircle2, Info, Search, Plus, Coins, Trash2 } from "lucide-react";
 import { GiCarKey, GiReceiveMoney } from "react-icons/gi";
 import {
@@ -30,11 +24,6 @@ import {
   SelectValue,
 } from "@/presentation/ui/select";
 import { Separator } from "@/presentation/ui/separator";
-import {
-  CreateProposalPayload,
-  Proposal,
-} from "@/application/core/@types/Proposals/Proposal";
-import { createProposal } from "@/application/services/Proposals/proposalService";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,9 +31,7 @@ import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskC
 import { Controller } from "react-hook-form";
 import { formatName, formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 import clsx from "clsx";
-
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
-const LOGISTA_SIMULATOR_ID = "logista-simulador";
+import { ConfirmationDialog } from "./components/ConfirmationDialog";
 
 const simulateProposalSchema = z.object({
   cpf: z.string().length(14, "CPF inválido"),
@@ -84,7 +71,7 @@ const simulateProposalSchema = z.object({
 
 export type SimulateProposalFormData = z.infer<typeof simulateProposalSchema>;
 
-interface ExtraProps {
+export interface ExtraProps {
   value: string;
   role: string;
 }
@@ -92,18 +79,18 @@ interface ExtraProps {
 export default function SimulacaoPage() {
   const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
   const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [extra, setExtra] = useState<ExtraProps[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
-  const [lastProposal, setLastProposal] = useState<Proposal | null>(null);
+  const [resumeProposal, setResumeProposal] = useState<SimulateProposalFormData | null>(null);
+  const [confirmationDialogIsOpen, setConfirmationDialogIsOpen] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
-    reset,
+    formState: { errors },
     setValue,
     control,
+    reset,
     watch,
     getValues
   } = useForm<SimulateProposalFormData>({
@@ -139,22 +126,6 @@ export default function SimulacaoPage() {
 
   const noHavePlate = !watch("vehiclePlate");
 
-  const { sendMessage } = useRealtimeChannel({
-    channel: REALTIME_CHANNELS.PROPOSALS,
-    identity: LOGISTA_SIMULATOR_ID,
-    url: REALTIME_URL,
-  });
-
-  const emitRealtimeEvent = useCallback(
-    (event: string, payload?: Record<string, unknown>) => {
-      dispatchBridgeEvent(sendMessage, event, {
-        source: LOGISTA_SIMULATOR_ID,
-        ...(payload ?? {}),
-      });
-    },
-    [sendMessage],
-  );
-
   const handleCPFLookup = async (cpfMasked: string) => {
     if(!cpfMasked) return;
 
@@ -170,8 +141,6 @@ export default function SimulacaoPage() {
 
       const data = await response.json();
       const pessoa = data?.data.response.content;
-
-      console.log(data);
 
       if(pessoa) {
         setValue("fullname", formatName(pessoa.nome.conteudo.nome) || "");
@@ -239,44 +208,8 @@ export default function SimulacaoPage() {
 
 
   const onSubmit = async (data: SimulateProposalFormData) => {
-    setIsSubmitting(true);
-    try {
-      const payload: CreateProposalPayload = {
-        customerCpf: data.cpf,
-        customerName: data.fullname,
-        customerBirthDate: data.birthday,
-        customerEmail: data.email,
-        customerPhone: data.phone,
-        hasCnh: data.haveCNH,
-        cnhCategory: data.categoryCNH || "",
-        vehiclePlate: data.vehiclePlate,
-        vehicleBrand: data.vehicleBrand,
-        vehicleModel: data.vehicleModel,
-        vehicleYear: Number(data.vehicleYear),
-        fipeCode: data.codeFIPE,
-        fipeValue: parseBRL(data.priceFIPE),
-        downPaymentValue: parseBRL(data.entryPrice),
-        financedValue: parseBRL(data.financedPrice),
-        notes: data.details
-      };
-
-      const proposal = await createProposal(payload);
-      // setLastProposal(proposal);
-      toast.success("Ficha enviada para a esteira da Grota.");
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-      });
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
-        reason: "logista-simulator-created",
-      });
-    } catch (error) {
-      console.error("[Simulacao] Falha ao enviar proposta", error);
-      toast.error(
-        "Não conseguimos enviar a ficha agora. Tente novamente em instantes.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
+    setResumeProposal(data);
+    setConfirmationDialogIsOpen(true);
   };
 
   useEffect(() => {
@@ -306,7 +239,8 @@ export default function SimulacaoPage() {
   }, [watch("priceFIPE"), watch("entryPrice")]);
 
   return (
-    <div className="space-y-6">
+    <Fragment>
+      <div className="space-y-6">
       <div>
         <p className="text-sm font-semibold text-brand-500 flex items-center gap-2">
           <FileText className="size-4" />
@@ -320,9 +254,7 @@ export default function SimulacaoPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit, (err) => {
-    console.log("TEM ERRO NO FORM", err);
-  })} className="grid gap-6 lg:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-2">
         <div className="space-y-6">
           <Card>
             <CardHeader>
@@ -857,6 +789,7 @@ export default function SimulacaoPage() {
                     id="financedPrice"
                     type="text"
                     placeholder="R$80.980"
+                    disabled={isCalculating}
                     {...register("financedPrice")}
                     onChange={
                       (e) => {
@@ -900,13 +833,8 @@ export default function SimulacaoPage() {
               <Button
                 type="submit"
                 className="w-full gap-2"
-                disabled={isSubmitting}
               >
-                {isSubmitting ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="size-4" />
-                )}
+                <CheckCircle2 className="size-4" />
                 Enviar ficha para a esteira
               </Button>
             </CardContent>
@@ -914,98 +842,15 @@ export default function SimulacaoPage() {
         </div>
       </form>
     </div>
+
+    <ConfirmationDialog
+      isOpen={confirmationDialogIsOpen}
+      onOpenChange={setConfirmationDialogIsOpen}
+      resumeProposal={resumeProposal}
+      setResumeProposal={setResumeProposal}
+      resetForm={reset}
+      resetExtra={setExtra}
+    />
+    </Fragment>
   );
 }
-
-          // <Card className="h-fit">
-          //   <CardHeader>
-          //     <CardTitle>Resumo da simulação</CardTitle>
-          //     <CardDescription>
-          //       Validamos automaticamente se o valor solicitado cabe na FIPE.
-          //     </CardDescription>
-          //   </CardHeader>
-          //   <CardContent className="space-y-4 text-sm">
-          //     <div className="space-y-1">
-          //       <p className="text-xs text-muted-foreground">Cliente</p>
-          //       <p className="font-semibold text-gray-900 dark:text-gray-50">
-          //         {watch("fullname") || "—"}
-          //       </p>
-          //       <p className="text-xs text-muted-foreground">
-          //         {watch("cpf") || "CPF em branco"}
-          //       </p>
-          //     </div>
-          //     <Separator />
-          //     <div className="space-y-1">
-          //       <p className="text-xs text-muted-foreground">Veículo</p>
-          //       <p className="font-semibold">
-          //         {watch("vehicleBrand") || "—"} {watch("vehicleModel")}
-          //       </p>
-          //       <p className="text-xs text-muted-foreground">
-          //         Ano {watch("vehicleYear") || "—"} • Placa{" "}
-          //         {watch("vehiclePlate") || "—"}
-          //       </p>
-          //     </div>
-          //     <Separator />
-          //     <div className="space-y-2">
-          //       <div className="flex justify-between text-muted-foreground">
-          //         <span>Valor FIPE</span>
-          //         <span className="font-semibold text-gray-900 dark:text-gray-50">
-          //           {watch("priceFIPE") || "—"}
-          //         </span>
-          //       </div>
-          //       <div className="flex justify-between text-muted-foreground">
-          //         <span>Entrada</span>
-          //         <span className="font-semibold text-gray-900 dark:text-gray-50">
-          //           {watch("entryPrice") || "—"}
-          //         </span>
-          //       </div>
-          //       <div className="flex justify-between text-muted-foreground">
-          //         <span>Valor financiado</span>
-          //         <span className="font-semibold text-gray-900 dark:text-gray-50">
-          //           {watch("financedPrice") || "—"}
-          //         </span>
-          //       </div>
-          //       <p className={`text-xs font-semibold`}>
-          //         {/* {summary.statusLabel} */}
-          //         <span className="block text-muted-foreground">
-          //           Diferença: {formatNumberToBRL(parseBRL(watch("financedPrice")) - parseBRL(watch("entryPrice")))}
-          //         </span>
-          //       </p>
-          //     </div>
-          //   </CardContent>
-          // </Card>
-
-          // {lastProposal ? (
-          //   <Card className="border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/40 dark:bg-emerald-950/30">
-          //     <CardHeader>
-          //       <CardTitle className="text-emerald-700 dark:text-emerald-200 text-base">
-          //         Última ficha enviada
-          //       </CardTitle>
-          //       <CardDescription>
-          //         #{lastProposal.id} • {lastProposal.customerName} ({lastProposal.status})
-          //       </CardDescription>
-          //     </CardHeader>
-          //     <CardContent className="text-sm text-emerald-900 dark:text-emerald-100 space-y-1">
-          //       <p>
-          //         CPF: <span className="font-semibold">{lastProposal.customerCpf}</span>
-          //       </p>
-          //       <p>
-          //         Veículo:{" "}
-          //         <span className="font-semibold">
-          //           {lastProposal.vehicleBrand} {lastProposal.vehicleModel} •{" "}
-          //           {lastProposal.vehicleYear}
-          //         </span>
-          //       </p>
-          //       <p>
-          //         Valor financiado:{" "}
-          //         <span className="font-semibold">
-          //           {currency.format(lastProposal.financedValue)}
-          //         </span>
-          //       </p>
-          //       <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80">
-          //         Status inicial: {lastProposal.status}. Acompanhe os andamentos na
-          //         esteira de propostas.
-          //       </p>
-          //     </CardContent>
-          //   </Card>
-          // ) : null}
