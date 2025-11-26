@@ -41,3 +41,11 @@ export function formatName(nome: string): string {
     )
     .join(" ");
 }
+
+export function formatDateISO(data: string): string {
+  if (!data) return "";
+
+  const [dia, mes, ano] = data.split("/");
+
+  return `${ano}-${mes}-${dia}`;
+}
