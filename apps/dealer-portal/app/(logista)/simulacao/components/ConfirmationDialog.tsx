@@ -5,8 +5,8 @@ import { Separator } from "@/presentation/ui/separator"
 import { ExtraProps, SimulateProposalFormData } from "../page";
 import { Button } from "@/presentation/ui/button";
 import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
-import { unmaskCPF } from "@/lib/masks";
-import { formatDateISO, parseBRL } from "@/lib/formatters";
+import { unmaskCPF } from "@/application/core/utils/masks";
+import { formatDateISO, parseBRL } from "@/application/core/utils/formatters";
 import { createProposal } from "@/application/services/Proposals/proposalService";
 import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import {

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/presentation/layout/components/ui/select";
 import { Clock3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { StatusBadge } from "../../logista/components/status-badge";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
@@ -26,30 +26,11 @@ type ProposalsTableProps = {
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
 };
 
-const statusStyles: Record<
-  ProposalStatus,
-  { wrapper: string; text: string; label: string }
-> = {
-  SUBMITTED: {
-    wrapper: "bg-sky-100 border-l-4 border-sky-500",
-    text: "text-sky-700",
-    label: "Enviada",
-  },
-  PENDING: {
-    wrapper: "bg-amber-100 border-l-4 border-amber-500",
-    text: "text-amber-700",
-    label: "Pendente",
-  },
-  APPROVED: {
-    wrapper: "bg-emerald-100 border-l-4 border-emerald-500",
-    text: "text-emerald-700",
-    label: "Aprovada",
-  },
-  REJECTED: {
-    wrapper: "bg-red-100 border-l-4 border-red-500",
-    text: "text-red-700",
-    label: "Recusada",
-  },
+const proposalStatusLabels: Record<ProposalStatus, string> = {
+  SUBMITTED: "Enviada",
+  PENDING: "Pendente",
+  APPROVED: "Aprovada",
+  REJECTED: "Recusada",
 };
 
 const statusOptions: ProposalStatus[] = [
@@ -113,8 +94,6 @@ export function ProposalsTable({
                   </TableRow>
                 ))
               : proposals.map((proposal) => {
-                  const statusStyle = statusStyles[proposal.status];
-
                   return (
                     <TableRow key={proposal.id} className="align-top" data-oid="data-row">
                       <TableCell className="pt-5">
@@ -171,17 +150,14 @@ export function ProposalsTable({
                         </div>
                       </TableCell>
                       <TableCell className="pt-5 space-y-2">
-                        <div
-                          className={cn(
-                            "space-y-1 rounded-md px-3 py-2 text-sm",
-                            statusStyle.wrapper,
-                            statusStyle.text,
-                          )}
-                        >
-                          <p className="font-semibold">
-                            {statusStyle.label}
-                          </p>
-                          <p className="text-xs">
+                        <div className="space-y-2 rounded-md border px-3 py-2 text-sm">
+                          <StatusBadge
+                            status={proposal.status}
+                            className="shadow-none px-2.5 py-1 text-[11px]"
+                          >
+                            {proposalStatusLabels[proposal.status]}
+                          </StatusBadge>
+                          <p className="text-xs text-muted-foreground">
                             Atualizado em {formatDateTime(proposal.updatedAt)}
                           </p>
                           <p className="text-xs font-semibold uppercase">
@@ -201,7 +177,7 @@ export function ProposalsTable({
                           <SelectContent>
                             {statusOptions.map((status) => (
                               <SelectItem key={status} value={status}>
-                                {statusStyles[status].label}
+                                {proposalStatusLabels[status]}
                               </SelectItem>
                             ))}
                           </SelectContent>

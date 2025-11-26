@@ -238,6 +238,7 @@ export default function EsteiraDePropostasFeature() {
       value: item.value,
       total: overallTotal,
       color: statusConfig[item.key].bulletColor,
+      status: item.key,
     }));
 
     return {
