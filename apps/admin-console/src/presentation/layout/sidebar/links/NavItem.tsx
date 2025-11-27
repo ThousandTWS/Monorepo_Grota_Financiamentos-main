@@ -48,4 +48,16 @@ export const navItems: NavItem[] = [
     ],
     
   },
+  {
+    name: "Gestão de Gestores",
+    icon: <Users />,
+    subItems: [
+      { 
+        name: "Gestores",
+         path: "/gestores", 
+         pro: false 
+      }, 
+    ],
+    
+  },
 ];

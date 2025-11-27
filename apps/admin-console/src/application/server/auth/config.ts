@@ -5,7 +5,7 @@ const DEFAULT_API_BASE_URL =
   process.env.ADMIN_API_BASE_URL ??
   process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL ??
   process.env.NEXT_PUBLIC_URL_API ??
-  "http://localhost:8080/api/v1/grota-financiamentos";
+  "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos";
 
 export const ADMIN_SESSION_COOKIE = "grota.admin.session";
 export const ADMIN_SESSION_SCOPE: SessionScope = "admin";
