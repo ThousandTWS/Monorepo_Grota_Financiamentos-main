@@ -19,7 +19,7 @@ export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
 export interface DocumentRecord {
   id: number;
   documentType: DocumentType;
-  contentType: string | null;
+  contentType?: string | null;
   sizeBytes: number;
   reviewStatus: ReviewStatus;
   reviewComment?: string | null;

@@ -4,20 +4,20 @@ import { getLogistaSession, unauthorizedResponse } from "../../../_lib/session";
 
 const API_BASE_URL = getLogistaApiBaseUrl();
 
-type RouteParams = {
-  params: {
+type RouteContext = {
+  params: Promise<{
     id?: string;
-  };
+  }>;
 };
 
-export async function GET(_request: NextRequest, { params }: RouteParams) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const session = await getLogistaSession();
     if (!session) {
       return unauthorizedResponse();
     }
 
-    const documentId = params.id;
+    const { id: documentId } = await context.params;
     if (!documentId) {
       return NextResponse.json(
         { error: "Documento não informado." },

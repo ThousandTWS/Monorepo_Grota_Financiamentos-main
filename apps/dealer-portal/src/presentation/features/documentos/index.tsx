@@ -195,31 +195,31 @@ const formatDateTime = (value?: string | null) => {
   });
 };
 
-const describeRealtimeEvent = (
-  event: string,
-  payload: Record<string, unknown> | null,
-) => {
-  switch (event) {
-    case REALTIME_EVENT_TYPES.DOCUMENT_UPLOADED:
-      return `Novo documento: ${
-        documentTypeConfig[
-          (payload?.document as DocumentRecord | undefined)?.documentType ??
-            "RG_FRENTE"
-        ]?.label ?? "Documento"
-      }`;
-    case REALTIME_EVENT_TYPES.DOCUMENT_REVIEW_UPDATED:
-      return `Status atualizado para ${
-        statusCopy[
-          (payload?.document as DocumentRecord | undefined)?.reviewStatus ??
-            "PENDENTE"
-        ]?.label ?? "Revisão"
-      }`;
-    case REALTIME_EVENT_TYPES.DOCUMENTS_REFRESH_REQUEST:
-      return "Sincronização solicitada pelo backoffice";
-    default:
-      return event;
-  }
-};
+  const describeRealtimeEvent = (
+    event: string,
+    payload: unknown,
+  ) => {
+    const typedPayload = (payload ?? null) as
+      | { document?: DocumentRecord }
+      | null;
+    switch (event) {
+      case REALTIME_EVENT_TYPES.DOCUMENT_UPLOADED:
+        return `Novo documento: ${
+          documentTypeConfig[
+            typedPayload?.document?.documentType ?? "RG_FRENTE"
+          ]?.label ?? "Documento"
+        }`;
+      case REALTIME_EVENT_TYPES.DOCUMENT_REVIEW_UPDATED:
+        return `Status atualizado para ${
+          statusCopy[typedPayload?.document?.reviewStatus ?? "PENDENTE"]
+            ?.label ?? "Revisão"
+        }`;
+      case REALTIME_EVENT_TYPES.DOCUMENTS_REFRESH_REQUEST:
+        return "Sincronização solicitada pelo backoffice";
+      default:
+        return event;
+    }
+  };
 
 export function DocumentosFeature() {
   const [documents, setDocuments] = useState<DocumentRecord[]>([]);
@@ -405,21 +405,28 @@ export function DocumentosFeature() {
     };
   }, [documents]);
 
+  const allowedRealtimeEvents = useMemo(
+    () =>
+      new Set<string>([
+        REALTIME_EVENT_TYPES.DOCUMENT_UPLOADED,
+        REALTIME_EVENT_TYPES.DOCUMENT_REVIEW_UPDATED,
+        REALTIME_EVENT_TYPES.DOCUMENTS_REFRESH_REQUEST,
+      ]),
+    [],
+  );
+
   const recentRealtimeEvents = useMemo(() => {
     return messages
       .map((message) => parseBridgeEvent(message))
       .filter(
-        (event) =>
-          event &&
-          [
-            REALTIME_EVENT_TYPES.DOCUMENT_UPLOADED,
-            REALTIME_EVENT_TYPES.DOCUMENT_REVIEW_UPDATED,
-            REALTIME_EVENT_TYPES.DOCUMENTS_REFRESH_REQUEST,
-          ].includes(event.event),
+        (
+          event,
+        ): event is NonNullable<ReturnType<typeof parseBridgeEvent>> =>
+          !!event && allowedRealtimeEvents.has(event.event),
       )
       .slice(-6)
       .reverse();
-  }, [messages]);
+  }, [allowedRealtimeEvents, messages]);
 
   return (
     <div className="space-y-6">

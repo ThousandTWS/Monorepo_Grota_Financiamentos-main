@@ -4,20 +4,20 @@ import { getAdminSession, unauthorizedResponse } from "../../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
-type Params = {
-  params: {
+type RouteContext = {
+  params: Promise<{
     id?: string;
-  };
+  }>;
 };
 
-export async function GET(_request: NextRequest, { params }: Params) {
+export async function GET(_request: NextRequest, context: RouteContext) {
   try {
     const session = await getAdminSession();
     if (!session) {
       return unauthorizedResponse();
     }
 
-    const documentId = params.id;
+    const { id: documentId } = await context.params;
     if (!documentId) {
       return NextResponse.json(
         { error: "Documento não informado." },

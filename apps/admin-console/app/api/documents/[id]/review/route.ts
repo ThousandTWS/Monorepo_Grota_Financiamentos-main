@@ -10,20 +10,20 @@ const bodySchema = z.object({
   reviewComment: z.string().optional(),
 });
 
-type Params = {
-  params: {
+type RouteContext = {
+  params: Promise<{
     id?: string;
-  };
+  }>;
 };
 
-export async function PUT(request: NextRequest, { params }: Params) {
+export async function PUT(request: NextRequest, context: RouteContext) {
   try {
     const session = await getAdminSession();
     if (!session) {
       return unauthorizedResponse();
     }
 
-    const documentId = params.id;
+    const { id: documentId } = await context.params;
     if (!documentId) {
       return NextResponse.json(
         { error: "Documento não informado." },
