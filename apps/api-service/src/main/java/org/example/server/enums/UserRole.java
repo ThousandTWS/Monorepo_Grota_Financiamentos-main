@@ -6,7 +6,8 @@ public enum UserRole implements GrantedAuthority {
     ADMIN,
     LOJISTA,
     VENDEDOR,
-    GESTOR;
+    GESTOR,
+    OPERADOR;
 
     @Override
     public String getAuthority() {
