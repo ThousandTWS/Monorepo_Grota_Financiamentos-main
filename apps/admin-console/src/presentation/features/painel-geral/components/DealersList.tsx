@@ -137,9 +137,12 @@ export function DealersList() {
                           <div className="font-medium text-gray-900 dark:text-gray-50">
                             {seller.fullName ?? "--"}
                           </div>
-                          <p className="text-xs text-muted-foreground">
+                          {/*
+                           <p className="text-xs text-muted-foreground">
                             ID #{seller.id}
                           </p>
+                          */}
+                         
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900 dark:text-gray-100">

@@ -1,20 +1,51 @@
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { Car, ChartBar, Users } from "lucide-react";
+import { Car, ChartBar, Users, UserSquare } from "lucide-react";
 
 export const navItems: NavItem[] = [
   {
     icon: <ChartBar />,
     name: "Painel Administrativo",
-    subItems: [{ name: "Visao Geral", path: "/visao-geral", pro: false },],
+    subItems: [
+      { 
+        name: "Visao Geral", 
+        path: "/visao-geral", 
+        pro: false 
+      },
+    ],
+  },
+   {
+    icon: <ChartBar />,
+    name: "Gestão de Propostas",
+    subItems: [
+      { 
+        name: "Esteira de Propostas", 
+        path: "/esteira-de-propostas", 
+        pro: false 
+      },
+    ],
   },
   {
-    name: "Veículos",
-    icon: <Car/>,
-    subItems: [{ name: "Gestão de Veículos", path: "/gestao-de-veiculos", pro: false }],
+    icon: <UserSquare />,
+    name: "Gestão de Vendedores",
+    subItems: [
+      { 
+        name: "Cadastrar Vendedor",
+        path: "/operadores", 
+        pro: false
+       },
+    ],
   },
+
   {
-    name: "Logistas",
+    name: "Gestão de Logistas",
     icon: <Users />,
-    subItems: [{ name: "Gestão de Logistas", path: "/logistas", pro: false }, { name: "Gestão de Documentos", path: "/gestao-documentos", pro: false }, { name: "Gestão de Propostas", path: "/esteira-de-propostas", pro: false }],
+    subItems: [
+      { 
+        name: "Logistas",
+         path: "/logistas", 
+         pro: false 
+      }, 
+    ],
+    
   },
 ];

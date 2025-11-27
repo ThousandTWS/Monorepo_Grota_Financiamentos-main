@@ -16,17 +16,7 @@ export const navItems: NavItem[] = [
       { name: "Simulador", path: "/simulacao", pro: false },
     ],
   },
-  {
-    name: "Documentos",
-    icon: <FileText />,
-    subItems: [
-      {
-        name: "Upload de Documentos",
-        path: "/documentos",
-        pro: false,
-      },
-    ],
-  },
+ 
   {
     name: "Gestão de Propostas",
     icon: <Calculator />,

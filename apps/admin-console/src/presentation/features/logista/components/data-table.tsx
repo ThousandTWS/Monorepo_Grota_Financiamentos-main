@@ -11,7 +11,7 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Plus, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -89,11 +89,6 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     setDeleteDialogOpen(true);
   };
 
-  const handleCreate = () => {
-    setSelectedLogista(null);
-    setDialogMode("create");
-    setDialogOpen(true);
-  };
 
   const handleSave = (logista: Logista) => {
     if (dialogMode === "create") {
@@ -196,10 +191,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
             </Select>
           </div>
 
-          <Button onClick={handleCreate} data-oid="5hrtjys">
-            <Plus className="size-4" data-oid="5-c5wp5" />
-            Novo Logista
-          </Button>
+        
         </div>
 
         {/* Tabela */}
