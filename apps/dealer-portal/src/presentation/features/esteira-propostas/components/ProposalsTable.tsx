@@ -10,37 +10,18 @@ import {
 import { ScrollArea } from "@/presentation/ui/scroll-area";
 import { Skeleton } from "@/presentation/ui/skeleton";
 import { Clock3 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { StatusBadge } from "./status-badge";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
   isLoading?: boolean;
 };
 
-const statusStyles: Record<
-  ProposalStatus,
-  { wrapper: string; text: string; label: string }
-> = {
-  SUBMITTED: {
-    wrapper: "bg-sky-100 border-l-4 border-sky-500",
-    text: "text-sky-700",
-    label: "Enviada",
-  },
-  PENDING: {
-    wrapper: "bg-amber-100 border-l-4 border-amber-500",
-    text: "text-amber-700",
-    label: "Pendente",
-  },
-  APPROVED: {
-    wrapper: "bg-emerald-100 border-l-4 border-emerald-500",
-    text: "text-emerald-700",
-    label: "Aprovada",
-  },
-  REJECTED: {
-    wrapper: "bg-red-100 border-l-4 border-red-500",
-    text: "text-red-700",
-    label: "Recusada",
-  },
+const statusLabels: Record<ProposalStatus, string> = {
+  SUBMITTED: "Enviada",
+  PENDING: "Pendente",
+  APPROVED: "Aprovada",
+  REJECTED: "Recusada",
 };
 
 const formatCurrency = (value: number) =>
@@ -100,8 +81,6 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                   </TableRow>
                 ))
               : proposals.map((proposal) => {
-                  const statusStyle = statusStyles[proposal.status];
-
                   return (
                     <TableRow key={proposal.id} className="align-top">
                       <TableCell className="pt-5">
@@ -162,16 +141,13 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
-                        <div
-                          className={cn(
-                            "space-y-1 rounded-md px-3 py-2 text-sm",
-                            statusStyle.wrapper,
-                            statusStyle.text,
-                          )}
-                        >
-                          <p className="font-semibold">
-                            {statusStyle.label}
-                          </p>
+                        <div className="space-y-2 rounded-md border px-3 py-2 text-sm">
+                          <StatusBadge
+                            status={proposal.status}
+                            className="shadow-none px-2.5 py-1 text-[11px]"
+                          >
+                            {statusLabels[proposal.status]}
+                          </StatusBadge>
                           <p className="text-xs">
                             Atualizado em {formatDateTime(proposal.updatedAt)}
                           </p>

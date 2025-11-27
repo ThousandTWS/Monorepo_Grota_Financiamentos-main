@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ConversionFunnel, DealersList, FinancingChart, QuickStats, RecentActivity, SellersList, StatusDistribution } from "@/presentation/features/painel-geral";
+import { ConversionFunnel, DealersList, FinancingChart, QuickStats, RecentActivity, SellersList } from "@/presentation/features/painel-geral";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 
 export default function Dashboard() {

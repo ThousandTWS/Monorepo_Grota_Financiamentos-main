@@ -1,6 +1,6 @@
 
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { Calculator, ChartBar } from "lucide-react";
+import { Calculator, ChartBar, FileText } from "lucide-react";
 
 export const navItems: NavItem[] = [
   {
@@ -16,6 +16,7 @@ export const navItems: NavItem[] = [
       { name: "Simulador", path: "/simulacao", pro: false },
     ],
   },
+ 
   {
     name: "Gestão de Propostas",
     icon: <Calculator />,

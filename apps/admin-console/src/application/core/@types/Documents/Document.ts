@@ -1,39 +1,28 @@
-export type DocumentStatus = "pending" | "approved" | "rejected" | "in_review";
+export const DOCUMENT_TYPES = [
+  "RG_FRENTE",
+  "RG_VERSO",
+  "CPF",
+  "CNH",
+  "EXTRATO_BANCARIO",
+  "HOLERITE",
+  "CONTRATO_SOCIAL",
+  "ULTIMA_ALTERACAO_CONTRATUAL",
+  "COMPROVANTE_DE_ENDERECO",
+  "DADOS_BANCARIOS",
+] as const;
 
-export type DocumentType =
-  | "rg"
-  | "cpf"
-  | "cnh"
-  | "comprovante_residencia"
-  | "comprovante_renda"
-  | "crlv"
-  | "contrato"
-  | "outros";
+export const REVIEW_STATUSES = ["PENDENTE", "APROVADO", "REPROVADO"] as const;
 
-export interface Document {
-  id: string;
-  proposalId: string;
-  clientName: string;
-  clientCpf: string;
+export type DocumentType = (typeof DOCUMENT_TYPES)[number];
+export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
+
+export interface DocumentRecord {
+  id: number;
   documentType: DocumentType;
-  fileName: string;
-  fileSize: number;
-  uploadDate: string;
-  status: DocumentStatus;
-  reviewedBy?: string;
-  reviewedAt?: string;
-  comments?: string;
-  priority: "low" | "medium" | "high";
-  daysWaiting: number;
-}
-
-export interface DocumentFilters {
-  status?: DocumentStatus[];
-  documentType?: DocumentType[];
-  dateRange?: {
-    start: string;
-    end: string;
-  };
-  search?: string;
-  priority?: ("low" | "medium" | "high")[];
+  contentType?: string | null;
+  sizeBytes: number;
+  reviewStatus: ReviewStatus;
+  reviewComment?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
 }

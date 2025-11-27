@@ -351,6 +351,8 @@ export default function Page() {
         </div>
         <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-5">
+            
+            {/* Bloco Painel Executivo */}
             <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">
               <Badge className="bg-white/15 text-white uppercase tracking-[0.35em]">
                 Painel executivo
@@ -359,14 +361,18 @@ export default function Page() {
                 {lastUpdateLabel} • {timeframeLabel}
               </span>
             </div>
+            {/* Bloco Painel Executivo */}
+
             <h1 className="text-3xl font-semibold leading-tight lg:text-4xl">
               Governança e performance dos lojistas Grota em tempo real.
             </h1>
+
             <p className="max-w-2xl text-base text-white/80">
               Consolide aprovações, carteira ativa e conformidade em um único
               cockpit. Indicadores reconciliados a cada 30 minutos com o core
               Daycoval e prontos para o comitê executivo.
             </p>
+
             <div className="flex flex-wrap gap-2">
               {timeframeFilters.map((filter) => {
                 const isActive = filter.value === activeTimeframe;
@@ -388,6 +394,7 @@ export default function Page() {
                 );
               })}
             </div>
+            
             {error ? (
               <p className="text-xs font-semibold text-rose-100">{error}</p>
             ) : null}

@@ -1,15 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import {
-  createSeller,
-  getAllSellers,
-  type Seller,
-} from "@/application/services/Seller/sellerService";
+import { createSeller } from "@/application/services/Seller/sellerService";
 import {
   Card,
   CardContent,
@@ -20,15 +16,8 @@ import {
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/presentation/layout/components/ui/table";
 import { Separator } from "@/presentation/layout/components/ui/separator";
+import { DealersList } from "@/presentation/features/painel-geral/components/DealersList";
 
 const sellerSchema = z.object({
   fullName: z.string().min(2, "Informe o nome completo"),
@@ -58,8 +47,6 @@ type SellerFormValues = z.infer<typeof sellerSchema>;
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 export default function Operadores() {
-  const [sellers, setSellers] = useState<Seller[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -85,26 +72,6 @@ export default function Operadores() {
     },
   });
 
-  const loadSellers = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const result = await getAllSellers();
-      setSellers(result);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Falha ao carregar vendedores.";
-      toast.error(message);
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    loadSellers();
-  }, [loadSellers]);
-
   const onSubmit = async (values: SellerFormValues) => {
     setIsSubmitting(true);
     try {
@@ -127,7 +94,6 @@ export default function Operadores() {
 
       toast.success("Vendedor cadastrado com sucesso!");
       reset();
-      await loadSellers();
     } catch (error) {
       const message =
         error instanceof Error
@@ -255,46 +221,7 @@ export default function Operadores() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Vendedores cadastrados</CardTitle>
-          <CardDescription>
-            Utilize o e-mail e a senha definidos acima para acessar o painel do logista.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Carregando vendedores...</p>
-          ) : sellers.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum vendedor cadastrado ainda.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Telefone</TableHead>
-                  <TableHead>Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {sellers.map((seller) => (
-                  <TableRow key={seller.id}>
-                    <TableCell>{seller.fullName ?? "--"}</TableCell>
-                    <TableCell>{seller.email ?? "--"}</TableCell>
-                    <TableCell>{seller.phone ?? "--"}</TableCell>
-                    <TableCell className="capitalize">
-                      {seller.status?.toLowerCase() ?? "pendente"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <DealersList />
     </div>
   );
 }
