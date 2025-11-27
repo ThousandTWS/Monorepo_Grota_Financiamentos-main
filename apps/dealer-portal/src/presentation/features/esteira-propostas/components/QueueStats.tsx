@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/presentation/ui/card";
 import { Skeleton } from "@/presentation/ui/skeleton";
-import { cn } from "@/lib/utils";
 import { ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
+import { StatusBadge } from "./status-badge";
 
 export type ProposalsDashboardSummary = {
   overallTotal: number;
@@ -10,6 +10,7 @@ export type ProposalsDashboardSummary = {
     value: number;
     total?: number;
     color?: string;
+    status?: ProposalStatus;
   }[];
   statusTotals: {
     key: ProposalStatus;
@@ -24,14 +25,6 @@ type QueueStatsProps = {
   summary: ProposalsDashboardSummary;
   isLoading?: boolean;
 };
-
-const fallbackColors = [
-  "bg-slate-400",
-  "bg-sky-400",
-  "bg-amber-400",
-  "bg-emerald-400",
-  "bg-rose-400",
-];
 
 export function QueueStats({ summary, isLoading }: QueueStatsProps) {
   const tickets = summary.myTickets;
@@ -80,13 +73,12 @@ export function QueueStats({ summary, isLoading }: QueueStatsProps) {
             className="flex items-center justify-between rounded-md border px-3 py-2"
           >
             <div className="flex items-center gap-3">
-              <span
-                className={cn(
-                  "h-2.5 w-2.5 rounded-full",
-                  ticket.color ?? fallbackColors[index % fallbackColors.length],
-                )}
-              />
-              <p className="text-sm font-medium">{ticket.label}</p>
+              <StatusBadge
+                status={ticket.status ?? ticket.label}
+                className="shadow-none px-3 py-1 text-xs"
+              >
+                {ticket.label}
+              </StatusBadge>
             </div>
             <div className="text-sm font-semibold">
               {ticket.value}
