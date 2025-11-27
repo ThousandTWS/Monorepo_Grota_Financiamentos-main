@@ -29,6 +29,24 @@ const statusConfig = {
       "bg-yellow-500/10 text-yellow-700 border-yellow-500/30 dark:bg-yellow-500/15 dark:text-yellow-400 dark:border-yellow-500/40 hover:bg-yellow-500/20 dark:hover:bg-yellow-500/25",
     dotClassName: "bg-yellow-500 shadow-yellow-500/50",
   },
+  enviada: {
+    label: "Enviada",
+    className:
+      "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-300 dark:border-sky-500/40 hover:bg-sky-500/20 dark:hover:bg-sky-500/25",
+    dotClassName: "bg-sky-500 shadow-sky-500/50",
+  },
+  aprovada: {
+    label: "Aprovada",
+    className:
+      "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-300 dark:border-emerald-500/40 hover:bg-emerald-500/20 dark:hover:bg-emerald-500/25",
+    dotClassName: "bg-emerald-500 shadow-emerald-500/50",
+  },
+  recusada: {
+    label: "Recusada",
+    className:
+      "bg-red-500/10 text-red-700 border-red-500/30 dark:bg-red-500/15 dark:text-red-300 dark:border-red-500/40 hover:bg-red-500/20 dark:hover:bg-red-500/25",
+    dotClassName: "bg-red-500 shadow-red-500/50",
+  },
 };
 
 type StatusKey = keyof typeof statusConfig;
@@ -39,6 +57,29 @@ const normalizeStatus = (status?: string | null): StatusKey => {
   if (normalized === "ativo" || normalized === "active") return "ativo";
   if (normalized === "inativo" || normalized === "inactive") return "inativo";
   if (normalized === "pendente" || normalized === "pending") return "pendente";
+  if (
+    normalized === "enviada" ||
+    normalized === "enviado" ||
+    normalized === "submitted" ||
+    normalized === "submetida" ||
+    normalized === "submetido"
+  ) {
+    return "enviada";
+  }
+  if (
+    normalized === "aprovada" ||
+    normalized === "aprovado" ||
+    normalized === "approved"
+  ) {
+    return "aprovada";
+  }
+  if (
+    normalized === "recusada" ||
+    normalized === "recusado" ||
+    normalized === "rejected"
+  ) {
+    return "recusada";
+  }
 
   return "pendente";
 };

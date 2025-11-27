@@ -15,12 +15,12 @@ export async function POST(req: Request) {
       "https://gateway.apibrasil.io/api/v2/vehicles/fipe",
       { placa },
       {
-        headers: {
+          headers: {
           "Content-Type": "application/json",
           // eslint-disable-next-line turbo/no-undeclared-env-vars
-          "DeviceToken": process.env.APIBRASIL_DEVICE_TOKEN_VEHICLE!,
+          "DeviceToken": "20c1b882-e68b-4659-9877-3e0e711830d0",
           // eslint-disable-next-line turbo/no-undeclared-env-vars
-          "Authorization": `Bearer ${process.env.APIBRASIL_TOKEN!}`,
+          "Authorization": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vZ2F0ZXdheS5hcGlicmFzaWwuaW8vYXBpL3YyL2F1dGgvcmVnaXN0ZXIiLCJpYXQiOjE3NjQwMzI2NDcsImV4cCI6MTc5NTU2ODY0NywibmJmIjoxNzY0MDMyNjQ3LCJqdGkiOiJZVEJNQ3lCZmNoRnRFbkU3Iiwic3ViIjoiMTg3ODMiLCJwcnYiOiIyM2JkNWM4OTQ5ZjYwMGFkYjM5ZTcwMWM0MDA4NzJkYjdhNTk3NmY3In0.gmxBG46RA_3sMIFzOXCKmG6p4N4PI77hWcKpWoBm5to" ,
         }
       }
     );
