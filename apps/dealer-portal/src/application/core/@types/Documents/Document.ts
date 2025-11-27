@@ -26,3 +26,8 @@ export interface DocumentRecord {
   createdAt: string;
   updatedAt?: string | null;
 }
+
+export interface DocumentUploadPayload {
+  documentType: DocumentType;
+  file: File;
+}

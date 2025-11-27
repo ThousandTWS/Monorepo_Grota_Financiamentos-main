@@ -56,6 +56,7 @@ export declare const REALTIME_CHANNELS: {
   readonly PROPOSALS: "proposals-bridge";
   readonly DEALERS: "dealers-bridge";
   readonly NOTIFICATIONS: "notifications-bridge";
+  readonly DOCUMENTS: "documents-bridge";
 };
 
 export declare const REALTIME_EVENT_TYPES: {
@@ -67,6 +68,10 @@ export declare const REALTIME_EVENT_TYPES: {
   readonly DEALER_DELETED: "DEALER_DELETED";
   readonly NOTIFICATION_PUBLISHED: "NOTIFICATION_PUBLISHED";
   readonly NOTIFICATION_DISMISS: "NOTIFICATION_DISMISS";
+  readonly SELLER_ACTIVITY_SENT: "SELLER_ACTIVITY_SENT";
+  readonly DOCUMENTS_REFRESH_REQUEST: "DOCUMENTS_REFRESH_REQUEST";
+  readonly DOCUMENT_UPLOADED: "DOCUMENT_UPLOADED";
+  readonly DOCUMENT_REVIEW_UPDATED: "DOCUMENT_REVIEW_UPDATED";
 };
 
 export declare function parseBridgeEvent<TPayload = unknown>(

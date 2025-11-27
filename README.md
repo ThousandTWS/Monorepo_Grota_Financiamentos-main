@@ -150,6 +150,8 @@ Esses contratos permitem alimentar o WebSocket de notificações e sincronizar a
 - **Esteira de Propostas** (apps `admin-console` e `dealer-portal`): novas fichas criadas em qualquer lado já aparecem no outro painel sem necessidade de atualizar a página. Ao salvar um rascunho é emitido um snapshot com os dados básicos via evento `PROPOSAL_CREATED` e todos os clientes atualizam sua fila imediatamente.
 - **Gestão de Logistas** (apps `admin-console` → `dealer-portal` e card “Lojistas cadastrados” da visão geral): criar, editar ou excluir um lojista dispara eventos `DEALER_UPSERTED/DEALER_DELETED`, fazendo com que a tabela principal e os cards do dashboard reflitam a alteração em tempo real.
 - **Canal Admin ↔ Logista** (dashboard geral): continua disponível para trocas rápidas; o mesmo socket é compartilhado com os eventos acima, então basta manter o servidor WebSocket ativo para usar toda a sincronização.
+- **Upload de Documentos** (apps `dealer-portal`): o formulário de envio na rota `/documentos` publica eventos `DOCUMENT_UPLOADED/DOCUMENTS_REFRESH_REQUEST`, exibindo o status de análise sem recarregar a página e notificando o backoffice sobre novos arquivos.
+- **Gestão de Documentos** (apps `admin-console`): a página `/gestao-documentos` agora consome o backend real, revisa arquivos via `PUT /documents/{id}/review` e replica as ações para o painel do lojista com eventos `DOCUMENT_REVIEW_UPDATED/DOCUMENTS_REFRESH_REQUEST`.
 
 > Sempre que futuros endpoints do backend estiverem disponíveis, basta converter os handlers atuais para disparar os mesmos eventos (ou o `DEALER/PROPOSALS_REFRESH_REQUEST`) após persistir a operação – a UI já está preparada para escutar as notificações.
 

@@ -42,10 +42,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/swagger-resources/**", "/webjars/**").permitAll()
 
-                        // Somente ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents").hasRole("ADMIN")
+                        // Documentos
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents").hasAnyRole("ADMIN", "LOJISTA")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents/*/url").hasAnyRole("ADMIN", "LOJISTA")
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/documents/*/review").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents/*/url").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

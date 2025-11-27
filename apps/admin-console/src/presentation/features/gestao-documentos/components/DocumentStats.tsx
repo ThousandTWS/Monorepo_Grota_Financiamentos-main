@@ -1,147 +1,104 @@
 "use client";
 import React from "react";
 import { Card, CardContent } from "@/presentation/layout/components/ui/card";
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Eye,
-  TrendingUp,
-  FileText,
-} from "lucide-react";
+import { Badge } from "@/presentation/layout/components/ui/badge";
+import { CheckCircle, Clock, Download, FileText, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface StatsCardProps {
+interface StatEntry {
   title: string;
   value: number | string;
   icon: React.ElementType;
-  color: string;
-  bgColor: string;
-  subtitle?: string;
-}
-
-function StatsCard({
-  title,
-  value,
-  icon: Icon,
-  color,
-  bgColor,
-  subtitle,
-}: StatsCardProps) {
-  return (
-    <Card
-      className="overflow-hidden border border-border/40 shadow-sm rounded-2xl transition-all duration-300 hover:shadow-lg hover:scale-[1.02]"
-    >
-      <CardContent className="p-5 md:p-6 flex flex-col justify-between h-full">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              {title}
-            </p>
-            <div>
-              <p className="text-3xl font-bold leading-tight">{value}</p>
-              {subtitle && (
-                <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-              )}
-            </div>
-          </div>
-
-          <div
-            className={cn(
-              "p-3 md:p-4 rounded-xl flex items-center justify-center transition-colors duration-300",
-              bgColor
-            )}
-          >
-            <Icon className={cn("h-6 w-6 md:h-7 md:w-7", color)} />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  pill?: string;
+  tone: {
+    text: string;
+    bg: string;
+  };
 }
 
 interface DocumentStatsProps {
-  totalDocuments: number;
-  pendingCount: number;
-  inReviewCount: number;
-  approvedCount: number;
-  rejectedCount: number;
-  avgProcessingTime?: number;
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  lastSyncLabel?: string;
 }
 
 export function DocumentStats({
-  totalDocuments,
-  pendingCount,
-  inReviewCount,
-  approvedCount,
-  rejectedCount,
-  avgProcessingTime = 3.2,
+  total,
+  pending,
+  approved,
+  rejected,
+  lastSyncLabel,
 }: DocumentStatsProps) {
-  const stats = [
+  const stats: StatEntry[] = [
     {
-      title: "Total de Documentos",
-      value: totalDocuments,
+      title: "Total recebidos",
+      value: total,
       icon: FileText,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50 dark:bg-blue-950",
-      subtitle: "Recebidos hoje",
+      tone: { text: "text-blue-700", bg: "bg-blue-100 dark:bg-blue-900/40" },
     },
     {
       title: "Pendentes",
-      value: pendingCount,
+      value: pending,
       icon: Clock,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50 dark:bg-amber-950",
-      subtitle: "Aguardando análise",
-    },
-    {
-      title: "Em Análise",
-      value: inReviewCount,
-      icon: Eye,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50 dark:bg-purple-950",
-      subtitle: "Sendo processados",
+      pill: "aguardando análise",
+      tone: {
+        text: "text-amber-700",
+        bg: "bg-amber-100 dark:bg-amber-900/40",
+      },
     },
     {
       title: "Aprovados",
-      value: approvedCount,
+      value: approved,
       icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50 dark:bg-green-950",
-      subtitle: "Finalizados",
+      tone: {
+        text: "text-emerald-700",
+        bg: "bg-emerald-100 dark:bg-emerald-900/30",
+      },
     },
     {
       title: "Reprovados",
-      value: rejectedCount,
+      value: rejected,
       icon: XCircle,
-      color: "text-red-600",
-      bgColor: "bg-red-50 dark:bg-red-950",
-      subtitle: "Necessitam reenvio",
+      tone: { text: "text-rose-700", bg: "bg-rose-100 dark:bg-rose-900/40" },
     },
     {
-      title: "Tempo Médio",
-      value: avgProcessingTime,
-      icon: TrendingUp,
-      color: "text-cyan-600",
-      bgColor: "bg-cyan-50 dark:bg-cyan-950",
-      subtitle: "Dias para aprovação",
+      title: "Última sincronização",
+      value: lastSyncLabel ?? "—",
+      icon: Download,
+      tone: { text: "text-slate-600", bg: "bg-slate-100 dark:bg-slate-800" },
     },
   ];
 
   return (
-    <div
-      className="
-        grid gap-4
-        sm:grid-cols-2
-        md:grid-cols-3
-        lg:grid-cols-3
-        xl:grid-cols-6
-        2xl:grid-cols-6
-        transition-all
-      "
-    >
-      {stats.map((stat, index) => (
-        <StatsCard key={index} {...stat} />
+    <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+      {stats.map((item) => (
+        <Card
+          key={item.title}
+          className="border border-border/60 shadow-sm transition-all hover:shadow-md"
+        >
+          <CardContent className="flex items-center justify-between gap-4 p-4">
+            <div>
+              <p className="text-sm text-muted-foreground">{item.title}</p>
+              <p className="text-2xl font-semibold mt-1">{item.value}</p>
+              {item.pill && (
+                <Badge variant="secondary" className="mt-2">
+                  {item.pill}
+                </Badge>
+              )}
+            </div>
+            <div
+              className={cn(
+                "rounded-2xl p-3 text-lg",
+                item.tone.bg,
+                item.tone.text,
+              )}
+            >
+              <item.icon className="h-5 w-5" />
+            </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
