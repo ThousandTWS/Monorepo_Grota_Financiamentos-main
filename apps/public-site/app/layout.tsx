@@ -5,9 +5,9 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import WhatsappGrota from "@/src/presentation/components/whatsapp/GrotaWhatsapp";
 import CookieProvider from "@/src/presentation/components/providers/CookieProvider";
+import { Toaster } from "sonner";
 
-const inter = Inter({ subsets: ["latin"] }); 
-
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title:
@@ -57,7 +57,8 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
+    title:
+      "Grota Financiamentos | Soluções Inteligentes em Crédito e Investimentos",
     description:
       "A Grota Financiamentos conecta pessoas às melhores oportunidades de crédito, financiamento e investimentos. Rapidez, transparência e tecnologia para transformar seus planos em realidade.",
     creator: "@grotafinanciamentos",
@@ -93,10 +94,6 @@ export const metadata: Metadata = {
   applicationName: "Grota Financiamentos",
 };
 
-
-
-
-
 const newRelicLoader = `
 ;window.NREUM||(NREUM={});NREUM.init={distributed_tracing:{enabled:true},performance:{capture_measures:true},privacy:{cookies_enabled:true},ajax:{deny_list:["bam.nr-data.net"]}};
 ;NREUM.loader_config={accountID:"7241159",trustKey:"7241159",agentID:"1134630939",licenseKey:"NRJS-92b23d5e70ac90dc2d6",applicationID:"1134630939"};
@@ -118,9 +115,6 @@ const session_replay = `
 })();
 `;
 
-
-
-
 export default function RootLayout({
   children,
 }: {
@@ -134,7 +128,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: newRelicLoader }}
         />
 
-         <script
+        <script
           type="text/javascript"
           dangerouslySetInnerHTML={{ __html: session_replay }}
         />
@@ -142,6 +136,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <CookieProvider>
           {children}
+          <Toaster richColors position="top-right" />
           <WhatsappGrota />
         </CookieProvider>
       </body>
