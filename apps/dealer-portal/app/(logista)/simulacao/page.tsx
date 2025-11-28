@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, FileText, UserCircle2, Info, Search, Plus, Coins, Trash2 } from "lucide-react";
 import { GiCarKey, GiReceiveMoney } from "react-icons/gi";
@@ -11,6 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/presentation/ui/card";
+import { Badge } from "@/presentation/ui/badge";
 import { Input } from "@/presentation/ui/input";
 import { Label } from "@/presentation/ui/label";
 import { Textarea } from "@/presentation/ui/textarea";
@@ -27,11 +28,12 @@ import { Separator } from "@/presentation/ui/separator";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF } from "@/application/core/utils/masks";
+import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF, maskCEP } from "@/application/core/utils/masks";
 import { Controller } from "react-hook-form";
 import { formatName, formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 import clsx from "clsx";
 import { ConfirmationDialog } from "./components/ConfirmationDialog";
+import viaCepService from "@/application/services/External/viaCepService";
 
 const simulateProposalSchema = z.object({
   cpf: z.string().length(14, "CPF inválido"),
@@ -39,7 +41,13 @@ const simulateProposalSchema = z.object({
   birthday: z.string().length(10, "Data de nascimento é obrigatório"),
   email: z.email("Formato de email inválido"),
   phone: z.string().length(15, "Formato de telefone inválido"),
-  motherName: z.string().length(4, "Nome da mãe é obrigatório"),
+  zipCode: z.string().length(9, "CEP inválido"),
+  addressStreet: z.string().optional(),
+  addressNeighborhood: z.string().optional(),
+  addressCity: z.string().optional(),
+  addressState: z.string().optional(),
+  addressNumber: z.string().optional(),
+  addressComplement: z.string().optional(),
   enterprise: z.string().min(1, "Nome da empresa é obrigatória"),
   function: z.string().min(1, "Função exercida é obrigatória"),
   income: z.object({
@@ -77,13 +85,35 @@ export interface ExtraProps {
   role: string;
 }
 
+interface CpfSummaryItem {
+  label: string;
+  value: string;
+}
+
+const ADDRESS_LABELS = [
+  "CEP",
+  "Rua",
+  "Número",
+  "Bairro",
+  "Cidade",
+  "Complemento",
+  "Estado",
+];
+const CNH_LABELS = ["Possui CNH", "Categoria CNH"];
+const PRESERVED_LABELS_ON_CPF_RESET = new Set([...ADDRESS_LABELS, ...CNH_LABELS]);
+
 export default function SimulacaoPage() {
   const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
   const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
+  const [isCepLookupLoading, setIsCepLookupLoading] = useState(false);
   const [extra, setExtra] = useState<ExtraProps[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [resumeProposal, setResumeProposal] = useState<SimulateProposalFormData | null>(null);
   const [confirmationDialogIsOpen, setConfirmationDialogIsOpen] = useState(false);
+  const [cpfSummary, setCpfSummary] = useState<CpfSummaryItem[]>([]);
+  const [cpfFederalStatus, setCpfFederalStatus] = useState("");
+  const [cpfFederalUpdatedAt, setCpfFederalUpdatedAt] = useState("");
+  const [cpfFederalSource, setCpfFederalSource] = useState("");
 
   const {
     register,
@@ -103,7 +133,13 @@ export default function SimulacaoPage() {
       birthday: "",
       email: "",
       phone: "",
-      motherName: "",
+      zipCode: "",
+      addressStreet: "",
+      addressNeighborhood: "",
+      addressCity: "",
+      addressState: "",
+      addressNumber: "",
+      addressComplement: "",
       haveCNH: false,
       categoryCNH: "",
       enterprise: "",
@@ -124,9 +160,37 @@ export default function SimulacaoPage() {
     },
   });
 
-  const noHaveCPF = getValues("cpf").length !== 14;
+  const cpfValue = watch("cpf");
+  const zipCodeValue = watch("zipCode");
+  const addressStreetValue = watch("addressStreet");
+  const addressNeighborhoodValue = watch("addressNeighborhood");
+  const addressCityValue = watch("addressCity");
+  const addressStateValue = watch("addressState");
+  const addressNumberValue = watch("addressNumber");
+  const addressComplementValue = watch("addressComplement");
+  const haveCNHValue = watch("haveCNH");
+  const categoryCNHValue = watch("categoryCNH");
+  const noHaveCPF = cpfValue.length !== 14;
 
   const noHavePlate = !watch("vehiclePlate");
+  const updateSummaryEntries = useCallback(
+    (items: CpfSummaryItem[], labelsToClear?: string[]) => {
+      setCpfSummary((prev) => {
+        const labels = new Set(labelsToClear ?? items.map((item) => item.label));
+        if (labels.size === 0 && items.length === 0) {
+          return prev;
+        }
+
+        const filtered = labels.size
+          ? prev.filter((item) => !labels.has(item.label))
+          : prev;
+
+        const additions = items.filter((item) => Boolean(item.value));
+        return [...filtered, ...additions];
+      });
+    },
+    []
+  );
 
   const handleCPFLookup = async (cpfMasked: string) => {
     if(!cpfMasked) return;
@@ -134,7 +198,6 @@ export default function SimulacaoPage() {
     try {
       setIsCPFLookupLoading(true);
 
-<<<<<<< HEAD
       const cpf = unmaskCPF(cpfMasked);
 
       const response = await fetch("/api/searchCPF", {
@@ -146,55 +209,198 @@ export default function SimulacaoPage() {
       const pessoa = data?.data.response.content;
 
       if(pessoa) {
+        const emailFromPreferredContact = pessoa.contato_preferencial?.conteudo?.find(
+          (contact: { tipo?: string }) => contact?.tipo === "EMAIL"
+        )?.valor;
+        const emailFromList = pessoa.emails?.conteudo?.[0];
+        const preferredPhone = pessoa.pesquisa_telefones?.conteudo?.[0]?.numero ?? "";
+
         setValue("fullname", formatName(pessoa.nome.conteudo?.nome) ?? "");
         setValue("birthday", pessoa.nome.conteudo?.data_nascimento ?? "");
-        setValue("motherName", pessoa.nome.conteudo?.mae ?? "");
-        setValue("phone", pessoa.pesquisa_telefones.conteudo?.length > 0 ? pessoa.pesquisa_telefones.conteudo[0]?.numero : "");
-        setValue("email", pessoa.emails.conteudo?.length > 0 ? pessoa.emails.conteudo[0]?.email : "");
+        setValue(
+          "phone",
+          preferredPhone
+        );
+        setValue("email", emailFromPreferredContact ?? emailFromList ?? "");
+        const primaryAddress = pessoa.pesquisa_enderecos?.conteudo?.[0]
+          ?? pessoa.enderecos?.conteudo?.[0]
+          ?? pessoa.endereco?.conteudo
+          ?? null;
+        const receitaFederalStatus =
+          pessoa?.situacao_cadastral?.conteudo?.situacao ??
+          pessoa?.situacao_cadastral?.conteudo?.status ??
+          pessoa?.situacao_cadastral?.conteudo?.descricao ??
+          pessoa?.situacao_cadastral?.conteudo?.situacao_cadastral ??
+          pessoa?.situacao_cadastral?.descricao ??
+          "";
+        const receitaFederalUpdatedAt =
+          pessoa?.situacao_cadastral?.conteudo?.data_atualizacao ??
+          pessoa?.situacao_cadastral?.conteudo?.atualizado_em ??
+          pessoa?.situacao_cadastral?.conteudo?.data_consulta ??
+          pessoa?.situacao_cadastral?.conteudo?.data ??
+          pessoa?.nome?.conteudo?.data_atualizacao ??
+          pessoa?.nome?.conteudo?.atualizado_em ??
+          "";
+        const receitaFederalSource =
+          pessoa?.situacao_cadastral?.conteudo?.fonte ??
+          pessoa?.situacao_cadastral?.titulo ??
+          "Receita Federal";
+
+        const summaryItems: CpfSummaryItem[] = [
+          {
+            label: "Dados atualizados em",
+            value: receitaFederalUpdatedAt,
+          },
+          {
+            label: "Status Receita Federal",
+            value: receitaFederalStatus,
+          },
+          {
+            label: "Fonte de verificação",
+            value: receitaFederalSource,
+          },
+          {
+            label: "CPF consultado",
+            value: cpfMasked,
+          },
+          {
+            label: "Nome completo",
+            value: formatName(pessoa.nome.conteudo?.nome) ?? "",
+          },
+          {
+            label: "Data de nascimento",
+            value: pessoa.nome.conteudo?.data_nascimento ?? "",
+          },
+          {
+            label: "Nome da mãe",
+            value: pessoa.nome.conteudo?.mae ?? "",
+          },
+          {
+            label: "Telefone",
+            value: preferredPhone,
+          },
+          {
+            label: "E-mail",
+            value: emailFromPreferredContact ?? emailFromList ?? "",
+          },
+        ].filter((item) => Boolean(item.value));
+        setCpfSummary(summaryItems);
+        setCpfFederalStatus(receitaFederalStatus);
+        setCpfFederalUpdatedAt(receitaFederalUpdatedAt);
+        setCpfFederalSource(receitaFederalSource);
 
         toast.success("Dados da pessoa encontradas");
+      } else {
+        setCpfSummary([]);
+        setCpfFederalStatus("");
+        setCpfFederalUpdatedAt("");
+        setCpfFederalSource("");
       }
-=======
-      const proposal = await createProposal(payload);
-      
-      toast.success("Ficha enviada para a esteira da Grota.");
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-      });
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
-        reason: "logista-simulator-created",
-      });
-     
->>>>>>> 4aa090e (fix)
     } catch (error) {
+      setCpfSummary([]);
+      setCpfFederalStatus("");
+      setCpfFederalUpdatedAt("");
+      setCpfFederalSource("");
       toast.error("Erro ao buscar CPF")
     } finally {
       setIsCPFLookupLoading(false);
     }
   }
 
+  const handleCepLookup = async (cepMasked: string) => {
+    const sanitizedCep = (cepMasked ?? "").replace(/\D/g, "");
+
+    if (sanitizedCep.length !== 8) {
+      toast.error("Informe um CEP válido");
+      return;
+    }
+
+    try {
+      setIsCepLookupLoading(true);
+      const address = await viaCepService.lookup(sanitizedCep);
+      const summaryAddressItems: CpfSummaryItem[] = [
+        {
+          label: "CEP",
+          value: maskCEP(sanitizedCep),
+        },
+        {
+          label: "Rua",
+          value: address.street ?? "",
+        },
+        {
+          label: "Bairro",
+          value: address.neighborhood ?? "",
+        },
+        {
+          label: "Cidade",
+          value: address.city ?? "",
+        },
+        {
+          label: "Complemento",
+          value: address.complement ?? "",
+        },
+        {
+          label: "Estado",
+          value: address.state ?? "",
+        },
+      ].filter((item) => Boolean(item.value));
+      const maskedCEP = maskCEP(sanitizedCep);
+      setValue("zipCode", maskedCEP, { shouldValidate: true });
+      setValue("addressStreet", address.street ?? "", { shouldValidate: true });
+      setValue("addressNeighborhood", address.neighborhood ?? "", { shouldValidate: true });
+      setValue("addressCity", address.city ?? "", { shouldValidate: true });
+      setValue("addressState", address.state ?? "", { shouldValidate: true });
+      if (address.complement) {
+        setValue("addressComplement", address.complement, { shouldValidate: true });
+      }
+      updateSummaryEntries(summaryAddressItems, ADDRESS_LABELS);
+      toast.success("Endereço atualizado pelo CEP");
+    } catch (error) {
+      toast.error("Não conseguimos consultar o CEP informado.");
+    } finally {
+      setIsCepLookupLoading(false);
+    }
+  };
+
   const handlePlateLookup = async (plateMasked: string) => {
     if(!plateMasked) return;
+
+    const normalizedPlate = plateMasked
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+    if(normalizedPlate.length !== 7) {
+      toast.error("Informe uma placa válida (ABC1234 ou ABC1D23)");
+      return;
+    }
 
     try {
       setIsPlateLookupLoading(true);
 
-      const placa = plateMasked;
+      const placa = normalizedPlate;
 
       const response = await fetch("/api/searchPlaca", {
         method: "POST",
         body: JSON.stringify({ placa }),
       })
 
-      const data = await response.json();
-      const veiculo = data?.data.response;
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result?.error ?? "Erro ao buscar placa");
+      }
+
+      const veiculo = result?.data?.response ?? result?.data;
 
       if(veiculo) {
-        setValue("vehicleBrand", veiculo.Marca ?? "");
-        setValue("vehicleModel", formatName(veiculo.Modelo) ?? "");
-        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() ?? "");
-        setValue("codeFIPE", veiculo.CodigoFipe ?? "");
-        setValue("priceFIPE", veiculo.Valor ?? "");
+        setValue("vehicleBrand", veiculo?.Marca ?? "");
+        setValue("vehicleModel", formatName(veiculo?.Modelo) ?? "");
+        setValue(
+          "vehicleYear",
+          veiculo?.AnoModelo ? veiculo.AnoModelo.split("/").pop() ?? "" : ""
+        );
+        setValue("codeFIPE", veiculo?.CodigoFipe ?? "");
+        setValue("priceFIPE", veiculo?.Valor ?? "");
 
         toast.success("Busca dados com placa concluida");
       }
@@ -228,6 +434,65 @@ export default function SimulacaoPage() {
     setResumeProposal(data);
     setConfirmationDialogIsOpen(true);
   };
+
+  useEffect(() => {
+    if (cpfValue.length !== 14) {
+      setCpfSummary((prev) =>
+        prev.filter((item) => PRESERVED_LABELS_ON_CPF_RESET.has(item.label))
+      );
+      setCpfFederalStatus("");
+      setCpfFederalUpdatedAt("");
+      setCpfFederalSource("");
+    }
+  }, [cpfValue]);
+
+  useEffect(() => {
+    const manualAddressItems: CpfSummaryItem[] = [];
+    if (zipCodeValue) {
+      manualAddressItems.push({ label: "CEP", value: zipCodeValue });
+    }
+    if (addressStreetValue) {
+      manualAddressItems.push({ label: "Rua", value: addressStreetValue });
+    }
+    if (addressNeighborhoodValue) {
+      manualAddressItems.push({ label: "Bairro", value: addressNeighborhoodValue });
+    }
+    if (addressCityValue) {
+      manualAddressItems.push({ label: "Cidade", value: addressCityValue });
+    }
+    if (addressStateValue) {
+      manualAddressItems.push({ label: "Estado", value: addressStateValue });
+    }
+    if (addressNumberValue) {
+      manualAddressItems.push({ label: "Número", value: addressNumberValue });
+    }
+    if (addressComplementValue) {
+      manualAddressItems.push({ label: "Complemento", value: addressComplementValue });
+    }
+
+    updateSummaryEntries(manualAddressItems, ADDRESS_LABELS);
+  }, [
+    zipCodeValue,
+    addressStreetValue,
+    addressNeighborhoodValue,
+    addressCityValue,
+    addressStateValue,
+    addressNumberValue,
+    addressComplementValue,
+    updateSummaryEntries,
+  ]);
+
+  useEffect(() => {
+    const cnhItems: CpfSummaryItem[] = haveCNHValue
+      ? [
+          { label: "Possui CNH", value: "Sim" },
+          ...(categoryCNHValue
+            ? [{ label: "Categoria CNH", value: categoryCNHValue }]
+            : []),
+        ]
+      : [];
+    updateSummaryEntries(cnhItems, CNH_LABELS);
+  }, [haveCNHValue, categoryCNHValue, updateSummaryEntries]);
 
   useEffect(() => {
     if (!watch("haveCNH")) {
@@ -288,131 +553,8 @@ export default function SimulacaoPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex flex-col gap-4">
-                <div className="grid gap-4 items-center">
-                    <div className="space-y-2">
-                      <Label htmlFor="cpf">CPF (consulta automática)</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          id="cpf"
-                          inputMode="numeric"
-                          maxLength={14}
-                          placeholder="Digite o CPF para buscar os dados"
-                          {...register("cpf")}
-                          onChange={
-                            (e) => {
-                              const masked = maskCPF(e.target.value);
-                              setValue("cpf", masked, { shouldValidate: true })
-                            }
-                          }
-                        />
-                        {errors.cpf && (
-                          <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
-                        )}
-
-                        <div className="flex items-end">
-                          <Button
-                            type="button"
-                            className="w-full gap-2"
-                            onClick={() => handleCPFLookup(getValues("cpf"))}
-                            disabled={isCPFLookupLoading || noHaveCPF}
-                          >
-                            {isCPFLookupLoading ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Search className="size-4" />
-                            )}
-                            Buscar dados com CPF
-                          </Button>
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Preencha o CPF corretamente para preenchimento automático dos demais dados solicitados.
-                      </p>
-                    </div>
-                </div>
-                <Separator />
-              </div>
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-3">
-                    <Label htmlFor="fullname" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Nome completo</Label>
-                    <Input
-                      id="fullname"
-                      placeholder="Inform o nome completo do cliente"
-                      {...register("fullname")}
-                      type="text"
-                      className={clsx(isCPFLookupLoading && "input-loading")}
-                      disabled={noHaveCPF || isCPFLookupLoading}
-                    />
-                    {errors.fullname && (
-                          <p className="text-red-500 text-xs mt-1">{errors.fullname.message}</p>
-                    )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="birthday" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Data de nascimento</Label>
-                  <Input
-                    id="birthday"
-                    inputMode="numeric"
-                    maxLength={10}
-                    placeholder="DD/MM/AAAA"
-                    {...register("birthday")}
-                    onChange={
-                      (e) => {
-                        const masked = maskDate(e.target.value);
-                        setValue("birthday", masked, { shouldValidate: true })
-                      }
-                    }
-                    className={clsx(isCPFLookupLoading && "input-loading")}
-                    disabled={noHaveCPF || isCPFLookupLoading}
-                  />
-                  {errors.birthday && (
-                    <p className="text-red-500 text-xs mt-1">{errors.birthday.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3 col-span-2">
-                    <Label htmlFor="motherName" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Nome da mãe</Label>
-                    <Input
-                      id="motherName"
-                      placeholder="Informe o nome completo da mãe do cliente"
-                      {...register("motherName")}
-                      type="text"
-                      className={clsx(isCPFLookupLoading && "input-loading")}
-                      disabled={noHaveCPF || isCPFLookupLoading}
-                    />
-                    {errors.motherName && (
-                          <p className="text-red-500 text-xs mt-1">{errors.motherName.message}</p>
-                    )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="email" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="cliente@email.com"
-                    {...register("email")}
-                    className={clsx(isCPFLookupLoading && "input-loading")}
-                    disabled={noHaveCPF || isCPFLookupLoading}
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="phone" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Telefone / Whatsapp</Label>
-                  <Input
-                    id="phone"
-                    placeholder="(11) 99999-0000"
-                    {...register("phone")}
-                    onChange={
-                      (e) => {
-                        const masked = maskPhone(e.target.value);
-                        setValue("phone", masked, { shouldValidate: true })
-                      }
-                    }
-                    className={clsx(isCPFLookupLoading && "input-loading")}
-                    disabled={noHaveCPF || isCPFLookupLoading}
-                  />
-                </div>
-                <div className="space-y-3">
+                <div className="grid gap-4 items-start md:grid-cols-2">
+                  <div className="space-y-3">
                     <Label htmlFor="haveCNH">Possui CNH?</Label>
                     <Controller
                         name="haveCNH"
@@ -471,6 +613,201 @@ export default function SimulacaoPage() {
                       )}
                     />
                 </div>
+                    <div className="space-y-2 md:col-span-2">
+                      <Label htmlFor="cpf">CPF (consulta automática)</Label>
+                      <div className="flex items-center gap-4">
+                        <Input
+                          id="cpf"
+                          inputMode="numeric"
+                          maxLength={14}
+                          placeholder="Digite o CPF para buscar os dados"
+                          {...register("cpf")}
+                          onChange={
+                            (e) => {
+                              const masked = maskCPF(e.target.value);
+                              setValue("cpf", masked, { shouldValidate: true })
+                            }
+                          }
+                        />
+                        {errors.cpf && (
+                          <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
+                        )}
+
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            className="w-full gap-2"
+                            onClick={() => handleCPFLookup(getValues("cpf"))}
+                            disabled={isCPFLookupLoading || noHaveCPF}
+                          >
+                            {isCPFLookupLoading ? (
+                              <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                              <Search className="size-4" />
+                            )}
+                            Buscar dados com CPF
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Preencha o CPF corretamente para preenchimento automático dos demais dados solicitados.
+                      </p>
+                    </div>
+                     
+                     <div className="space-y-1">
+                  <Label htmlFor="email" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>E-mail</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="cliente@email.com"
+                    {...register("email")}
+                    className={clsx(isCPFLookupLoading && "input-loading")}
+                    disabled={noHaveCPF || isCPFLookupLoading}
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                  )}
+                    <div className="space-y-1">
+                  <Input/>
+                </div>
+                </div>
+
+
+                
+                <div className="space-y-3">
+                  <Label htmlFor="phone" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Telefone / Whatsapp</Label>
+                  <Input
+                    id="phone"
+                    placeholder="(11) 99999-0000"
+                    {...register("phone")}
+                    onChange={
+                      (e) => {
+                        const masked = maskPhone(e.target.value);
+                        setValue("phone", masked, { shouldValidate: true })
+                      }
+                    }
+                    className={clsx(isCPFLookupLoading && "input-loading")}
+                    disabled={noHaveCPF || isCPFLookupLoading}
+                  />
+                </div>
+                </div>
+                <Separator />
+              </div>
+              
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-3 col-span-2">
+                  <Label htmlFor="zipCode">CEP</Label>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                    <Input
+                      id="zipCode"
+                      placeholder="00000-000"
+                      {...register("zipCode")}
+                      onChange={(e) => {
+                        const masked = maskCEP(e.target.value);
+                        setValue("zipCode", masked, { shouldValidate: true });
+                      }}
+                      className={clsx(
+                        "md:max-w-xs",
+                        isCepLookupLoading && "input-loading"
+                      )}
+                    />
+                    <Button
+                      type="button"
+                      className="md:w-auto gap-2"
+                      onClick={() => handleCepLookup(getValues("zipCode"))}
+                      disabled={
+                        isCepLookupLoading ||
+                        zipCodeValue.replace(/\D/g, "").length !== 8
+                      }
+                    >
+                      {isCepLookupLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                      ) : (
+                        <Search className="size-4" />
+                      )}
+                      Buscar CEP
+                    </Button>
+                  </div>
+                  {errors.zipCode && (
+                    <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
+                  )}
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label htmlFor="addressStreet">Rua</Label>
+                      <Input
+                        id="addressStreet"
+                        placeholder="Av. Brasil"
+                        {...register("addressStreet")}
+                      />
+                      {errors.addressStreet && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressStreet.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="addressNeighborhood">Bairro</Label>
+                      <Input
+                        id="addressNeighborhood"
+                        placeholder="Centro"
+                        {...register("addressNeighborhood")}
+                      />
+                      {errors.addressNeighborhood && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressNeighborhood.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="addressCity">Cidade</Label>
+                      <Input
+                        id="addressCity"
+                        placeholder="Campinas"
+                        {...register("addressCity")}
+                      />
+                      {errors.addressCity && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressCity.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="addressState">Estado</Label>
+                      <Input
+                        id="addressState"
+                        placeholder="SP"
+                        maxLength={2}
+                        {...register("addressState")}
+                        onChange={(e) =>
+                          setValue("addressState", e.target.value.toUpperCase(), {
+                            shouldValidate: true,
+                          })
+                        }
+                      />
+                      {errors.addressState && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressState.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="addressNumber">Número</Label>
+                      <Input
+                        id="addressNumber"
+                        placeholder="123"
+                        {...register("addressNumber")}
+                      />
+                      {errors.addressNumber && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="addressComplement">Complemento</Label>
+                      <Input
+                        id="addressComplement"
+                        placeholder="Apartamento, bloco, etc"
+                        {...register("addressComplement")}
+                      />
+                      {errors.addressComplement && (
+                        <p className="text-red-500 text-xs mt-1">{errors.addressComplement.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+               
+               
               </div>
               <Card>
                 <CardHeader>
@@ -634,6 +971,62 @@ export default function SimulacaoPage() {
         </div>
 
         <div className="space-y-6">
+          {cpfSummary.length > 0 && (
+            <Card>
+              <CardHeader>
+                <div className="flex gap-3 items-center">
+                  <CheckCircle2 className="h-10 w-10 text-emerald-500" />
+                  <aside className="flex flex-col gap-1.5">
+                    <CardTitle>Resumo da validação</CardTitle>
+                    <CardDescription>
+                      Dados confirmados automaticamente pela consulta do CPF.
+                    </CardDescription>
+                  </aside>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {(cpfFederalStatus || cpfFederalUpdatedAt) && (
+                  <div className="space-y-1.5 rounded-md border border-emerald-200 bg-emerald-50/70 px-3 py-2 text-sm text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <Info className="size-4" />
+                        <div className="flex flex-col">
+                          <span className="font-semibold">Dados atualizados e verificados</span>
+                          {cpfFederalSource && (
+                            <span className="text-xs text-emerald-800/80 dark:text-emerald-200/80">
+                              Origem: {cpfFederalSource}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {cpfFederalStatus && (
+                        <Badge className="bg-white text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-100" variant="outline">
+                          {cpfFederalStatus}
+                        </Badge>
+                      )}
+                    </div>
+                    {cpfFederalUpdatedAt && (
+                      <p className="text-xs text-emerald-800/80 dark:text-emerald-200/80">
+                        Última atualização: {cpfFederalUpdatedAt}
+                      </p>
+                    )}
+                  </div>
+                )}
+                {cpfSummary.map((item) => (
+                  <div
+                    key={item.label}
+                    className="flex items-start justify-between rounded-md border px-3 py-2"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-gray-900 dark:text-white">{item.label}</p>
+                      <p className="text-sm text-muted-foreground">{item.value}</p>
+                    </div>
+                    <CheckCircle2 className="size-5 flex-shrink-0 text-emerald-500" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
           <Card>
             <CardHeader>
               <div className="flex gap-3 items-center">
@@ -647,7 +1040,9 @@ export default function SimulacaoPage() {
                 </aside>
               </div>
             </CardHeader>
+            
             <CardContent className="space-y-4">
+              
               <div className="flex flex-col gap-4">
                 <div className="grid gap-4 items-center">
                     <div className="space-y-2">
@@ -845,39 +1240,7 @@ export default function SimulacaoPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex gap-3 items-center">
-                <Info className="h-10 w-10" />
-                <aside className="flex flex-col gap-1.5">
-                  <CardTitle>Observações</CardTitle>
-                  <CardDescription>
-                    Use este campo para avisar o time administrativo sobre acordos
-                    especiais ou documentos pendentes.
-                  </CardDescription>
-                </aside>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Textarea
-                id="details"
-                placeholder="CNH vence em 30 dias, cliente aceita portabilidade, etc."
-                rows={4}
-                className="h-[118px] resize-none"
-                {...register("details")}
-              />
-              {errors.details && (
-                <p className="text-red-500 text-xs mt-1">{errors.details.message}</p>
-              )}
-              <Button
-                type="submit"
-                className="w-full gap-2"
-              >
-                <CheckCircle2 className="size-4" />
-                Enviar ficha para a esteira
-              </Button>
-            </CardContent>
-          </Card>
+         
         </div>
       </form>
     </div>
