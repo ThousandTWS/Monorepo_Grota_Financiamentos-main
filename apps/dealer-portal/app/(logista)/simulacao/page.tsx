@@ -28,7 +28,7 @@ import { Separator } from "@/presentation/ui/separator";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF, maskCEP } from "@/application/core/utils/masks";
+import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF } from "@/application/core/utils/masks";
 import { Controller } from "react-hook-form";
 import { formatName, formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 import clsx from "clsx";
