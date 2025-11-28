@@ -132,7 +132,6 @@ export default function SimulacaoPage() {
     try {
       setIsCPFLookupLoading(true);
 
-<<<<<<< HEAD
       const cpf = unmaskCPF(cpfMasked);
 
       const response = await fetch("/api/searchCPF", {
@@ -149,18 +148,6 @@ export default function SimulacaoPage() {
         setValue("email", pessoa.pessoas_contato.conteudo[0].numero || "");
         setValue("phone", pessoa.emails.conteudo[0].email || "");
       }
-=======
-      const proposal = await createProposal(payload);
-      
-      toast.success("Ficha enviada para a esteira da Grota.");
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-      });
-      emitRealtimeEvent(REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
-        reason: "logista-simulator-created",
-      });
-     
->>>>>>> 4aa090e (fix)
     } catch (error) {
       toast.error("Erro ao buscar CPF")
     } finally {
