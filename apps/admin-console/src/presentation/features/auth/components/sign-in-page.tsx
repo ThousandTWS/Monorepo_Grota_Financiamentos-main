@@ -61,6 +61,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       }
     } catch (error) {
       const errorMessage = "Erro de conexão. Tente novamente.";
+      toast.error(errorMessage)
       return { success: false, message: errorMessage };
     }
   };
@@ -100,6 +101,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       type={showPassword ? "text" : "password"}
                       {...register("password")}
                       placeholder="Digite sua senha"
+                      maxLength={8}
                       className="w-full bg-white text-[#1B4B7C] placeholder:text-[#1B4B7C]/50 text-sm p-4 rounded-2xl focus:outline-none"
                       disabled={isLoading}
                     />
@@ -150,10 +152,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   "Entrar"
                 )}
               </button>
-
-              {error && (
-                <p className="text-red-600 text-sm text-center">{error}</p>
-              )}
             </form>
 
             <p className="animate-element animate-delay-900 text-center text-sm text-[#1B4B7C]/80">

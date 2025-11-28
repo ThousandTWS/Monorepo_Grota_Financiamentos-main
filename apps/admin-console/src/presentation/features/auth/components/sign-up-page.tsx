@@ -37,7 +37,7 @@ export type RegisterFormData = z.infer<typeof registerSchema>;
 export const SignUpPage: React.FC<SignUpPageProps> = ({
   heroImageSrc,
 }) => {
-  const { signUp, isLoading, error } = useAuth();
+  const { signUp, isLoading } = useAuth();
   const {
     register,
     handleSubmit,
@@ -124,6 +124,7 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                       id="password"
                       type={showPassword ? "text" : "password"}
                       {...register("password")}
+                      maxLength={8}
                       placeholder="Crie uma senha"
                       className="w-full bg-transparent text-black text-sm p-4 pr-12 rounded-2xl focus:outline-none"
                       disabled={isLoading}
