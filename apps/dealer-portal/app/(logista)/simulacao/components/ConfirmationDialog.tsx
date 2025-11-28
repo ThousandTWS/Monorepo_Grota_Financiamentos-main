@@ -17,6 +17,7 @@ import {
 } from "@grota/realtime-client";
 import { Loader2, Send } from "lucide-react";
 import { UseFormReset } from "react-hook-form";
+import { toast } from "sonner";
 
 type ConfirmationDialogProps = {
     isOpen: boolean;
@@ -81,11 +82,12 @@ const ConfirmationDialog = ({ isOpen, onOpenChange, resumeProposal, setResumePro
             });
 
             onOpenChange(false);
+            toast.success("Proposta enviada para esteira!");
             setResumeProposal(null);
             resetExtra([]);
             resetForm();
         } catch (error) {
-            console.error("[Simulacao] Falha ao enviar proposta", error);
+            toast.error("Falha ao enviar proposta");
         } finally {
             setIsSubmitting(false);
         }

@@ -10,7 +10,7 @@ import userServices, {
 } from "@/application/services/UserServices/UserServices";
 
 const CLIENT_REDIRECT_URL =
-  process.env.NEXT_PUBLIC_CLIENT_URL ?? "http://localhost:3001";
+  process.env.NEXT_PUBLIC_CLIENT_URL ?? "http://localhost:3000";
 
 export default function UserDropdown() {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);

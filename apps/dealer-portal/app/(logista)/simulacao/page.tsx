@@ -145,17 +145,18 @@ export default function SimulacaoPage() {
       const pessoa = data?.data.response.content;
 
       if(pessoa) {
-        setValue("fullname", formatName(pessoa.nome.conteudo.nome) || "");
-        setValue("birthday", pessoa.nome.conteudo.data_nascimento || "");
-        setValue("motherName", pessoa.nome.conteudo.mae || "");
-        setValue("email", pessoa.pessoas_contato.conteudo[0].numero || "");
-        setValue("phone", pessoa.emails.conteudo[0].email || "");
+        setValue("fullname", formatName(pessoa.nome.conteudo?.nome) ?? "");
+        setValue("birthday", pessoa.nome.conteudo?.data_nascimento ?? "");
+        setValue("motherName", pessoa.nome.conteudo?.mae ?? "");
+        setValue("phone", pessoa.pesquisa_telefones.conteudo?.length > 0 ? pessoa.pesquisa_telefones.conteudo[0]?.numero : "");
+        setValue("email", pessoa.emails.conteudo?.length > 0 ? pessoa.emails.conteudo[0]?.email : "");
+
+        toast.success("Dados da pessoa encontradas");
       }
     } catch (error) {
       toast.error("Erro ao buscar CPF")
     } finally {
       setIsCPFLookupLoading(false);
-      toast.success("Busca dados com CPF concluida")
     }
   }
 
@@ -175,20 +176,20 @@ export default function SimulacaoPage() {
       const data = await response.json();
       const veiculo = data?.data.response;
 
-      console.log(data);
-
       if(veiculo) {
-        setValue("vehicleBrand", veiculo.Marca || "");
-        setValue("vehicleModel", formatName(veiculo.Modelo) || "");
-        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() || "");
-        setValue("codeFIPE", veiculo.CodigoFipe || "");
-        setValue("priceFIPE", veiculo.Valor || "");
+        setValue("vehicleBrand", veiculo.Marca ?? "");
+        setValue("vehicleModel", formatName(veiculo.Modelo) ?? "");
+        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() ?? "");
+        setValue("codeFIPE", veiculo.CodigoFipe ?? "");
+        setValue("priceFIPE", veiculo.Valor ?? "");
+
+        toast.success("Busca dados com placa concluida");
       }
     } catch (error) {
+      console.log(error)
       toast.error("Erro ao buscar placa")
     } finally {
       setIsPlateLookupLoading(false);
-      toast.success("Busca dados com placa concluida")
     }
   }
 
