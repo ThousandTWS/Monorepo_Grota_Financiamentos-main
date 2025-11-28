@@ -3,7 +3,7 @@
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2, FileText, UserCircle2, Info, Search, Plus, Coins, Trash2 } from "lucide-react";
-import { GiCarKey, GiReceiveMoney } from "react-icons/gi";
+import { GiReceiveMoney } from "react-icons/gi";
 import {
   Card,
   CardContent,
@@ -14,7 +14,6 @@ import {
 import { Badge } from "@/presentation/ui/badge";
 import { Input } from "@/presentation/ui/input";
 import { Label } from "@/presentation/ui/label";
-import { Textarea } from "@/presentation/ui/textarea";
 import { Button } from "@/presentation/ui/button";
 import { Switch } from "@/presentation/ui/switch";
 import {
@@ -28,7 +27,7 @@ import { Separator } from "@/presentation/ui/separator";
 import z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { maskBRL, maskCPF, maskDate, maskFipeCode, maskPhone, maskPlate, unmaskCPF } from "@/application/core/utils/masks";
+import { maskBRL, maskCEP, maskCPF, maskDate, maskPhone, unmaskCPF } from "@/application/core/utils/masks";
 import { Controller } from "react-hook-form";
 import { formatName, formatNumberToBRL, parseBRL } from "@/application/core/utils/formatters";
 import clsx from "clsx";
@@ -39,6 +38,7 @@ const simulateProposalSchema = z.object({
   cpf: z.string().length(14, "CPF inválido"),
   fullname: z.string().min(4, "Nome completo é obrigatório"),
   birthday: z.string().length(10, "Data de nascimento é obrigatório"),
+  motherName: z.string().min(2, "Nome da mãe é obrigatório"),
   email: z.email("Formato de email inválido"),
   phone: z.string().length(15, "Formato de telefone inválido"),
   zipCode: z.string().length(9, "CEP inválido"),
@@ -62,19 +62,14 @@ const simulateProposalSchema = z.object({
   admission: z.string().min(1, "Renda é obrigatória").optional(),
   haveCNH: z.boolean(),
   categoryCNH: z.string().optional(),
-  vehiclePlate: z
-  .string()
-  .regex(
-    /^[A-Z]{3}\d{4}$|^[A-Z]{3}\d[A-Z]\d{2}$/,
-    "Formato de placa inválida"
-  ),
-  vehicleBrand: z.string().min(1, "Marca do veículo é necessário"),
-  vehicleModel: z.string().min(1, "Modelo do veículo é necessário"),
-  vehicleYear: z.string().min(1, "Ano do veículo é necessário"),
-  codeFIPE: z.string().length(8, "Formato do código FIPE inválido"),
-  priceFIPE: z.string().min(1, "Valor do veículo é necessário"),
-  entryPrice: z.string().min(1, "Valor de entrada do veículo é necessário"),
-  financedPrice: z.string().min(1, "Valor de financiamento é necessário"),
+  vehiclePlate: z.string().optional(),
+  vehicleBrand: z.string().optional(),
+  vehicleModel: z.string().optional(),
+  vehicleYear: z.string().optional(),
+  codeFIPE: z.string().optional(),
+  priceFIPE: z.string().optional(),
+  entryPrice: z.string().optional(),
+  financedPrice: z.string().optional(),
   details: z.string().optional()
 })
 
@@ -100,11 +95,16 @@ const ADDRESS_LABELS = [
   "Estado",
 ];
 const CNH_LABELS = ["Possui CNH", "Categoria CNH"];
-const PRESERVED_LABELS_ON_CPF_RESET = new Set([...ADDRESS_LABELS, ...CNH_LABELS]);
+const CONTACT_LABELS = ["Telefone", "E-mail"];
+const PRESERVED_LABELS_ON_CPF_RESET = new Set([
+  ...ADDRESS_LABELS,
+  ...CNH_LABELS,
+  ...CONTACT_LABELS,
+  "Nome da mãe",
+]);
 
 export default function SimulacaoPage() {
   const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
-  const [isPlateLookupLoading, setIsPlateLookupLoading] = useState(false);
   const [isCepLookupLoading, setIsCepLookupLoading] = useState(false);
   const [extra, setExtra] = useState<ExtraProps[]>([]);
   const [isCalculating, setIsCalculating] = useState(false);
@@ -131,6 +131,7 @@ export default function SimulacaoPage() {
       cpf: "",
       fullname: "",
       birthday: "",
+      motherName: "",
       email: "",
       phone: "",
       zipCode: "",
@@ -168,11 +169,12 @@ export default function SimulacaoPage() {
   const addressStateValue = watch("addressState");
   const addressNumberValue = watch("addressNumber");
   const addressComplementValue = watch("addressComplement");
+  const motherNameValue = watch("motherName");
+  const emailValue = watch("email");
+  const phoneValue = watch("phone");
   const haveCNHValue = watch("haveCNH");
   const categoryCNHValue = watch("categoryCNH");
   const noHaveCPF = cpfValue.length !== 14;
-
-  const noHavePlate = !watch("vehiclePlate");
   const updateSummaryEntries = useCallback(
     (items: CpfSummaryItem[], labelsToClear?: string[]) => {
       setCpfSummary((prev) => {
@@ -217,6 +219,7 @@ export default function SimulacaoPage() {
 
         setValue("fullname", formatName(pessoa.nome.conteudo?.nome) ?? "");
         setValue("birthday", pessoa.nome.conteudo?.data_nascimento ?? "");
+        setValue("motherName", formatName(pessoa.nome.conteudo?.mae) ?? "");
         setValue(
           "phone",
           preferredPhone
@@ -291,12 +294,14 @@ export default function SimulacaoPage() {
 
         toast.success("Dados da pessoa encontradas");
       } else {
+        setValue("motherName", "");
         setCpfSummary([]);
         setCpfFederalStatus("");
         setCpfFederalUpdatedAt("");
         setCpfFederalSource("");
       }
     } catch (error) {
+      setValue("motherName", "");
       setCpfSummary([]);
       setCpfFederalStatus("");
       setCpfFederalUpdatedAt("");
@@ -362,56 +367,6 @@ export default function SimulacaoPage() {
     }
   };
 
-  const handlePlateLookup = async (plateMasked: string) => {
-    if(!plateMasked) return;
-
-    const normalizedPlate = plateMasked
-      .toUpperCase()
-      .replace(/[^A-Z0-9]/g, "");
-
-    if(normalizedPlate.length !== 7) {
-      toast.error("Informe uma placa válida (ABC1234 ou ABC1D23)");
-      return;
-    }
-
-    try {
-      setIsPlateLookupLoading(true);
-
-      const placa = normalizedPlate;
-
-      const response = await fetch("/api/searchPlaca", {
-        method: "POST",
-        body: JSON.stringify({ placa }),
-      })
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result?.error ?? "Erro ao buscar placa");
-      }
-
-      const veiculo = result?.data?.response ?? result?.data;
-
-      if(veiculo) {
-        setValue("vehicleBrand", veiculo?.Marca ?? "");
-        setValue("vehicleModel", formatName(veiculo?.Modelo) ?? "");
-        setValue(
-          "vehicleYear",
-          veiculo?.AnoModelo ? veiculo.AnoModelo.split("/").pop() ?? "" : ""
-        );
-        setValue("codeFIPE", veiculo?.CodigoFipe ?? "");
-        setValue("priceFIPE", veiculo?.Valor ?? "");
-
-        toast.success("Busca dados com placa concluida");
-      }
-    } catch (error) {
-      console.log(error)
-      toast.error("Erro ao buscar placa")
-    } finally {
-      setIsPlateLookupLoading(false);
-    }
-  }
-
   const handleAddNewExtra = () => {
     const newExtra: ExtraProps = {
       role: "",
@@ -443,8 +398,9 @@ export default function SimulacaoPage() {
       setCpfFederalStatus("");
       setCpfFederalUpdatedAt("");
       setCpfFederalSource("");
+      setValue("motherName", "");
     }
-  }, [cpfValue]);
+  }, [cpfValue, setValue]);
 
   useEffect(() => {
     const manualAddressItems: CpfSummaryItem[] = [];
@@ -483,6 +439,13 @@ export default function SimulacaoPage() {
   ]);
 
   useEffect(() => {
+    const motherItems: CpfSummaryItem[] = motherNameValue
+      ? [{ label: "Nome da mãe", value: motherNameValue }]
+      : [];
+    updateSummaryEntries(motherItems, ["Nome da mãe"]);
+  }, [motherNameValue, updateSummaryEntries]);
+
+  useEffect(() => {
     const cnhItems: CpfSummaryItem[] = haveCNHValue
       ? [
           { label: "Possui CNH", value: "Sim" },
@@ -493,6 +456,14 @@ export default function SimulacaoPage() {
       : [];
     updateSummaryEntries(cnhItems, CNH_LABELS);
   }, [haveCNHValue, categoryCNHValue, updateSummaryEntries]);
+
+  useEffect(() => {
+    const contactItems: CpfSummaryItem[] = [
+      { label: "Telefone", value: phoneValue },
+      { label: "E-mail", value: emailValue },
+    ].filter((item) => Boolean(item.value));
+    updateSummaryEntries(contactItems, CONTACT_LABELS);
+  }, [phoneValue, emailValue, updateSummaryEntries]);
 
   useEffect(() => {
     if (!watch("haveCNH")) {
@@ -529,30 +500,29 @@ export default function SimulacaoPage() {
           Simulador de Propostas
         </p>
         <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Preencha todos os dados do cliente e do veículo em um único fluxo simples
+          Preencha todos os dados do cliente em um único fluxo simples
         </h1>
         <p className="text-sm text-muted-foreground">
-          Informe os dados do cliente, consulte automaticamente o veículo pela placa e gere a ficha pronta para análise no sistema administrativo.
+          Informe os dados do cliente e gere a ficha pronta para análise no sistema administrativo.
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid gap-6 lg:grid-cols-2">
-        <div className="space-y-6">
-          <Card>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
+          <Card className="h-full">
             <CardHeader>
               <div className="flex gap-3 items-center">
                 <UserCircle2 className="h-10 w-10" />
                 <aside className="flex flex-col gap-1.5">
                   <CardTitle>Informações do cliente</CardTitle>
                   <CardDescription>
-                    Use a placa para buscar as informações pré-configuradas ou
-                    preencha manualmente.
+                    Preencha ou consulte os dados principais do cliente.
                   </CardDescription>
                 </aside>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex flex-col gap-4">
+              <div className="space-y-4">
                 <div className="grid gap-4 items-start md:grid-cols-2">
                   <div className="space-y-3">
                     <Label htmlFor="haveCNH">Possui CNH?</Label>
@@ -578,124 +548,134 @@ export default function SimulacaoPage() {
                           </Fragment>
                         )}
                       />
-                </div>
-                <div className="space-y-3">
-                    <Label htmlFor="categoryCNH">Categoria da CNH</Label>
-                    
-                    <Controller
-                      name="categoryCNH"
-                      control={control}
-                      defaultValue=""
-                      render={({ field }) => (
-                        <Fragment>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            disabled={!watch("haveCNH")}
-                          >
-                            <SelectTrigger className="w-full">
-                              <SelectValue placeholder="Selecione a categoria" />
-                            </SelectTrigger>
+                  </div>
+                  <div className="space-y-3">
+                      <Label htmlFor="categoryCNH">Categoria da CNH</Label>
+                      
+                      <Controller
+                        name="categoryCNH"
+                        control={control}
+                        defaultValue=""
+                        render={({ field }) => (
+                          <Fragment>
+                            <Select
+                              value={field.value}
+                              onValueChange={field.onChange}
+                              disabled={!watch("haveCNH")}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione a categoria" />
+                              </SelectTrigger>
 
-                            <SelectContent>
-                              <SelectItem value="A">A</SelectItem>
-                              <SelectItem value="B">B</SelectItem>
-                              <SelectItem value="AB">AB</SelectItem>
-                              <SelectItem value="C">C</SelectItem>
-                              <SelectItem value="D">D</SelectItem>
-                              <SelectItem value="E">E</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {errors.categoryCNH && (
-                            <p className="text-red-500 text-xs mt-1">{errors.categoryCNH.message}</p>
-                          )}
-                        </Fragment>
-                      )}
-                    />
-                </div>
-                    <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="cpf">CPF (consulta automática)</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          id="cpf"
-                          inputMode="numeric"
-                          maxLength={14}
-                          placeholder="Digite o CPF para buscar os dados"
-                          {...register("cpf")}
-                          onChange={
-                            (e) => {
-                              const masked = maskCPF(e.target.value);
-                              setValue("cpf", masked, { shouldValidate: true })
-                            }
-                          }
-                        />
-                        {errors.cpf && (
-                          <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
-                        )}
-
-                        <div className="flex items-end">
-                          <Button
-                            type="button"
-                            className="w-full gap-2"
-                            onClick={() => handleCPFLookup(getValues("cpf"))}
-                            disabled={isCPFLookupLoading || noHaveCPF}
-                          >
-                            {isCPFLookupLoading ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Search className="size-4" />
+                              <SelectContent>
+                                <SelectItem value="A">A</SelectItem>
+                                <SelectItem value="B">B</SelectItem>
+                                <SelectItem value="AB">AB</SelectItem>
+                                <SelectItem value="C">C</SelectItem>
+                                <SelectItem value="D">D</SelectItem>
+                                <SelectItem value="E">E</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {errors.categoryCNH && (
+                              <p className="text-red-500 text-xs mt-1">{errors.categoryCNH.message}</p>
                             )}
-                            Buscar dados com CPF
-                          </Button>
-                        </div>
+                          </Fragment>
+                        )}
+                      />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="cpf">CPF (consulta automática)</Label>
+                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-4">
+                      <Input
+                        id="cpf"
+                        inputMode="numeric"
+                        maxLength={14}
+                        placeholder="Digite o CPF para buscar os dados"
+                        {...register("cpf")}
+                        onChange={
+                          (e) => {
+                            const masked = maskCPF(e.target.value);
+                            setValue("cpf", masked, { shouldValidate: true })
+                          }
+                        }
+                      />
+                      {errors.cpf && (
+                        <p className="text-red-500 text-xs mt-1">{errors.cpf.message}</p>
+                      )}
+
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          className="w-full gap-2"
+                          onClick={() => handleCPFLookup(getValues("cpf"))}
+                          disabled={isCPFLookupLoading || noHaveCPF}
+                        >
+                          {isCPFLookupLoading ? (
+                            <Loader2 className="size-4 animate-spin" />
+                          ) : (
+                            <Search className="size-4" />
+                          )}
+                          Buscar dados com CPF
+                        </Button>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        Preencha o CPF corretamente para preenchimento automático dos demais dados solicitados.
-                      </p>
                     </div>
-                     
-                     <div className="space-y-1">
-                  <Label htmlFor="email" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>E-mail</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="cliente@email.com"
-                    {...register("email")}
-                    className={clsx(isCPFLookupLoading && "input-loading")}
-                    disabled={noHaveCPF || isCPFLookupLoading}
-                  />
-                  {errors.email && (
-                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
-                  )}
+                    <p className="text-xs text-muted-foreground">
+                      Preencha o CPF corretamente para preenchimento automático dos demais dados solicitados.
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="motherName">Nome da mãe</Label>
+                    <Input
+                      id="motherName"
+                      placeholder="Nome completo da mãe"
+                      {...register("motherName")}
+                      className={clsx(isCPFLookupLoading && "input-loading")}
+                      disabled={isCPFLookupLoading}
+                    />
+                    {errors.motherName && (
+                      <p className="text-red-500 text-xs mt-1">{errors.motherName.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1">
+                    <Label htmlFor="email">E-mail</Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="cliente@email.com"
+                      {...register("email")}
+                      className={clsx(isCPFLookupLoading && "input-loading")}
+                      disabled={isCPFLookupLoading}
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
+                    )}
                     <div className="space-y-1">
-                  <Input/>
-                </div>
-                </div>
+                      <Input />
+                    </div>
+                  </div>
 
-
-                
-                <div className="space-y-3">
-                  <Label htmlFor="phone" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Telefone / Whatsapp</Label>
-                  <Input
-                    id="phone"
-                    placeholder="(11) 99999-0000"
-                    {...register("phone")}
-                    onChange={
-                      (e) => {
-                        const masked = maskPhone(e.target.value);
-                        setValue("phone", masked, { shouldValidate: true })
+                  <div className="space-y-3 md:col-span-2">
+                    <Label htmlFor="phone">Telefone / Whatsapp</Label>
+                    <Input
+                      id="phone"
+                      placeholder="(11) 99999-0000"
+                      {...register("phone")}
+                      onChange={
+                        (e) => {
+                          const masked = maskPhone(e.target.value);
+                          setValue("phone", masked, { shouldValidate: true })
+                        }
                       }
-                    }
-                    className={clsx(isCPFLookupLoading && "input-loading")}
-                    disabled={noHaveCPF || isCPFLookupLoading}
-                  />
+                      className={clsx(isCPFLookupLoading && "input-loading")}
+                      disabled={isCPFLookupLoading}
+                    />
+                  </div>
                 </div>
-                </div>
+
                 <Separator />
-              </div>
-              
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-3 col-span-2">
+
+                <div className="space-y-3">
                   <Label htmlFor="zipCode">CEP</Label>
                   <div className="flex flex-col gap-2 md:flex-row md:items-center">
                     <Input
@@ -731,248 +711,88 @@ export default function SimulacaoPage() {
                   {errors.zipCode && (
                     <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
                   )}
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-1">
-                      <Label htmlFor="addressStreet">Rua</Label>
-                      <Input
-                        id="addressStreet"
-                        placeholder="Av. Brasil"
-                        {...register("addressStreet")}
-                      />
-                      {errors.addressStreet && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressStreet.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="addressNeighborhood">Bairro</Label>
-                      <Input
-                        id="addressNeighborhood"
-                        placeholder="Centro"
-                        {...register("addressNeighborhood")}
-                      />
-                      {errors.addressNeighborhood && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressNeighborhood.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="addressCity">Cidade</Label>
-                      <Input
-                        id="addressCity"
-                        placeholder="Campinas"
-                        {...register("addressCity")}
-                      />
-                      {errors.addressCity && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressCity.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="addressState">Estado</Label>
-                      <Input
-                        id="addressState"
-                        placeholder="SP"
-                        maxLength={2}
-                        {...register("addressState")}
-                        onChange={(e) =>
-                          setValue("addressState", e.target.value.toUpperCase(), {
-                            shouldValidate: true,
-                          })
-                        }
-                      />
-                      {errors.addressState && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressState.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="addressNumber">Número</Label>
-                      <Input
-                        id="addressNumber"
-                        placeholder="123"
-                        {...register("addressNumber")}
-                      />
-                      {errors.addressNumber && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-1">
-                      <Label htmlFor="addressComplement">Complemento</Label>
-                      <Input
-                        id="addressComplement"
-                        placeholder="Apartamento, bloco, etc"
-                        {...register("addressComplement")}
-                      />
-                      {errors.addressComplement && (
-                        <p className="text-red-500 text-xs mt-1">{errors.addressComplement.message}</p>
-                      )}
-                    </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label htmlFor="addressStreet">Rua</Label>
+                    <Input
+                      id="addressStreet"
+                      placeholder="Av. Brasil"
+                      {...register("addressStreet")}
+                    />
+                    {errors.addressStreet && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressStreet.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="addressNeighborhood">Bairro</Label>
+                    <Input
+                      id="addressNeighborhood"
+                      placeholder="Centro"
+                      {...register("addressNeighborhood")}
+                    />
+                    {errors.addressNeighborhood && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressNeighborhood.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="addressCity">Cidade</Label>
+                    <Input
+                      id="addressCity"
+                      placeholder="Campinas"
+                      {...register("addressCity")}
+                    />
+                    {errors.addressCity && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressCity.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="addressState">Estado</Label>
+                    <Input
+                      id="addressState"
+                      placeholder="SP"
+                      maxLength={2}
+                      {...register("addressState")}
+                      onChange={(e) =>
+                        setValue("addressState", e.target.value.toUpperCase(), {
+                          shouldValidate: true,
+                        })
+                      }
+                    />
+                    {errors.addressState && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressState.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="addressNumber">Número</Label>
+                    <Input
+                      id="addressNumber"
+                      placeholder="123"
+                      {...register("addressNumber")}
+                    />
+                    {errors.addressNumber && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressNumber.message}</p>
+                    )}
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="addressComplement">Complemento</Label>
+                    <Input
+                      id="addressComplement"
+                      placeholder="Apartamento, bloco, etc"
+                      {...register("addressComplement")}
+                    />
+                    {errors.addressComplement && (
+                      <p className="text-red-500 text-xs mt-1">{errors.addressComplement.message}</p>
+                    )}
                   </div>
                 </div>
-               
-               
               </div>
-              <Card>
-                <CardHeader>
-                  <div className="flex gap-3 items-center">
-                    <GiReceiveMoney className="h-10 w-10" />
-                    <aside className="flex flex-col gap-1.5">
-                      <CardTitle>Informações de Renda</CardTitle>
-                      <CardDescription>
-                        Preencha qual os dados quanto a renda do cliente.
-                      </CardDescription>
-                    </aside>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <div className="space-y-3">
-                        <Label htmlFor="enterprise">Empresa</Label>
-                        <Input
-                          id="enterprise"
-                          placeholder="Informe a empresa que trabalha"
-                          {...register("enterprise")}
-                          type="text"
-                        />
-                        {errors.enterprise && (
-                          <p className="text-red-500 text-xs mt-1">{errors.enterprise.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                        <Label htmlFor="function">Função exercida</Label>
-                        <Input
-                          id="function"
-                          placeholder="Informe a função que exerce"
-                          {...register("function")}
-                          type="text"
-                        />
-                        {errors.function && (
-                          <p className="text-red-500 text-xs mt-1">{errors.function.message}</p>
-                        )}
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="admission">Data de admissão</Label>
-                      <Input
-                        id="admission"
-                        inputMode="numeric"
-                        maxLength={10}
-                        placeholder="DD/MM/AAAA"
-                        {...register("admission")}
-                        onChange={
-                          (e) => {
-                            const masked = maskDate(e.target.value);
-                            setValue("admission", masked, { shouldValidate: true })
-                          }
-                        }
-                      />
-                      {errors.admission && (
-                        <p className="text-red-500 text-xs mt-1">{errors.admission.message}</p>
-                      )}
-                    </div>
-                    <div className="space-y-3">
-                      <Label htmlFor="income.mainValue">Renda</Label>
-                      <Input
-                        id="income.mainValue"
-                        type="text"
-                        {...register("income.mainValue")}
-                        placeholder="R$50.760"
-                        onChange={
-                          (e) => {
-                            const masked = maskBRL(e.target.value);
-                            setValue("income.mainValue", masked, { shouldValidate: true })
-                          }
-                        }
-                      />
-                      {errors.income?.mainValue && (
-                        <p className="text-red-500 text-xs mt-1">{errors.income?.mainValue.message}</p>
-                      )}
-                      <button
-                        className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > 0 ? "hidden" : ""}`}
-                        onClick={handleAddNewExtra}
-                        disabled={extra.length > 0}
-                      >
-                        <Plus className="size-4"/>
-                        Adicionar renda extra
-                      </button>
-                    </div>
-                    {
-                       extra.length > 0 && (
-                        <Card className="w-full col-span-2">
-                            <CardHeader>
-                              <div className="flex items-center justify-between">
-                                <div className="flex gap-3 items-center">
-                                  <Coins className="h-10 w-10" />
-                                  <aside className="flex flex-col gap-1.5">
-                                    <CardTitle>Renda Extra</CardTitle>
-                                    <CardDescription>
-                                      Adicione informações da(s) renda(s) extra do cliente.
-                                    </CardDescription>
-                                  </aside>
-                                </div>
-                                <Button variant="destructive" size="icon" onClick={handleDeleteExtra}>
-                                  <Trash2 />
-                                </Button>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="grid gap-4 md:grid-cols-2">
-                                {
-                                  extra.map((extraInfo, index) => (
-                                    <Fragment key={index}>
-                                      <div className="space-y-3">
-                                        <Label htmlFor="extraValue">Valor</Label>
-                                        <Input
-                                          id="extraValue"
-                                          type="text"
-                                          {...register(`income.extra.${index}.value`)}
-                                          placeholder="R$50.760"
-                                          onChange={
-                                            (e) => {
-                                              const masked = maskBRL(e.target.value);
-                                              setValue(`income.extra.${index}.value`, masked, { shouldValidate: true })
-                                            }
-                                          }
-                                        />
-                                        {errors.income?.extra?.[index]?.value && (
-                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.value.message}</p>
-                                        )}
-                                      </div>
-
-                                      <div className="space-y-3">
-                                        <Label htmlFor="extraRole">Função exercida</Label>
-                                        <Input
-                                          id="extraRole"
-                                          placeholder="Informe a função que exerce"
-                                          {...register(`income.extra.${index}.role`)}
-                                          type="text"
-                                        />
-                                        {errors.income?.extra?.[index]?.role && (
-                                          <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.role.message}</p>
-                                        )}
-                                        <button
-                                          className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > index + 1 ? "hidden" : ""}`}
-                                          onClick={handleAddNewExtra}
-                                          disabled={extra.length > index + 1}
-                                        >
-                                          <Plus className="size-4"/>
-                                          Adicionar renda extra
-                                        </button>
-                                      </div>
-                                    </Fragment>
-                                  ))
-                                }
-                              </div>
-                            </CardContent>
-                          </Card>
-                      ) 
-                    }
-                  </div>
-                </CardContent>
-              </Card>
             </CardContent>
           </Card>
-        </div>
 
-        <div className="space-y-6">
           {cpfSummary.length > 0 && (
-            <Card>
+            <Card className="h-full">
               <CardHeader>
                 <div className="flex gap-3 items-center">
                   <CheckCircle2 className="h-10 w-10 text-emerald-500" />
@@ -1027,221 +847,165 @@ export default function SimulacaoPage() {
               </CardContent>
             </Card>
           )}
-          <Card>
-            <CardHeader>
-              <div className="flex gap-3 items-center">
-                <GiCarKey className="h-10 w-10" />
-                <aside className="flex flex-col gap-1.5">
-                  <CardTitle>Dados do veículo</CardTitle>
-                  <CardDescription>
-                    Use a placa para buscar as informações pré-configuradas ou
-                    preencha manualmente.
-                  </CardDescription>
-                </aside>
-              </div>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              
-              <div className="flex flex-col gap-4">
-                <div className="grid gap-4 items-center">
-                    <div className="space-y-2">
-                      <Label htmlFor="vehiclePlate">Placa do veículo</Label>
-                      <div className="flex items-center gap-4">
-                        <Input
-                          id="vehiclePlate"
-                          placeholder="ABC-1234 ou ABC1D23"
-                          maxLength={8}
-                          inputMode="text"
-                          {...register("vehiclePlate")}
-                          onChange={
-                            (e) => {
-                              const masked = maskPlate(e.target.value);
-                              setValue("vehiclePlate", masked, { shouldValidate: true })
-                            }
-                          }
-                        />
-                        {errors.vehiclePlate && (
-                          <p className="text-red-500 text-xs mt-1">{errors.vehiclePlate.message}</p>
-                        )}
+        </div>
 
-                        <div className="flex items-end">
-                          <Button
-                            type="button"
-                            className="w-full gap-2"
-                            onClick={() => handlePlateLookup(getValues("vehiclePlate"))}
-                            disabled={isPlateLookupLoading || !getValues("vehiclePlate")}
-                          >
-                            {isPlateLookupLoading ? (
-                              <Loader2 className="size-4 animate-spin" />
-                            ) : (
-                              <Search className="size-4" />
-                            )}
-                            Buscar dados com placa
+        <Card>
+          <CardHeader>
+            <div className="flex gap-3 items-center">
+              <GiReceiveMoney className="h-10 w-10" />
+              <aside className="flex flex-col gap-1.5">
+                <CardTitle>Informações de Renda</CardTitle>
+                <CardDescription>
+                  Preencha qual os dados quanto a renda do cliente.
+                </CardDescription>
+              </aside>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-3">
+                  <Label htmlFor="enterprise">Empresa</Label>
+                  <Input
+                    id="enterprise"
+                    placeholder="Informe a empresa que trabalha"
+                    {...register("enterprise")}
+                    type="text"
+                  />
+                  {errors.enterprise && (
+                    <p className="text-red-500 text-xs mt-1">{errors.enterprise.message}</p>
+                  )}
+              </div>
+              <div className="space-y-3">
+                  <Label htmlFor="function">Função exercida</Label>
+                  <Input
+                    id="function"
+                    placeholder="Informe a função que exerce"
+                    {...register("function")}
+                    type="text"
+                  />
+                  {errors.function && (
+                    <p className="text-red-500 text-xs mt-1">{errors.function.message}</p>
+                  )}
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="admission">Data de admissão</Label>
+                <Input
+                  id="admission"
+                  inputMode="numeric"
+                  maxLength={10}
+                  placeholder="DD/MM/AAAA"
+                  {...register("admission")}
+                  onChange={
+                    (e) => {
+                      const masked = maskDate(e.target.value);
+                      setValue("admission", masked, { shouldValidate: true })
+                    }
+                  }
+                />
+                {errors.admission && (
+                  <p className="text-red-500 text-xs mt-1">{errors.admission.message}</p>
+                )}
+              </div>
+              <div className="space-y-3">
+                <Label htmlFor="income.mainValue">Renda</Label>
+                <Input
+                  id="income.mainValue"
+                  type="text"
+                  {...register("income.mainValue")}
+                  placeholder="R$50.760"
+                  onChange={
+                    (e) => {
+                      const masked = maskBRL(e.target.value);
+                      setValue("income.mainValue", masked, { shouldValidate: true })
+                    }
+                  }
+                />
+                {errors.income?.mainValue && (
+                  <p className="text-red-500 text-xs mt-1">{errors.income?.mainValue.message}</p>
+                )}
+                <button
+                  className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > 0 ? "hidden" : ""}`}
+                  onClick={handleAddNewExtra}
+                  disabled={extra.length > 0}
+                >
+                  <Plus className="size-4"/>
+                  Adicionar renda extra
+                </button>
+              </div>
+              {
+                 extra.length > 0 && (
+                  <Card className="w-full col-span-2">
+                      <CardHeader>
+                        <div className="flex items-center justify-between">
+                          <div className="flex gap-3 items-center">
+                            <Coins className="h-10 w-10" />
+                            <aside className="flex flex-col gap-1.5">
+                              <CardTitle>Renda Extra</CardTitle>
+                              <CardDescription>
+                                Adicione informações da(s) renda(s) extra do cliente.
+                              </CardDescription>
+                            </aside>
+                          </div>
+                          <Button variant="destructive" size="icon" onClick={handleDeleteExtra}>
+                            <Trash2 />
                           </Button>
                         </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Aceitamos placas no padrão Mercosul e antigo. A consulta FIPE
-                        usa uma base local de demonstração.
-                      </p>
-                    </div>
-                </div>
-                <Separator />
-              </div>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid gap-4 md:grid-cols-2">
+                          {
+                            extra.map((extraInfo, index) => (
+                              <Fragment key={index}>
+                                <div className="space-y-3">
+                                  <Label htmlFor="extraValue">Valor</Label>
+                                  <Input
+                                    id="extraValue"
+                                    type="text"
+                                    {...register(`income.extra.${index}.value`)}
+                                    placeholder="R$50.760"
+                                    onChange={
+                                      (e) => {
+                                        const masked = maskBRL(e.target.value);
+                                        setValue(`income.extra.${index}.value`, masked, { shouldValidate: true })
+                                      }
+                                    }
+                                  />
+                                  {errors.income?.extra?.[index]?.value && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.value.message}</p>
+                                  )}
+                                </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="space-y-3">
-                  <Label htmlFor="vehicleBrand" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Marca</Label>
-                  <Input
-                    id="vehicleBrand"
-                    placeholder="Marca"
-                    {...register("vehicleBrand")}
-                    className={clsx(isPlateLookupLoading && "input-loading")}
-                    disabled={noHavePlate || isPlateLookupLoading}
-                  />
-                  {errors.vehicleBrand && (
-                    <p className="text-red-500 text-xs mt-1">{errors.vehicleBrand.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="vehicleModel" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Modelo</Label>
-                  <Input
-                    id="vehicleModel"
-                    placeholder="Modelo"
-                    {...register("vehicleModel")}
-                    className={clsx(isPlateLookupLoading && "input-loading")}
-                    disabled={noHavePlate || isPlateLookupLoading}
-                  />
-                  {errors.vehicleModel && (
-                    <p className="text-red-500 text-xs mt-1">{errors.vehicleModel.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="vehicleYear" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Ano</Label>
-                  <Controller
-                    name="vehicleYear"
-                    control={control}
-                    defaultValue=""
-                    render={({ field }) => {
-                      const currentYear = new Date().getFullYear();
-                      const years = Array.from(
-                        { length: currentYear - 1990 + 1 },
-                        (_, i) => String(currentYear - i)
-                      );
-
-                      return (
-                        <Fragment>
-                          <Select
-                            value={field.value}
-                            onValueChange={field.onChange}
-                            disabled={noHavePlate || isPlateLookupLoading}
-                          >
-                            <SelectTrigger className={clsx("w-full", isPlateLookupLoading && "input-loading")}>
-                              <SelectValue placeholder="Selecione o ano" />
-                            </SelectTrigger>
-
-                            <SelectContent className="max-h-40">
-                              {years.map((year) => (
-                                <SelectItem key={year} value={year}>
-                                  {year}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {errors.vehicleYear && (
-                            <p className="text-red-500 text-xs mt-1">{errors.vehicleYear.message}</p>
-                          )}
-                        </Fragment>
-                      );
-                    }}
-                  />
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="codeFIPE" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Código FIPE</Label>
-                  <Input
-                    id="codeFIPE"
-                    placeholder="000000-0"
-                    {...register("codeFIPE")}
-                    onChange={
-                      (e) => {
-                        const masked = maskFipeCode(e.target.value);
-                        setValue("codeFIPE", masked, { shouldValidate: true })
-                      }
-                    }
-                    className={clsx(isPlateLookupLoading && "input-loading")}
-                    disabled={noHavePlate || isPlateLookupLoading}
-                  />
-                  {errors.codeFIPE && (
-                    <p className="text-red-500 text-xs mt-1">{errors.codeFIPE.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="space-y-3">
-                  <Label htmlFor="priceFIPE" className={clsx(noHavePlate ? "opacity-40" : "opacity-100")}>Valor FIPE</Label>
-                  <Input
-                    id="priceFIPE"
-                    type="text"
-                    {...register("priceFIPE")}
-                    placeholder="R$69.900"
-                    onChange={
-                      (e) => {
-                        const masked = maskBRL(e.target.value);
-                        setValue("priceFIPE", masked, { shouldValidate: true })
-                      }
-                    }
-                    className={clsx(isPlateLookupLoading && "input-loading")}
-                    disabled={noHavePlate || isPlateLookupLoading}
-                  />
-                  {errors.priceFIPE && (
-                    <p className="text-red-500 text-xs mt-1">{errors.priceFIPE.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="entryPrice">Entrada</Label>
-                  <Input
-                    id="entryPrice"
-                    type="text"
-                    placeholder="R$80.900"
-                    {...register("entryPrice")}
-                    onChange={
-                      (e) => {
-                        const masked = maskBRL(e.target.value);
-                        setValue("entryPrice", masked, { shouldValidate: true })
-                      }
-                    }
-                  />
-                  {errors.entryPrice && (
-                    <p className="text-red-500 text-xs mt-1">{errors.entryPrice.message}</p>
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <Label htmlFor="financedPrice">Valor financiado</Label>
-                  <Input
-                    id="financedPrice"
-                    type="text"
-                    placeholder="R$80.980"
-                    disabled={isCalculating}
-                    {...register("financedPrice")}
-                    onChange={
-                      (e) => {
-                        const masked = maskBRL(e.target.value);
-                        setValue("financedPrice", masked, { shouldValidate: true })
-                      }
-                    }
-                  />
-                  {errors.financedPrice && (
-                    <p className="text-red-500 text-xs mt-1">{errors.financedPrice.message}</p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-         
-        </div>
+                                <div className="space-y-3">
+                                  <Label htmlFor="extraRole">Função exercida</Label>
+                                  <Input
+                                    id="extraRole"
+                                    placeholder="Informe a função que exerce"
+                                    {...register(`income.extra.${index}.role`)}
+                                    type="text"
+                                  />
+                                  {errors.income?.extra?.[index]?.role && (
+                                    <p className="text-red-500 text-xs mt-1">{errors.income?.extra?.[index]?.role.message}</p>
+                                  )}
+                                  <button
+                                    className={`flex items-center gap-2 text-xs text-muted-foreground p-0.5 ${extra.length > index + 1 ? "hidden" : ""}`}
+                                    onClick={handleAddNewExtra}
+                                    disabled={extra.length > index + 1}
+                                  >
+                                    <Plus className="size-4"/>
+                                    Adicionar renda extra
+                                  </button>
+                                </div>
+                              </Fragment>
+                            ))
+                          }
+                        </div>
+                      </CardContent>
+                    </Card>
+                ) 
+              }
+            </div>
+          </CardContent>
+        </Card>
       </form>
     </div>
 
