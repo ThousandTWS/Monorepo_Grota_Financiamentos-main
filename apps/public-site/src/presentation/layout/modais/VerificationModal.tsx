@@ -23,6 +23,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
 import clsx from "clsx";
+import { toast } from "sonner";
 
 interface VerificationModalProps {
   isOpen: boolean;
@@ -82,13 +83,9 @@ export function VerificationModal({
   });
 
   const handleSuccess = () => {
-    setMessage({
-      message: "Código validado! Você será redirecionado",
-      type: "SUCCESS",
-    });
+    toast.success("Código validado! Você será redirecionado");
     setTimeout(() => {
       onClose();
-      setMessage(null);
       reset();
       const event = new CustomEvent("openLoginModal");
       window.dispatchEvent(event);
@@ -97,7 +94,6 @@ export function VerificationModal({
 
   const handleVerifyToken = async (data: VerificationFormData) => {
     setIsLoading(true);
-    setMessage(null);
 
     try {
       const response = await api.put("/auth/verify-code", {
@@ -108,18 +104,11 @@ export function VerificationModal({
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       response.data.success
         ? handleSuccess()
-        : setMessage({
-            message:
-              "Código inválido. Por favor, verifique sua caixa de entrada.",
-            type: "ERROR",
-          });
+        : toast.error(
+            "Código inválido. Por favor, verifique sua caixa de entrada."
+          );
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao verificar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao verificar o código. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -136,14 +125,14 @@ export function VerificationModal({
         newPassword: data.newPassword,
       });
 
-      if (response.data.success) handleSuccess();
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      response.data.success
+        ? handleSuccess()
+        : toast.error(
+            "Código inválido. Por favor, verifique sua caixa de entrada."
+          );
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao verificar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao verificar o código. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -163,23 +152,12 @@ export function VerificationModal({
       }
 
       if (response?.data?.success) {
-        setMessage({
-          message: "Código reenviado com sucesso!",
-          type: "SUCCESS",
-        });
+        toast.success("Código reenviado com sucesso!");
       } else {
-        setMessage({
-          message: "Erro ao reenviar código.",
-          type: "ERROR",
-        });
+        toast.error("Erro ao reenviar código.");
       }
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao reenviar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao reenviar o código. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
@@ -306,6 +284,7 @@ export function VerificationModal({
                     id="newPassword"
                     {...register("newPassword")}
                     className={inputStyle}
+                    maxLength={8}
                     placeholder="Mínimo 8 caracteres"
                     disabled={isLoading}
                   />

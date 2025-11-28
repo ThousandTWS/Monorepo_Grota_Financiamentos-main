@@ -87,7 +87,13 @@ export class MockAuthService {
           data?.error ||
           "Não foi possível concluir seu cadastro.";
 
-        if (status === 400 || status === 409 || status === 422) {
+        if (
+          status === 400 ||
+          status === 409 ||
+          status === 422 ||
+          status === 401 ||
+          status === 402
+        ) {
           return {
             success: false,
             message: apiMessage,

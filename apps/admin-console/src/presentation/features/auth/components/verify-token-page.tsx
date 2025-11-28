@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import type React from "react"
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
 interface Message {
@@ -69,12 +70,8 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
   });
 
   const handleSuccess = () => {
-    setMessage({
-      message: "Código validado! Você será redirecionado",
-      type: "SUCCESS",
-    });
+    toast.success("Código validado! Você será redirecionado")
     setTimeout(() => {
-      setMessage(null);
       reset();
       router.push("/");
     }, 3000);
@@ -93,18 +90,9 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
       // eslint-disable-next-line @typescript-eslint/no-unused-expressions
       response.data.success
         ? handleSuccess()
-        : setMessage({
-            message:
-              "Código inválido. Por favor, verifique sua caixa de entrada.",
-            type: "ERROR",
-          });
+        : toast.error("Código inválido. Por favor, verifique sua caixa de entrada.")
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao verificar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao verificar o código. Tente novamente.")
     } finally {
       setIsLoading(false);
     }
@@ -121,14 +109,12 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
         newPassword: data.newPassword,
       });
 
-      if (response.data.success) handleSuccess();
+      // eslint-disable-next-line @typescript-eslint/no-unused-expressions
+      response.data.success
+        ? handleSuccess()
+        : toast.error("Código inválido. Por favor, verifique sua caixa de entrada.")
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao verificar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao verificar o código. Tente novamente.")
     } finally {
       setIsLoading(false);
     }
@@ -148,23 +134,12 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
       }
 
       if (response?.data?.success) {
-        setMessage({
-          message: "Código reenviado com sucesso!",
-          type: "SUCCESS",
-        });
+        toast.success("Código reenviado com sucesso!");
       } else {
-        setMessage({
-          message: "Erro ao reenviar código.",
-          type: "ERROR",
-        });
+        toast.error("Erro ao reenviar código.")
       }
     } catch (apiError: any) {
-      setMessage({
-        message:
-          apiError.response?.data?.message ||
-          "Erro ao reenviar o código. Tente novamente.",
-        type: "ERROR",
-      });
+      toast.error("Erro ao reenviar o código. Tente novamente.")
     } finally {
       setIsLoading(false);
     }
@@ -239,6 +214,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
                       type="password"
                       {...register("newPassword")}
                       placeholder="Digite sua senha"
+                      maxLength={8}
                       className="w-full bg-transparent text-black text-sm p-4 rounded-2xl focus:outline-none"
                       disabled={isLoading}
                     />

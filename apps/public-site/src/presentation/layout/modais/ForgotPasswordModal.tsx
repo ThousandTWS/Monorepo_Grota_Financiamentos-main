@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { X, Mail, AlertCircle, Loader2 } from "lucide-react";
+import { X, Mail, Loader2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
 import { VerificationType } from "@/application/core/@types/verification.type";
+import { toast } from "sonner";
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -15,13 +16,11 @@ export function ForgotPasswordModal({
   onClose,
 }: ForgotPasswordModalProps) {
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState("");
-  const { forgotPassword, isLoading, error, clearError } = useAuth();
+  const { forgotPassword, isLoading, clearError } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    setSuccess("");
 
     if (!email) {
       return;
@@ -29,10 +28,9 @@ export function ForgotPasswordModal({
 
     const result = await forgotPassword(email);
     if (result.success) {
-      setSuccess(result.message);
+      toast.success(result.message);
       setTimeout(() => {
         onClose();
-        setSuccess("");
         setEmail("");
         const event = new CustomEvent("openVerificationModal", {
           detail: {
@@ -66,19 +64,6 @@ export function ForgotPasswordModal({
               Digite seu email para receber as instruções de recuperação
             </p>
           </div>
-
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <AlertCircle size={16} />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-              <span className="text-sm">{success}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>

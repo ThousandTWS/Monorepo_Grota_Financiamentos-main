@@ -39,6 +39,7 @@ const simulateProposalSchema = z.object({
   birthday: z.string().length(10, "Data de nascimento é obrigatório"),
   email: z.email("Formato de email inválido"),
   phone: z.string().length(15, "Formato de telefone inválido"),
+  motherName: z.string().length(4, "Nome da mãe é obrigatório"),
   enterprise: z.string().min(1, "Nome da empresa é obrigatória"),
   function: z.string().min(1, "Função exercida é obrigatória"),
   income: z.object({
@@ -102,6 +103,7 @@ export default function SimulacaoPage() {
       birthday: "",
       email: "",
       phone: "",
+      motherName: "",
       haveCNH: false,
       categoryCNH: "",
       enterprise: "",
@@ -144,10 +146,13 @@ export default function SimulacaoPage() {
       const pessoa = data?.data.response.content;
 
       if(pessoa) {
-        setValue("fullname", formatName(pessoa.nome.conteudo.nome) || "");
-        setValue("birthday", pessoa.nome.conteudo.data_nascimento || "");
-        setValue("email", pessoa.pessoas_contato.conteudo[0].numero || "");
-        setValue("phone", pessoa.emails.conteudo[0].email || "");
+        setValue("fullname", formatName(pessoa.nome.conteudo?.nome) ?? "");
+        setValue("birthday", pessoa.nome.conteudo?.data_nascimento ?? "");
+        setValue("motherName", pessoa.nome.conteudo?.mae ?? "");
+        setValue("phone", pessoa.pesquisa_telefones.conteudo?.length > 0 ? pessoa.pesquisa_telefones.conteudo[0]?.numero : "");
+        setValue("email", pessoa.emails.conteudo?.length > 0 ? pessoa.emails.conteudo[0]?.email : "");
+
+        toast.success("Dados da pessoa encontradas");
       }
 =======
       const proposal = await createProposal(payload);
@@ -165,7 +170,6 @@ export default function SimulacaoPage() {
       toast.error("Erro ao buscar CPF")
     } finally {
       setIsCPFLookupLoading(false);
-      toast.success("Busca dados com CPF concluida")
     }
   }
 
@@ -185,20 +189,20 @@ export default function SimulacaoPage() {
       const data = await response.json();
       const veiculo = data?.data.response;
 
-      console.log(data);
-
       if(veiculo) {
-        setValue("vehicleBrand", veiculo.Marca || "");
-        setValue("vehicleModel", formatName(veiculo.Modelo) || "");
-        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() || "");
-        setValue("codeFIPE", veiculo.CodigoFipe || "");
-        setValue("priceFIPE", veiculo.Valor || "");
+        setValue("vehicleBrand", veiculo.Marca ?? "");
+        setValue("vehicleModel", formatName(veiculo.Modelo) ?? "");
+        setValue("vehicleYear", veiculo.AnoModelo.split("/").pop() ?? "");
+        setValue("codeFIPE", veiculo.CodigoFipe ?? "");
+        setValue("priceFIPE", veiculo.Valor ?? "");
+
+        toast.success("Busca dados com placa concluida");
       }
     } catch (error) {
+      console.log(error)
       toast.error("Erro ao buscar placa")
     } finally {
       setIsPlateLookupLoading(false);
-      toast.success("Busca dados com placa concluida")
     }
   }
 
@@ -333,10 +337,11 @@ export default function SimulacaoPage() {
                     <Label htmlFor="fullname" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Nome completo</Label>
                     <Input
                       id="fullname"
-                      placeholder="Fulano da Silva"
+                      placeholder="Inform o nome completo do cliente"
                       {...register("fullname")}
                       type="text"
-                      disabled={noHaveCPF}
+                      className={clsx(isCPFLookupLoading && "input-loading")}
+                      disabled={noHaveCPF || isCPFLookupLoading}
                     />
                     {errors.fullname && (
                           <p className="text-red-500 text-xs mt-1">{errors.fullname.message}</p>
@@ -356,11 +361,26 @@ export default function SimulacaoPage() {
                         setValue("birthday", masked, { shouldValidate: true })
                       }
                     }
-                    disabled={noHaveCPF}
+                    className={clsx(isCPFLookupLoading && "input-loading")}
+                    disabled={noHaveCPF || isCPFLookupLoading}
                   />
                   {errors.birthday && (
                     <p className="text-red-500 text-xs mt-1">{errors.birthday.message}</p>
                   )}
+                </div>
+                <div className="space-y-3 col-span-2">
+                    <Label htmlFor="motherName" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>Nome da mãe</Label>
+                    <Input
+                      id="motherName"
+                      placeholder="Informe o nome completo da mãe do cliente"
+                      {...register("motherName")}
+                      type="text"
+                      className={clsx(isCPFLookupLoading && "input-loading")}
+                      disabled={noHaveCPF || isCPFLookupLoading}
+                    />
+                    {errors.motherName && (
+                          <p className="text-red-500 text-xs mt-1">{errors.motherName.message}</p>
+                    )}
                 </div>
                 <div className="space-y-3">
                   <Label htmlFor="email" className={clsx(noHaveCPF ? "opacity-40" : "opacity-100")}>E-mail</Label>
@@ -369,7 +389,8 @@ export default function SimulacaoPage() {
                     type="email"
                     placeholder="cliente@email.com"
                     {...register("email")}
-                    disabled={noHaveCPF}
+                    className={clsx(isCPFLookupLoading && "input-loading")}
+                    disabled={noHaveCPF || isCPFLookupLoading}
                   />
                   {errors.email && (
                     <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
@@ -387,7 +408,8 @@ export default function SimulacaoPage() {
                         setValue("phone", masked, { shouldValidate: true })
                       }
                     }
-                    disabled={noHaveCPF}
+                    className={clsx(isCPFLookupLoading && "input-loading")}
+                    disabled={noHaveCPF || isCPFLookupLoading}
                   />
                 </div>
                 <div className="space-y-3">
@@ -680,7 +702,8 @@ export default function SimulacaoPage() {
                     id="vehicleBrand"
                     placeholder="Marca"
                     {...register("vehicleBrand")}
-                    disabled={noHavePlate}
+                    className={clsx(isPlateLookupLoading && "input-loading")}
+                    disabled={noHavePlate || isPlateLookupLoading}
                   />
                   {errors.vehicleBrand && (
                     <p className="text-red-500 text-xs mt-1">{errors.vehicleBrand.message}</p>
@@ -692,7 +715,8 @@ export default function SimulacaoPage() {
                     id="vehicleModel"
                     placeholder="Modelo"
                     {...register("vehicleModel")}
-                    disabled={noHavePlate}
+                    className={clsx(isPlateLookupLoading && "input-loading")}
+                    disabled={noHavePlate || isPlateLookupLoading}
                   />
                   {errors.vehicleModel && (
                     <p className="text-red-500 text-xs mt-1">{errors.vehicleModel.message}</p>
@@ -716,9 +740,9 @@ export default function SimulacaoPage() {
                           <Select
                             value={field.value}
                             onValueChange={field.onChange}
-                            disabled={noHavePlate}
+                            disabled={noHavePlate || isPlateLookupLoading}
                           >
-                            <SelectTrigger className="w-full">
+                            <SelectTrigger className={clsx("w-full", isPlateLookupLoading && "input-loading")}>
                               <SelectValue placeholder="Selecione o ano" />
                             </SelectTrigger>
 
@@ -750,7 +774,8 @@ export default function SimulacaoPage() {
                         setValue("codeFIPE", masked, { shouldValidate: true })
                       }
                     }
-                    disabled={noHavePlate}
+                    className={clsx(isPlateLookupLoading && "input-loading")}
+                    disabled={noHavePlate || isPlateLookupLoading}
                   />
                   {errors.codeFIPE && (
                     <p className="text-red-500 text-xs mt-1">{errors.codeFIPE.message}</p>
@@ -772,7 +797,8 @@ export default function SimulacaoPage() {
                         setValue("priceFIPE", masked, { shouldValidate: true })
                       }
                     }
-                    disabled={noHavePlate}
+                    className={clsx(isPlateLookupLoading && "input-loading")}
+                    disabled={noHavePlate || isPlateLookupLoading}
                   />
                   {errors.priceFIPE && (
                     <p className="text-red-500 text-xs mt-1">{errors.priceFIPE.message}</p>

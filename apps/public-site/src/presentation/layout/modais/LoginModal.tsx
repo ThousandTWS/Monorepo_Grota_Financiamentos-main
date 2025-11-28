@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { X, Lock, AlertCircle, Loader2, Mail } from "lucide-react";
+import { X, Lock, Loader2, Mail } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
+import { toast } from "sonner";
 
 const LOGISTA = (
   process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3002"
@@ -25,8 +25,7 @@ interface LoginModalProps {
 }
 
 export function LoginModal({ isOpen, onClose }: LoginModalProps) {
-  const { signIn, isLoading, error, clearError } = useAuth();
-  const [success, setSuccess] = useState("");
+  const { signIn, isLoading } = useAuth();
 
   const {
     register,
@@ -37,16 +36,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   });
 
   const onSubmit = async (data: LoginForm) => {
-    clearError();
-    setSuccess("");
-
     if (!data.email || !data.password) {
       return;
     }
 
     const result = await signIn(data);
     if (result.success) {
-      setSuccess(result.message);
+      toast.success(result.message);
       setTimeout(() => {
         onClose();
         window.location.href = LOGISTA;
@@ -87,19 +83,6 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             </p>
           </div>
 
-          {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <AlertCircle size={16} />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700">
-              <span className="text-sm">{success}</span>
-            </div>
-          )}
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <InputGroup
               id="email"
@@ -128,6 +111,7 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 id="password"
                 {...register("password")}
                 className={inputStyle}
+                maxLength={8}
                 placeholder="••••••••"
                 disabled={isLoading}
               />

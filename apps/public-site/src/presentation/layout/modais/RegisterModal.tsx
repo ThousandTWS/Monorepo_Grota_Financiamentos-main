@@ -1,22 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import {
-  X,
-  User,
-  Lock,
-  Mail,
-  Phone,
-  Building,
-  AlertCircle,
-  Loader2,
-} from "lucide-react";
+import { X, User, Lock, Mail, Phone, Building, Loader2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { InputGroup } from "../shared/InputGroups";
 import { VerificationType } from "@/application/core/@types/verification.type";
+import { toast } from "sonner";
 
 interface RegisterModalProps {
   isOpen: boolean;
@@ -44,8 +35,7 @@ const registerSchema = z
 export type RegisterFormData = z.infer<typeof registerSchema>;
 
 export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
-  const [success, setSuccess] = useState("");
-  const { signUp, isLoading, error } = useAuth();
+  const { signUp, isLoading } = useAuth();
 
   const {
     register,
@@ -66,16 +56,13 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
   });
 
   const onSubmit = async (data: RegisterFormData) => {
-    setSuccess("");
-
     const result = await signUp(data);
 
     if (result.success) {
-      setSuccess("Conta criada com sucesso! Você será redirecionado.");
+      toast.success(result.message);
 
       setTimeout(() => {
         onClose();
-        setSuccess("");
         reset();
         const event = new CustomEvent("openVerificationModal", {
           detail: {
@@ -120,19 +107,6 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               Preencha os dados abaixo para se tornar um parceiro Grota.
             </p>
           </div>
-
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-300 rounded-lg flex items-start gap-3 text-red-800">
-              <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
-              <span className="text-sm font-medium">{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-300 rounded-lg text-green-800 font-medium text-sm">
-              {success}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <InputGroup
@@ -213,6 +187,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                   id="password"
                   {...register("password")}
                   className={inputStyle}
+                  maxLength={8}
                   placeholder="Mínimo 8 caracteres"
                   disabled={isLoading}
                 />

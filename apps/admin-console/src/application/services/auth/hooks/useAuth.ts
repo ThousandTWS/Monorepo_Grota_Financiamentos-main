@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthCredentials, AuthResult, MockAuthService, RegisterData } from '../MockAuthService';
+import { toast } from 'sonner';
 
 export function useAuth() {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,12 +15,14 @@ export function useAuth() {
       const result = await authService.signIn(credentials);
       if (!result.success) {
         setError(result.message);
+        toast.error(result.message);
       }
       return result;
 
     } catch (err) {
       const errorMessage = 'Erro de conexão. Tente novamente.';
       setError(errorMessage);
+      toast.error(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setIsLoading(false);
@@ -34,11 +37,13 @@ export function useAuth() {
       const result = await authService.signUp(data);
       if (!result.success) {
         setError(result.message);
+        toast.error(result.message);
       }
       return result;
     } catch (err) {
       const errorMessage = 'Erro de conexão. Tente novamente.';
       setError(errorMessage);
+      toast.error(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setIsLoading(false);
@@ -53,11 +58,13 @@ export function useAuth() {
       const result = await authService.forgotPassword(email);
       if (!result.success) {
         setError(result.message);
+        toast.error(result.message);
       }
       return result;
     } catch (err) {
       const errorMessage = 'Erro de conexão. Tente novamente.';
       setError(errorMessage);
+      toast.error(errorMessage);
       return { success: false, message: errorMessage };
     } finally {
       setIsLoading(false);

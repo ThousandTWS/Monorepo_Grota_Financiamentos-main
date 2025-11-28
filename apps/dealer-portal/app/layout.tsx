@@ -4,6 +4,7 @@ import "./globals.css";
 import { NotificationProvider } from "@grota/realtime-client";
 import { SidebarProvider } from "@/application/core/context/SidebarContext";
 import { ThemeProvider } from "@/application/core/context/ThemeContext";
+import { Toaster } from "sonner";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
           <ThemeProvider>
             <SidebarProvider>
               {children}
+              <Toaster  richColors position="top-right" />
             </SidebarProvider>
           </ThemeProvider>
         </NotificationProvider>

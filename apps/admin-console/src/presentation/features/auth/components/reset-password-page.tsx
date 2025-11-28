@@ -20,14 +20,12 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
 }) => {
   const { forgotPassword, isLoading, clearError } = useAuth();
   const [email, setEmail] = useState("");
-  const [success, setSuccess] = useState("");
 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
-    setSuccess("");
 
     if (!email) {
       return;
@@ -35,10 +33,8 @@ export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
 
     const result = await forgotPassword(email);
     if (result.success) {
-      setSuccess(result.message);
-      toast.success("Código enviado com sucesso!");
+      toast.success(result.success);
       setTimeout(() => {
-        setSuccess("");
         setEmail("");
         router.push(`/verificacao-token?tipo=redefinicao-senha&email=${email}`)
       }, 1500);
