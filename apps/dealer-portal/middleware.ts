@@ -26,10 +26,15 @@ export async function middleware(request: NextRequest) {
   const session = await decryptSession(sessionValue, SESSION_SECRET);
   const isAuthenticated =
     !!session && session.scope === LOGISTA_SESSION_SCOPE && !!session.userId;
+  const pathname = request.nextUrl.pathname;
 
   if (!isAuthenticated) {
     const loginFallback = getLogistaClientOrigin();
     return buildRedirectResponse(loginFallback, request);
+  }
+
+  if (isAuthenticated && pathname === "/") {
+    return buildRedirectResponse("/visao-geral", request);
   }
 
   return NextResponse.next();
