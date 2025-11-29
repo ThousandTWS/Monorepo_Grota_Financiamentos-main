@@ -120,8 +120,8 @@ export async function GET() {
   };
 
   const encoded = await encryptSession(activeSession, SESSION_SECRET);
-  const cookieStore = await cookies();
-  cookieStore.set({
+  const refreshedCookieStore = await cookies();
+  refreshedCookieStore.set({
     name: LOGISTA_SESSION_COOKIE,
     value: encoded,
     httpOnly: true,
