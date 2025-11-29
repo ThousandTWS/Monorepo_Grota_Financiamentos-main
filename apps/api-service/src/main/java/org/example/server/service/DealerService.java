@@ -75,7 +75,7 @@ public class DealerService {
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
         if (Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration())) {
-            user.setStatus(UserStatus.ATIVO);
+            user.markAsVerified();
         } else {
             user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
         }
