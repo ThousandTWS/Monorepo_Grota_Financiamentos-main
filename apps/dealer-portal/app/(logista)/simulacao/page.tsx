@@ -103,7 +103,7 @@ const PRESERVED_LABELS_ON_CPF_RESET = new Set([
   "Nome da mãe",
 ]);
 
-export default function SimulacaoPage() {
+export function SimulacaoPFForm() {
   const [isCPFLookupLoading, setIsCPFLookupLoading] = useState(false);
   const [isCepLookupLoading, setIsCepLookupLoading] = useState(false);
   const [extra, setExtra] = useState<ExtraProps[]>([]);
@@ -493,20 +493,6 @@ export default function SimulacaoPage() {
 
   return (
     <Fragment>
-      <div className="space-y-6">
-      <div>
-        <p className="text-sm font-semibold text-brand-500 flex items-center gap-2">
-          <FileText className="size-4" />
-          Simulador de Propostas
-        </p>
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
-          Preencha todos os dados do cliente em um único fluxo simples
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Informe os dados do cliente e gere a ficha pronta para análise no sistema administrativo.
-        </p>
-      </div>
-
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
           <Card className="h-full">
@@ -1007,16 +993,94 @@ export default function SimulacaoPage() {
           </CardContent>
         </Card>
       </form>
-    </div>
+      <ConfirmationDialog
+        isOpen={confirmationDialogIsOpen}
+        onOpenChange={setConfirmationDialogIsOpen}
+        resumeProposal={resumeProposal}
+        setResumeProposal={setResumeProposal}
+        resetForm={reset}
+        resetExtra={setExtra}
+      />
+    </Fragment>
+  );
+}
 
-    <ConfirmationDialog
-      isOpen={confirmationDialogIsOpen}
-      onOpenChange={setConfirmationDialogIsOpen}
-      resumeProposal={resumeProposal}
-      setResumeProposal={setResumeProposal}
-      resetForm={reset}
-      resetExtra={setExtra}
-    />
+export default function SimulacaoPage() {
+  const [personType, setPersonType] = useState<"PF" | "PJ">("PF");
+
+  return (
+    <Fragment>
+      <div className="space-y-6">
+        <div>
+          <p className="text-sm font-semibold text-brand-500 flex items-center gap-2">
+            <FileText className="size-4" />
+            Simulador de Propostas
+          </p>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+            Preencha todos os dados do cliente em um único fluxo simples
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Informe os dados do cliente e gere a ficha pronta para análise no sistema administrativo.
+          </p>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-3">
+                <UserCircle2 className="h-8 w-8" />
+                <aside className="flex flex-col">
+                  <CardTitle>Operação</CardTitle>
+                  <CardDescription>Selecione o tipo de simulação.</CardDescription>
+                </aside>
+              </div>
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  variant={personType === "PF" ? "default" : "outline"}
+                  className="gap-2"
+                  onClick={() => setPersonType("PF")}
+                >
+                  <UserCircle2 className="h-4 w-4" />
+                  Pessoa Física
+                </Button>
+                <Button
+                  type="button"
+                  variant={personType === "PJ" ? "default" : "outline"}
+                  className="gap-2"
+                  onClick={() => setPersonType("PJ")}
+                >
+                  <FileText className="h-4 w-4" />
+                  Pessoa Jurídica
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+
+        {personType === "PF" ? (
+          <SimulacaoPFForm />
+        ) : (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <FileText className="h-8 w-8" />
+                <aside className="flex flex-col gap-1.5">
+                  <CardTitle>Simulação para Pessoa Jurídica</CardTitle>
+                  <CardDescription>
+                    Em breve vamos preencher com dados da API Brasil para PJ.
+                  </CardDescription>
+                </aside>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+                Selecione Pessoa Jurídica quando quiser simular empresas. Integração com API Brasil será adicionada aqui.
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </Fragment>
   );
 }
