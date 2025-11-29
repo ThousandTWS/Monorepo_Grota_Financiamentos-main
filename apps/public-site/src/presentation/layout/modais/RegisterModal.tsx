@@ -16,7 +16,16 @@ interface RegisterModalProps {
 const registerSchema = z
   .object({
     fullName: z.string().min(2, "O nome completo é obrigatório"),
-    email: z.string().email("Formato de e-mail inválido"),
+    email: z.preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          const trimmed = val.trim();
+          return trimmed.length === 0 ? undefined : trimmed;
+        }
+        return val;
+      },
+      z.string().email("Formato de e-mail inválido").optional(),
+    ),
     phone: z
       .string()
       .regex(/^\d{10,15}$/, "Telefone inválido (apenas números)"),
@@ -64,13 +73,16 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
       setTimeout(() => {
         onClose();
         reset();
-        const event = new CustomEvent("openVerificationModal", {
-          detail: {
-            email: result.user.email,
-            verification_type: VerificationType.CONFIRM_CODE,
-          },
-        });
-        window.dispatchEvent(event);
+        const emailForVerification = result.user?.email ?? data.email;
+        if (emailForVerification) {
+          const event = new CustomEvent("openVerificationModal", {
+            detail: {
+              email: emailForVerification,
+              verification_type: VerificationType.CONFIRM_CODE,
+            },
+          });
+          window.dispatchEvent(event);
+        }
       }, 3000);
     }
   };
@@ -127,7 +139,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
             <InputGroup
               id="email"
-              label="E-mail"
+              label="E-mail (opcional)"
               icon={<Mail size={20} />}
               error={errors.email}
             >

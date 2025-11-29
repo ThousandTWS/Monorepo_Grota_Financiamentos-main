@@ -10,7 +10,6 @@ public record DealerRegistrationRequestDTO(
         @Size(min = 2, max = 100, message = "O nome completo deve ter entre 2 a 100 caracteres")
         String fullName,
 
-        @NotBlank(message = "O e-mail é obrigatório")
         @Email(message = "E-mail inválido")
         String email,
 

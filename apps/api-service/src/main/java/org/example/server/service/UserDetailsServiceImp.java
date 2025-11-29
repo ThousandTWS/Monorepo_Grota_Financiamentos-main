@@ -1,5 +1,7 @@
 package org.example.server.service;
 
+import org.example.server.model.Dealer;
+import org.example.server.repository.DealerRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -10,14 +12,17 @@ import org.springframework.stereotype.Service;
 public class UserDetailsServiceImp implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final DealerRepository dealerRepository;
 
-    public UserDetailsServiceImp(UserRepository userRepository) {
+    public UserDetailsServiceImp(UserRepository userRepository, DealerRepository dealerRepository) {
         this.userRepository = userRepository;
+        this.dealerRepository = dealerRepository;
     }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByEmail(username)
+                .or(() -> dealerRepository.findByEnterpriseIgnoreCase(username).map(Dealer::getUser))
                 .orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrado"));
     }
 }

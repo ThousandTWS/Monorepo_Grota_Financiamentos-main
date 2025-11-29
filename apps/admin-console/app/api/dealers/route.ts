@@ -77,13 +77,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const email =
+      typeof body?.email === "string" && body.email.trim().length > 0
+        ? body.email.trim()
+        : undefined;
+
     const upstreamResponse = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify({ ...body, adminRegistration: true }),
+      body: JSON.stringify({
+        ...body,
+        email,
+        adminRegistration: true,
+      }),
       cache: "no-store",
     });
 

@@ -1,7 +1,7 @@
 export type Dealer = {
   id: number;
   fullName: string;
-  email: string;
+  email?: string | null;
   phone: string;
   enterprise: string;
   status?: string;
@@ -10,7 +10,7 @@ export type Dealer = {
 
 export type CreateDealerPayload = {
   fullName: string;
-  email: string;
+  email?: string;
   phone: string;
   enterprise: string;
   password: string;

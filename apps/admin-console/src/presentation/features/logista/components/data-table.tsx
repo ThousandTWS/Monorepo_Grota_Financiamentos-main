@@ -53,7 +53,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     const normalizedSearch = searchTerm.toLowerCase();
     const matchesSearch =
       logista.fullName?.toLowerCase().includes(normalizedSearch) ||
-      logista.email.toLowerCase().includes(normalizedSearch) ||
+      (logista.email ?? "").toLowerCase().includes(normalizedSearch) ||
       logista.enterprise?.toLowerCase().includes(normalizedSearch) ||
       logista.phone?.toLowerCase().includes(normalizedSearch);
 
@@ -102,10 +102,11 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
   const handleSave = async (payload: CreateDealerPayload) => {
     setIsSaving(true);
     try {
+      const email = payload.email?.trim();
       const created = await createDealer({
         ...payload,
         fullName: payload.fullName.trim(),
-        email: payload.email.trim(),
+        email: email?.length ? email : undefined,
         phone: digitsOnly(payload.phone),
         enterprise: payload.enterprise.trim(),
         adminRegistration: true,

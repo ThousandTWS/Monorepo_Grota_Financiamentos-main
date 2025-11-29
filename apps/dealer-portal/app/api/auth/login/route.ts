@@ -83,22 +83,28 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 403 });
   }
 
-  let body: { email?: string; password?: string };
+  let body: { enterprise?: string; password?: string };
   try {
     body = await request.json();
   } catch {
     return unauthorizedResponse("Payload inválido", origin);
   }
 
-  if (!body.email || !body.password) {
-    return unauthorizedResponse("Credenciais são obrigatórias", origin);
+  if (!body.enterprise || !body.password) {
+    return unauthorizedResponse(
+      "Nome da empresa e senha são obrigatórios",
+      origin,
+    );
   }
 
   try {
     const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: body.email, password: body.password }),
+      body: JSON.stringify({
+        enterprise: body.enterprise,
+        password: body.password,
+      }),
       cache: "no-store",
     });
 

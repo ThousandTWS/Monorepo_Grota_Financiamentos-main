@@ -78,9 +78,10 @@ export function LogistaDialog({
     }
 
     setFormError(null);
+    const normalizedEmail = formData.email?.trim() || undefined;
     const normalizedPayload: CreateDealerPayload = {
       fullName: formData.fullName.trim(),
-      email: formData.email.trim(),
+      email: normalizedEmail,
       phone: formData.phone.trim(),
       enterprise: formData.enterprise.trim(),
       password: formData.password.trim(),
@@ -151,7 +152,7 @@ export function LogistaDialog({
 
               <div className="space-y-2" data-oid="c3hhoay">
                 <Label htmlFor="enterprise" data-oid="srk9ani">
-                  Empresa
+                  Empresa (usada para login)
                 </Label>
                 <Input
                   id="enterprise"
@@ -173,7 +174,7 @@ export function LogistaDialog({
 
               <div className="space-y-2" data-oid="4xla:p:">
                 <Label htmlFor="email" data-oid="0qjx6tp">
-                  E-mail
+                  E-mail (opcional)
                 </Label>
                 <Input
                   id="email"
@@ -184,7 +185,6 @@ export function LogistaDialog({
                   }
                   placeholder="joao@email.com"
                   disabled={isReadOnly}
-                  required
                   data-oid="rs6yg8g" />
 
               </div>

@@ -16,7 +16,7 @@ import { StatusBadge } from "./status-badge";
 export type Logista = {
   id: number;
   fullName: string;
-  email: string;
+  email?: string | null;
   phone: string;
   enterprise: string;
   status?: string;
@@ -91,7 +91,7 @@ export const getLogistaColumns = (actions: {
       header: "E-mail",
       cell: (logista: Logista) =>
         <div className="text-muted-foreground" data-oid="fh9f-xk">
-          {logista.email}
+          {logista.email || "--"}
         </div>
 
     },

@@ -345,272 +345,6 @@ export default function Page() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#134B73] via-[#134B73] to-[#134B73] px-6 py-8 text-white shadow-2xl">
-        <div className="pointer-events-none absolute inset-0 opacity-40 blur-3xl">
-          <div className="mx-auto h-full w-full max-w-2xl bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_65%)]" />
-        </div>
-        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-5">
-            
-            {/* Bloco Painel Executivo */}
-            <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">
-              <Badge className="bg-white/15 text-white uppercase tracking-[0.35em]">
-                Painel executivo
-              </Badge>
-              <span className="tracking-[0.2em]">
-                {lastUpdateLabel} • {timeframeLabel}
-              </span>
-            </div>
-            {/* Bloco Painel Executivo */}
-
-            <h1 className="text-3xl font-semibold leading-tight lg:text-4xl">
-              Governança e performance dos lojistas Grota em tempo real.
-            </h1>
-
-            <p className="max-w-2xl text-base text-white/80">
-              Consolide aprovações, carteira ativa e conformidade em um único
-              cockpit. Indicadores reconciliados a cada 30 minutos com o core
-              Daycoval e prontos para o comitê executivo.
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {timeframeFilters.map((filter) => {
-                const isActive = filter.value === activeTimeframe;
-                return (
-                  <Button
-                    key={filter.value}
-                    size="sm"
-                    variant="ghost"
-                    disabled={loading && isActive}
-                    onClick={() => setActiveTimeframe(filter.value)}
-                    className={`rounded-full border border-white/20 px-4 text-xs uppercase tracking-wide backdrop-blur ${
-                      isActive
-                        ? "bg-white text-slate-900 font-semibold shadow-lg hover:bg-white"
-                        : "text-white/80 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {filter.label}
-                  </Button>
-                );
-              })}
-            </div>
-            
-            {error ? (
-              <p className="text-xs font-semibold text-rose-100">{error}</p>
-            ) : null}
-            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-              {executiveHighlights.length
-                ? executiveHighlights.map((highlight) => (
-                    <div
-                      key={highlight.label}
-                      className="rounded-2xl border border-white/20 bg-white/5 p-4 text-white/90 backdrop-blur-md"
-                    >
-                      <p className="text-[0.6rem] uppercase tracking-[0.35em] text-white/60">
-                        {highlight.label}
-                      </p>
-                      <p className="mt-2 text-xl font-semibold text-white">
-                        {highlight.value}
-                      </p>
-                      <p className="text-sm text-white/70">{highlight.helper}</p>
-                    </div>
-                  ))
-                : isInitialLoading
-                  ? Array.from({ length: 3 }).map((_, index) => (
-                      <LoadingHighlightSkeleton key={index} />
-                    ))
-                  : (
-                    <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-4 text-sm text-white/70 backdrop-blur-md">
-                      Sem destaques executivos para o período selecionado.
-                    </div>
-                  )}
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Badge className="bg-white/15 text-white shadow-sm">
-                {portfolioLabel}
-              </Badge>
-              <Badge className="bg-white/10 text-white">{slaLabel}</Badge>
-            </div>
-          </div>
-
-          <div className="grid w-full gap-4 sm:grid-cols-2 lg:max-w-lg">
-            <div className="rounded-2xl border border-white/25 bg-white/10 p-5 backdrop-blur-md">
-              <p className="text-xs uppercase text-white/70">{goalLabel}</p>
-              <p className="mt-2 text-3xl font-semibold">{goalValue}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm text-emerald-200">
-                <ArrowUpRight className="size-4" /> {goalDeltaLabel}
-              </span>
-              <p className="mt-4 text-xs text-white/70">
-                Cobertura contratada em 42 concessionárias premium.
-              </p>
-            </div>
-            <div className="rounded-2xl border border-white/25 bg-[#0C2B44]/70 p-5 backdrop-blur-lg">
-              <p className="text-xs uppercase text-white/70">
-                {portfolioMonitorLabel}
-              </p>
-              <p className="mt-2 text-3xl font-semibold">{portfolioValue}</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-sm text-white/80">
-                {portfolioDetail}
-              </span>
-              <div className="mt-4 space-y-1 text-xs text-white/70">
-                <p>{portfolioInsight}</p>
-                <p>{complianceInsight}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <RealtimeBridgePanel />
-
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {kpiCards.length
-          ? kpiCards.map((card) => {
-              const Icon = card.icon;
-              const isUp = card.trend === "up";
-
-              return (
-                <Card key={card.label} className="border-border/60">
-                  <CardHeader className="gap-3">
-                    <div className="flex items-center justify-between">
-                      <div className="rounded-full bg-primary/10 p-2 text-primary">
-                        <Icon className="size-5" />
-                      </div>
-                      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                        {card.helper}
-                      </span>
-                    </div>
-                    <CardTitle className="text-base font-medium text-foreground/90">
-                      {card.label}
-                    </CardTitle>
-                    <CardDescription className="text-4xl font-semibold text-foreground">
-                      {card.value}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="border-t border-dashed border-border/60 pt-4">
-                    <div
-                      className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-sm font-medium ${
-                        isUp
-                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-200"
-                          : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-200"
-                      }`}
-                    >
-                      {isUp ? (
-                        <ArrowUpRight className="size-4" />
-                      ) : (
-                        <ArrowDownRight className="size-4" />
-                      )}
-                      {card.delta}
-                    </div>
-                    {card.detail ? (
-                      <p className="mt-3 text-xs text-muted-foreground/90">
-                        {card.detail}
-                      </p>
-                    ) : null}
-                  </CardContent>
-                </Card>
-              );
-            })
-          : isInitialLoading
-            ? Array.from({ length: 4 }).map((_, index) => (
-                <LoadingCardSkeleton key={index} />
-              ))
-            : (
-                <Card className="border-border/60 sm:col-span-2 xl:col-span-4">
-                  <CardContent className="py-10 text-center text-sm text-muted-foreground">
-                    Sem indicadores para o período selecionado.
-                  </CardContent>
-                </Card>
-              )}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <Card className="border-border/60">
-          <CardHeader className="border-b border-border/60">
-            <CardTitle>Parceiros em destaque</CardTitle>
-            <CardDescription>
-              Concessionárias com maior performance
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-5 pt-6">
-            {isInitialLoading ? (
-              <ListCardSkeleton rows={3} />
-            ) : partnerDealers.length ? (
-              partnerDealers.map((dealer) => (
-                <div key={dealer.name} className="space-y-2">
-                  <div className="flex items-center justify-between text-sm font-medium">
-                    <div>
-                      <p className="text-foreground/90">{dealer.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {dealer.city}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold">{dealer.volume}</p>
-                      <p className="text-xs text-emerald-600 dark:text-emerald-300">
-                        {dealer.variation}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="h-2 rounded-full bg-muted">
-                    <div
-                      className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${dealer.progress}%` }}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyState
-                message="Sem parceiros destacados neste período."
-                className="h-40"
-              />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card className="border-border/60">
-          <CardHeader className="border-b border-border/60">
-            <CardTitle>Governança e conformidade</CardTitle>
-            <CardDescription>
-              Alertas priorizados pelo comitê de risco
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4 pt-6">
-            {isInitialLoading ? (
-              <ListCardSkeleton rows={3} />
-            ) : governanceAlerts.length ? (
-              governanceAlerts.map((alert) => (
-                <div
-                  key={alert.title}
-                  className="rounded-2xl border border-border/60 bg-muted/40 p-4"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {alert.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {alert.description}
-                      </p>
-                    </div>
-                    <span
-                      className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${toneClasses[alert.tone]}`}
-                    >
-                      {alert.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <EmptyState
-                message="Sem alertas de governança para o período selecionado."
-                className="h-32"
-              />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <Card className="border-border/60">
           <CardHeader className="border-b border-border/60">
@@ -799,100 +533,125 @@ export default function Page() {
           </CardContent>
         </Card>
       </div>
-
-      <Card className="border-border/60">
-        <CardHeader className="border-b border-border/60">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <CardTitle>Pipeline operacional</CardTitle>
-              <CardDescription>
-                Monitoramento diário do squad de crédito e pós-venda
-              </CardDescription>
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#134B73] via-[#134B73] to-[#134B73] px-6 py-8 text-white shadow-2xl">
+        <div className="pointer-events-none absolute inset-0 opacity-40 blur-3xl">
+          <div className="mx-auto h-full w-full max-w-2xl bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_65%)]" />
+        </div>
+        <div className="relative flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-5">
+            
+            {/* Bloco Painel Executivo */}
+            <div className="flex flex-wrap items-center gap-3 text-xs text-white/70">
+              <Badge className="bg-white/15 text-white uppercase tracking-[0.35em]">
+                Painel executivo
+              </Badge>
+              <span className="tracking-[0.2em]">
+                {lastUpdateLabel} • {timeframeLabel}
+              </span>
             </div>
-            <Badge className="bg-muted text-foreground">
-              {lastUpdateLabel}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6 dark:bg-[#134B73]">
-          <div className="overflow-x-auto">
-            {isInitialLoading ? (
-              <TableSkeleton rows={5} />
-            ) : (
-              <table className="w-full min-w-[620px] text-sm">
-                <thead className="text-muted-foreground">
-                  <tr className="border-b border-border/60 text-left">
-                    <th className="pb-3 pr-4 font-medium">Proposta</th>
-                    <th className="pb-3 pr-4 font-medium">Cliente</th>
-                    <th className="pb-3 pr-4 font-medium">Veículo</th>
-                    <th className="pb-3 pr-4 font-medium">Valor</th>
-                    <th className="pb-3 pr-4 font-medium">Status</th>
-                    <th className="pb-3 text-right font-medium">Atualizado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {proposalPipeline.length ? (
-                    proposalPipeline.map((proposal) => (
-                      <tr
-                        key={proposal.id}
-                        className="border-b border-border/40 hover:bg-muted/30"
-                      >
-                        <td className="py-3 pr-4 font-medium text-foreground/90">
-                          {proposal.id}
-                        </td>
-                        <td className="py-3 pr-4">{proposal.client}</td>
-                        <td className="py-3 pr-4 text-muted-foreground">
-                          {proposal.vehicle}
-                        </td>
-                        <td className="py-3 pr-4 font-semibold">
-                          {proposal.amount}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold ${
-                              statusClasses[proposal.status] ??
-                              "bg-muted text-foreground"
-                            }`}
-                          >
-                            {proposal.status}
-                          </span>
-                        </td>
-                        <td className="py-3 text-right text-muted-foreground">
-                          {proposal.updatedAt}
-                        </td>
-                      </tr>
+            {/* Bloco Painel Executivo */}
+
+            <h1 className="text-3xl font-semibold leading-tight lg:text-4xl">
+              Governança e performance dos lojistas Grota em tempo real.
+            </h1>
+
+            <p className="max-w-2xl text-base text-white/80">
+              Consolide aprovações, carteira ativa e conformidade em um único
+              cockpit. Indicadores reconciliados a cada 30 minutos com o core
+              Daycoval e prontos para o comitê executivo.
+            </p>
+
+            <div className="flex flex-wrap gap-2">
+              {timeframeFilters.map((filter) => {
+                const isActive = filter.value === activeTimeframe;
+                return (
+                  <Button
+                    key={filter.value}
+                    size="sm"
+                    variant="ghost"
+                    disabled={loading && isActive}
+                    onClick={() => setActiveTimeframe(filter.value)}
+                    className={`rounded-full border border-white/20 px-4 text-xs uppercase tracking-wide backdrop-blur ${
+                      isActive
+                        ? "bg-white text-slate-900 font-semibold shadow-lg hover:bg-white"
+                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {filter.label}
+                  </Button>
+                );
+              })}
+            </div>
+            
+            {error ? (
+              <p className="text-xs font-semibold text-rose-100">{error}</p>
+            ) : null}
+            <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
+              {executiveHighlights.length
+                ? executiveHighlights.map((highlight) => (
+                    <div
+                      key={highlight.label}
+                      className="rounded-2xl border border-white/20 bg-white/5 p-4 text-white/90 backdrop-blur-md"
+                    >
+                      <p className="text-[0.6rem] uppercase tracking-[0.35em] text-white/60">
+                        {highlight.label}
+                      </p>
+                      <p className="mt-2 text-xl font-semibold text-white">
+                        {highlight.value}
+                      </p>
+                      <p className="text-sm text-white/70">{highlight.helper}</p>
+                    </div>
+                  ))
+                : isInitialLoading
+                  ? Array.from({ length: 3 }).map((_, index) => (
+                      <LoadingHighlightSkeleton key={index} />
                     ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={6}
-                        className="py-6 text-center text-sm text-muted-foreground"
-                      >
-                        Nenhuma proposta no período selecionado.
-                      </td>
-                    </tr>
+                  : (
+                    <div className="rounded-2xl border border-dashed border-white/20 bg-white/5 p-4 text-sm text-white/70 backdrop-blur-md">
+                      Sem destaques executivos para o período selecionado.
+                    </div>
                   )}
-                </tbody>
-              </table>
-            )}
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Badge className="bg-white/15 text-white shadow-sm">
+                {portfolioLabel}
+              </Badge>
+              <Badge className="bg-white/10 text-white">{slaLabel}</Badge>
+            </div>
           </div>
-        </CardContent>
-        <CardFooter className="border-t border-border/60 pt-5 dark:bg-[#134B73] ">
-          <div className="flex flex-wrap gap-6 text-muted-foreground">
-            {pipelineInsights.map((insight) => (
-              <div key={insight.label} className="min-w-[140px] dark:text-white">
-                <p className="text-[0.65rem] uppercase tracking-[0.25em]">
-                  {insight.label}
-                </p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {insight.value}
-                </p>
-                <p className="text-xs">{insight.helper}</p>
+
+          <div className="grid w-full gap-4 sm:grid-cols-2 lg:max-w-lg">
+            <div className="rounded-2xl border border-white/25 bg-white/10 p-5 backdrop-blur-md">
+              <p className="text-xs uppercase text-white/70">{goalLabel}</p>
+              <p className="mt-2 text-3xl font-semibold">{goalValue}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm text-emerald-200">
+                <ArrowUpRight className="size-4" /> {goalDeltaLabel}
+              </span>
+              <p className="mt-4 text-xs text-white/70">
+                Cobertura contratada em 42 concessionárias premium.
+              </p>
+            </div>
+            <div className="rounded-2xl border border-white/25 bg-[#0C2B44]/70 p-5 backdrop-blur-lg">
+              <p className="text-xs uppercase text-white/70">
+                {portfolioMonitorLabel}
+              </p>
+              <p className="mt-2 text-3xl font-semibold">{portfolioValue}</p>
+              <span className="mt-3 inline-flex items-center gap-1 text-sm text-white/80">
+                {portfolioDetail}
+              </span>
+              <div className="mt-4 space-y-1 text-xs text-white/70">
+                <p>{portfolioInsight}</p>
+                <p>{complianceInsight}</p>
               </div>
-            ))}
+            </div>
           </div>
-        </CardFooter>
-      </Card>
+        </div>
+      </section>
+
+
+
+
+    
     </div>
   );
 }

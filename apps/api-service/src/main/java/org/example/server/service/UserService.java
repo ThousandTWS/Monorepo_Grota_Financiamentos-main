@@ -13,6 +13,7 @@ import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.exception.user.UserAlreadyVerifiedException;
 import org.example.server.exception.user.UserNotVerifiedException;
 import org.example.server.model.User;
+import org.example.server.repository.DealerRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final DealerRepository dealerRepository;
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -40,7 +42,7 @@ public class UserService {
     private final VerificationCodeGenerator codeGenerator;
 
     public UserService(
-            UserRepository userRepository, UserDetailsService userDetailsService,
+            UserRepository userRepository, DealerRepository dealerRepository, UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager manager,
@@ -49,6 +51,7 @@ public class UserService {
             VerificationCodeGenerator codeGenerator
     ) {
         this.userRepository = userRepository;
+        this.dealerRepository = dealerRepository;
         this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -92,11 +95,12 @@ public class UserService {
     }
 
     public String login(AuthRequest request) {
+        String username = resolveLoginIdentifier(request);
         manager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.email(), request.password())
+                new UsernamePasswordAuthenticationToken(username, request.password())
         );
 
-        User user = (User) userDetailsService.loadUserByUsername(request.email());
+        User user = (User) userDetailsService.loadUserByUsername(username);
 
         if (user.getVerificationStatus() == UserStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
@@ -172,9 +176,20 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public UserDetails loadUserByUsername(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com e-mail: " + email));
+    public UserDetails loadUserByUsername(String identifier) {
+        return userRepository.findByEmail(identifier)
+                .or(() -> dealerRepository.findByEnterpriseIgnoreCase(identifier).map(dealer -> (UserDetails) dealer.getUser()))
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com identificador: " + identifier));
+    }
+
+    public String resolveLoginIdentifier(AuthRequest request) {
+        if (request.enterprise() != null && !request.enterprise().isBlank()) {
+            return request.enterprise().trim();
+        }
+        if (request.email() != null && !request.email().isBlank()) {
+            return request.email().trim();
+        }
+        throw new IllegalArgumentException("Identificador de login ausente");
     }
 
 }

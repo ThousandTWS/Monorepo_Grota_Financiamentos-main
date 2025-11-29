@@ -6,14 +6,14 @@ const LOGISTA_PANEL_ORIGIN = (
 ).replace(/\/$/, "");
 
 export interface AuthCredentials {
-  email: string;
+  enterprise: string;
   password: string;
 }
 
 export interface RegisterData extends AuthCredentials {
   fullName: string;
   phone: string;
-  enterprise: string;
+  email?: string;
 }
 
 export interface AuthResult {
@@ -24,13 +24,13 @@ export interface AuthResult {
 }
 
 export class MockAuthService {
-  async signIn({ email, password }: AuthCredentials): Promise<AuthResult> {
+  async signIn({ enterprise, password }: AuthCredentials): Promise<AuthResult> {
     try {
       const response = await fetch(`${LOGISTA_PANEL_ORIGIN}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ enterprise, password }),
       });
 
       if (!response.ok) {
@@ -56,11 +56,11 @@ export class MockAuthService {
   }
 
   async signUp({
-    email,
     password,
     fullName,
     phone,
     enterprise,
+    email,
   }: RegisterData): Promise<AuthResult> {
     try {
       const { data } = await api.post("/auth/register", {

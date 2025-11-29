@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 type Dealer = {
   id: number;
   fullName: string;
-  email: string;
+  email?: string | null;
   enterprise: string;
   phone: string;
   status?: string;

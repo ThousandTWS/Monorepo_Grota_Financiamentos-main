@@ -61,20 +61,26 @@ public class DealerService {
 
     @Transactional
     public DealerRegistrationResponseDTO create(DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
-        if (userRepository.existsByEmail(dealerRegistrationRequestDTO.email())) {
+        String normalizedEmail = normalize(dealerRegistrationRequestDTO.email());
+        String normalizedEnterprise = normalize(dealerRegistrationRequestDTO.enterprise());
+
+        if (normalizedEmail != null && userRepository.existsByEmail(normalizedEmail)) {
             throw new DataAlreadyExistsException("Email já existe");
         }
 
         if (dealerRepository.existsByPhone(dealerRegistrationRequestDTO.phone())) {
             throw new DataAlreadyExistsException("Telefone já cadastrado");
         }
+        if (dealerRepository.existsByEnterpriseIgnoreCase(normalizedEnterprise)) {
+            throw new DataAlreadyExistsException("Empresa já cadastrada");
+        }
 
         User user = new User();
         user.setFullName(dealerRegistrationRequestDTO.fullName());
-        user.setEmail(dealerRegistrationRequestDTO.email());
+        user.setEmail(normalizedEmail);
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
-        if (Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration())) {
+        if (Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration()) || normalizedEmail == null) {
             user.markAsVerified();
         } else {
             user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
@@ -83,14 +89,14 @@ public class DealerService {
         Dealer dealer = new Dealer();
         dealer.setUser(user);
         dealer.setPhone(dealerRegistrationRequestDTO.phone());
-        dealer.setEnterprise(dealerRegistrationRequestDTO.enterprise());
+        dealer.setEnterprise(normalizedEnterprise);
         dealer.setUser(user);
 
         user.setDealer(dealer);
 
         dealerRepository.save(dealer);
 
-        if (!Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration())) {
+        if (!Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration()) && normalizedEmail != null) {
             emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
         }
 
@@ -146,11 +152,22 @@ public class DealerService {
             throw new EntityNotFoundException("Usuário vinculado à logística não encontrado");
         }
 
+        String normalizedEmail = normalize(dealerRegistrationRequestDTO.email());
+        String normalizedEnterprise = normalize(dealerRegistrationRequestDTO.enterprise());
+
+        if (normalizedEmail != null && !normalizedEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
+            throw new DataAlreadyExistsException("Email já existe");
+        }
+        if (normalizedEnterprise != null && !normalizedEnterprise.equalsIgnoreCase(dealer.getEnterprise())
+                && dealerRepository.existsByEnterpriseIgnoreCase(normalizedEnterprise)) {
+            throw new DataAlreadyExistsException("Empresa já cadastrada");
+        }
+
         user.setFullName(dealerRegistrationRequestDTO.fullName());
-        user.setEmail(dealerRegistrationRequestDTO.email());
+        user.setEmail(normalizedEmail);
 
         dealer.setPhone(dealerRegistrationRequestDTO.phone());
-        dealer.setEnterprise(dealerRegistrationRequestDTO.enterprise());
+        dealer.setEnterprise(normalizedEnterprise);
 
         userRepository.save(user);
         dealerRepository.save(dealer);
@@ -175,4 +192,9 @@ public class DealerService {
         dealerRepository.deleteById(id);
     }
 
+    private String normalize(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
+    }
 }

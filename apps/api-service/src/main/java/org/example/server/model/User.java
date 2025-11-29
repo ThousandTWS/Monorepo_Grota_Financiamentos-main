@@ -23,7 +23,7 @@ public class User implements UserDetails {
 
     private String fullName;
 
-    @Column(nullable = false, unique = true, length = 150)
+    @Column(nullable = true, unique = true, length = 150)
     private String email;
 
     @Column(nullable = false)
@@ -205,7 +205,13 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return this.email;
+        if (this.email != null && !this.email.isBlank()) {
+            return this.email;
+        }
+        if (this.dealer != null && this.dealer.getEnterprise() != null && !this.dealer.getEnterprise().isBlank()) {
+            return this.dealer.getEnterprise();
+        }
+        return "";
     }
 
     @Override

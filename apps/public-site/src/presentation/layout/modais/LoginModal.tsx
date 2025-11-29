@@ -1,6 +1,6 @@
 "use client";
 
-import { X, Lock, Loader2, Mail } from "lucide-react";
+import { X, Lock, Loader2, Building2 } from "lucide-react";
 import { useAuth } from "@/src/application/services/auth/hooks/useAuth";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,8 +13,11 @@ const LOGISTA = (
 ).replace(/\/$/, "");
 
 const loginSchema = z.object({
-  email: z.string(),
-  password: z.string(),
+  enterprise: z
+    .string()
+    .trim()
+    .min(1, "O nome da empresa é obrigatório"),
+  password: z.string().min(1, "A senha é obrigatória"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -33,10 +36,14 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
     formState: { errors, isValid, isDirty },
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      enterprise: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data: LoginForm) => {
-    if (!data.email || !data.password) {
+    if (!data.enterprise || !data.password) {
       return;
     }
 
@@ -79,23 +86,23 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               Área do Logista
             </h2>
             <p className="text-md text-gray-600">
-              Informe suas credencias para continuar.
+              Informe o nome da empresa e sua senha para continuar.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <InputGroup
-              id="email"
-              label="E-mail"
-              icon={<Mail size={20} />}
-              error={errors.email}
+              id="enterprise"
+              label="Nome da empresa"
+              icon={<Building2 size={20} />}
+              error={errors.enterprise}
             >
               <input
-                type="email"
-                id="email"
-                {...register("email")}
+                type="text"
+                id="enterprise"
+                {...register("enterprise")}
                 className={inputStyle}
-                placeholder="seuemail@empresa.com.br"
+                placeholder="Ex: Loja Central Auto"
                 disabled={isLoading}
               />
             </InputGroup>

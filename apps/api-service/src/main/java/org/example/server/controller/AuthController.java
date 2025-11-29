@@ -72,7 +72,8 @@ public class AuthController {
     })
     public ResponseEntity<AuthResponseDTO> login(@RequestBody @Valid AuthRequest request) {
         String accessToken = userService.login(request);
-        UserDetails userDetails = userService.loadUserByUsername(request.email());
+        String loginIdentifier = userService.resolveLoginIdentifier(request);
+        UserDetails userDetails = userService.loadUserByUsername(loginIdentifier);
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(
                 ((User) userDetails).getId()

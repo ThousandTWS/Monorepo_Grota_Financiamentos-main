@@ -18,7 +18,7 @@ public class Dealer {
     @Column(nullable = false, unique = true, length = 50)
     private String phone;
 
-    @Column(length = 150)
+    @Column(length = 150, nullable = false, unique = true)
     private String enterprise;
 
     private String fullNameEnterprise;
