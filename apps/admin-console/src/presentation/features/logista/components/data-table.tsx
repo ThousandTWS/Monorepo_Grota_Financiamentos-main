@@ -108,6 +108,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
         email: payload.email.trim(),
         phone: digitsOnly(payload.phone),
         enterprise: payload.enterprise.trim(),
+        adminRegistration: true,
       });
       const updatedData = [...data, created].sort(
         (a, b) => (new Date(b.createdAt ?? 0).getTime()) - (new Date(a.createdAt ?? 0).getTime()),

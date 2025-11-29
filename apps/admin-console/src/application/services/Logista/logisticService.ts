@@ -14,6 +14,7 @@ export type CreateDealerPayload = {
   phone: string;
   enterprise: string;
   password: string;
+  adminRegistration?: boolean;
 };
 
 async function request<T>(

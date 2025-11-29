@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ ...body, adminRegistration: true }),
       cache: "no-store",
     });
 

@@ -74,7 +74,11 @@ public class DealerService {
         user.setEmail(dealerRegistrationRequestDTO.email());
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
-        user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
+        if (Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration())) {
+            user.setStatus(UserStatus.ATIVO);
+        } else {
+            user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
+        }
 
         Dealer dealer = new Dealer();
         dealer.setUser(user);
@@ -86,7 +90,9 @@ public class DealerService {
 
         dealerRepository.save(dealer);
 
-        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+        if (!Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration())) {
+            emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+        }
 
         return dealerRegistrationMapper.toDTO(dealer);
     }
