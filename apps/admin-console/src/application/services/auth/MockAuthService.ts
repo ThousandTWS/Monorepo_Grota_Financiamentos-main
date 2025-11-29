@@ -14,6 +14,7 @@ export interface AuthResult {
   message: string;
   user?: any;
   token?: string;
+  needsVerification?: boolean;
 }
 
 export class MockAuthService {
@@ -28,9 +29,15 @@ export class MockAuthService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => null);
+        const message = error?.error ?? "Credenciais inválidas.";
+        const needsVerification =
+          response.status === 401 &&
+          typeof message === "string" &&
+          /verific/i.test(message);
         return {
           success: false,
-          message: error?.error ?? "Credenciais inválidas.",
+          message,
+          needsVerification,
         };
       }
 

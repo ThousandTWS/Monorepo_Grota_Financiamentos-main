@@ -10,6 +10,9 @@ import { useForm } from "react-hook-form"
 import { useAuth } from "@/application/services/auth/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/presentation/layout/components/ui/dialog"
+import { Input } from "@/presentation/layout/components/ui/input"
+import { Button } from "@/presentation/layout/components/ui/button"
 
 const loginSchema = z.object({
   email: z.email("Email inválido"),
@@ -44,6 +47,11 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const router = useRouter()
 
   const [showPassword, setShowPassword] = useState(false)
+  const [showVerification, setShowVerification] = useState(false)
+  const [verificationCode, setVerificationCode] = useState("")
+  const [pendingEmail, setPendingEmail] = useState("")
+  const [pendingPassword, setPendingPassword] = useState("")
+  const [isVerifying, setIsVerifying] = useState(false)
 
   const onSubmit = async (data: LoginForm) => {
     clearError();
@@ -52,17 +60,79 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       return;
     }
 
+    setPendingEmail(data.email);
+    setPendingPassword(data.password);
+
     try {
       const result = await signIn(data);
 
       if (result.success) {
         toast.success("Login realizado com sucesso!");
         router.push("/visao-geral");
+      } else if (result.needsVerification) {
+        setShowVerification(true);
+        toast.message("Código de verificação necessário", {
+          description: "Enviamos um código para o e-mail informado.",
+        });
       }
     } catch (error) {
       const errorMessage = "Erro de conexão. Tente novamente.";
       toast.error(errorMessage)
       return { success: false, message: errorMessage };
+    }
+  };
+
+  const handleVerify = async () => {
+    if (!pendingEmail || !verificationCode.trim()) {
+      toast.error("Informe o código de verificação.");
+      return;
+    }
+    setIsVerifying(true);
+    try {
+      const response = await fetch("/api/auth/verify-code", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail, code: verificationCode.trim() }),
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = payload?.error ?? "Não foi possível verificar o código.";
+        toast.error(message);
+        return;
+      }
+
+      toast.success("Código verificado com sucesso! Entrando...");
+      setShowVerification(false);
+      setVerificationCode("");
+      await onSubmit({ email: pendingEmail, password: pendingPassword });
+    } catch (err) {
+      toast.error("Erro ao verificar código. Tente novamente.");
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!pendingEmail) {
+      toast.error("Informe o e-mail para reenviar o código.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/auth/resend-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: pendingEmail }),
+      });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message = payload?.error ?? "Não foi possível reenviar o código.";
+        toast.error(message);
+        return;
+      }
+      toast.success("Código reenviado para o e-mail informado.");
+    } catch {
+      toast.error("Erro ao reenviar código.");
     }
   };
 
@@ -180,6 +250,53 @@ export const SignInPage: React.FC<SignInPageProps> = ({
           ></div>
         </section>
       )}
+
+      <Dialog open={showVerification} onOpenChange={setShowVerification}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Verifique seu acesso</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Enviamos um código para o e-mail informado. Digite abaixo para liberar o login.
+            </p>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Código de verificação</label>
+              <Input
+                value={verificationCode}
+                onChange={(e) => setVerificationCode(e.target.value)}
+                maxLength={6}
+                placeholder="Digite o código (6 dígitos)"
+              />
+            </div>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-muted-foreground">{pendingEmail}</span>
+              <button
+                type="button"
+                className="text-blue-600 hover:underline"
+                onClick={handleResend}
+              >
+                Reenviar código
+              </button>
+            </div>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowVerification(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleVerify} disabled={isVerifying}>
+              {isVerifying ? (
+                <>
+                  <Loader2 size={16} className="animate-spin mr-2" />
+                  Validando...
+                </>
+              ) : (
+                "Validar código"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
