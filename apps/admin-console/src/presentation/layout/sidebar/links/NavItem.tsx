@@ -1,5 +1,5 @@
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { Car, ChartBar, Users, UserSquare } from "lucide-react";
+import { ChartBar, Users, UserSquare } from "lucide-react";
 
 export const navItems: NavItem[] = [
   {
@@ -26,38 +26,35 @@ export const navItems: NavItem[] = [
   },
   {
     icon: <UserSquare />,
-    name: "Gestão de Vendedores",
+    name: "Gestão de usuarios",
     subItems: [
       { 
         name: "Cadastrar Vendedor",
-        path: "/operadores", 
+        path: "/vendedores", 
+        pro: false
+       },
+       { 
+        name: "Cadastrar Operadores",
+        path: "/vendedores", 
+        pro: false
+       },
+        { 
+        name: "Cadastrar Gestores",
+        path: "/vendedores", 
         pro: false
        },
     ],
   },
 
   {
-    name: "Gestão de Logistas",
+    name: "Gestão de Lojas",
     icon: <Users />,
     subItems: [
       { 
-        name: "Logistas",
+        name: "Cadastrar Lojas",
          path: "/logistas", 
          pro: false 
       }, 
     ],
-    
-  },
-  {
-    name: "Gestão de Gestores",
-    icon: <Users />,
-    subItems: [
-      { 
-        name: "Gestores",
-         path: "/gestores", 
-         pro: false 
-      }, 
-    ],
-    
   },
 ];

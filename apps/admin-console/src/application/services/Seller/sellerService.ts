@@ -5,6 +5,10 @@ export type Seller = {
   email?: string;
   phone?: string;
   status?: string;
+  canView?: boolean;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 };
 
 export type CreateSellerPayload = {
@@ -22,6 +26,10 @@ export type CreateSellerPayload = {
     state: string;
     zipCode: string;
   };
+  canView?: boolean;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 };
 
 async function request<T>(

@@ -19,6 +19,12 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return unauthorizedResponse();
     }
+    if (session.canCreate === false) {
+      return NextResponse.json(
+        { error: "Você não tem permissão para enviar documentos." },
+        { status: 403 },
+      );
+    }
 
     const formData = await request.formData();
     const documentType = formData.get("documentType");

@@ -32,19 +32,23 @@ export async function GET() {
       return unauthorized();
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
+    const upstreamResponse = await fetch(
+      `${API_BASE_URL}/notifications?targetType=ADMIN&targetId=${session.userId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        cache: "no-store",
       },
-      cache: "no-store",
-    });
+    );
 
     const payload = await upstreamResponse.json().catch(() => null);
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { message?: string })?.message ??
-        "Falha ao carregar gestores.";
+        (payload as { message?: string; error?: string })?.error ??
+        (payload as { message?: string; error?: string })?.message ??
+        "Falha ao carregar notificações.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
@@ -52,9 +56,9 @@ export async function GET() {
 
     return NextResponse.json(payload ?? []);
   } catch (error) {
-    console.error("[admin][managers] Falha ao buscar gestores", error);
+    console.error("[admin][notifications] Falha ao buscar notificações", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar gestores." },
+      { error: "Erro interno ao carregar notificações." },
       { status: 500 },
     );
   }
@@ -77,7 +81,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/notifications`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,24 +97,62 @@ export async function POST(request: NextRequest) {
       const message =
         (payload as { error?: string; message?: string })?.error ??
         (payload as { error?: string; message?: string })?.message ??
-        "Não foi possível criar o gestor.";
-      console.error("[admin][managers] upstream error", {
-        status: upstreamResponse.status,
-        message,
-        payload,
-      });
+        "Não foi possível criar a notificação.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
     }
 
-    return NextResponse.json(payload ?? {}, {
+    return NextResponse.json(payload ?? {}, { status: upstreamResponse.status });
+  } catch (error) {
+    console.error("[admin][notifications] Falha ao criar notificação", error);
+    return NextResponse.json(
+      { error: "Erro interno ao criar notificação." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await resolveSession();
+    if (!session) {
+      return unauthorized();
+    }
+
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID da notificação é obrigatório." },
+        { status: 400 },
+      );
+    }
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (upstreamResponse.status === 204 || upstreamResponse.ok) {
+      return NextResponse.json({ ok: true }, { status: 200 });
+    }
+
+    const payload = await upstreamResponse.json().catch(() => null);
+    const message =
+      (payload as { message?: string; error?: string })?.error ??
+      (payload as { message?: string; error?: string })?.message ??
+      "Não foi possível marcar como lida.";
+
+    return NextResponse.json({ error: message }, {
       status: upstreamResponse.status,
     });
   } catch (error) {
-    console.error("[admin][managers] Falha ao criar gestor", error);
+    console.error("[admin][notifications] Falha ao atualizar notificação", error);
     return NextResponse.json(
-      { error: "Erro interno ao criar gestor." },
+      { error: "Erro interno ao atualizar notificação." },
       { status: 500 },
     );
   }

@@ -32,7 +32,7 @@ export async function GET() {
       return unauthorized();
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/operators`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
       },
@@ -43,8 +43,9 @@ export async function GET() {
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { message?: string })?.message ??
-        "Falha ao carregar gestores.";
+        (payload as { message?: string; error?: string })?.error ??
+        (payload as { message?: string; error?: string })?.message ??
+        "Falha ao carregar operadores.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
@@ -52,9 +53,9 @@ export async function GET() {
 
     return NextResponse.json(payload ?? []);
   } catch (error) {
-    console.error("[admin][managers] Falha ao buscar gestores", error);
+    console.error("[admin][operators] Falha ao buscar operadores", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar gestores." },
+      { error: "Erro interno ao carregar operadores." },
       { status: 500 },
     );
   }
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/operators`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -93,8 +94,8 @@ export async function POST(request: NextRequest) {
       const message =
         (payload as { error?: string; message?: string })?.error ??
         (payload as { error?: string; message?: string })?.message ??
-        "Não foi possível criar o gestor.";
-      console.error("[admin][managers] upstream error", {
+        "Não foi possível criar o operador.";
+      console.error("[admin][operators] upstream error", {
         status: upstreamResponse.status,
         message,
         payload,
@@ -108,9 +109,9 @@ export async function POST(request: NextRequest) {
       status: upstreamResponse.status,
     });
   } catch (error) {
-    console.error("[admin][managers] Falha ao criar gestor", error);
+    console.error("[admin][operators] Falha ao criar operador", error);
     return NextResponse.json(
-      { error: "Erro interno ao criar gestor." },
+      { error: "Erro interno ao criar operador." },
       { status: 500 },
     );
   }

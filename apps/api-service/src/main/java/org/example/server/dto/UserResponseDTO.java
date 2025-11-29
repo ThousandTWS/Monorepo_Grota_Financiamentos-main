@@ -6,5 +6,9 @@ public record UserResponseDTO(
         Long id,
         String email,
         String fullName,
-        UserRole role
+        UserRole role,
+        Boolean canView,
+        Boolean canCreate,
+        Boolean canUpdate,
+        Boolean canDelete
 ) {}

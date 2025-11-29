@@ -66,8 +66,12 @@ public class SellerService {
         seller.setBirthData(sellerRequestDTO.birthData());
         seller.setAddress(addressMapper.toEntity(sellerRequestDTO.address()));
         seller.setUser(newUser);
+        seller.setCanView(sellerRequestDTO.canView() != null ? sellerRequestDTO.canView() : true);
+        seller.setCanCreate(sellerRequestDTO.canCreate() != null ? sellerRequestDTO.canCreate() : true);
+        seller.setCanUpdate(sellerRequestDTO.canUpdate() != null ? sellerRequestDTO.canUpdate() : true);
+        seller.setCanDelete(sellerRequestDTO.canDelete() != null ? sellerRequestDTO.canDelete() : true);
 
-        user.setSeller(seller);
+        newUser.setSeller(seller);
 
         emailService.sendPasswordToEmail(sellerRequestDTO.email(), sellerRequestDTO.password());
 
@@ -98,6 +102,10 @@ public class SellerService {
         seller.setPhone(sellerRequestDTO.phone());
         seller.setCPF(sellerRequestDTO.CPF());
         seller.setBirthData(sellerRequestDTO.birthData());
+        seller.setCanView(sellerRequestDTO.canView() != null ? sellerRequestDTO.canView() : seller.getCanView());
+        seller.setCanCreate(sellerRequestDTO.canCreate() != null ? sellerRequestDTO.canCreate() : seller.getCanCreate());
+        seller.setCanUpdate(sellerRequestDTO.canUpdate() != null ? sellerRequestDTO.canUpdate() : seller.getCanUpdate());
+        seller.setCanDelete(sellerRequestDTO.canDelete() != null ? sellerRequestDTO.canDelete() : seller.getCanDelete());
 
         userRepository.save(user);
         sellerRepository.save(seller);

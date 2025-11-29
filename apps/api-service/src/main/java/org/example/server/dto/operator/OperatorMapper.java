@@ -29,7 +29,11 @@ public class OperatorMapper {
                 operator.getCPF(),
                 operator.getBirthData(),
                 user.getVerificationStatus(),
-                operator.getCreatedAt()
+                operator.getCreatedAt(),
+                operator.getCanView(),
+                operator.getCanCreate(),
+                operator.getCanUpdate(),
+                operator.getCanDelete()
         );
     }
 

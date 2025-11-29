@@ -5,7 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { createManager } from "@/application/services/Manager/managerService";
+import { createOperator } from "@/application/services/Operator/operatorService";
 import {
   Card,
   CardContent,
@@ -17,11 +17,11 @@ import { Input } from "@/presentation/layout/components/ui/input";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
 import { Separator } from "@/presentation/layout/components/ui/separator";
-import { ManagersList } from "@/presentation/features/painel-geral/components/ManagersList";
+import { OperatorsList } from "@/presentation/features/painel-geral/components/OperatorsList";
 import { createNotification } from "@/application/services/Notifications/notificationService";
 import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
 
-const managerSchema = z.object({
+const operatorSchema = z.object({
   fullName: z.string().min(2, "Informe o nome completo"),
   email: z.string().email("E-mail inválido"),
   phone: z.string().min(8, "Informe o telefone"),
@@ -48,11 +48,11 @@ const managerSchema = z.object({
   canDelete: z.boolean().default(true),
 });
 
-type ManagerFormValues = z.infer<typeof managerSchema>;
+type OperatorFormValues = z.infer<typeof operatorSchema>;
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
-export default function Gestores() {
+export default function Operadores() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -61,8 +61,8 @@ export default function Gestores() {
     reset,
     control,
     formState: { errors },
-  } = useForm<ManagerFormValues>({
-    resolver: zodResolver(managerSchema),
+  } = useForm<OperatorFormValues>({
+    resolver: zodResolver(operatorSchema),
     defaultValues: {
       fullName: "",
       email: "",
@@ -83,12 +83,12 @@ export default function Gestores() {
     },
   });
 
-  const onSubmit = async (values: ManagerFormValues) => {
+  const onSubmit = async (values: OperatorFormValues) => {
     setIsSubmitting(true);
     try {
       const birthDateIso = new Date(values.birthData).toISOString().split("T")[0];
 
-      await createManager({
+      await createOperator({
         fullName: values.fullName.trim(),
         email: values.email.trim(),
         phone: digitsOnly(values.phone),
@@ -109,23 +109,23 @@ export default function Gestores() {
         canDelete: values.canDelete,
       });
 
-      toast.success("Gestor cadastrado com sucesso!");
+      toast.success("Operador cadastrado com sucesso!");
       await createNotification({
-        title: "Novo gestor cadastrado",
+        title: "Novo operador cadastrado",
         description: `${values.fullName} foi criado no painel admin.`,
         actor: "Admin",
         targetType: "ADMIN",
         targetId: 0,
-        href: "/gestores",
+        href: "/operadores",
       }).catch((err) => {
-        console.warn("Falha ao notificar criação de gestor:", err);
+        console.warn("Falha ao notificar criação de operador:", err);
       });
       reset();
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : "Não foi possível cadastrar o gestor.";
+          : "Não foi possível cadastrar o operador.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -136,9 +136,9 @@ export default function Gestores() {
     <div className="space-y-8">
       <Card>
         <CardHeader>
-          <CardTitle>Novo gestor</CardTitle>
+          <CardTitle>Novo operador</CardTitle>
           <CardDescription>
-            Crie gestores que poderão administrar o painel com o e-mail e senha cadastrados.
+            Crie operadores para apoiar a esteira e gestão de propostas.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -300,14 +300,14 @@ export default function Gestores() {
 
             <div className="md:col-span-2 flex justify-end">
               <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvando..." : "Cadastrar gestor"}
+                {isSubmitting ? "Salvando..." : "Cadastrar operador"}
               </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      <ManagersList />
+      <OperatorsList />
     </div>
   );
 }

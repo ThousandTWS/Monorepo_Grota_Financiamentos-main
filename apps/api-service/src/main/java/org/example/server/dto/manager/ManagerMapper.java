@@ -29,7 +29,11 @@ public class ManagerMapper {
                 manager.getCPF(),
                 manager.getBirthData(),
                 user.getVerificationStatus(),
-                manager.getCreatedAt()
+                manager.getCreatedAt(),
+                manager.getCanView(),
+                manager.getCanCreate(),
+                manager.getCanUpdate(),
+                manager.getCanDelete()
         );
     }
 

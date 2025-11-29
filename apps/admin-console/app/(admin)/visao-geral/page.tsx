@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { ConversionFunnel, DealersList, FinancingChart, QuickStats, RecentActivity, SellersList } from "@/presentation/features/painel-geral";
+import { ConversionFunnel, DealersList, FinancingChart, ManagersList, OperatorsList, QuickStats, RecentActivity, SellersList } from "@/presentation/features/painel-geral";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 
 export default function Dashboard() {
@@ -49,11 +49,15 @@ export default function Dashboard() {
         <RecentActivity data-oid="m.cymte" />
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 xl:grid-cols-2">
         <DealersList />
+        <ManagersList />
       </div>
 
-      <SellersList />
+      <div className="grid gap-6 xl:grid-cols-2">
+        <OperatorsList />
+        <SellersList />
+      </div>
     </div>
   );
 }

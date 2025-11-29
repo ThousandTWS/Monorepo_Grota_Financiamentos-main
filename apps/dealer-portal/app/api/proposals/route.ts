@@ -34,6 +34,10 @@ function unauthorized() {
   return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
 }
 
+function forbidden(message = "Permissão insuficiente.") {
+  return NextResponse.json({ error: message }, { status: 403 });
+}
+
 async function resolveDealerId(
   session: SessionLike,
 ): Promise<number | null> {
@@ -141,6 +145,9 @@ export async function POST(request: NextRequest) {
     const session = await getSession();
     if (!session) {
       return unauthorized();
+    }
+    if (session.canCreate === false) {
+      return forbidden("Você não tem permissão para criar propostas.");
     }
 
     const dealerId = await resolveDealerId(session);

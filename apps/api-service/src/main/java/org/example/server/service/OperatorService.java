@@ -73,6 +73,10 @@ public class OperatorService {
         operator.setBirthData(operatorRequestDTO.birthData());
         operator.setAddress(addressMapper.toEntity(operatorRequestDTO.address()));
         operator.setUser(newUser);
+        operator.setCanView(operatorRequestDTO.canView() != null ? operatorRequestDTO.canView() : true);
+        operator.setCanCreate(operatorRequestDTO.canCreate() != null ? operatorRequestDTO.canCreate() : true);
+        operator.setCanUpdate(operatorRequestDTO.canUpdate() != null ? operatorRequestDTO.canUpdate() : true);
+        operator.setCanDelete(operatorRequestDTO.canDelete() != null ? operatorRequestDTO.canDelete() : true);
 
         newUser.setOperator(operator);
 
@@ -106,6 +110,10 @@ public class OperatorService {
         operator.setCPF(operatorRequestDTO.CPF());
         operator.setBirthData(operatorRequestDTO.birthData());
         operator.setAddress(addressMapper.toEntity(operatorRequestDTO.address()));
+        operator.setCanView(operatorRequestDTO.canView() != null ? operatorRequestDTO.canView() : operator.getCanView());
+        operator.setCanCreate(operatorRequestDTO.canCreate() != null ? operatorRequestDTO.canCreate() : operator.getCanCreate());
+        operator.setCanUpdate(operatorRequestDTO.canUpdate() != null ? operatorRequestDTO.canUpdate() : operator.getCanUpdate());
+        operator.setCanDelete(operatorRequestDTO.canDelete() != null ? operatorRequestDTO.canDelete() : operator.getCanDelete());
 
         userRepository.save(operatorUser);
         operatorRepository.save(operator);

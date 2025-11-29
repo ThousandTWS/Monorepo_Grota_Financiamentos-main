@@ -12,3 +12,5 @@ export { ForecastChart } from "./components/ForecastChart";
 export { DealersList } from "./components/DealersList";
 export { SellersList } from "./components/SellersList";
 export { RealtimeBridgePanel } from "./components/RealtimeBridgePanel";
+export { ManagersList } from "./components/ManagersList";
+export { OperatorsList } from "./components/OperatorsList";

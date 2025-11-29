@@ -11,7 +11,7 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -23,6 +23,11 @@ import {
 import { LogistaDialog } from "./logista-dialog";
 import { DeleteDialog } from "./delete-dialog";
 import { useToast } from "@/application/core/hooks/use-toast";
+import {
+  CreateDealerPayload,
+  createDealer,
+  deleteDealer,
+} from "@/application/services/Logista/logisticService";
 
 interface DataTableProps {
   data: Logista[];
@@ -40,18 +45,21 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLogista, setSelectedLogista] = useState<Logista | null>(null);
-  const [dialogMode, setDialogMode] = useState<"view" | "edit" | "create">(
-    "view"
-  );
+  const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredData = data.filter((logista) => {
+    const normalizedSearch = searchTerm.toLowerCase();
     const matchesSearch =
-    logista.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    logista.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    logista.cpf.includes(searchTerm);
+      logista.fullName?.toLowerCase().includes(normalizedSearch) ||
+      logista.email.toLowerCase().includes(normalizedSearch) ||
+      logista.enterprise?.toLowerCase().includes(normalizedSearch) ||
+      logista.phone?.toLowerCase().includes(normalizedSearch);
 
     const matchesStatus =
-    statusFilter === "todos" || logista.status === statusFilter;
+      statusFilter === "todos" ||
+      (logista.status ?? "").toLowerCase() === statusFilter;
 
     return matchesSearch && matchesStatus;
   });
@@ -78,64 +86,87 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     setDialogOpen(true);
   };
 
-  const handleEdit = (logista: Logista) => {
-    setSelectedLogista(logista);
-    setDialogMode("edit");
-    setDialogOpen(true);
-  };
-
   const handleDelete = (logista: Logista) => {
     setSelectedLogista(logista);
     setDeleteDialogOpen(true);
   };
 
+  const handleCreate = () => {
+    setSelectedLogista(null);
+    setDialogMode("create");
+    setDialogOpen(true);
+  };
 
-  const handleSave = (logista: Logista) => {
-    if (dialogMode === "create") {
-      // Criar novo logista
-      const newLogista = {
-        ...logista,
-        id: Date.now().toString(),
-        comissaoTotal: 0
-      };
-      onUpdate([...data, newLogista]);
-      onSync?.("upsert", newLogista);
-      toast({
-        title: "Logista criado!",
-        description: `${logista.fullName} foi adicionado com sucesso.`
+  const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
+  const handleSave = async (payload: CreateDealerPayload) => {
+    setIsSaving(true);
+    try {
+      const created = await createDealer({
+        ...payload,
+        fullName: payload.fullName.trim(),
+        email: payload.email.trim(),
+        phone: digitsOnly(payload.phone),
+        enterprise: payload.enterprise.trim(),
       });
-    } else if (dialogMode === "edit") {
-      // Atualizar logista existente
-      const updatedData = data.map((item) =>
-      item.id === logista.id ? logista : item
+      const updatedData = [...data, created].sort(
+        (a, b) => (new Date(b.createdAt ?? 0).getTime()) - (new Date(a.createdAt ?? 0).getTime()),
       );
       onUpdate(updatedData);
-      onSync?.("upsert", logista);
+      onSync?.("upsert", created);
       toast({
-        title: "Logista atualizado!",
-        description: `As informações de ${logista.fullName} foram atualizadas.`
+        title: "Logista criado!",
+        description: `${created.fullName} foi adicionado com sucesso.`,
       });
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível criar o logista.";
+      toast({
+        title: "Erro ao criar logista",
+        description: message,
+        variant: "destructive",
+      });
+      throw error;
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (selectedLogista) {
-      const updatedData = data.filter((item) => item.id !== selectedLogista.id);
-      onUpdate(updatedData);
-      onSync?.("delete", selectedLogista);
-      toast({
-        title: "Logista excluído!",
-        description: `${selectedLogista.fullName} foi removido do sistema.`,
-        variant: "destructive"
-      });
-      setDeleteDialogOpen(false);
-      setSelectedLogista(null);
+      setIsDeleting(true);
+      try {
+        await deleteDealer(Number(selectedLogista.id));
+        const updatedData = data.filter((item) => item.id !== selectedLogista.id);
+        onUpdate(updatedData);
+        onSync?.("delete", selectedLogista);
+        toast({
+          title: "Logista excluído!",
+          description: `${selectedLogista.fullName} foi removido do sistema.`,
+          variant: "destructive"
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Não foi possível remover o logista.";
+        toast({
+          title: "Erro ao excluir",
+          description: message,
+          variant: "destructive",
+        });
+      } finally {
+        setDeleteDialogOpen(false);
+        setSelectedLogista(null);
+        setIsDeleting(false);
+      }
     }
   };
 
   const columns = getLogistaColumns({
     onView: handleView,
-    onEdit: handleEdit,
     onDelete: handleDelete
   });
 
@@ -191,7 +222,10 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
             </Select>
           </div>
 
-        
+          <Button onClick={handleCreate} data-oid="addDealer" className="w-full sm:w-auto">
+            <Plus className="mr-2 h-4 w-4" />
+            Novo logista
+          </Button>
         </div>
 
         {/* Tabela */}
@@ -333,6 +367,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
         onOpenChange={setDialogOpen}
         onSave={handleSave}
         mode={dialogMode}
+        isSubmitting={isSaving}
         data-oid="tiu-a96" />
 
 
@@ -341,6 +376,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         onConfirm={handleConfirmDelete}
+        isLoading={isDeleting}
         data-oid="vdsjxi4" />
 
     </>);

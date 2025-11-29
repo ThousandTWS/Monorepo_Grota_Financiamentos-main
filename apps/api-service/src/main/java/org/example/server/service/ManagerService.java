@@ -73,6 +73,10 @@ public class ManagerService {
         manager.setBirthData(managerRequestDTO.birthData());
         manager.setAddress(addressMapper.toEntity(managerRequestDTO.address()));
         manager.setUser(newUser);
+        manager.setCanView(managerRequestDTO.canView() != null ? managerRequestDTO.canView() : true);
+        manager.setCanCreate(managerRequestDTO.canCreate() != null ? managerRequestDTO.canCreate() : true);
+        manager.setCanUpdate(managerRequestDTO.canUpdate() != null ? managerRequestDTO.canUpdate() : true);
+        manager.setCanDelete(managerRequestDTO.canDelete() != null ? managerRequestDTO.canDelete() : true);
 
         newUser.setManager(manager);
 
@@ -106,6 +110,10 @@ public class ManagerService {
         manager.setCPF(managerRequestDTO.CPF());
         manager.setBirthData(managerRequestDTO.birthData());
         manager.setAddress(addressMapper.toEntity(managerRequestDTO.address()));
+        manager.setCanView(managerRequestDTO.canView() != null ? managerRequestDTO.canView() : manager.getCanView());
+        manager.setCanCreate(managerRequestDTO.canCreate() != null ? managerRequestDTO.canCreate() : manager.getCanCreate());
+        manager.setCanUpdate(managerRequestDTO.canUpdate() != null ? managerRequestDTO.canUpdate() : manager.getCanUpdate());
+        manager.setCanDelete(managerRequestDTO.canDelete() != null ? managerRequestDTO.canDelete() : manager.getCanDelete());
 
         userRepository.save(managerUser);
         managerRepository.save(manager);

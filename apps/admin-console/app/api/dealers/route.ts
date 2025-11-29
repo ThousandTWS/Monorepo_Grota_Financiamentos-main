@@ -32,7 +32,7 @@ export async function GET() {
       return unauthorized();
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
       },
@@ -43,8 +43,8 @@ export async function GET() {
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { message?: string })?.message ??
-        "Falha ao carregar gestores.";
+        (payload as { message?: string; error?: string })?.message ??
+        "Falha ao carregar logistas.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
@@ -52,9 +52,9 @@ export async function GET() {
 
     return NextResponse.json(payload ?? []);
   } catch (error) {
-    console.error("[admin][managers] Falha ao buscar gestores", error);
+    console.error("[admin][dealers] Falha ao buscar logistas", error);
     return NextResponse.json(
-      { error: "Erro interno ao carregar gestores." },
+      { error: "Erro interno ao carregar logistas." },
       { status: 500 },
     );
   }
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/managers`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -91,14 +91,9 @@ export async function POST(request: NextRequest) {
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { error?: string; message?: string })?.error ??
-        (payload as { error?: string; message?: string })?.message ??
-        "Não foi possível criar o gestor.";
-      console.error("[admin][managers] upstream error", {
-        status: upstreamResponse.status,
-        message,
-        payload,
-      });
+        (payload as { message?: string; error?: string })?.message ??
+        (payload as { error?: string })?.error ??
+        "Não foi possível criar o logista.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
@@ -108,9 +103,59 @@ export async function POST(request: NextRequest) {
       status: upstreamResponse.status,
     });
   } catch (error) {
-    console.error("[admin][managers] Falha ao criar gestor", error);
+    console.error("[admin][dealers] Falha ao criar logista", error);
     return NextResponse.json(
-      { error: "Erro interno ao criar gestor." },
+      { error: "Erro interno ao criar logista." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await resolveSession();
+    if (!session) {
+      return unauthorized();
+    }
+
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "ID do logista é obrigatório." },
+        { status: 400 },
+      );
+    }
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (upstreamResponse.status === 204) {
+      return NextResponse.json({}, { status: 204 });
+    }
+
+    const payload = await upstreamResponse.json().catch(() => null);
+
+    if (!upstreamResponse.ok) {
+      const message =
+        (payload as { message?: string; error?: string })?.message ??
+        "Não foi possível remover o logista.";
+      return NextResponse.json({ error: message }, {
+        status: upstreamResponse.status,
+      });
+    }
+
+    return NextResponse.json(payload ?? {}, {
+      status: upstreamResponse.status,
+    });
+  } catch (error) {
+    console.error("[admin][dealers] Falha ao remover logista", error);
+    return NextResponse.json(
+      { error: "Erro interno ao remover logista." },
       { status: 500 },
     );
   }

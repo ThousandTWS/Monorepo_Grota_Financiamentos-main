@@ -17,13 +17,15 @@ interface DeleteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
+  isLoading?: boolean;
 }
 
 export function DeleteDialog({
   logista,
   open,
   onOpenChange,
-  onConfirm
+  onConfirm,
+  isLoading = false,
 }: DeleteDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange} data-oid="eedkofo">
@@ -41,13 +43,16 @@ export function DeleteDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter data-oid="eq_bls1">
-          <AlertDialogCancel data-oid="7adp:su">Cancelar</AlertDialogCancel>
+          <AlertDialogCancel disabled={isLoading} data-oid="7adp:su">
+            Cancelar
+          </AlertDialogCancel>
           <AlertDialogAction
             onClick={onConfirm}
             className="bg-destructive text-white hover:bg-destructive/90"
+            disabled={isLoading}
             data-oid="3f1bv2f">
 
-            Excluir
+            {isLoading ? "Excluindo..." : "Excluir"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

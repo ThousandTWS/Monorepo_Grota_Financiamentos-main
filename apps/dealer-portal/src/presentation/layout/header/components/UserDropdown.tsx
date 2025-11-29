@@ -44,12 +44,7 @@ export default function UserDropdown() {
       } catch (error: unknown) {
         console.error("Erro ao buscar usuário:", error);
         if (isMounted) {
-          setUser({
-            id: 0,
-            email: "",
-            fullName: "Usuário",
-            role: "",
-          });
+          setUser(null);
         }
       } finally {
         if (isMounted) {

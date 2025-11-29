@@ -1,4 +1,4 @@
-export type Manager = {
+export type Operator = {
   createdAt: string;
   id: number;
   fullName?: string;
@@ -11,7 +11,7 @@ export type Manager = {
   canDelete?: boolean;
 };
 
-export type CreateManagerPayload = {
+export type CreateOperatorPayload = {
   fullName: string;
   email: string;
   phone: string;
@@ -58,17 +58,17 @@ async function request<T>(
   return (payload ?? {}) as T;
 }
 
-export const getAllManagers = async (): Promise<Manager[]> => {
-  const payload = await request<Manager[]>("/api/managers", {
+export const getAllOperators = async (): Promise<Operator[]> => {
+  const payload = await request<Operator[]>("/api/operators", {
     method: "GET",
   });
   return Array.isArray(payload) ? payload : [];
 };
 
-export const createManager = async (
-  payload: CreateManagerPayload,
-): Promise<Manager> => {
-  return request<Manager>("/api/managers", {
+export const createOperator = async (
+  payload: CreateOperatorPayload,
+): Promise<Operator> => {
+  return request<Operator>("/api/operators", {
     method: "POST",
     body: JSON.stringify(payload),
   });

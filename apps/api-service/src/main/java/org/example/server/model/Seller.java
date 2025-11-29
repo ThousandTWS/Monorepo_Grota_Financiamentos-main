@@ -32,6 +32,18 @@ public class Seller {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean canView = true;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean canCreate = true;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean canUpdate = true;
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean canDelete = true;
+
     public Seller() {
     }
 
@@ -88,6 +100,38 @@ public class Seller {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Boolean getCanView() {
+        return canView;
+    }
+
+    public void setCanView(Boolean canView) {
+        this.canView = canView;
+    }
+
+    public Boolean getCanCreate() {
+        return canCreate;
+    }
+
+    public void setCanCreate(Boolean canCreate) {
+        this.canCreate = canCreate;
+    }
+
+    public Boolean getCanUpdate() {
+        return canUpdate;
+    }
+
+    public void setCanUpdate(Boolean canUpdate) {
+        this.canUpdate = canUpdate;
+    }
+
+    public Boolean getCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(Boolean canDelete) {
+        this.canDelete = canDelete;
     }
 
     @Override

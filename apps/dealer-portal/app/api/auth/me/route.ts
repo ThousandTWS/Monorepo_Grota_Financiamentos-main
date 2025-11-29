@@ -111,6 +111,26 @@ export async function GET() {
   }
 
   const user = await profileResponse.json();
+  activeSession = {
+    ...activeSession,
+    canView: user?.canView ?? true,
+    canCreate: user?.canCreate ?? true,
+    canUpdate: user?.canUpdate ?? true,
+    canDelete: user?.canDelete ?? true,
+  };
+
+  const encoded = await encryptSession(activeSession, SESSION_SECRET);
+  const cookieStore = await cookies();
+  cookieStore.set({
+    name: LOGISTA_SESSION_COOKIE,
+    value: encoded,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    maxAge: LOGISTA_SESSION_MAX_AGE,
+    path: "/",
+  });
+
   const response = NextResponse.json({ user });
   response.headers.set("Cache-Control", "no-store");
   return response;

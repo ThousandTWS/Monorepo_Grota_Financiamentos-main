@@ -163,11 +163,40 @@ public class AuthController {
             return ResponseEntity.status(401).build();
         }
 
+        Boolean canView = true;
+        Boolean canCreate = true;
+        Boolean canUpdate = true;
+        Boolean canDelete = true;
+
+        if (user.getManager() != null) {
+            var m = user.getManager();
+            canView = m.getCanView();
+            canCreate = m.getCanCreate();
+            canUpdate = m.getCanUpdate();
+            canDelete = m.getCanDelete();
+        } else if (user.getOperator() != null) {
+            var o = user.getOperator();
+            canView = o.getCanView();
+            canCreate = o.getCanCreate();
+            canUpdate = o.getCanUpdate();
+            canDelete = o.getCanDelete();
+        } else if (user.getSeller() != null) {
+            var s = user.getSeller();
+            canView = s.getCanView();
+            canCreate = s.getCanCreate();
+            canUpdate = s.getCanUpdate();
+            canDelete = s.getCanDelete();
+        }
+
         UserResponseDTO userResponseDTO = new UserResponseDTO(
                 user.getId(),
                 user.getEmail(),
                 user.getDealer() != null ? user.getDealer().getUser().getFullName() : user.getFullName(),
-                user.getRole()
+                user.getRole(),
+                canView,
+                canCreate,
+                canUpdate,
+                canDelete
         );
         return ResponseEntity.ok(userResponseDTO);
     }

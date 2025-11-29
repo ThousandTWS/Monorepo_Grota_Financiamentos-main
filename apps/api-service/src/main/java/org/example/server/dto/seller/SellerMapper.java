@@ -29,7 +29,11 @@ public class SellerMapper {
                 seller.getCPF(),
                 seller.getBirthData(),
                 seller.getUser().getVerificationStatus(),
-                seller.getCreatedAt()
+                seller.getCreatedAt(),
+                seller.getCanView(),
+                seller.getCanCreate(),
+                seller.getCanUpdate(),
+                seller.getCanDelete()
         );
     }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -18,6 +18,7 @@ import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
 import { Separator } from "@/presentation/layout/components/ui/separator";
 import { DealersList } from "@/presentation/features/painel-geral/components/DealersList";
+import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
 
 const sellerSchema = z.object({
   fullName: z.string().min(2, "Informe o nome completo"),
@@ -40,6 +41,10 @@ const sellerSchema = z.object({
     .min(2, "UF inválida")
     .max(2, "UF inválida"),
   zipCode: z.string().min(8, "Informe o CEP"),
+  canView: z.boolean().default(true),
+  canCreate: z.boolean().default(true),
+  canUpdate: z.boolean().default(true),
+  canDelete: z.boolean().default(true),
 });
 
 type SellerFormValues = z.infer<typeof sellerSchema>;
@@ -53,6 +58,7 @@ export default function Operadores() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm<SellerFormValues>({
     resolver: zodResolver(sellerSchema),
@@ -69,6 +75,10 @@ export default function Operadores() {
       neighborhood: "",
       state: "SP",
       zipCode: "",
+      canView: true,
+      canCreate: true,
+      canUpdate: true,
+      canDelete: true,
     },
   });
 
@@ -82,15 +92,19 @@ export default function Operadores() {
         password: values.password,
         CPF: digitsOnly(values.cpf),
         birthData: values.birthData,
-        address: {
-          street: values.street.trim(),
-          number: values.number.trim(),
-          complement: values.complement?.trim() ?? "",
-          neighborhood: values.neighborhood.trim(),
-          state: values.state.trim().toUpperCase(),
-          zipCode: digitsOnly(values.zipCode),
-        },
-      });
+      address: {
+        street: values.street.trim(),
+        number: values.number.trim(),
+        complement: values.complement?.trim() ?? "",
+        neighborhood: values.neighborhood.trim(),
+        state: values.state.trim().toUpperCase(),
+        zipCode: digitsOnly(values.zipCode),
+      },
+      canView: values.canView,
+      canCreate: values.canCreate,
+      canUpdate: values.canUpdate,
+      canDelete: values.canDelete,
+    });
 
       toast.success("Vendedor cadastrado com sucesso!");
       reset();
@@ -210,6 +224,66 @@ export default function Operadores() {
               {errors.zipCode && (
                 <p className="text-sm text-red-500">{errors.zipCode.message}</p>
               )}
+            </div>
+
+            <Separator className="md:col-span-2" />
+
+            <div className="md:col-span-2">
+              <h3 className="text-sm font-semibold mb-2">Permissões</h3>
+              <div className="grid grid-cols-2 gap-3">
+                <label className="flex items-center gap-2 text-sm">
+                  <Controller
+                    control={control}
+                    name="canView"
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                    )}
+                  />
+                  Ver
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Controller
+                    control={control}
+                    name="canCreate"
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                    )}
+                  />
+                  Criar
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Controller
+                    control={control}
+                    name="canUpdate"
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                    )}
+                  />
+                  Atualizar
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Controller
+                    control={control}
+                    name="canDelete"
+                    render={({ field }) => (
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={(checked) => field.onChange(!!checked)}
+                      />
+                    )}
+                  />
+                  Excluir
+                </label>
+              </div>
             </div>
 
             <div className="md:col-span-2 flex justify-end">

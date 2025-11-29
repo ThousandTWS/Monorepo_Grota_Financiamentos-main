@@ -26,6 +26,10 @@ interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: string;
+  canView?: boolean;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 const API_BASE_URL = getLogistaApiBaseUrl();
@@ -125,6 +129,10 @@ export async function POST(request: NextRequest) {
       email: user.email,
       fullName: user.fullName,
       role: user.role,
+      canView: user.canView ?? true,
+      canCreate: user.canCreate ?? true,
+      canUpdate: user.canUpdate ?? true,
+      canDelete: user.canDelete ?? true,
       scope: LOGISTA_SESSION_SCOPE,
       accessToken: tokens.accessToken,
       refreshToken: tokens.refreshToken,

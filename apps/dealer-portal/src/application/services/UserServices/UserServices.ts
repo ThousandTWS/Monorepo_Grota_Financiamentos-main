@@ -3,6 +3,10 @@ export interface AuthenticatedUser {
   email: string;
   fullName: string;
   role: string;
+  canView?: boolean;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
 }
 
 const userServices = {

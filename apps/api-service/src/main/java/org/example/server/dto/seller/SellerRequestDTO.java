@@ -30,5 +30,10 @@ public record SellerRequestDTO(
         LocalDate birthData,
 
         @Valid
-        AddressDTO address
+        AddressDTO address,
+
+        Boolean canView,
+        Boolean canCreate,
+        Boolean canUpdate,
+        Boolean canDelete
 ) {}

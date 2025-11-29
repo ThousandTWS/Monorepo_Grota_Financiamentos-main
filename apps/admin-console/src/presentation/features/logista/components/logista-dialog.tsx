@@ -13,22 +13,17 @@ import {
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from
-  "@/presentation/layout/components/ui/select";
 import { Logista } from "./columns";
+import { CreateDealerPayload } from "@/application/services/Logista/logisticService";
+import { StatusBadge } from "./status-badge";
 
 interface LogistaDialogProps {
   logista: Logista | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (logista: Logista) => void;
-  mode: "view" | "edit" | "create";
+  onSave: (payload: CreateDealerPayload) => Promise<void>;
+  mode: "view" | "create";
+  isSubmitting?: boolean;
 }
 
 export function LogistaDialog({
@@ -36,43 +31,65 @@ export function LogistaDialog({
   open,
   onOpenChange,
   onSave,
-  mode
+  mode,
+  isSubmitting = false,
 }: LogistaDialogProps) {
-  const [formData, setFormData] = useState<Logista>({
-    id: "",
+  const [formData, setFormData] = useState<CreateDealerPayload>({
     fullName: "",
-    cpf: "",
-    cnpj: "",
     email: "",
     phone: "",
-    status: "ativo",
-    createdAt: new Date().toISOString().split("T")[0],
-    comissaoTotal: 0
+    enterprise: "",
+    password: "",
   });
+  const [formError, setFormError] = useState<string | null>(null);
 
   useEffect(() => {
     if (logista) {
-      setFormData(logista);
+      setFormData({
+        fullName: logista.fullName ?? "",
+        email: logista.email ?? "",
+        phone: logista.phone ?? "",
+        enterprise: logista.enterprise ?? "",
+        password: "",
+      });
     } else {
       setFormData({
-        id: "",
         fullName: "",
-        cpf: "",
-        cnpj: "",
         email: "",
         phone: "",
-        status: "ativo",
-        createdAt: new Date().toISOString().split("T")[0],
-        comissaoTotal: 0
+        enterprise: "",
+        password: "",
       });
     }
+    setFormError(null);
   }, [logista, open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (mode !== "view") {
-      onSave(formData);
+    if (mode === "view") {
       onOpenChange(false);
+      return;
+    }
+
+    const passwordLength = formData.password?.trim().length ?? 0;
+    if (passwordLength < 6 || passwordLength > 8) {
+      setFormError("Defina uma senha de 6 a 8 caracteres.");
+      return;
+    }
+
+    setFormError(null);
+    const normalizedPayload: CreateDealerPayload = {
+      fullName: formData.fullName.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      enterprise: formData.enterprise.trim(),
+      password: formData.password.trim(),
+    };
+    try {
+      await onSave(normalizedPayload);
+      onOpenChange(false);
+    } catch (err) {
+      console.error("[logista-dialog] Falha ao salvar logista", err);
     }
   };
 
@@ -82,8 +99,6 @@ export function LogistaDialog({
     switch (mode) {
       case "view":
         return "Visualizar Logista";
-      case "edit":
-        return "Editar Logista";
       case "create":
         return "Novo Logista";
     }
@@ -93,8 +108,6 @@ export function LogistaDialog({
     switch (mode) {
       case "view":
         return "Informações detalhadas do logista";
-      case "edit":
-        return "Edite as informações do logista";
       case "create":
         return "Preencha os dados para criar um novo logista";
     }
@@ -137,34 +150,16 @@ export function LogistaDialog({
               </div>
 
               <div className="space-y-2" data-oid="c3hhoay">
-                <Label htmlFor="cnpj" data-oid="srk9ani">
-                  CNPJ
+                <Label htmlFor="enterprise" data-oid="srk9ani">
+                  Empresa
                 </Label>
                 <Input
-                  id="cnpj"
-                  value={formData.cnpj}
+                  id="enterprise"
+                  value={formData.enterprise}
                   onChange={(e) =>
-                    setFormData({ ...formData, cnpj: e.target.value })
+                    setFormData({ ...formData, enterprise: e.target.value })
                   }
-                  placeholder="12.345.678/0001-99"
-                  disabled={isReadOnly}
-                  required
-                  data-oid="ft0hh.o"
-                />
-              </div>
-
-
-              <div className="space-y-2" data-oid="c3hhoay">
-                <Label htmlFor="cpf" data-oid="srk9ani">
-                  CPF
-                </Label>
-                <Input
-                  id="cpf"
-                  value={formData.cpf}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cpf: e.target.value })
-                  }
-                  placeholder="123.456.789-00"
+                  placeholder="Auto Center XPTO"
                   disabled={isReadOnly}
                   required
                   data-oid="ft0hh.o" />
@@ -212,73 +207,53 @@ export function LogistaDialog({
               </div>
             </div>
 
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              data-oid="v7qo9cd">
-
-              <div className="space-y-2" data-oid="6uh39qe">
-                <Label htmlFor="status" data-oid="7:omj4e">
-                  Status
-                </Label>
-                <Select
-                  value={formData.status}
-                  onValueChange={(value: "ativo" | "inativo" | "pendente") =>
-                    setFormData({ ...formData, status: value })
-                  }
-                  disabled={isReadOnly}
-                  data-oid="ynrrpeu">
-
-                  <SelectTrigger data-oid="ymfnfva">
-                    <SelectValue data-oid="m8n2pk3" />
-                  </SelectTrigger>
-                  <SelectContent data-oid="8bdysh_">
-                    <SelectItem value="ativo" data-oid="jwsp2-y">
-                      Ativo
-                    </SelectItem>
-                    <SelectItem value="inativo" data-oid="4g26hv_">
-                      Inativo
-                    </SelectItem>
-                    <SelectItem value="pendente" data-oid="3j1umk:">
-                      Pendente
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2" data-oid=":cvuhlv">
-                <Label htmlFor="dataRegistro" data-oid="460_8hu">
-                  Data de Registro
-                </Label>
-                <Input
-                  id="dataRegistro"
-                  type="date"
-                  value={formData.createdAt}
-                  onChange={(e) =>
-                    setFormData({ ...formData, createdAt: e.target.value })
-                  }
-                  disabled={isReadOnly}
-                  required
-                  data-oid="2wtu.qb" />
-
-              </div>
-            </div>
-
-            {mode === "view" &&
+            {mode === "create" && (
               <div className="space-y-2" data-oid="c3lkwui">
-                <Label htmlFor="comissaoTotal" data-oid="wsc_nal">
-                  Comissão Total
+                <Label htmlFor="password" data-oid="wsc_nal">
+                  Senha inicial
                 </Label>
                 <Input
-                  id="comissaoTotal"
-                  value={new Intl.NumberFormat("pt-BR", {
-                    style: "currency",
-                    currency: "BRL"
-                  }).format(formData.comissaoTotal)}
-                  disabled
+                  id="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
+                  placeholder="Defina uma senha (6 a 8 caracteres)"
+                  disabled={isSubmitting}
+                  required
+                  minLength={6}
+                  maxLength={8}
                   data-oid="9ffpl6v" />
 
+                <p className="text-xs text-muted-foreground">
+                  Essa senha será utilizada pelo lojista ao acessar o painel do logista.
+                </p>
               </div>
-            }
+            )}
+
+            {mode === "view" && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-oid="v7qo9cd">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <StatusBadge status={logista?.status} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Data de registro</Label>
+                  <div className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                    {logista?.createdAt
+                      ? new Date(logista.createdAt).toLocaleDateString("pt-BR")
+                      : "--"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {formError && (
+              <p className="text-sm text-red-500" data-oid="errMsg">
+                {formError}
+              </p>
+            )}
           </div>
 
           <DialogFooter data-oid="gwrq6il">
@@ -290,11 +265,11 @@ export function LogistaDialog({
 
               {mode === "view" ? "Fechar" : "Cancelar"}
             </Button>
-            {mode !== "view" &&
-              <Button type="submit" data-oid="fnyk5_2">
-                {mode === "create" ? "Criar" : "Salvar"}
+            {mode !== "view" && (
+              <Button type="submit" disabled={isSubmitting} data-oid="fnyk5_2">
+                {isSubmitting ? "Salvando..." : "Criar"}
               </Button>
-            }
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

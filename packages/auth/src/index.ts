@@ -10,6 +10,10 @@ export interface SessionPayload {
   email: string;
   fullName: string;
   role: string;
+  canView?: boolean;
+  canCreate?: boolean;
+  canUpdate?: boolean;
+  canDelete?: boolean;
   scope: SessionScope;
   accessToken: string;
   refreshToken: string;

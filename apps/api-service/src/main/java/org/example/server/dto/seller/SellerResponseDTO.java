@@ -14,5 +14,9 @@ public record SellerResponseDTO(
         String CPF,
         LocalDate birthData,
         UserStatus status,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        Boolean canView,
+        Boolean canCreate,
+        Boolean canUpdate,
+        Boolean canDelete
 ) {}
