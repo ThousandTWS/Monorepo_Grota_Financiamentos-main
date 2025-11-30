@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState } from 'react';
 import { AuthCredentials, AuthResult, MockAuthService, RegisterData } from '../MockAuthService';
 import { toast } from 'sonner';
