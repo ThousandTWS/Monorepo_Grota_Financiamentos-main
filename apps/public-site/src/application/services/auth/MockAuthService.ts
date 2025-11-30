@@ -6,14 +6,16 @@ const LOGISTA_PANEL_ORIGIN = (
 ).replace(/\/$/, "");
 
 export interface AuthCredentials {
-  enterprise: string;
+  identifier: string; // e-mail ou nome da empresa
   password: string;
 }
 
-export interface RegisterData extends AuthCredentials {
+export interface RegisterData {
   fullName: string;
   phone: string;
   email?: string;
+  enterprise: string;
+  password: string;
 }
 
 export interface AuthResult {
@@ -24,17 +26,21 @@ export interface AuthResult {
 }
 
 export class MockAuthService {
-  async signIn({ enterprise, password }: AuthCredentials): Promise<AuthResult> {
+  async signIn({ identifier, password }: AuthCredentials): Promise<AuthResult> {
     try {
-      const normalizedEnterprise = enterprise?.trim();
+      const normalizedIdentifier = identifier?.trim();
       const normalizedPassword = password?.trim();
+      const isEmail = normalizedIdentifier?.includes("@");
+      const enterprise = isEmail ? undefined : normalizedIdentifier;
+      const email = isEmail ? normalizedIdentifier : undefined;
 
       const response = await fetch(`${LOGISTA_PANEL_ORIGIN}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          enterprise: normalizedEnterprise,
+          enterprise,
+          email,
           password: normalizedPassword,
         }),
       });
@@ -75,8 +81,6 @@ export class MockAuthService {
         fullName,
         phone,
         enterprise,
-        // Marca como cadastro interno para liberar login imediato (evita bloqueio por conta pendente)
-        adminRegistration: true,
       });
 
       return {

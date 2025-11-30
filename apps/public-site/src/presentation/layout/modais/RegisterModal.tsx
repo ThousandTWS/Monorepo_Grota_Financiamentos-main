@@ -32,8 +32,8 @@ const registerSchema = z
     enterprise: z.string().min(2, "O nome da empresa é obrigatório"),
     password: z
       .string()
-      .min(6, "A senha deve ter pelo menos 6 caracteres")
-      .max(8, "A senha deve ter no maximo 8 caracteres"),
+      .min(8, "A senha deve ter pelo menos 8 caracteres")
+      .max(50, "A senha deve ter no m\u00e1ximo 50 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -200,7 +200,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                   {...register("password")}
                   className={inputStyle}
                   maxLength={8}
-                  placeholder="Senha com 6 a 8 caracteres"
+                  placeholder="Mnimo 8 caracteres"
                   disabled={isLoading}
                 />
               </InputGroup>
@@ -263,6 +263,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
     </div>
   );
 }
+
 
 
 

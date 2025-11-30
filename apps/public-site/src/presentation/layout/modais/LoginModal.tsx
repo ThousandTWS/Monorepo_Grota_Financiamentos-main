@@ -13,10 +13,10 @@ const LOGISTA = (
 ).replace(/\/$/, "");
 
 const loginSchema = z.object({
-  enterprise: z
+  identifier: z
     .string()
     .trim()
-    .min(1, "O nome da empresa é obrigatório"),
+    .min(1, "Informe e-mail ou nome da empresa"),
   password: z.string().min(1, "A senha é obrigatória"),
 });
 
@@ -37,13 +37,13 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
   } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      enterprise: "",
+      identifier: "",
       password: "",
     },
   });
 
   const onSubmit = async (data: LoginForm) => {
-    if (!data.enterprise || !data.password) {
+    if (!data.identifier || !data.password) {
       return;
     }
 
@@ -86,23 +86,23 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
               Área do Logista
             </h2>
             <p className="text-md text-gray-600">
-              Informe o nome da empresa e sua senha para continuar.
+              Informe o e-mail ou nome da empresa e sua senha para continuar.
             </p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <InputGroup
-              id="enterprise"
-              label="Nome da empresa"
+              id="identifier"
+              label="E-mail ou nome da empresa"
               icon={<Building2 size={20} />}
-              error={errors.enterprise}
+              error={errors.identifier}
             >
               <input
                 type="text"
-                id="enterprise"
-                {...register("enterprise")}
+                id="identifier"
+                {...register("identifier")}
                 className={inputStyle}
-                placeholder="Ex: Loja Central Auto"
+                placeholder="Ex: contato@loja.com ou Loja Central Auto"
                 disabled={isLoading}
               />
             </InputGroup>

@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     return new NextResponse(null, { status: 403 });
   }
 
-  let body: { enterprise?: string; password?: string };
+  let body: { enterprise?: string; email?: string; password?: string };
   try {
     body = await request.json();
   } catch {
@@ -91,11 +91,12 @@ export async function POST(request: NextRequest) {
   }
 
   const enterprise = body.enterprise?.trim();
+  const email = body.email?.trim();
   const password = body.password?.trim();
 
-  if (!enterprise || !password) {
+  if ((!enterprise && !email) || !password) {
     return unauthorizedResponse(
-      "Nome da empresa e senha sao obrigatorios",
+      "Informe email ou empresa e a senha",
       origin,
     );
   }
@@ -106,6 +107,7 @@ export async function POST(request: NextRequest) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         enterprise,
+        email,
         password,
       }),
       cache: "no-store",
