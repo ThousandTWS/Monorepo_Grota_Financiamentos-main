@@ -76,7 +76,7 @@ public class UserService {
 
         User user = userMapper.toEntity(userRequestDTO);
 
-        user.setRole(UserRole.LOJISTA);
+        user.setRole(UserRole.ADMIN);
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
