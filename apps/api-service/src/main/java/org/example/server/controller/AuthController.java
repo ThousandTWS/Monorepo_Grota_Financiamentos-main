@@ -216,7 +216,7 @@ public class AuthController {
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
     public ResponseEntity<Api_Response> verifyCode(@RequestBody @Valid VerificationCodeRequestDTO verificationCodeRequestDTO) {
-        userService.verifiUser(verificationCodeRequestDTO);
+        userService.verifyUser(verificationCodeRequestDTO);
         return ResponseEntity.ok(new Api_Response(true, "Usuário verificado com sucesso"));
     }
 

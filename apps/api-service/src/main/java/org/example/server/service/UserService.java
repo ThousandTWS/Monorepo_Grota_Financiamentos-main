@@ -43,7 +43,9 @@ public class UserService {
     private final VerificationCodeGenerator codeGenerator;
 
     public UserService(
-            UserRepository userRepository, DealerRepository dealerRepository, UserDetailsService userDetailsService,
+            UserRepository userRepository,
+            DealerRepository dealerRepository,
+            UserDetailsService userDetailsService,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             AuthenticationManager manager,
@@ -71,15 +73,20 @@ public class UserService {
         if (userRepository.existsByEmail(userRequestDTO.email())) {
             throw new DataAlreadyExistsException("E-mail já cadastrado");
         }
+
         User user = userMapper.toEntity(userRequestDTO);
 
-        user.setRole(UserRole.ADMIN);
+        user.setRole(UserRole.LOJISTA);
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
         userRepository.save(user);
 
-        emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+        if (sendVerification) {
+            emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+        }
+
         return userMapper.toDto(user);
     }
 
@@ -100,13 +107,16 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     public String login(AuthRequest request) {
         String username = resolveLoginIdentifier(request);
+
         manager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, request.password())
         );
 
-        User user = (User) userDetailsService.loadUserByUsername(username);
+        // Usa o próprio método de resolução de usuário por identificador
+        User user = (User) loadUserByUsername(username);
 
         if (user.getVerificationStatus() == UserStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
@@ -115,9 +125,13 @@ public class UserService {
         return jwtService.generateToken(user);
     }
 
-    public void verifiUser(VerificationCodeRequestDTO verificationCodeRequestDTO) {
+    // Corrigido nome do método: verifiUser -> verifyUser
+    @Transactional
+    public void verifyUser(VerificationCodeRequestDTO verificationCodeRequestDTO) {
         User user = userRepository.findByEmail(verificationCodeRequestDTO.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado com o e-mail: " + verificationCodeRequestDTO.email()));
+                .orElseThrow(() -> new RecordNotFoundException(
+                        "Usuario não encontrado com o e-mail: " + verificationCodeRequestDTO.email()
+                ));
 
         if (user.getVerificationStatus() == UserStatus.ATIVO) {
             throw new UserAlreadyVerifiedException("Usuário já verificado");
@@ -128,10 +142,12 @@ public class UserService {
         if (!user.doesVerificationCodeMatch(verificationCodeRequestDTO.code())) {
             throw new CodeInvalidException("Código inválido");
         }
+
         user.markAsVerified();
         userRepository.save(user);
     }
 
+    @Transactional
     public void resendCode(EmailResponseDTO dto) {
         User user = userRepository.findByEmail(dto.email())
                 .orElseThrow(() -> new RecordNotFoundException("Usuario não encontrado com e-mail: " + dto.email()));
@@ -149,7 +165,9 @@ public class UserService {
     @Transactional
     public void requestPasswordReset(PasswordResetRequestDTO passwordResetRequestDTO) {
         User user = userRepository.findByEmail(passwordResetRequestDTO.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com e-mail: " + passwordResetRequestDTO.email()));
+                .orElseThrow(() -> new RecordNotFoundException(
+                        "Usuário não encontrado com e-mail: " + passwordResetRequestDTO.email()
+                ));
 
         String resetCode = codeGenerator.generate();
         user.generateResetCode(resetCode, Duration.ofMinutes(10));
@@ -161,7 +179,9 @@ public class UserService {
     @Transactional
     public void resetPassword(PasswordResetConfirmRequestDTO passwordResetConfirmRequestDTO) {
         User user = userRepository.findByEmail(passwordResetConfirmRequestDTO.email())
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com e-mail: " + passwordResetConfirmRequestDTO.email()));
+                .orElseThrow(() -> new RecordNotFoundException(
+                        "Usuário não encontrado com e-mail: " + passwordResetConfirmRequestDTO.email()
+                ));
 
         if (user.isResetCodeExpired()) {
             throw new CodeInvalidException("Código de redefinição expirado. Solicite um novo.");
@@ -175,10 +195,11 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional(readOnly = true)
     public List<UserResponseDTO> findAll() {
-        List<User> usersDtos = userRepository.findAll();
-        return usersDtos.stream()
-                .map(userResponseDTO -> userMapper.toDto(userResponseDTO))
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
 
@@ -196,8 +217,9 @@ public class UserService {
 
         if (dto.email() != null && !dto.email().isBlank()) {
             String normalizedEmail = dto.email().trim();
-            if (!normalizedEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
-                throw new DataAlreadyExistsException("E-mail j\u00e1 cadastrado");
+            if (!normalizedEmail.equalsIgnoreCase(user.getEmail())
+                    && userRepository.existsByEmail(normalizedEmail)) {
+                throw new DataAlreadyExistsException("E-mail já cadastrado");
             }
             user.setEmail(normalizedEmail);
         }
@@ -209,10 +231,14 @@ public class UserService {
         return userMapper.toDto(userRepository.save(user));
     }
 
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String identifier) {
         return userRepository.findByEmail(identifier)
-                .or(() -> dealerRepository.findByEnterpriseIgnoreCase(identifier).map(dealer -> (UserDetails) dealer.getUser()))
-                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado com identificador: " + identifier));
+                .or(() -> dealerRepository.findByEnterpriseIgnoreCase(identifier)
+                        .map(dealer -> (User) dealer.getUser()))
+                .orElseThrow(() ->
+                        new RecordNotFoundException("Usuário não encontrado com identificador: " + identifier)
+                );
     }
 
     public String resolveLoginIdentifier(AuthRequest request) {
@@ -226,8 +252,3 @@ public class UserService {
     }
 
 }
-
-
-
-
-

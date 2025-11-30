@@ -11,6 +11,7 @@ import org.example.server.model.Dealer;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.DocumentRepository;
+import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -34,6 +35,7 @@ public class DealerService {
     private final AddressMapper addressMapper;
     private final DealerDetailsMapper dealerDetailsMapper;
     private final VerificationCodeGenerator codeGenerator;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public DealerService(
             DealerRepository dealerRepository,
@@ -45,7 +47,8 @@ public class DealerService {
             DealerProfileMapper dealerProfileMapper,
             AddressMapper addressMapper,
             DealerDetailsMapper dealerDetailsMapper,
-            VerificationCodeGenerator codeGenerator
+            VerificationCodeGenerator codeGenerator,
+            RefreshTokenRepository refreshTokenRepository
     ) {
         this.dealerRepository = dealerRepository;
         this.userRepository = userRepository;
@@ -57,6 +60,7 @@ public class DealerService {
         this.addressMapper = addressMapper;
         this.dealerDetailsMapper = dealerDetailsMapper;
         this.codeGenerator = codeGenerator;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Transactional
@@ -188,8 +192,17 @@ public class DealerService {
         return dealerProfileMapper.toDTO(dealerRepository.save(dealer));
     }
 
+    @Transactional
     public void delete(Long id) {
-        dealerRepository.deleteById(id);
+        Dealer dealer = dealerRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException(id));
+
+        User user = dealer.getUser();
+        if (user != null) {
+            refreshTokenRepository.deleteByUser(user);
+        }
+
+        dealerRepository.delete(dealer);
     }
 
     private String normalize(String value) {

@@ -77,38 +77,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { email: rawEmail, ...rest } = body ?? {};
     const email =
-      typeof body?.email === "string" && body.email.trim().length > 0
-        ? body.email.trim()
+      typeof rawEmail === "string" && rawEmail.trim().length > 0
+        ? rawEmail.trim()
         : undefined;
+    const payload = {
+      ...rest,
+      adminRegistration: true,
+      ...(email ? { email } : {}),
+    };
 
     const upstreamResponse = await fetch(`${API_BASE_URL}/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${session.accessToken}`,
+        // Endpoint é público no backend; mantemos protegido apenas pelo session check do admin.
       },
-      body: JSON.stringify({
-        ...body,
-        email,
-        adminRegistration: true,
-      }),
+      body: JSON.stringify(payload),
       cache: "no-store",
     });
 
-    const payload = await upstreamResponse.json().catch(() => null);
+    const responsePayload = await upstreamResponse.json().catch(() => null);
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { message?: string; error?: string })?.message ??
-        (payload as { error?: string })?.error ??
+        (responsePayload as { message?: string; error?: string })?.message ??
+        (responsePayload as { error?: string })?.error ??
         "Não foi possível criar o logista.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });
     }
 
-    return NextResponse.json(payload ?? {}, {
+    return NextResponse.json(responsePayload ?? {}, {
       status: upstreamResponse.status,
     });
   } catch (error) {
