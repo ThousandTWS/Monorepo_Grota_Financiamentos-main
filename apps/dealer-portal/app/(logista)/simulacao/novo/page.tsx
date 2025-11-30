@@ -277,18 +277,18 @@ export default function SimuladorNovo() {
         </Card>
       </div>
 
-      <Card className="border-none bg-[#e8f2f9] shadow-sm">
-        <CardContent className="flex items-center justify-center p-6">
+      <div className="border-none bg-[#e8f2f9] shadow-sm">
+        <div className="flex items-center justify-center ">
           <Image
             src="https://res.cloudinary.com/dqagks3zl/image/upload/v1764448576/baixados_kitmbz.png"
-            width={260}
-            height={180}
+            width={1080}
+            height={1080}
             alt="Simulação Grota"
-            className="h-auto max-w-full"
+            className="h-auto w-full"
             priority
           />
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <Card>
         <CardHeader className="pb-3">
