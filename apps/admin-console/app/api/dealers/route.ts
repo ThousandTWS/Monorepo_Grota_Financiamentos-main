@@ -92,11 +92,21 @@ export async function POST(request: NextRequest) {
     const responsePayload = await upstreamResponse.json().catch(() => null);
 
     if (!upstreamResponse.ok) {
-      const message =
+      const responseErrors = Array.isArray((responsePayload as { errors?: unknown })?.errors)
+        ? (responsePayload as { errors: unknown[] }).errors.filter((err) => typeof err === "string")
+        : [];
+
+      const baseMessage =
         (responsePayload as { message?: string; error?: string })?.message ??
         (responsePayload as { error?: string })?.error ??
         "Não foi possível criar o logista.";
-      return NextResponse.json({ error: message }, {
+
+      const detailedMessage =
+        responseErrors.length > 0
+          ? `${baseMessage} - ${responseErrors.join("; ")}`
+          : baseMessage;
+
+      return NextResponse.json({ error: detailedMessage, errors: responseErrors }, {
         status: upstreamResponse.status,
       });
     }

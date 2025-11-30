@@ -55,10 +55,21 @@ async function request<T>(
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      (payload as { error?: string })?.error ??
+    const errors = Array.isArray((payload as { errors?: unknown })?.errors)
+      ? (payload as { errors: unknown[] }).errors.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [];
+
+    const baseMessage =
+      (payload as { error?: string; message?: string })?.error ??
+      (payload as { message?: string })?.message ??
       "Não foi possível concluir a operação.";
-    throw new Error(message);
+
+    const detailedMessage =
+      errors.length > 0 ? `${baseMessage} - ${errors.join("; ")}` : baseMessage;
+
+    throw new Error(detailedMessage);
   }
 
   return (payload ?? {}) as T;

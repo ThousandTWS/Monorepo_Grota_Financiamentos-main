@@ -23,6 +23,7 @@ public class ManagerMapper {
 
         return new ManagerResponseDTO(
                 manager.getId(),
+                manager.getDealer() != null ? manager.getDealer().getId() : null,
                 user.getFullName(),
                 user.getEmail(),
                 manager.getPhone(),

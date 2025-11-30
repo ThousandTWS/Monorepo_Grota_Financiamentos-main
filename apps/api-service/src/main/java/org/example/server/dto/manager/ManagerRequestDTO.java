@@ -3,6 +3,7 @@ package org.example.server.dto.manager;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import jakarta.validation.constraints.Size;
 import org.example.server.dto.address.AddressDTO;
@@ -10,6 +11,9 @@ import org.example.server.dto.address.AddressDTO;
 import java.time.LocalDate;
 
 public record ManagerRequestDTO(
+        @NotNull(message = "O id do lojista é obrigatório")
+        Long dealerId,
+
         @NotBlank(message = "O nome completo é obrigatório")
         @Size(min = 2, max = 100, message = "O nome completo deve ter entre 2 a 100 caracteres")
         String fullName,

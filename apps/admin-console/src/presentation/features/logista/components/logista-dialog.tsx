@@ -31,6 +31,8 @@ import {
 import { Operator, getAllOperators } from "@/application/services/Operator/operatorService";
 import { StatusBadge } from "./status-badge";
 
+const digitsOnly = (value?: string) => (value ?? "").replace(/\D/g, "");
+
 interface LogistaDialogProps {
   logista: Logista | null;
   open: boolean;
@@ -139,9 +141,95 @@ export function LogistaDialog({
       return;
     }
 
-    const passwordLength = formData.password?.trim().length ?? 0;
-    if (passwordLength < 6 || passwordLength > 8) {
-      setFormError("Defina uma senha de 6 a 8 caracteres.");
+    const validationErrors: string[] = [];
+
+    const fullName = formData.fullName.trim();
+    const enterprise = formData.enterprise.trim();
+    const phoneDigits = digitsOnly(formData.phone);
+    const password = formData.password.trim();
+
+    if (!fullName) {
+      validationErrors.push("O nome completo é obrigatório.");
+    } else if (fullName.length < 2 || fullName.length > 100) {
+      validationErrors.push("O nome completo deve ter entre 2 e 100 caracteres.");
+    }
+
+    if (!enterprise) {
+      validationErrors.push("A empresa é obrigatória.");
+    } else if (enterprise.length < 2 || enterprise.length > 100) {
+      validationErrors.push("O nome da empresa deve ter entre 2 e 100 caracteres.");
+    }
+
+    if (!phoneDigits) {
+      validationErrors.push("O telefone é obrigatório.");
+    } else if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      validationErrors.push("Informe um telefone válido com 10 ou 11 dígitos.");
+    }
+
+    if (!password) {
+      validationErrors.push("A senha é obrigatória.");
+    } else if (password.length < 6 || password.length > 8) {
+      validationErrors.push("Defina uma senha de 6 a 8 caracteres.");
+    }
+
+    const address = formData.address;
+    if (address) {
+      const zipDigits = digitsOnly(address.zipCode);
+      const street = address.street?.trim() ?? "";
+      const number = address.number?.trim() ?? "";
+      const complement = address.complement?.trim() ?? "";
+      const neighborhood = address.neighborhood?.trim() ?? "";
+      const city = address.city?.trim() ?? "";
+      const state = address.state?.trim() ?? "";
+
+      if (zipDigits && zipDigits.length !== 8) {
+        validationErrors.push("CEP deve conter 8 dígitos.");
+      }
+      if (street && (street.length < 2 || street.length > 255)) {
+        validationErrors.push("Logradouro deve ter entre 2 e 255 caracteres.");
+      }
+      if (number && number.length > 20) {
+        validationErrors.push("Número deve ter no máximo 20 caracteres.");
+      }
+      if (complement && complement.length > 255) {
+        validationErrors.push("Complemento deve ter no máximo 255 caracteres.");
+      }
+      if (neighborhood && (neighborhood.length < 2 || neighborhood.length > 100)) {
+        validationErrors.push("Bairro deve ter entre 2 e 100 caracteres.");
+      }
+      if (city && (city.length < 2 || city.length > 100)) {
+        validationErrors.push("Cidade deve ter entre 2 e 100 caracteres.");
+      }
+      if (state && state.length !== 2) {
+        validationErrors.push("Estado deve ser a sigla com 2 caracteres.");
+      }
+    }
+
+    (formData.partners ?? []).forEach((partner, index) => {
+      const cpfDigits = digitsOnly(partner.cpf);
+      const name = partner.name?.trim() ?? "";
+      const hasData = cpfDigits || name || partner.type;
+      if (!hasData) return;
+
+      if (!cpfDigits) {
+        validationErrors.push(`Sócio ${index + 1}: CPF é obrigatório.`);
+      } else if (cpfDigits.length !== 11) {
+        validationErrors.push(`Sócio ${index + 1}: CPF deve ter 11 dígitos.`);
+      }
+
+      if (!name) {
+        validationErrors.push(`Sócio ${index + 1}: nome é obrigatório.`);
+      } else if (name.length < 2 || name.length > 150) {
+        validationErrors.push(`Sócio ${index + 1}: nome deve ter entre 2 e 150 caracteres.`);
+      }
+
+      if (!partner.type) {
+        validationErrors.push(`Sócio ${index + 1}: selecione o tipo.`);
+      }
+    });
+
+    if (validationErrors.length > 0) {
+      setFormError(validationErrors.join(" "));
       return;
     }
 
@@ -256,6 +344,51 @@ export function LogistaDialog({
         <div className="space-y-1">
           <h3 className="text-base font-semibold text-foreground">Dados da Loja</h3>
           <p className="text-xs text-muted-foreground">Preencha as informações principais.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="fullName">Responsável</Label>
+            <Input
+              id="fullName"
+              className={inputWidth}
+              value={formData.fullName}
+              onChange={(e) =>
+                setFormData({ ...formData, fullName: e.target.value })
+              }
+              placeholder="Nome completo"
+              disabled={isReadOnly}
+              data-oid="full-name"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="enterprise">Nome da empresa</Label>
+            <Input
+              id="enterprise"
+              className={inputWidth}
+              value={formData.enterprise}
+              onChange={(e) =>
+                setFormData({ ...formData, enterprise: e.target.value })
+              }
+              placeholder="Nome fantasia / login"
+              disabled={isReadOnly}
+              data-oid="enterprise"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone</Label>
+            <Input
+              id="phone"
+              className={inputWidth}
+              value={formData.phone}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
+              placeholder="(00) 00000-0000"
+              disabled={isReadOnly}
+              data-oid="phone"
+            />
+          </div>
         </div>
 
         <div className="space-y-2">

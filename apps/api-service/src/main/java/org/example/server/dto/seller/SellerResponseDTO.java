@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 
 public record SellerResponseDTO(
         Long id,
+        Long dealerId,
         String fullName,
         String email,
         String phone,

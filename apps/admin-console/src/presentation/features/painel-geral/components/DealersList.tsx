@@ -24,7 +24,7 @@ const formatDate = (value?: string) => {
   }).format(date);
 };
 
-export function DealersList() {
+export function DealersList({ dealerId }: { dealerId?: number }) {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export function DealersList() {
     const fetchSellers = async () => {
       try {
         setLoading(true);
-        const data = await getAllSellers();
+        const data = await getAllSellers(dealerId);
         if (mounted) {
           setSellers(Array.isArray(data) ? data : []);
           setError(null);
@@ -59,7 +59,7 @@ export function DealersList() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [dealerId]);
 
   const displayedSellers = useMemo(() => sellers.slice(0, 10), [sellers]);
   const visibleCount = displayedSellers.length;

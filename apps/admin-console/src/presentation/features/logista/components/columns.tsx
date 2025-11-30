@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/presentation/layout/components/ui/button";
+import { useRouter } from "next/navigation";
 import { MoreHorizontal, Trash2, Eye, } from "lucide-react";
 import {
   DropdownMenu,
@@ -29,13 +30,29 @@ type LogistaActionsProps = {
   logista: Logista;
   onView: (logista: Logista) => void;
   onDelete: (logista: Logista) => void;
+  onLinkSeller: (logista: Logista) => void;
+  onLinkManager: (logista: Logista) => void;
+  onLinkOperator: (logista: Logista) => void;
 };
 
 export function LogistaActions({
   logista,
   onView,
-  onDelete
+  onDelete,
+  onLinkSeller,
+  onLinkManager,
+  onLinkOperator,
 }: LogistaActionsProps) {
+  const router = useRouter();
+
+  const handleNavigate = (path: string) => {
+    const params = new URLSearchParams({
+      dealerId: String(logista.id),
+      dealerName: logista.fullName,
+    });
+    router.push(`${path}?${params.toString()}`);
+  };
+
   return (
     <DropdownMenu data-oid="8xat6mv">
       <DropdownMenuTrigger asChild data-oid="puq9q_b">
@@ -49,6 +66,15 @@ export function LogistaActions({
       <DropdownMenuContent align="end" data-oid="ldr2mjd">
         <DropdownMenuLabel data-oid="7udh9n_">Ações</DropdownMenuLabel>
         <DropdownMenuSeparator data-oid="3s.-cik" />
+        <DropdownMenuItem onClick={() => onLinkSeller(logista)} data-oid="add-seller">
+          Adicionar Vendedor
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onLinkManager(logista)} data-oid="add-manager">
+          Adicionar Gestor
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => onLinkOperator(logista)} data-oid="add-operator">
+          Adicionar Operador
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onView(logista)} data-oid="1h.xlk7">
           <Eye className="size-4 mr-2" data-oid="zteg2rm" />
           Visualizar
@@ -70,6 +96,9 @@ export function LogistaActions({
 export const getLogistaColumns = (actions: {
   onView: (logista: Logista) => void;
   onDelete: (logista: Logista) => void;
+  onLinkSeller: (logista: Logista) => void;
+  onLinkManager: (logista: Logista) => void;
+  onLinkOperator: (logista: Logista) => void;
 }) => [
     {
       key: "referenceCode",
@@ -150,6 +179,9 @@ export const getLogistaColumns = (actions: {
           logista={logista}
           onView={actions.onView}
           onDelete={actions.onDelete}
+          onLinkSeller={actions.onLinkSeller}
+          onLinkManager={actions.onLinkManager}
+          onLinkOperator={actions.onLinkOperator}
           data-oid="j-ksfjm" />
 
 

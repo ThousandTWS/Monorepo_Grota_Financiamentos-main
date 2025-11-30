@@ -27,7 +27,7 @@ const formatDate = (value?: string) => {
 const isActive = (status?: string) =>
   (status ?? "").toString().trim().toUpperCase() === "ATIVO";
 
-export function OperatorsList() {
+export function OperatorsList({ dealerId }: { dealerId?: number }) {
   const [operators, setOperators] = useState<Operator[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function OperatorsList() {
     const fetchOperators = async () => {
       try {
         setLoading(true);
-        const data = await getAllOperators();
+        const data = await getAllOperators(dealerId);
         if (mounted) {
           setOperators(Array.isArray(data) ? data : []);
           setError(null);
@@ -62,7 +62,7 @@ export function OperatorsList() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [dealerId]);
 
   const activeOperators = useMemo(
     () => operators.filter((o) => isActive(o.status)),

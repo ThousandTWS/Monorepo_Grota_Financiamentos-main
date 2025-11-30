@@ -9,8 +9,10 @@ import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.model.Dealer;
 import org.example.server.model.Operator;
 import org.example.server.model.User;
+import org.example.server.repository.DealerRepository;
 import org.example.server.repository.OperatorRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +31,7 @@ public class OperatorService {
     private final OperatorMapper operatorMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
+    private final DealerRepository dealerRepository;
 
     public OperatorService(
             OperatorRepository operatorRepository,
@@ -36,7 +39,8 @@ public class OperatorService {
             PasswordEncoder passwordEncoder,
             OperatorMapper operatorMapper,
             AddressMapper addressMapper,
-            EmailService emailService
+            EmailService emailService,
+            DealerRepository dealerRepository
     ) {
         this.operatorRepository = operatorRepository;
         this.userRepository = userRepository;
@@ -44,6 +48,7 @@ public class OperatorService {
         this.operatorMapper = operatorMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
+        this.dealerRepository = dealerRepository;
     }
 
     public OperatorResponseDTO create(User user, OperatorRequestDTO operatorRequestDTO) {
@@ -59,6 +64,9 @@ public class OperatorService {
         if (operatorRepository.existsByPhone(operatorRequestDTO.phone())) {
             throw new DataAlreadyExistsException("Telefone já existe.");
         }
+
+        Dealer dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         User newUser = new User();
         newUser.setFullName(operatorRequestDTO.fullName());
@@ -77,6 +85,7 @@ public class OperatorService {
         operator.setCanCreate(operatorRequestDTO.canCreate() != null ? operatorRequestDTO.canCreate() : true);
         operator.setCanUpdate(operatorRequestDTO.canUpdate() != null ? operatorRequestDTO.canUpdate() : true);
         operator.setCanDelete(operatorRequestDTO.canDelete() != null ? operatorRequestDTO.canDelete() : true);
+        operator.setDealer(dealer);
 
         newUser.setOperator(operator);
 
@@ -85,8 +94,12 @@ public class OperatorService {
         return operatorMapper.toDTO(operatorRepository.save(operator));
     }
 
-    public List<OperatorResponseDTO> findAll() {
-        return operatorRepository.findAll()
+    public List<OperatorResponseDTO> findAll(Long dealerId) {
+        List<Operator> operators = dealerId != null
+                ? operatorRepository.findByDealerId(dealerId)
+                : operatorRepository.findAll();
+
+        return operators
                 .stream()
                 .map(operatorMapper::toDTO)
                 .collect(Collectors.toList());
@@ -102,6 +115,8 @@ public class OperatorService {
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User operatorUser = operator.getUser();
+        Dealer dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         operatorUser.setFullName(operatorRequestDTO.fullName());
         operatorUser.setEmail(operatorRequestDTO.email());
@@ -114,10 +129,38 @@ public class OperatorService {
         operator.setCanCreate(operatorRequestDTO.canCreate() != null ? operatorRequestDTO.canCreate() : operator.getCanCreate());
         operator.setCanUpdate(operatorRequestDTO.canUpdate() != null ? operatorRequestDTO.canUpdate() : operator.getCanUpdate());
         operator.setCanDelete(operatorRequestDTO.canDelete() != null ? operatorRequestDTO.canDelete() : operator.getCanDelete());
+        operator.setDealer(dealer);
 
         userRepository.save(operatorUser);
         operatorRepository.save(operator);
 
         return operatorMapper.toDTO(operator);
+    }
+
+    public OperatorResponseDTO updateDealer(User requester, Long operatorId, Long dealerId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode reatribuir operador.");
+        }
+
+        Operator operator = operatorRepository.findById(operatorId)
+                .orElseThrow(() -> new RecordNotFoundException(operatorId));
+        if (dealerId != null) {
+            Dealer dealer = dealerRepository.findById(dealerId)
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+            operator.setDealer(dealer);
+        } else {
+            operator.setDealer(null);
+        }
+        operatorRepository.save(operator);
+        return operatorMapper.toDTO(operator);
+    }
+
+    public void delete(User requester, Long operatorId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode remover operador.");
+        }
+        Operator operator = operatorRepository.findById(operatorId)
+                .orElseThrow(() -> new RecordNotFoundException(operatorId));
+        operatorRepository.delete(operator);
     }
 }

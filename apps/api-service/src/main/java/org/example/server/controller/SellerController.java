@@ -50,8 +50,8 @@ public class SellerController {
             @ApiResponse(responseCode = "200", description = "Lista de Vendedores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<SellerResponseDTO>> findAll(){
-        List<SellerResponseDTO> selles = sellerService.findAll();
+    public ResponseEntity<List<SellerResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
+        List<SellerResponseDTO> selles = sellerService.findAll(dealerId);
         return ResponseEntity.ok().body(selles);
     }
 
@@ -69,6 +69,43 @@ public class SellerController {
     public ResponseEntity<SellerResponseDTO> findById(@PathVariable Long id){
         SellerResponseDTO selle = sellerService.findById(id);
         return ResponseEntity.ok().body(selle);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Remover vendedor",
+            description = "Remove definitivamente um vendedor e seu usuário associado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Vendedor removido com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Vendedor não encontrado")
+    })
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        sellerService.delete(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/dealer")
+    @Operation(
+            summary = "Reatribuir vendedor para outra loja",
+            description = "Atualiza o dealer associado ao vendedor."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Vínculo atualizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Vendedor ou lojista não encontrados")
+    })
+    public ResponseEntity<SellerResponseDTO> updateDealer(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long dealerId,
+            @AuthenticationPrincipal User user
+    ) {
+        SellerResponseDTO updated = sellerService.updateDealer(user, id, dealerId);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}")

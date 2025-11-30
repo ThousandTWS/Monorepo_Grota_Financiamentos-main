@@ -50,8 +50,8 @@ public class ManagerController {
             @ApiResponse(responseCode = "200", description = "Lista de Gestores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<ManagerResponseDTO>> findAll(){
-        List<ManagerResponseDTO> managers = managerService.findAll();
+    public ResponseEntity<List<ManagerResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
+        List<ManagerResponseDTO> managers = managerService.findAll(dealerId);
         return ResponseEntity.ok().body(managers);
     }
 
@@ -69,6 +69,43 @@ public class ManagerController {
     public ResponseEntity<ManagerResponseDTO> findById(@PathVariable Long id){
         ManagerResponseDTO manager = managerService.findById(id);
         return ResponseEntity.ok().body(manager);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Remover gestor",
+            description = "Remove definitivamente um gestor e seu usuário associado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Gestor removido com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Gestor não encontrado")
+    })
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        managerService.delete(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/dealer")
+    @Operation(
+            summary = "Reatribuir gestor para outra loja",
+            description = "Atualiza o dealer associado ao gestor."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Vínculo atualizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Gestor ou lojista não encontrados")
+    })
+    public ResponseEntity<ManagerResponseDTO> updateDealer(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long dealerId,
+            @AuthenticationPrincipal User user
+    ) {
+        ManagerResponseDTO updated = managerService.updateDealer(user, id, dealerId);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}")

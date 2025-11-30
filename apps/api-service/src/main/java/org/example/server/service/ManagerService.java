@@ -9,8 +9,10 @@ import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.model.Dealer;
 import org.example.server.model.Manager;
 import org.example.server.model.User;
+import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ManagerRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +31,7 @@ public class ManagerService {
     private final ManagerMapper managerMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
+    private final DealerRepository dealerRepository;
 
     public ManagerService(
             ManagerRepository managerRepository,
@@ -36,7 +39,8 @@ public class ManagerService {
             PasswordEncoder passwordEncoder,
             ManagerMapper managerMapper,
             AddressMapper addressMapper,
-            EmailService emailService
+            EmailService emailService,
+            DealerRepository dealerRepository
     ) {
         this.managerRepository = managerRepository;
         this.userRepository = userRepository;
@@ -44,6 +48,7 @@ public class ManagerService {
         this.managerMapper = managerMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
+        this.dealerRepository = dealerRepository;
     }
 
     public ManagerResponseDTO create(User user, ManagerRequestDTO managerRequestDTO) {
@@ -59,6 +64,9 @@ public class ManagerService {
         if (managerRepository.existsByPhone(managerRequestDTO.phone())) {
             throw new DataAlreadyExistsException("Telefone já existe.");
         }
+
+        Dealer dealer = dealerRepository.findById(managerRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         User newUser = new User();
         newUser.setFullName(managerRequestDTO.fullName());
@@ -77,6 +85,7 @@ public class ManagerService {
         manager.setCanCreate(managerRequestDTO.canCreate() != null ? managerRequestDTO.canCreate() : true);
         manager.setCanUpdate(managerRequestDTO.canUpdate() != null ? managerRequestDTO.canUpdate() : true);
         manager.setCanDelete(managerRequestDTO.canDelete() != null ? managerRequestDTO.canDelete() : true);
+        manager.setDealer(dealer);
 
         newUser.setManager(manager);
 
@@ -85,8 +94,12 @@ public class ManagerService {
         return managerMapper.toDTO(managerRepository.save(manager));
     }
 
-    public List<ManagerResponseDTO> findAll() {
-        return managerRepository.findAll()
+    public List<ManagerResponseDTO> findAll(Long dealerId) {
+        List<Manager> managers = dealerId != null
+                ? managerRepository.findByDealerId(dealerId)
+                : managerRepository.findAll();
+
+        return managers
                 .stream()
                 .map(managerMapper::toDTO)
                 .collect(Collectors.toList());
@@ -97,11 +110,31 @@ public class ManagerService {
                 .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
+    public ManagerResponseDTO updateDealer(User requester, Long managerId, Long dealerId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode reatribuir gestor.");
+        }
+
+        Manager manager = managerRepository.findById(managerId)
+                .orElseThrow(() -> new RecordNotFoundException(managerId));
+        if (dealerId != null) {
+            Dealer dealer = dealerRepository.findById(dealerId)
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+            manager.setDealer(dealer);
+        } else {
+            manager.setDealer(null);
+        }
+        managerRepository.save(manager);
+        return managerMapper.toDTO(manager);
+    }
+
     public ManagerResponseDTO update(Long id, ManagerRequestDTO managerRequestDTO) {
         Manager manager = managerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User managerUser = manager.getUser();
+        Dealer dealer = dealerRepository.findById(managerRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         managerUser.setFullName(managerRequestDTO.fullName());
         managerUser.setEmail(managerRequestDTO.email());
@@ -114,10 +147,20 @@ public class ManagerService {
         manager.setCanCreate(managerRequestDTO.canCreate() != null ? managerRequestDTO.canCreate() : manager.getCanCreate());
         manager.setCanUpdate(managerRequestDTO.canUpdate() != null ? managerRequestDTO.canUpdate() : manager.getCanUpdate());
         manager.setCanDelete(managerRequestDTO.canDelete() != null ? managerRequestDTO.canDelete() : manager.getCanDelete());
+        manager.setDealer(dealer);
 
         userRepository.save(managerUser);
         managerRepository.save(manager);
 
         return managerMapper.toDTO(manager);
+    }
+
+    public void delete(User requester, Long managerId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode remover gestor.");
+        }
+        Manager manager = managerRepository.findById(managerId)
+                .orElseThrow(() -> new RecordNotFoundException(managerId));
+        managerRepository.delete(manager);
     }
 }

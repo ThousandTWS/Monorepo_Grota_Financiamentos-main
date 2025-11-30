@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { createManager } from "@/application/services/Manager/managerService";
+import { getAllLogistics, Dealer } from "@/application/services/Logista/logisticService";
 import {
   Card,
   CardContent,
@@ -20,8 +22,16 @@ import { Separator } from "@/presentation/layout/components/ui/separator";
 import { ManagersList } from "@/presentation/features/painel-geral/components/ManagersList";
 import { createNotification } from "@/application/services/Notifications/notificationService";
 import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/presentation/layout/components/ui/select";
 
 const managerSchema = z.object({
+  dealerId: z.string().min(1, "Selecione a loja"),
   fullName: z.string().min(2, "Informe o nome completo"),
   email: z.string().email("E-mail inválido"),
   phone: z.string().min(8, "Informe o telefone"),
@@ -54,16 +64,21 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 export default function Gestores() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [dealers, setDealers] = useState<Dealer[]>([]);
+  const searchParams = useSearchParams();
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<ManagerFormValues>({
     resolver: zodResolver(managerSchema),
     defaultValues: {
+      dealerId: "",
       fullName: "",
       email: "",
       phone: "",
@@ -83,12 +98,28 @@ export default function Gestores() {
     },
   });
 
+  const selectedDealerId = watch("dealerId");
+
+  useEffect(() => {
+    getAllLogistics()
+      .then((data) => setDealers(Array.isArray(data) ? data : []))
+      .catch(() => setDealers([]));
+  }, []);
+
+  useEffect(() => {
+    const dealerIdParam = searchParams.get("dealerId");
+    if (dealerIdParam) {
+      setValue("dealerId", dealerIdParam);
+    }
+  }, [searchParams, setValue]);
+
   const onSubmit = async (values: ManagerFormValues) => {
     setIsSubmitting(true);
     try {
       const birthDateIso = new Date(values.birthData).toISOString().split("T")[0];
 
       await createManager({
+        dealerId: Number(values.dealerId),
         fullName: values.fullName.trim(),
         email: values.email.trim(),
         phone: digitsOnly(values.phone),
@@ -146,6 +177,28 @@ export default function Gestores() {
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-6 md:grid-cols-2"
           >
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="dealerId">Loja</Label>
+              <Select
+                value={selectedDealerId}
+                onValueChange={(value) => setValue("dealerId", value)}
+              >
+                <SelectTrigger id="dealerId">
+                  <SelectValue placeholder="Selecione a loja" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dealers.map((dealer) => (
+                    <SelectItem key={dealer.id} value={String(dealer.id)}>
+                      {dealer.fullName} — {dealer.enterprise}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.dealerId && (
+                <p className="text-sm text-red-500">{errors.dealerId.message}</p>
+              )}
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="fullName">Nome completo</Label>
               <Input id="fullName" {...register("fullName")} />
@@ -307,7 +360,7 @@ export default function Gestores() {
         </CardContent>
       </Card>
 
-      <ManagersList />
+      <ManagersList dealerId={selectedDealerId ? Number(selectedDealerId) : undefined} />
     </div>
   );
 }

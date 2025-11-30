@@ -1,6 +1,7 @@
 export type Seller = {
   createdAt: string;
   id: number;
+  dealerId?: number;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -12,6 +13,7 @@ export type Seller = {
 };
 
 export type CreateSellerPayload = {
+  dealerId: number;
   fullName: string;
   email: string;
   phone: string;
@@ -48,17 +50,35 @@ async function request<T>(
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      (payload as { error?: string })?.error ??
+    const errors = Array.isArray((payload as { errors?: unknown })?.errors)
+      ? (payload as { errors: unknown[] }).errors.filter(
+          (item): item is string => typeof item === "string",
+        )
+      : [];
+
+    const baseMessage =
+      (payload as { error?: string; message?: string })?.error ??
+      (payload as { message?: string })?.message ??
       "Não foi possível concluir a operação.";
+
+    const detailedMessage =
+      errors.length > 0 ? `${baseMessage} - ${errors.join("; ")}` : baseMessage;
+
+    const status = response.status;
+    const message =
+      status === 401 || status === 403
+        ? "Sessão expirada ou acesso não autorizado. Faça login novamente."
+        : detailedMessage;
+
     throw new Error(message);
   }
 
   return (payload ?? {}) as T;
 }
 
-export const getAllSellers = async (): Promise<Seller[]> => {
-  const payload = await request<Seller[]>("/api/sellers", {
+export const getAllSellers = async (dealerId?: number): Promise<Seller[]> => {
+  const query = dealerId ? `?dealerId=${dealerId}` : "";
+  const payload = await request<Seller[]>(`/api/sellers${query}`, {
     method: "GET",
   });
   return Array.isArray(payload) ? payload : [];
@@ -70,5 +90,18 @@ export const createSeller = async (
   return request<Seller>("/api/sellers", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+};
+
+export const linkSellerToDealer = async (sellerId: number, dealerId: number | null): Promise<Seller> => {
+  return request<Seller>("/api/sellers", {
+    method: "PATCH",
+    body: JSON.stringify({ sellerId, dealerId }),
+  });
+};
+
+export const deleteSeller = async (sellerId: number): Promise<void> => {
+  await request<void>(`/api/sellers?id=${sellerId}`, {
+    method: "DELETE",
   });
 };

@@ -4,6 +4,9 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.List;
+import org.example.server.model.Manager;
+import org.example.server.model.Seller;
+import org.example.server.model.Operator;
 
 @Entity
 @Table(name = "tb_dealer")
@@ -45,6 +48,15 @@ public class Dealer {
 
     @OneToMany(mappedBy = "dealer", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Partner> partners;
+
+    @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
+    private List<Seller> sellers;
+
+    @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
+    private List<Manager> managers;
+
+    @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
+    private List<Operator> operators;
 
     public Dealer() {
     }
@@ -145,6 +157,30 @@ public class Dealer {
 
     public void setPartners(List<Partner> partners) {
         this.partners = partners;
+    }
+
+    public List<Seller> getSellers() {
+        return sellers;
+    }
+
+    public void setSellers(List<Seller> sellers) {
+        this.sellers = sellers;
+    }
+
+    public List<Manager> getManagers() {
+        return managers;
+    }
+
+    public void setManagers(List<Manager> managers) {
+        this.managers = managers;
+    }
+
+    public List<Operator> getOperators() {
+        return operators;
+    }
+
+    public void setOperators(List<Operator> operators) {
+        this.operators = operators;
     }
 
 }

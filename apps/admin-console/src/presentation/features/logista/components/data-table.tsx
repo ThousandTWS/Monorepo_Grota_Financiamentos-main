@@ -27,6 +27,31 @@ import {
   createDealer,
   deleteDealer,
 } from "@/application/services/Logista/logisticService";
+import {
+  getAllSellers,
+  linkSellerToDealer,
+  Seller,
+  deleteSeller,
+} from "@/application/services/Seller/sellerService";
+import {
+  getAllManagers,
+  linkManagerToDealer,
+  Manager,
+  deleteManager,
+} from "@/application/services/Manager/managerService";
+import {
+  getAllOperators,
+  linkOperatorToDealer,
+  Operator,
+  deleteOperator,
+} from "@/application/services/Operator/operatorService";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/presentation/layout/components/ui/dialog";
 
 interface DataTableProps {
   data: Logista[];
@@ -47,6 +72,13 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [linkingType, setLinkingType] = useState<"seller" | "manager" | null>(null);
+  const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [selectedLinkId, setSelectedLinkId] = useState<string>("");
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [isLinking, setIsLinking] = useState(false);
 
   const filteredData = data.filter((logista) => {
     const normalizedSearch = searchTerm.toLowerCase();
@@ -123,6 +155,78 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     setDialogOpen(true);
   };
 
+  const openLinkModal = async (type: "seller" | "manager" | "operator", logista: Logista) => {
+    setSelectedLogista(logista);
+    setLinkingType(type);
+    setSelectedLinkId("");
+    setLinkModalOpen(true);
+
+    try {
+      if (type === "seller") {
+        const list = await getAllSellers();
+        setSellers(Array.isArray(list) ? list : []);
+      } else if (type === "manager") {
+        const list = await getAllManagers();
+        setManagers(Array.isArray(list) ? list : []);
+      } else {
+        const list = await getAllOperators();
+        setOperators(Array.isArray(list) ? list : []);
+      }
+    } catch {
+      toast({
+        title: "Erro ao carregar opções",
+        description: "Não foi possível carregar a lista de usuários.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLink = async () => {
+    if (!linkingType || !selectedLogista || !selectedLinkId) return;
+    setIsLinking(true);
+    try {
+      if (linkingType === "seller") {
+        await linkSellerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
+        toast({ title: "Vendedor vinculado!", description: "Vendedor associado à loja." });
+      } else if (linkingType === "manager") {
+        await linkManagerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
+        toast({ title: "Gestor vinculado!", description: "Gestor associado à loja." });
+      } else {
+        await linkOperatorToDealer(Number(selectedLinkId), Number(selectedLogista.id));
+        toast({ title: "Operador vinculado!", description: "Operador associado à loja." });
+      }
+      setLinkModalOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível vincular.";
+      toast({ title: "Erro ao vincular", description: message, variant: "destructive" });
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
+  const handleUnlink = async () => {
+    if (!linkingType || !selectedLogista || !selectedLinkId) return;
+    setIsLinking(true);
+    try {
+      if (linkingType === "seller") {
+        await deleteSeller(Number(selectedLinkId));
+        toast({ title: "Vendedor removido!", description: "Usuário apagado do sistema." });
+      } else if (linkingType === "manager") {
+        await deleteManager(Number(selectedLinkId));
+        toast({ title: "Gestor removido!", description: "Usuário apagado do sistema." });
+      } else {
+        await deleteOperator(Number(selectedLinkId));
+        toast({ title: "Operador removido!", description: "Usuário apagado do sistema." });
+      }
+      setLinkModalOpen(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível remover.";
+      toast({ title: "Erro ao remover", description: message, variant: "destructive" });
+    } finally {
+      setIsLinking(false);
+    }
+  };
+
   const digitsOnly = (value?: string) => (value ?? "").replace(/\D/g, "");
 
   const handleSave = async (payload: CreateDealerPayload) => {
@@ -168,7 +272,10 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
   const columns = getLogistaColumns({
     onView: handleView,
-    onDelete: handleDelete
+    onDelete: handleDelete,
+    onLinkSeller: (logista) => openLinkModal("seller", logista),
+    onLinkManager: (logista) => openLinkModal("manager", logista),
+    onLinkOperator: (logista) => openLinkModal("operator", logista),
   });
 
   return (
@@ -399,6 +506,60 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
           data-oid="tiu-a96"
         />
       )}
+
+      <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {linkingType === "seller" ? "Vincular vendedor" : "Vincular gestor"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {selectedLogista
+                ? `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                : "Selecione uma loja."}
+            </p>
+            <Select
+              value={selectedLinkId}
+              onValueChange={setSelectedLinkId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {(linkingType === "seller"
+                  ? sellers
+                  : linkingType === "manager"
+                    ? managers
+                    : operators
+                ).map((item) => (
+                  <SelectItem key={item.id} value={String(item.id)}>
+                    {item.fullName} — {item.email ?? item.phone ?? `ID ${item.id}`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter className="justify-end gap-2">
+            <Button variant="outline" onClick={() => setLinkModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleUnlink}
+              disabled={isLinking || !selectedLinkId}
+            >
+              {isLinking ? "Removendo..." : "Desvincular"}
+            </Button>
+            <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
+              {isLinking ? "Salvando..." : "Vincular"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
     </>);
 

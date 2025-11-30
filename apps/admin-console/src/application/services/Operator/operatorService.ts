@@ -1,6 +1,7 @@
 export type Operator = {
   createdAt: string;
   id: number;
+  dealerId?: number;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -12,6 +13,7 @@ export type Operator = {
 };
 
 export type CreateOperatorPayload = {
+  dealerId: number;
   fullName: string;
   email: string;
   phone: string;
@@ -58,8 +60,9 @@ async function request<T>(
   return (payload ?? {}) as T;
 }
 
-export const getAllOperators = async (): Promise<Operator[]> => {
-  const payload = await request<Operator[]>("/api/operators", {
+export const getAllOperators = async (dealerId?: number): Promise<Operator[]> => {
+  const query = dealerId ? `?dealerId=${dealerId}` : "";
+  const payload = await request<Operator[]>(`/api/operators${query}`, {
     method: "GET",
   });
   return Array.isArray(payload) ? payload : [];
@@ -71,5 +74,18 @@ export const createOperator = async (
   return request<Operator>("/api/operators", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+};
+
+export const linkOperatorToDealer = async (operatorId: number, dealerId: number | null): Promise<Operator> => {
+  return request<Operator>("/api/operators", {
+    method: "PATCH",
+    body: JSON.stringify({ operatorId, dealerId }),
+  });
+};
+
+export const deleteOperator = async (operatorId: number): Promise<void> => {
+  await request<void>(`/api/operators?id=${operatorId}`, {
+    method: "DELETE",
   });
 };

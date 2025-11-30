@@ -26,14 +26,17 @@ function unauthorized() {
   return NextResponse.json({ error: "Usuário não autenticado." }, { status: 401 });
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await resolveSession();
     if (!session) {
       return unauthorized();
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/operators`, {
+    const dealerId = request.nextUrl.searchParams.get("dealerId");
+    const searchParams = dealerId ? `?dealerId=${dealerId}` : "";
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/operators${searchParams}`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
       },
@@ -107,6 +110,113 @@ export async function POST(request: NextRequest) {
     console.error("[admin][operators] Falha ao criar operador", error);
     return NextResponse.json(
       { error: "Erro interno ao criar operador." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await resolveSession();
+    if (!session) {
+      return unauthorized();
+    }
+
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: "Payload inválido." },
+        { status: 400 },
+      );
+    }
+
+    const { operatorId, dealerId } = body ?? {};
+    if (!operatorId) {
+      return NextResponse.json(
+        { error: "operatorId é obrigatório." },
+        { status: 400 },
+      );
+    }
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/operators/${operatorId}/dealer?dealerId=${dealerId}`, {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    const payload = await upstreamResponse.json().catch(() => null);
+
+    if (!upstreamResponse.ok) {
+      const message =
+        (payload as { error?: string; message?: string })?.error ??
+        (payload as { error?: string; message?: string })?.message ??
+        "Não foi possível atualizar o vínculo do operador.";
+      return NextResponse.json({ error: message }, {
+        status: upstreamResponse.status,
+      });
+    }
+
+    return NextResponse.json(payload ?? {}, {
+      status: upstreamResponse.status,
+    });
+  } catch (error) {
+    console.error("[admin][operators] Falha ao reatribuir operador", error);
+    return NextResponse.json(
+      { error: "Erro interno ao reatribuir operador." },
+      { status: 500 },
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await resolveSession();
+    if (!session) {
+      return unauthorized();
+    }
+
+    const id = request.nextUrl.searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { error: "id é obrigatório." },
+        { status: 400 },
+      );
+    }
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/operators/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+    if (upstreamResponse.status === 204) {
+      return NextResponse.json({}, { status: 204 });
+    }
+
+    const payload = await upstreamResponse.json().catch(() => null);
+    if (!upstreamResponse.ok) {
+      const message =
+        (payload as { error?: string; message?: string })?.error ??
+        (payload as { error?: string; message?: string })?.message ??
+        "Não foi possível remover o operador.";
+      return NextResponse.json({ error: message }, {
+        status: upstreamResponse.status,
+      });
+    }
+
+    return NextResponse.json(payload ?? {}, {
+      status: upstreamResponse.status,
+    });
+  } catch (error) {
+    console.error("[admin][operators] Falha ao remover operador", error);
+    return NextResponse.json(
+      { error: "Erro interno ao remover operador." },
       { status: 500 },
     );
   }

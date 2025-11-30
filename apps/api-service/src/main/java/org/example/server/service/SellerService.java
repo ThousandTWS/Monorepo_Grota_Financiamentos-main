@@ -9,8 +9,10 @@ import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.model.Dealer;
 import org.example.server.model.Seller;
 import org.example.server.model.User;
+import org.example.server.repository.DealerRepository;
 import org.example.server.repository.SellerRepository;
 import org.example.server.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,14 +31,16 @@ public class SellerService {
     private final SellerMapper sellerMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
+    private final DealerRepository dealerRepository;
 
-    public SellerService(SellerRepository sellerRepository, UserRepository userRepository, PasswordEncoder passwordEncoder, SellerMapper sellerMapper, AddressMapper addressMapper, EmailService emailService) {
+    public SellerService(SellerRepository sellerRepository, UserRepository userRepository, PasswordEncoder passwordEncoder, SellerMapper sellerMapper, AddressMapper addressMapper, EmailService emailService, DealerRepository dealerRepository) {
         this.sellerRepository = sellerRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.sellerMapper = sellerMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
+        this.dealerRepository = dealerRepository;
     }
 
     public SellerResponseDTO create(User user, SellerRequestDTO sellerRequestDTO) {
@@ -52,6 +56,9 @@ public class SellerService {
         if (sellerRepository.existsByPhone(sellerRequestDTO.phone())) {
             throw new DataAlreadyExistsException("Telefone já existe.");
         }
+
+        Dealer dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         User newUser = new User();
         newUser.setFullName(sellerRequestDTO.fullName());
@@ -70,6 +77,7 @@ public class SellerService {
         seller.setCanCreate(sellerRequestDTO.canCreate() != null ? sellerRequestDTO.canCreate() : true);
         seller.setCanUpdate(sellerRequestDTO.canUpdate() != null ? sellerRequestDTO.canUpdate() : true);
         seller.setCanDelete(sellerRequestDTO.canDelete() != null ? sellerRequestDTO.canDelete() : true);
+        seller.setDealer(dealer);
 
         newUser.setSeller(seller);
 
@@ -78,10 +86,14 @@ public class SellerService {
         return sellerMapper.toDTO(sellerRepository.save(seller));
     }
 
-    public List<SellerResponseDTO> findAll() {
-        return sellerRepository.findAll()
+    public List<SellerResponseDTO> findAll(Long dealerId) {
+        List<Seller> sellers = dealerId != null
+                ? sellerRepository.findByDealerId(dealerId)
+                : sellerRepository.findAll();
+
+        return sellers
                 .stream()
-                .map(seller -> sellerMapper.toDTO(seller))
+                .map(sellerMapper::toDTO)
                 .collect(Collectors.toList());
     }
 
@@ -90,11 +102,33 @@ public class SellerService {
                 .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
+    public SellerResponseDTO updateDealer(User requester, Long sellerId, Long dealerId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode reatribuir vendedor.");
+        }
+
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new RecordNotFoundException(sellerId));
+
+        if (dealerId != null) {
+            Dealer dealer = dealerRepository.findById(dealerId)
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+            seller.setDealer(dealer);
+        } else {
+            seller.setDealer(null);
+        }
+
+        sellerRepository.save(seller);
+        return sellerMapper.toDTO(seller);
+    }
+
     public SellerResponseDTO update(Long id, SellerRequestDTO sellerRequestDTO) {
         Seller seller = sellerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User user = seller.getUser();
+        Dealer dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
 
         user.setFullName(sellerRequestDTO.fullName());
         user.setEmail(sellerRequestDTO.email());
@@ -106,10 +140,20 @@ public class SellerService {
         seller.setCanCreate(sellerRequestDTO.canCreate() != null ? sellerRequestDTO.canCreate() : seller.getCanCreate());
         seller.setCanUpdate(sellerRequestDTO.canUpdate() != null ? sellerRequestDTO.canUpdate() : seller.getCanUpdate());
         seller.setCanDelete(sellerRequestDTO.canDelete() != null ? sellerRequestDTO.canDelete() : seller.getCanDelete());
+        seller.setDealer(dealer);
 
         userRepository.save(user);
         sellerRepository.save(seller);
 
         return sellerMapper.toDTO(seller);
+    }
+
+    public void delete(User requester, Long sellerId) {
+        if (!requester.getRole().equals(UserRole.ADMIN)) {
+            throw new AccessDeniedException("Apenas ADMIN pode remover vendedor.");
+        }
+        Seller seller = sellerRepository.findById(sellerId)
+                .orElseThrow(() -> new RecordNotFoundException(sellerId));
+        sellerRepository.delete(seller);
     }
 }

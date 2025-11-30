@@ -7,6 +7,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import org.example.server.model.Dealer;
+
 @Entity
 @Table(name = "tb_manager")
 public class Manager {
@@ -44,6 +46,10 @@ public class Manager {
 
     @Column(nullable = false, columnDefinition = "boolean default true")
     private Boolean canDelete = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "dealer_id", nullable = true)
+    private Dealer dealer;
 
     public Manager() {
     }
@@ -133,6 +139,14 @@ public class Manager {
 
     public void setCanDelete(Boolean canDelete) {
         this.canDelete = canDelete;
+    }
+
+    public Dealer getDealer() {
+        return dealer;
+    }
+
+    public void setDealer(Dealer dealer) {
+        this.dealer = dealer;
     }
 
     @Override

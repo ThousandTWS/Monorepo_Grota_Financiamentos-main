@@ -101,6 +101,53 @@ Foi adicionado um canal WebSocket compartilhado para permitir que o painel admin
    NEXT_PUBLIC_REALTIME_WS_URL=ws://localhost:4545
    ```
 
+
+## Comunicação em tempo real (Admin ↔ Logista)
+
+Foi adicionado um canal WebSocket compartilhado para permitir que o painel administrativo envie recados imediatos aos lojistas diretamente do dashboard:
+
+1. **Suba o servidor** dedicado no workspace:
+
+   ```bash
+   Websocks
+   pnpm realtime
+   pnpm --filter @grota/realtime-server dev
+   
+   Apps
+   pnpm dev --filter grota-website
+   pnpm dev --filter grota-painel-logista
+   pnpm dev --filter grota-painel-admin
+
+   ```
+
+   > O servidor usa `ws://localhost:4545` por padrão (configurável via `WS_PORT`).
+
+2. **Defina o endpoint** público nos apps que consumirão o canal, por exemplo em `.env.local`:
+
+   ```bash
+   NEXT_PUBLIC_REALTIME_WS_URL=ws://localhost:4545
+   ```
+
+3. Abra as páginas `apps/admin-console/(admin)/visao-geral` e `apps/dealer-portal/(logista)/visao-geral` para visualizar o card *Canal Admin ↔ Logista*. As mensagens viajam instantaneamente enquanto ambos estiverem conectados.
+
+Os pacotes `packages/realtime-client` (hook + tipos compartilhados) e `packages/realtime-server` (servidor ws com histórico e presença) concentram a implementação.
+
+## API – Propostas e Notificações
+
+O backend Spring agora expõe os contratos necessários para integrar o fluxo completo entre logista e admin:
+
+- `POST /api/v1/grota-financiamentos/proposals` cria uma nova ficha. Payload mínimo:
+
+```json
+{
+  "dealerId": 1,
+  "sellerId": 2,
+  "customerName": "Fulano de Tal",
+  "customerCpf": "12345678900",
+  "customerBirthDate": "1990-05-10",
+  "customerEmail": "cliente@email.com",
+  "customerPhone": "11999999999",
+  "cnhCategory": "AB",
 3. Abra as páginas `apps/admin-console/(admin)/visao-geral` e `apps/dealer-portal/(logista)/visao-geral` para visualizar o card *Canal Admin ↔ Logista*. As mensagens viajam instantaneamente enquanto ambos estiverem conectados.
 
 Os pacotes `packages/realtime-client` (hook + tipos compartilhados) e `packages/realtime-server` (servidor ws com histórico e presença) concentram a implementação.

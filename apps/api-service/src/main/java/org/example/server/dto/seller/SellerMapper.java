@@ -23,6 +23,7 @@ public class SellerMapper {
 
         return new SellerResponseDTO(
                 seller.getId(),
+                seller.getDealer() != null ? seller.getDealer().getId() : null,
                 seller.getUser().getFullName(),
                 seller.getUser().getEmail(),
                 seller.getPhone(),

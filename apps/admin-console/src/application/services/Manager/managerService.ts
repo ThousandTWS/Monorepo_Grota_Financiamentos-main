@@ -1,6 +1,7 @@
 export type Manager = {
   createdAt: string;
   id: number;
+  dealerId?: number;
   fullName?: string;
   email?: string;
   phone?: string;
@@ -12,6 +13,7 @@ export type Manager = {
 };
 
 export type CreateManagerPayload = {
+  dealerId: number;
   fullName: string;
   email: string;
   phone: string;
@@ -58,8 +60,9 @@ async function request<T>(
   return (payload ?? {}) as T;
 }
 
-export const getAllManagers = async (): Promise<Manager[]> => {
-  const payload = await request<Manager[]>("/api/managers", {
+export const getAllManagers = async (dealerId?: number): Promise<Manager[]> => {
+  const query = dealerId ? `?dealerId=${dealerId}` : "";
+  const payload = await request<Manager[]>(`/api/managers${query}`, {
     method: "GET",
   });
   return Array.isArray(payload) ? payload : [];
@@ -71,5 +74,18 @@ export const createManager = async (
   return request<Manager>("/api/managers", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+};
+
+export const linkManagerToDealer = async (managerId: number, dealerId: number | null): Promise<Manager> => {
+  return request<Manager>("/api/managers", {
+    method: "PATCH",
+    body: JSON.stringify({ managerId, dealerId }),
+  });
+};
+
+export const deleteManager = async (managerId: number): Promise<void> => {
+  await request<void>(`/api/managers?id=${managerId}`, {
+    method: "DELETE",
   });
 };

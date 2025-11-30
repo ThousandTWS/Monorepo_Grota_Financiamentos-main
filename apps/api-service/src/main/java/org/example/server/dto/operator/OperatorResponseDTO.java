@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 
 public record OperatorResponseDTO(
         Long id,
+        Long dealerId,
         String fullName,
         String email,
         String phone,

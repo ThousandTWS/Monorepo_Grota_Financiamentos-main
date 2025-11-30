@@ -50,8 +50,8 @@ public class OperatorController {
             @ApiResponse(responseCode = "200", description = "Lista de Operadores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<OperatorResponseDTO>> findAll(){
-        List<OperatorResponseDTO> operators = operatorService.findAll();
+    public ResponseEntity<List<OperatorResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
+        List<OperatorResponseDTO> operators = operatorService.findAll(dealerId);
         return ResponseEntity.ok().body(operators);
     }
 
@@ -69,6 +69,43 @@ public class OperatorController {
     public ResponseEntity<OperatorResponseDTO> findById(@PathVariable Long id){
         OperatorResponseDTO operator = operatorService.findById(id);
         return ResponseEntity.ok().body(operator);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Remover operador",
+            description = "Remove definitivamente um operador e seu usuário associado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Operador removido com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Operador não encontrado")
+    })
+    public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            @AuthenticationPrincipal User user
+    ) {
+        operatorService.delete(user, id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{id}/dealer")
+    @Operation(
+            summary = "Reatribuir operador para outra loja",
+            description = "Atualiza o dealer associado ao operador."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Vínculo atualizado com sucesso"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "404", description = "Operador ou lojista não encontrados")
+    })
+    public ResponseEntity<OperatorResponseDTO> updateDealer(
+            @PathVariable Long id,
+            @RequestParam(required = false) Long dealerId,
+            @AuthenticationPrincipal User user
+    ) {
+        OperatorResponseDTO updated = operatorService.updateDealer(user, id, dealerId);
+        return ResponseEntity.ok(updated);
     }
 
     @PutMapping("/{id}")

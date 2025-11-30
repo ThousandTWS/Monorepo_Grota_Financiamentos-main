@@ -23,6 +23,7 @@ public class OperatorMapper {
 
         return new OperatorResponseDTO(
                 operator.getId(),
+                operator.getDealer() != null ? operator.getDealer().getId() : null,
                 user.getFullName(),
                 user.getEmail(),
                 operator.getPhone(),

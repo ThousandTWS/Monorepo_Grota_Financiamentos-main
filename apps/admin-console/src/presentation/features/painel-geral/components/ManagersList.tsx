@@ -27,7 +27,7 @@ const formatDate = (value?: string) => {
 const isActive = (status?: string) =>
   (status ?? "").toString().trim().toUpperCase() === "ATIVO";
 
-export function ManagersList() {
+export function ManagersList({ dealerId }: { dealerId?: number }) {
   const [managers, setManagers] = useState<Manager[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +39,7 @@ export function ManagersList() {
     const fetchManagers = async () => {
       try {
         setLoading(true);
-        const data = await getAllManagers();
+        const data = await getAllManagers(dealerId);
         if (mounted) {
           setManagers(Array.isArray(data) ? data : []);
           setError(null);
@@ -62,7 +62,7 @@ export function ManagersList() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [dealerId]);
 
   const activeManagers = useMemo(
     () => managers.filter((m) => isActive(m.status)),
