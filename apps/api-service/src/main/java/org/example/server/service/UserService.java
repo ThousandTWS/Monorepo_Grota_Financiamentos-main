@@ -4,6 +4,7 @@ import org.example.server.dto.auth.*;
 import org.example.server.dto.user.UserMapper;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
+import org.example.server.dto.user.UserProfileUpdateDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.CodeInvalidException;
@@ -62,6 +63,11 @@ public class UserService {
     }
 
     public UserResponseDTO create(UserRequestDTO userRequestDTO) {
+        return create(userRequestDTO, true);
+    }
+
+    @Transactional
+    public UserResponseDTO create(UserRequestDTO userRequestDTO, boolean sendVerification) {
         if (userRepository.existsByEmail(userRequestDTO.email())) {
             throw new DataAlreadyExistsException("E-mail já cadastrado");
         }
@@ -176,6 +182,33 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public UserResponseDTO findById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException(id));
+        return userMapper.toDto(user);
+    }
+
+    @Transactional
+    public UserResponseDTO updateProfile(Long userId, UserProfileUpdateDTO dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RecordNotFoundException(userId));
+
+        if (dto.email() != null && !dto.email().isBlank()) {
+            String normalizedEmail = dto.email().trim();
+            if (!normalizedEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
+                throw new DataAlreadyExistsException("E-mail j\u00e1 cadastrado");
+            }
+            user.setEmail(normalizedEmail);
+        }
+
+        if (dto.fullName() != null && !dto.fullName().isBlank()) {
+            user.setFullName(dto.fullName().trim());
+        }
+
+        return userMapper.toDto(userRepository.save(user));
+    }
+
     public UserDetails loadUserByUsername(String identifier) {
         return userRepository.findByEmail(identifier)
                 .or(() -> dealerRepository.findByEnterpriseIgnoreCase(identifier).map(dealer -> (UserDetails) dealer.getUser()))
@@ -193,3 +226,8 @@ public class UserService {
     }
 
 }
+
+
+
+
+

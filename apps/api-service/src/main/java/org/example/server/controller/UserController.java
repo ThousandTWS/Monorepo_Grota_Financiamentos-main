@@ -10,9 +10,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
+import org.example.server.dto.user.UserProfileUpdateDTO;
 import org.example.server.service.UserService;
+import org.example.server.model.User;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -52,5 +55,26 @@ public class UserController {
     public ResponseEntity<List<UserResponseDTO>> findAll(){
         List<UserResponseDTO> userResponseDTOs = userService.findAll();
         return ResponseEntity.ok(userResponseDTOs);
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Obter perfil do usuário autenticado")
+    public ResponseEntity<UserResponseDTO> getMe(@AuthenticationPrincipal User user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(userService.findById(user.getId()));
+    }
+
+    @PutMapping("/me")
+    @Operation(summary = "Atualizar perfil do usuário autenticado")
+    public ResponseEntity<UserResponseDTO> updateMe(
+            @AuthenticationPrincipal User user,
+            @Valid @RequestBody UserProfileUpdateDTO dto
+    ) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        return ResponseEntity.ok(userService.updateProfile(user.getId(), dto));
     }
 }
