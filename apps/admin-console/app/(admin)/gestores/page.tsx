@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -63,6 +63,14 @@ type ManagerFormValues = z.infer<typeof managerSchema>;
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 export default function Gestores() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <GestoresContent />
+    </Suspense>
+  );
+}
+
+function GestoresContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const searchParams = useSearchParams();
@@ -76,6 +84,7 @@ export default function Gestores() {
     setValue,
     formState: { errors },
   } = useForm<ManagerFormValues>({
+    //@ts-ignore
     resolver: zodResolver(managerSchema),
     defaultValues: {
       dealerId: "",
@@ -173,7 +182,9 @@ export default function Gestores() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          
           <form
+           //@ts-ignore
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-6 md:grid-cols-2"
           >

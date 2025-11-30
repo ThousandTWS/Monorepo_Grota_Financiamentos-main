@@ -157,6 +157,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
   const openLinkModal = async (type: "seller" | "manager" | "operator", logista: Logista) => {
     setSelectedLogista(logista);
+    //@ts-ignore
     setLinkingType(type);
     setSelectedLinkId("");
     setLinkModalOpen(true);

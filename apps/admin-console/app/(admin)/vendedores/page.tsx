@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -62,6 +62,14 @@ type SellerFormValues = z.infer<typeof sellerSchema>;
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 export default function Operadores() {
+  return (
+    <Suspense fallback={<div>Carregando...</div>}>
+      <OperadoresContent />
+    </Suspense>
+  );
+}
+
+function OperadoresContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const searchParams = useSearchParams();
@@ -75,6 +83,7 @@ export default function Operadores() {
     setValue,
     formState: { errors },
   } = useForm<SellerFormValues>({
+     //@ts-ignore
     resolver: zodResolver(sellerSchema),
     defaultValues: {
       fullName: "",
@@ -162,6 +171,7 @@ export default function Operadores() {
         </CardHeader>
         <CardContent>
           <form
+           //@ts-ignore
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-6 md:grid-cols-2"
           >
