@@ -1,8 +1,10 @@
 import axios, { AxiosInstance } from "axios";
 
+// Aponta direto para a API (não para o painel), pois o painel não expõe /auth/register
 const BASE_URL =
-  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ??
-  "http://localhost:8080/api/v1/grota-financiamentos";
+  process.env.LOGISTA_API_BASE_URL ??
+  process.env.NEXT_PUBLIC_URL_API ??
+  "https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos";
 
 const defaultHeaders = {
   "Content-Type": "application/json",

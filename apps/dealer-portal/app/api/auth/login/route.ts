@@ -87,12 +87,15 @@ export async function POST(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return unauthorizedResponse("Payload inválido", origin);
+    return unauthorizedResponse("Payload invalido", origin);
   }
 
-  if (!body.enterprise || !body.password) {
+  const enterprise = body.enterprise?.trim();
+  const password = body.password?.trim();
+
+  if (!enterprise || !password) {
     return unauthorizedResponse(
-      "Nome da empresa e senha são obrigatórios",
+      "Nome da empresa e senha sao obrigatorios",
       origin,
     );
   }
@@ -102,14 +105,30 @@ export async function POST(request: NextRequest) {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        enterprise: body.enterprise,
-        password: body.password,
+        enterprise,
+        password,
       }),
       cache: "no-store",
     });
 
     if (!loginResponse.ok) {
-      return unauthorizedResponse("Credenciais inválidas", origin);
+      let message = "Credenciais invalidas";
+      try {
+        const errorBody = await loginResponse.json();
+        if (typeof errorBody?.message === "string") {
+          message = errorBody.message;
+        } else if (typeof errorBody?.error === "string") {
+          message = errorBody.error;
+        }
+      } catch {
+        // ignore parse errors
+      }
+      const response = NextResponse.json(
+        { error: message },
+        { status: loginResponse.status || 401 },
+      );
+      applyCorsHeaders(response, origin);
+      return response;
     }
 
     const tokens = (await loginResponse.json()) as AuthTokens;
@@ -123,7 +142,7 @@ export async function POST(request: NextRequest) {
 
     if (!userResponse.ok) {
       return unauthorizedResponse(
-        "Não foi possível carregar o usuário",
+        "Nao foi possivel carregar o usuario",
         origin,
       );
     }

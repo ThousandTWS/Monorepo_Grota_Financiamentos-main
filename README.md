@@ -157,3 +157,4 @@ Esses contratos permitem alimentar o WebSocket de notificações e sincronizar a
 
 
 Gerar chave openssl rand -base64 48
+Z1z3Uay+jLoTyGj0GFua1T6PcmjnZFjETZnHVv/OhjtC8RzuULEKttX+ZHqn01ti

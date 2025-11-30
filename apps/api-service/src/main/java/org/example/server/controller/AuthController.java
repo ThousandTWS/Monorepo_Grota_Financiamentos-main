@@ -301,7 +301,7 @@ public class AuthController {
     private ResponseCookie createRefreshCookie(String token, boolean expire) {
         return ResponseCookie.from("refresh_token", expire ? "" : token)
                 .httpOnly(true)
-                .secure(false) // ajustar
+                .secure(true)
                 .sameSite("Lax")
                 .path("/")
                 .maxAge(expire ? Duration.ZERO : Duration.ofDays(7)) // 7 dias para refresh token

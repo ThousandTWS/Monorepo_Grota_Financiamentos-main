@@ -2,7 +2,7 @@
 import api from "../server/api";
 
 const LOGISTA_PANEL_ORIGIN = (
-  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3002"
+  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3001"
 ).replace(/\/$/, "");
 
 export interface AuthCredentials {
@@ -26,11 +26,17 @@ export interface AuthResult {
 export class MockAuthService {
   async signIn({ enterprise, password }: AuthCredentials): Promise<AuthResult> {
     try {
+      const normalizedEnterprise = enterprise?.trim();
+      const normalizedPassword = password?.trim();
+
       const response = await fetch(`${LOGISTA_PANEL_ORIGIN}/api/auth/login`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enterprise, password }),
+        body: JSON.stringify({
+          enterprise: normalizedEnterprise,
+          password: normalizedPassword,
+        }),
       });
 
       if (!response.ok) {
@@ -69,6 +75,8 @@ export class MockAuthService {
         fullName,
         phone,
         enterprise,
+        // Marca como cadastro interno para liberar login imediato (evita bloqueio por conta pendente)
+        adminRegistration: true,
       });
 
       return {

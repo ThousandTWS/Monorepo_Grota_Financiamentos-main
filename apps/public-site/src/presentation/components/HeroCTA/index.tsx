@@ -67,6 +67,7 @@ export function HeroSectionGrota() {
                 src="https://res.cloudinary.com/dx1659yxu/image/upload/v1760452281/clientes-satisfeitos-na-concessionaria-de-automoveis_kc75rk.jpg"
                 alt="Visual Grota Financiamento"
                 fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 priority
                 className="h-full w-full rounded-xl object-cover shadow-2xl"
               />

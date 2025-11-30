@@ -73,7 +73,7 @@ public class RefreshTokenService {
         verifyExpiration(refreshToken);
 
         User user = refreshToken.getUser();
-        return jwtService.generateRefreshToken(user);
+        return jwtService.generateToken(user);
     }
 
     @Transactional
@@ -89,3 +89,4 @@ public class RefreshTokenService {
         return refreshTokenRepository.findByTokenHash(token);
     }
 }
+

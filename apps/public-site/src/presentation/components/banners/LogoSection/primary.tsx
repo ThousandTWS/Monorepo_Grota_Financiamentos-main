@@ -140,17 +140,17 @@ export function BlurredInfiniteSlider({
 
 
 const LOGOS = [
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_10_qwqsyy.svg", alt: "OpenAI Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_9_p0u6bp.svg", alt: "Nvidia Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_11_sxc8pc.svg", alt: "Column Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_4_ukdky6.svg", alt: "GitHub Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_8_hsubyy.svg", alt: "Nike Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_6_vz6pnl.svg", alt: "Lemon Squeezy Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_7_kftxir.svg", alt: "Laravel Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_3_qddfil.svg", alt: "Lilly Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_1_kt0gbb.svg", alt: "Lilly Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_2_w6hobf.svg", alt: "Lilly Logo", height: 30 },
-    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_5_fkmgx1.svg", alt: "Lilly Logo", height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_10_qwqsyy.svg", alt: "OpenAI Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_9_p0u6bp.svg", alt: "Nvidia Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428329/Logotipo_bancos_11_sxc8pc.svg", alt: "Column Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_4_ukdky6.svg", alt: "GitHub Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428328/Logotipo_bancos_8_hsubyy.svg", alt: "Nike Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_6_vz6pnl.svg", alt: "Lemon Squeezy Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_7_kftxir.svg", alt: "Laravel Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_3_qddfil.svg", alt: "Lilly Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_1_kt0gbb.svg", alt: "Lilly Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_2_w6hobf.svg", alt: "Lilly Logo", width: 120, height: 30 },
+    { src: "https://res.cloudinary.com/dx1659yxu/image/upload/v1759428327/Logotipo_bancos_5_fkmgx1.svg", alt: "Lilly Logo", width: 120, height: 30 },
 
 
 ];
@@ -176,12 +176,12 @@ export default function LogoCloudDemoPage() {
                                 {LOGOS.map((logo) => (
                                     <div key={logo.src} className="flex">
                                         <Image
-                                            className="mx-auto w-fit"
+                                            className="mx-auto h-auto"
                                             src={logo.src}
                                             alt={logo.alt}
-                                            width={20}
+                                            width={logo.width}
                                             height={logo.height}
-                                            style={{ height: `${logo.height}px`, width: "auto" }}
+                                            sizes="(max-width: 768px) 60vw, 180px"
                                         />
                                     </div>
                                 ))}
