@@ -16,7 +16,9 @@ import { StatusBadge } from "./status-badge";
 export type Logista = {
   id: number;
   fullName: string;
-  email?: string | null;
+  razaoSocial?: string | null;
+  cnpj?: string | null;
+  referenceCode?: string | null;
   phone: string;
   enterprise: string;
   status?: string;
@@ -70,6 +72,14 @@ export const getLogistaColumns = (actions: {
   onDelete: (logista: Logista) => void;
 }) => [
     {
+      key: "referenceCode",
+      header: "Código Ref.",
+      cell: (logista: Logista) =>
+        <div className="font-mono text-sm" data-oid="refCode">
+          {logista.referenceCode || "--"}
+        </div>
+    },
+    {
       key: "fullName",
       header: "Nome",
       cell: (logista: Logista) =>
@@ -87,13 +97,20 @@ export const getLogistaColumns = (actions: {
         </div>
     },
     {
-      key: "email",
-      header: "E-mail",
+      key: "razaoSocial",
+      header: "Razão Social",
       cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid="fh9f-xk">
-          {logista.email || "--"}
+        <div className="text-muted-foreground" data-oid="razao">
+          {logista.razaoSocial || "--"}
         </div>
-
+    },
+    {
+      key: "cnpj",
+      header: "CNPJ",
+      cell: (logista: Logista) =>
+        <div className="text-muted-foreground" data-oid="cnpj">
+          {logista.cnpj || "--"}
+        </div>
     },
     {
       key: "telefone",

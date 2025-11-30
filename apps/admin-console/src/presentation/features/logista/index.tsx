@@ -40,7 +40,12 @@ export default function LogistasFeature() {
   }
 
   return (
-    <DataTable data={logistas} onUpdate={setLogistas} data-oid="53hj6yg" />
+    <DataTable
+      data={logistas}
+      onUpdate={setLogistas}
+      onRefresh={fetchLogistas}
+      data-oid="53hj6yg"
+    />
   );
 
 }

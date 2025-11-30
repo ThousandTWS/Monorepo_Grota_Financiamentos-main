@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.dealer.DealerAdminRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerDetailsResponseDTO;
 import org.example.server.dto.dealer.DealerProfileDTO;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
@@ -13,6 +14,7 @@ import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
 import org.example.server.service.DealerService;
 import org.example.server.service.VehicleService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +32,24 @@ public class DealerController {
     public DealerController(DealerService dealerService, VehicleService vehicleService) {
         this.dealerService = dealerService;
         this.vehicleService = vehicleService;
+    }
+
+    @PostMapping("/admin-register")
+    @Operation(
+            summary = "Cadastro de Lojista (admin)",
+            description = "Permite ao admin cadastrar um lojista com endereço completo e dados dos sócios."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Lojista cadastrado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<DealerRegistrationResponseDTO> createFromAdmin(
+            @Valid @RequestBody DealerAdminRegistrationRequestDTO dto
+    ) {
+        DealerRegistrationResponseDTO responseDTO = dealerService.createFromAdmin(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
     }
 
     @GetMapping
@@ -182,4 +202,3 @@ public class DealerController {
 
 
 }
-

@@ -13,8 +13,22 @@ import {
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
+import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/presentation/layout/components/ui/select";
+import { Textarea } from "@/presentation/layout/components/ui/textarea";
 import { Logista } from "./columns";
-import { CreateDealerPayload } from "@/application/services/Logista/logisticService";
+import {
+  AddressPayload,
+  CreateDealerPayload,
+  PartnerPayload
+} from "@/application/services/Logista/logisticService";
+import { Operator, getAllOperators } from "@/application/services/Operator/operatorService";
 import { StatusBadge } from "./status-badge";
 
 interface LogistaDialogProps {
@@ -24,6 +38,7 @@ interface LogistaDialogProps {
   onSave: (payload: CreateDealerPayload) => Promise<void>;
   mode: "view" | "create";
   isSubmitting?: boolean;
+  renderAsModal?: boolean;
 }
 
 export function LogistaDialog({
@@ -33,33 +48,86 @@ export function LogistaDialog({
   onSave,
   mode,
   isSubmitting = false,
+  renderAsModal = true,
 }: LogistaDialogProps) {
+  const inputWidth = "w-60 md:w-full";
   const [formData, setFormData] = useState<CreateDealerPayload>({
     fullName: "",
-    email: "",
     phone: "",
     enterprise: "",
     password: "",
+    razaoSocial: "",
+    cnpj: "",
+    address: {
+      zipCode: "",
+      street: "",
+      number: "",
+      complement: "",
+      neighborhood: "",
+      city: "",
+      state: "",
+    },
+    partners: [],
+    observation: "",
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const [isCepLoading, setIsCepLoading] = useState(false);
+  const [operator, setOperator] = useState("");
+  const [operators, setOperators] = useState<Operator[]>([]);
+  const [isLoadingOperators, setIsLoadingOperators] = useState(false);
+
+  useEffect(() => {
+    if (!open || mode !== "create") return;
+    setIsLoadingOperators(true);
+    getAllOperators()
+      .then((ops) => setOperators(ops))
+      .catch(() => setOperators([]))
+      .finally(() => setIsLoadingOperators(false));
+  }, [open, mode]);
 
   useEffect(() => {
     if (logista) {
       setFormData({
         fullName: logista.fullName ?? "",
-        email: logista.email ?? "",
         phone: logista.phone ?? "",
         enterprise: logista.enterprise ?? "",
         password: "",
+        razaoSocial: logista.razaoSocial ?? "",
+        cnpj: logista.cnpj ?? "",
+        address: {
+          zipCode: "",
+          street: "",
+          number: "",
+          complement: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+        },
+        partners: [],
+        observation: "",
       });
+      setOperator("");
     } else {
       setFormData({
         fullName: "",
-        email: "",
         phone: "",
         enterprise: "",
         password: "",
+        razaoSocial: "",
+        cnpj: "",
+        address: {
+          zipCode: "",
+          street: "",
+          number: "",
+          complement: "",
+          neighborhood: "",
+          city: "",
+          state: "",
+        },
+        partners: [],
+        observation: "",
       });
+      setOperator("");
     }
     setFormError(null);
   }, [logista, open]);
@@ -78,19 +146,83 @@ export function LogistaDialog({
     }
 
     setFormError(null);
-    const normalizedEmail = formData.email?.trim() || undefined;
+    const normalizedAddress: AddressPayload | undefined = formData.address &&
+      Object.values(formData.address).some((value) => value && value.toString().trim().length > 0)
+        ? {
+            zipCode: formData.address.zipCode?.replace(/\D/g, ""),
+            street: formData.address.street?.trim(),
+            number: formData.address.number?.trim(),
+            complement: formData.address.complement?.trim(),
+            neighborhood: formData.address.neighborhood?.trim(),
+            city: formData.address.city?.trim(),
+            state: formData.address.state?.trim(),
+          }
+        : undefined;
+
+    const normalizedPartners: PartnerPayload[] | undefined = formData.partners
+      ?.map((partner) => ({
+        cpf: partner.cpf?.replace(/\D/g, ""),
+        name: partner.name?.trim(),
+        type: partner.type,
+        signatory: partner.signatory,
+      }))
+      .filter(
+        (partner) =>
+          (partner.cpf && partner.cpf.length > 0) ||
+          (partner.name && partner.name.length > 0) ||
+          partner.type,
+      );
+
     const normalizedPayload: CreateDealerPayload = {
       fullName: formData.fullName.trim(),
-      email: normalizedEmail,
       phone: formData.phone.trim(),
       enterprise: formData.enterprise.trim(),
       password: formData.password.trim(),
+      razaoSocial: formData.razaoSocial?.trim() || undefined,
+      cnpj: formData.cnpj?.replace(/\D/g, "") || undefined,
+      address: normalizedAddress,
+      partners: normalizedPartners,
+      observation: formData.observation?.trim() || undefined,
     };
     try {
       await onSave(normalizedPayload);
       onOpenChange(false);
     } catch (err) {
       console.error("[logista-dialog] Falha ao salvar logista", err);
+    }
+  };
+
+  const handleCepLookup = async () => {
+    const cep = formData.address?.zipCode?.replace(/\D/g, "");
+    if (!cep || cep.length !== 8) {
+      setFormError("Informe um CEP válido com 8 dígitos.");
+      return;
+    }
+    setFormError(null);
+    setIsCepLoading(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      if (data?.erro) {
+        setFormError("CEP não encontrado.");
+        return;
+      }
+      setFormData((prev) => ({
+        ...prev,
+        address: {
+          ...(prev.address ?? {}),
+          zipCode: cep,
+          street: data.logradouro ?? prev.address?.street ?? "",
+          neighborhood: data.bairro ?? prev.address?.neighborhood ?? "",
+          city: data.localidade ?? prev.address?.city ?? "",
+          state: data.uf ?? prev.address?.state ?? "",
+        },
+      }));
+    } catch (error) {
+      console.error("[logista-dialog] Falha ao buscar CEP", error);
+      setFormError("Não foi possível buscar o CEP.");
+    } finally {
+      setIsCepLoading(false);
     }
   };
 
@@ -114,97 +246,322 @@ export function LogistaDialog({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange} data-oid=".0zrq2c">
-      <DialogContent
-        className="max-w-2xl max-h-[90vh] overflow-y-auto"
-        data-oid=":atedp.">
+  const states = [
+    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+  ];
 
-        <form onSubmit={handleSubmit} data-oid="mt:b5u-">
-          <DialogHeader data-oid="m47lj:e">
-            <DialogTitle data-oid="4b1w_.y">{getTitle()}</DialogTitle>
-            <DialogDescription data-oid="dyehaxg">
-              {getDescription()}
-            </DialogDescription>
-          </DialogHeader>
+  const formContent = (
+    <form onSubmit={handleSubmit} data-oid="mt:b5u-">
+      <div className="space-y-4 py-3" data-oid="j2804_h">
+        <div className="space-y-1">
+          <h3 className="text-base font-semibold text-foreground">Dados da Loja</h3>
+          <p className="text-xs text-muted-foreground">Preencha as informações principais.</p>
+        </div>
 
-          <div className="grid gap-4 py-4" data-oid="j2804_h">
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              data-oid="fqhl2pm">
+        <div className="space-y-2">
+          <Label>Operador</Label>
+          <Select
+            value={operator}
+            onValueChange={setOperator}
+            disabled={isReadOnly}
+          >
+            <SelectTrigger className={inputWidth}>
+              <SelectValue placeholder={isLoadingOperators ? "Carregando..." : "Selecione"} />
+            </SelectTrigger>
+            <SelectContent>
+              {operators.map((op) => (
+                <SelectItem key={op.id} value={String(op.id)}>
+                  {op.fullName ?? `Operador ${op.id}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-              <div className="space-y-2" data-oid="swtwq4f">
-                <Label htmlFor="nome" data-oid="j0-mncq">
-                  Nome Completo
-                </Label>
-                <Input
-                  id="nome"
-                  value={formData.fullName}
-                  onChange={(e) =>
-                    setFormData({ ...formData, fullName: e.target.value })
-                  }
-                  placeholder="João Silva Santos"
-                  disabled={isReadOnly}
-                  required
-                  data-oid="::3dzxy" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-2">
+            <Label htmlFor="cnpj">CNPJ</Label>
+            <Input
+              id="cnpj"
+              className={inputWidth}
+              value={formData.cnpj ?? ""}
+              onChange={(e) =>
+                setFormData({ ...formData, cnpj: e.target.value })
+              }
+              placeholder="00.000.000/0000-00"
+              disabled={isReadOnly}
+              data-oid="cnpj"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="razaoSocial">Razão Social</Label>
+            <Input
+              id="razaoSocial"
+              className={inputWidth}
+              value={formData.razaoSocial ?? ""}
+              onChange={(e) =>
+                setFormData({ ...formData, razaoSocial: e.target.value })
+              }
+              placeholder="RAZÃO SOCIAL"
+              disabled={isReadOnly}
+              data-oid="razao-social"
+            />
+          </div>
+        </div>
 
-              </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="space-y-1">
+              <Label>Endereço (opcional)</Label>
+              <p className="text-xs text-muted-foreground">
+                Busque pelo CEP para preencher automaticamente.
+              </p>
+            </div>
+            {!isReadOnly && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleCepLookup}
+                disabled={isCepLoading}
+              >
+                {isCepLoading ? "Buscando..." : "Buscar CEP"}
+              </Button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <Input
+              placeholder="CEP"
+              className={inputWidth}
+              value={formData.address?.zipCode ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), zipCode: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="cep"
+            />
+            <Input
+              placeholder="Logradouro"
+              className="md:col-span-2"
+              value={formData.address?.street ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), street: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="logradouro"
+            />
+            <Input
+              placeholder="Número"
+              className={inputWidth}
+              value={formData.address?.number ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), number: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="numero"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Input
+              placeholder="Complemento"
+              className={inputWidth}
+              value={formData.address?.complement ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), complement: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="complemento"
+            />
+            <Input
+              placeholder="Bairro"
+              className="md:col-span-2"
+              value={formData.address?.neighborhood ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), neighborhood: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="bairro"
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Input
+              placeholder="Cidade"
+              className={inputWidth}
+              value={formData.address?.city ?? ""}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), city: e.target.value },
+                })
+              }
+              disabled={isReadOnly}
+              data-oid="cidade"
+            />
+            <Select
+              value={formData.address?.state ?? ""}
+              onValueChange={(value) =>
+                setFormData({
+                  ...formData,
+                  address: { ...(formData.address ?? {}), state: value },
+                })
+              }
+              disabled={isReadOnly}
+            >
+              <SelectTrigger className={inputWidth}>
+                <SelectValue placeholder="Estado" />
+              </SelectTrigger>
+              <SelectContent>
+                {states.map((uf) => (
+                  <SelectItem key={uf} value={uf}>
+                    {uf}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
-              <div className="space-y-2" data-oid="c3hhoay">
-                <Label htmlFor="enterprise" data-oid="srk9ani">
-                  Empresa (usada para login)
-                </Label>
-                <Input
-                  id="enterprise"
-                  value={formData.enterprise}
-                  onChange={(e) =>
-                    setFormData({ ...formData, enterprise: e.target.value })
-                  }
-                  placeholder="Auto Center XPTO"
-                  disabled={isReadOnly}
-                  required
-                  data-oid="ft0hh.o" />
-
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="observation">Observação (opcional)</Label>
+              <Textarea
+                id="observation"
+                value={formData.observation ?? ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, observation: e.target.value })
+                }
+                placeholder="Observações internas sobre o lojista"
+                disabled={isReadOnly}
+                data-oid="observacao"
+              />
             </div>
 
-            <div
-              className="grid grid-cols-1 md:grid-cols-2 gap-4"
-              data-oid="nz_vxdf">
-
-              <div className="space-y-2" data-oid="4xla:p:">
-                <Label htmlFor="email" data-oid="0qjx6tp">
-                  E-mail (opcional)
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value })
-                  }
-                  placeholder="joao@email.com"
-                  disabled={isReadOnly}
-                  data-oid="rs6yg8g" />
-
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Sócios / Procuradores (opcional)</Label>
+                {!isReadOnly && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        partners: [
+                          ...(formData.partners ?? []),
+                          { cpf: "", name: "", type: "SOCIO", signatory: false },
+                        ],
+                      })
+                    }
+                    data-oid="add-partner"
+                  >
+                    Adicionar
+                  </Button>
+                )}
               </div>
-
-              <div className="space-y-2" data-oid="6f71yr:">
-                <Label htmlFor="telefone" data-oid="005bchm">
-                  Telefone
-                </Label>
-                <Input
-                  id="telefone"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value })
-                  }
-                  placeholder="(11) 98765-4321"
-                  disabled={isReadOnly}
-                  required
-                  data-oid="3yqnd-h" />
-
-              </div>
+              {(formData.partners ?? []).map((partner, index) => (
+                <div
+                  key={`partner-${index}`}
+                  className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end border rounded-md p-3"
+                >
+                  <div className="space-y-1">
+                    <Label>CPF</Label>
+                    <Input
+                      value={partner.cpf ?? ""}
+                      onChange={(e) => {
+                        const partners = [...(formData.partners ?? [])];
+                        partners[index] = { ...partners[index], cpf: e.target.value };
+                        setFormData({ ...formData, partners });
+                      }}
+                      placeholder="00000000000"
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Nome</Label>
+                    <Input
+                      value={partner.name ?? ""}
+                      onChange={(e) => {
+                        const partners = [...(formData.partners ?? [])];
+                        partners[index] = { ...partners[index], name: e.target.value };
+                        setFormData({ ...formData, partners });
+                      }}
+                      placeholder="Nome completo"
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Tipo</Label>
+                    <Select
+                      value={partner.type ?? "SOCIO"}
+                      onValueChange={(value) => {
+                        const partners = [...(formData.partners ?? [])];
+                        partners[index] = {
+                          ...partners[index],
+                          type: value as PartnerPayload["type"],
+                        };
+                        setFormData({ ...formData, partners });
+                      }}
+                      disabled={isReadOnly}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SOCIO">Sócio</SelectItem>
+                        <SelectItem value="PROCURADOR">Procurador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id={`sign-${index}`}
+                      checked={partner.signatory ?? false}
+                      onCheckedChange={(checked) => {
+                        const partners = [...(formData.partners ?? [])];
+                        partners[index] = {
+                          ...partners[index],
+                          signatory: Boolean(checked),
+                        };
+                        setFormData({ ...formData, partners });
+                      }}
+                      disabled={isReadOnly}
+                    />
+                    <Label htmlFor={`sign-${index}`}>Assina pela empresa</Label>
+                  </div>
+                  {!isReadOnly && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        const partners = (formData.partners ?? []).filter((_, i) => i !== index);
+                        setFormData({ ...formData, partners });
+                      }}
+                    >
+                      Remover
+                    </Button>
+                  )}
+                </div>
+              ))}
+              {(formData.partners?.length ?? 0) === 0 && (
+                <p className="text-sm text-muted-foreground">
+                  Nenhum sócio ou procurador adicionado.
+                </p>
+              )}
             </div>
 
             {mode === "create" && (
@@ -214,6 +571,7 @@ export function LogistaDialog({
                 </Label>
                 <Input
                   id="password"
+                  className={inputWidth}
                   type="password"
                   value={formData.password}
                   onChange={(e) =>
@@ -256,23 +614,51 @@ export function LogistaDialog({
             )}
           </div>
 
-          <DialogFooter data-oid="gwrq6il">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              data-oid="ybh:lpy">
+      <DialogFooter data-oid="gwrq6il">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onOpenChange(false)}
+          data-oid="ybh:lpy">
 
-              {mode === "view" ? "Fechar" : "Cancelar"}
-            </Button>
-            {mode !== "view" && (
-              <Button type="submit" disabled={isSubmitting} data-oid="fnyk5_2">
-                {isSubmitting ? "Salvando..." : "Criar"}
-              </Button>
-            )}
-          </DialogFooter>
-        </form>
+          {mode === "view" ? "Fechar" : "Cancelar"}
+        </Button>
+        {mode !== "view" && (
+          <Button type="submit" disabled={isSubmitting} data-oid="fnyk5_2">
+            {isSubmitting ? "Salvando..." : "Criar"}
+          </Button>
+        )}
+      </DialogFooter>
+    </form>
+  );
+
+  if (!renderAsModal && mode === "create") {
+    if (!open) return null;
+    return (
+      <div className="rounded-lg border bg-card p-6 shadow-sm" data-oid="inline-logista-form">
+        <div className="space-y-1 mb-2">
+          <h2 className="text-lg font-semibold">{getTitle()}</h2>
+          <p className="text-sm text-muted-foreground">{getDescription()}</p>
+        </div>
+        {formContent}
+      </div>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange} data-oid=".0zrq2c">
+      <DialogContent
+        className="max-w-2xl max-h-[90vh] overflow-y-auto"
+        data-oid=":atedp.">
+
+        <DialogHeader data-oid="m47lj:e">
+          <DialogTitle data-oid="4b1w_.y">{getTitle()}</DialogTitle>
+          <DialogDescription data-oid="dyehaxg">
+            {getDescription()}
+          </DialogDescription>
+        </DialogHeader>
+
+        {formContent}
       </DialogContent>
     </Dialog>);
-
 }

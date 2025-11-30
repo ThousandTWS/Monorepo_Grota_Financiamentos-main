@@ -35,12 +35,12 @@ export const navItems: NavItem[] = [
        },
        { 
         name: "Cadastrar Operadores",
-        path: "/vendedores", 
+        path: "/operadores", 
         pro: false
        },
         { 
         name: "Cadastrar Gestores",
-        path: "/vendedores", 
+        path: "/gestores", 
         pro: false
        },
     ],

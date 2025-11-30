@@ -8,18 +8,18 @@ import org.example.server.enums.UserRole;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
+import org.example.server.model.Partner;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.DocumentRepository;
 import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.UserRepository;
-import org.example.server.util.VerificationCodeGenerator;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,11 +30,9 @@ public class DealerService {
     private final DocumentRepository documentRepository;
     private final DealerRegistrationMapper dealerRegistrationMapper;
     private final PasswordEncoder passwordEncoder;
-    private final EmailService emailService;
     private final DealerProfileMapper dealerProfileMapper;
     private final AddressMapper addressMapper;
     private final DealerDetailsMapper dealerDetailsMapper;
-    private final VerificationCodeGenerator codeGenerator;
     private final RefreshTokenRepository refreshTokenRepository;
 
     public DealerService(
@@ -43,11 +41,9 @@ public class DealerService {
             DocumentRepository documentRepository,
             DealerRegistrationMapper dealerRegistrationMapper,
             PasswordEncoder passwordEncoder,
-            EmailService emailService,
             DealerProfileMapper dealerProfileMapper,
             AddressMapper addressMapper,
             DealerDetailsMapper dealerDetailsMapper,
-            VerificationCodeGenerator codeGenerator,
             RefreshTokenRepository refreshTokenRepository
     ) {
         this.dealerRepository = dealerRepository;
@@ -55,22 +51,15 @@ public class DealerService {
         this.documentRepository = documentRepository;
         this.dealerRegistrationMapper = dealerRegistrationMapper;
         this.passwordEncoder = passwordEncoder;
-        this.emailService = emailService;
         this.dealerProfileMapper = dealerProfileMapper;
         this.addressMapper = addressMapper;
         this.dealerDetailsMapper = dealerDetailsMapper;
-        this.codeGenerator = codeGenerator;
         this.refreshTokenRepository = refreshTokenRepository;
     }
 
     @Transactional
     public DealerRegistrationResponseDTO create(DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
-        String normalizedEmail = normalize(dealerRegistrationRequestDTO.email());
         String normalizedEnterprise = normalize(dealerRegistrationRequestDTO.enterprise());
-
-        if (normalizedEmail != null && userRepository.existsByEmail(normalizedEmail)) {
-            throw new DataAlreadyExistsException("Email já existe");
-        }
 
         if (dealerRepository.existsByPhone(dealerRegistrationRequestDTO.phone())) {
             throw new DataAlreadyExistsException("Telefone já cadastrado");
@@ -81,28 +70,75 @@ public class DealerService {
 
         User user = new User();
         user.setFullName(dealerRegistrationRequestDTO.fullName());
-        user.setEmail(normalizedEmail);
+        user.setEmail(generateFallbackEmail(normalizedEnterprise, dealerRegistrationRequestDTO.phone()));
         user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
         user.setRole(UserRole.LOJISTA);
-        if (Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration()) || normalizedEmail == null) {
-            user.markAsVerified();
-        } else {
-            user.generateVerificationCode(codeGenerator.generate(), Duration.ofMinutes(10));
-        }
+        user.markAsVerified();
 
         Dealer dealer = new Dealer();
         dealer.setUser(user);
         dealer.setPhone(dealerRegistrationRequestDTO.phone());
         dealer.setEnterprise(normalizedEnterprise);
+        dealer.setReferenceCode(generateReferenceCode(normalizedEnterprise, dealerRegistrationRequestDTO.phone()));
         dealer.setUser(user);
 
         user.setDealer(dealer);
 
         dealerRepository.save(dealer);
 
-        if (!Boolean.TRUE.equals(dealerRegistrationRequestDTO.adminRegistration()) && normalizedEmail != null) {
-            emailService.sendVerificationEmail(user.getEmail(), user.getVerificationCode());
+        return dealerRegistrationMapper.toDTO(dealer);
+    }
+
+    @Transactional
+    public DealerRegistrationResponseDTO createFromAdmin(DealerAdminRegistrationRequestDTO dto) {
+        String normalizedEnterprise = normalize(dto.enterprise());
+        String normalizedPhone = digitsOnly(dto.phone());
+
+        if (dealerRepository.existsByPhone(normalizedPhone)) {
+            throw new DataAlreadyExistsException("Telefone já cadastrado");
         }
+        if (dealerRepository.existsByEnterpriseIgnoreCase(normalizedEnterprise)) {
+            throw new DataAlreadyExistsException("Empresa já cadastrada");
+        }
+
+        User user = new User();
+        user.setFullName(dto.fullName());
+        user.setEmail(generateFallbackEmail(normalizedEnterprise, dto.phone()));
+        user.setPassword(passwordEncoder.encode(dto.password()));
+        user.setRole(UserRole.LOJISTA);
+        user.markAsVerified();
+
+        Dealer dealer = new Dealer();
+        dealer.setUser(user);
+        dealer.setPhone(normalizedPhone);
+        dealer.setEnterprise(normalizedEnterprise);
+        dealer.setFullNameEnterprise(normalize(dto.razaoSocial()));
+        dealer.setCnpj(digitsOnly(dto.cnpj()));
+        dealer.setObservation(normalize(dto.observation()));
+        dealer.setReferenceCode(generateReferenceCode(normalizedEnterprise, dto.phone()));
+        if (dto.address() != null) {
+            var address = addressMapper.fromAdmin(dto.address());
+            if (address != null) {
+                address.setZipCode(digitsOnly(dto.address().zipCode()));
+                dealer.setAddress(address);
+            }
+        }
+
+        if (dto.partners() != null && !dto.partners().isEmpty()) {
+            List<Partner> partners = dto.partners().stream().map(p -> {
+                Partner partner = new Partner();
+                partner.setCpf(digitsOnly(p.cpf()));
+                partner.setName(p.name());
+                partner.setType(p.type());
+                partner.setSignatory(p.signatory());
+                partner.setDealer(dealer);
+                return partner;
+            }).toList();
+            dealer.setPartners(partners);
+        }
+
+        user.setDealer(dealer);
+        dealerRepository.save(dealer);
 
         return dealerRegistrationMapper.toDTO(dealer);
     }
@@ -156,19 +192,17 @@ public class DealerService {
             throw new EntityNotFoundException("Usuário vinculado à logística não encontrado");
         }
 
-        String normalizedEmail = normalize(dealerRegistrationRequestDTO.email());
         String normalizedEnterprise = normalize(dealerRegistrationRequestDTO.enterprise());
 
-        if (normalizedEmail != null && !normalizedEmail.equalsIgnoreCase(user.getEmail()) && userRepository.existsByEmail(normalizedEmail)) {
-            throw new DataAlreadyExistsException("Email já existe");
-        }
         if (normalizedEnterprise != null && !normalizedEnterprise.equalsIgnoreCase(dealer.getEnterprise())
                 && dealerRepository.existsByEnterpriseIgnoreCase(normalizedEnterprise)) {
             throw new DataAlreadyExistsException("Empresa já cadastrada");
         }
 
         user.setFullName(dealerRegistrationRequestDTO.fullName());
-        user.setEmail(normalizedEmail);
+        if (user.getEmail() == null || user.getEmail().isBlank()) {
+            user.setEmail(generateFallbackEmail(normalizedEnterprise, dealerRegistrationRequestDTO.phone()));
+        }
 
         dealer.setPhone(dealerRegistrationRequestDTO.phone());
         dealer.setEnterprise(normalizedEnterprise);
@@ -209,5 +243,32 @@ public class DealerService {
         if (value == null) return null;
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private String digitsOnly(String value) {
+        if (value == null) return null;
+        return value.replaceAll("\\D", "");
+    }
+
+    private String generateFallbackEmail(String enterprise, String phone) {
+        String base = normalize(enterprise);
+        String phoneDigits = digitsOnly(phone);
+        String random = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 8);
+        String local = (base != null && !base.isBlank() ? base.replaceAll("\\s+", "").toLowerCase() : "lojista")
+                + (phoneDigits != null && !phoneDigits.isBlank() ? "-" + phoneDigits : "-" + random);
+        return local + "@lojista.local";
+    }
+
+    private String generateReferenceCode(String enterprise, String phone) {
+        String base = normalize(enterprise);
+        String phoneDigits = digitsOnly(phone);
+        String random = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 6).toUpperCase();
+        String prefix = base != null && !base.isBlank()
+                ? base.replaceAll("[^A-Za-z0-9]", "").toUpperCase()
+                : "LOGISTA";
+        String phoneSuffix = phoneDigits != null && phoneDigits.length() >= 4
+                ? phoneDigits.substring(phoneDigits.length() - 4)
+                : random;
+        return (prefix.length() > 6 ? prefix.substring(0, 6) : prefix) + "-" + phoneSuffix;
     }
 }

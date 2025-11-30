@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { decryptSession } from "../../../../../packages/auth";
 import {
@@ -7,6 +7,7 @@ import {
   getAdminApiBaseUrl,
   getAdminSessionSecret,
 } from "@/application/server/auth/config";
+import { NextRequest } from "next/server";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 const SESSION_SECRET = getAdminSessionSecret();
@@ -43,7 +44,6 @@ export async function GET() {
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { message?: string; error?: string })?.error ??
         (payload as { message?: string; error?: string })?.message ??
         "Falha ao carregar operadores.";
       return NextResponse.json({ error: message }, {
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(body ?? {}),
       cache: "no-store",
     });
 
@@ -92,14 +92,9 @@ export async function POST(request: NextRequest) {
 
     if (!upstreamResponse.ok) {
       const message =
-        (payload as { error?: string; message?: string })?.error ??
-        (payload as { error?: string; message?: string })?.message ??
+        (payload as { message?: string; error?: string })?.message ??
+        (payload as { error?: string })?.error ??
         "Não foi possível criar o operador.";
-      console.error("[admin][operators] upstream error", {
-        status: upstreamResponse.status,
-        message,
-        payload,
-      });
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });

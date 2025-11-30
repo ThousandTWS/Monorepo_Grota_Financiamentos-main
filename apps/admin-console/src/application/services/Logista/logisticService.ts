@@ -1,20 +1,42 @@
 export type Dealer = {
   id: number;
   fullName: string;
-  email?: string | null;
+  razaoSocial?: string | null;
+  cnpj?: string | null;
+  referenceCode?: string | null;
   phone: string;
   enterprise: string;
   status?: string;
   createdAt?: string;
 };
 
+export type PartnerPayload = {
+  cpf?: string;
+  name?: string;
+  type?: "SOCIO" | "PROCURADOR";
+  signatory?: boolean;
+};
+
+export type AddressPayload = {
+  zipCode?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  neighborhood?: string;
+  city?: string;
+  state?: string;
+};
+
 export type CreateDealerPayload = {
   fullName: string;
-  email?: string;
   phone: string;
   enterprise: string;
   password: string;
-  adminRegistration?: boolean;
+  razaoSocial?: string;
+  cnpj?: string;
+  address?: AddressPayload;
+  partners?: PartnerPayload[];
+  observation?: string;
 };
 
 async function request<T>(

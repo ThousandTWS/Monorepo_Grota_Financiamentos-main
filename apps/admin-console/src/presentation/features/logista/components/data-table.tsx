@@ -11,7 +11,7 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Filter, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -21,7 +21,6 @@ import {
   SelectValue } from
 "@/presentation/layout/components/ui/select";
 import { LogistaDialog } from "./logista-dialog";
-import { DeleteDialog } from "./delete-dialog";
 import { useToast } from "@/application/core/hooks/use-toast";
 import {
   CreateDealerPayload,
@@ -33,9 +32,10 @@ interface DataTableProps {
   data: Logista[];
   onUpdate: (data: Logista[]) => void;
   onSync?: (action: "upsert" | "delete", logista?: Logista) => void;
+  onRefresh?: () => void;
 }
 
-export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
+export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps) {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("todos");
@@ -43,7 +43,6 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedLogista, setSelectedLogista] = useState<Logista | null>(null);
   const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
   const [isSaving, setIsSaving] = useState(false);
@@ -53,7 +52,8 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     const normalizedSearch = searchTerm.toLowerCase();
     const matchesSearch =
       logista.fullName?.toLowerCase().includes(normalizedSearch) ||
-      (logista.email ?? "").toLowerCase().includes(normalizedSearch) ||
+      (logista.razaoSocial ?? "").toLowerCase().includes(normalizedSearch) ||
+      (logista.referenceCode ?? "").toLowerCase().includes(normalizedSearch) ||
       logista.enterprise?.toLowerCase().includes(normalizedSearch) ||
       logista.phone?.toLowerCase().includes(normalizedSearch);
 
@@ -87,8 +87,34 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
   };
 
   const handleDelete = (logista: Logista) => {
-    setSelectedLogista(logista);
-    setDeleteDialogOpen(true);
+    if (isDeleting) return;
+    setIsDeleting(true);
+    deleteDealer(Number(logista.id))
+      .then(() => {
+        const updatedData = data.filter((item) => item.id !== logista.id);
+        onUpdate(updatedData);
+        onSync?.("delete", logista);
+        toast({
+          title: "Logista excluído!",
+          description: `${logista.fullName} foi removido do sistema.`,
+          variant: "destructive"
+        });
+      })
+      .catch((error) => {
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Não foi possível remover o logista.";
+        toast({
+          title: "Erro ao excluir",
+          description: message,
+          variant: "destructive",
+        });
+      })
+      .finally(() => {
+        setIsDeleting(false);
+        setSelectedLogista(null);
+      });
   };
 
   const handleCreate = () => {
@@ -97,19 +123,23 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     setDialogOpen(true);
   };
 
-  const digitsOnly = (value: string) => value.replace(/\D/g, "");
+  const digitsOnly = (value?: string) => (value ?? "").replace(/\D/g, "");
 
   const handleSave = async (payload: CreateDealerPayload) => {
     setIsSaving(true);
     try {
-      const email = payload.email?.trim();
       const created = await createDealer({
         ...payload,
         fullName: payload.fullName.trim(),
-        email: email?.length ? email : undefined,
         phone: digitsOnly(payload.phone),
         enterprise: payload.enterprise.trim(),
-        adminRegistration: true,
+        cnpj: digitsOnly(payload.cnpj),
+        address: payload.address
+          ? {
+              ...payload.address,
+              zipCode: digitsOnly(payload.address.zipCode),
+            }
+          : undefined,
       });
       const updatedData = [...data, created].sort(
         (a, b) => (new Date(b.createdAt ?? 0).getTime()) - (new Date(a.createdAt ?? 0).getTime()),
@@ -136,37 +166,6 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (selectedLogista) {
-      setIsDeleting(true);
-      try {
-        await deleteDealer(Number(selectedLogista.id));
-        const updatedData = data.filter((item) => item.id !== selectedLogista.id);
-        onUpdate(updatedData);
-        onSync?.("delete", selectedLogista);
-        toast({
-          title: "Logista excluído!",
-          description: `${selectedLogista.fullName} foi removido do sistema.`,
-          variant: "destructive"
-        });
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Não foi possível remover o logista.";
-        toast({
-          title: "Erro ao excluir",
-          description: message,
-          variant: "destructive",
-        });
-      } finally {
-        setDeleteDialogOpen(false);
-        setSelectedLogista(null);
-        setIsDeleting(false);
-      }
-    }
-  };
-
   const columns = getLogistaColumns({
     onView: handleView,
     onDelete: handleDelete
@@ -190,7 +189,7 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
                 data-oid="3m7dtc4" />
 
               <Input
-                placeholder="Buscar por nome, e-mail ou CPF..."
+                placeholder="Buscar por nome, razão social, código ou CNPJ..."
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-9"
@@ -224,11 +223,37 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
             </Select>
           </div>
 
-          <Button onClick={handleCreate} data-oid="addDealer" className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            Novo logista
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={onRefresh}
+              data-oid="refreshDealer"
+              className="w-full sm:w-auto"
+            >
+              <RefreshCcw className="mr-2 h-4 w-4" />
+              Atualizar
+            </Button>
+            <Button onClick={handleCreate} data-oid="addDealer" className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Novo logista
+            </Button>
+          </div>
         </div>
+
+        {/* Formulário inline de criação */}
+        {dialogMode === "create" && (
+          <div className="mt-4">
+            <LogistaDialog
+              logista={null}
+              open={dialogOpen}
+              onOpenChange={setDialogOpen}
+              onSave={handleSave}
+              mode="create"
+              isSubmitting={isSaving}
+              renderAsModal={false}
+            />
+          </div>
+        )}
 
         {/* Tabela */}
         <div className="rounded-lg border" data-oid="zu73duo">
@@ -363,23 +388,17 @@ export function DataTable({ data, onUpdate, onSync }: DataTableProps) {
       </div>
 
       {/* Modais */}
-      <LogistaDialog
-        logista={selectedLogista}
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSave={handleSave}
-        mode={dialogMode}
-        isSubmitting={isSaving}
-        data-oid="tiu-a96" />
-
-
-      <DeleteDialog
-        logista={selectedLogista}
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        onConfirm={handleConfirmDelete}
-        isLoading={isDeleting}
-        data-oid="vdsjxi4" />
+      {dialogMode === "view" && (
+        <LogistaDialog
+          logista={selectedLogista}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSave={handleSave}
+          mode={dialogMode}
+          isSubmitting={isSaving}
+          data-oid="tiu-a96"
+        />
+      )}
 
     </>);
 

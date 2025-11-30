@@ -25,8 +25,13 @@ public class Dealer {
 
     private String cnpj;
 
+    @Column(unique = true, length = 30)
+    private String referenceCode;
+
     @Embedded
     private Address address;
+
+    private String observation;
 
     @OneToOne(cascade = CascadeType.ALL, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
@@ -37,6 +42,9 @@ public class Dealer {
 
     @OneToMany(mappedBy = "dealer", fetch = FetchType.LAZY)
     private List<Document> documents;
+
+    @OneToMany(mappedBy = "dealer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Partner> partners;
 
     public Dealer() {
     }
@@ -99,6 +107,14 @@ public class Dealer {
         this.cnpj = cnpj;
     }
 
+    public String getReferenceCode() {
+        return referenceCode;
+    }
+
+    public void setReferenceCode(String referenceCode) {
+        this.referenceCode = referenceCode;
+    }
+
     public Address getAddress() {
         return address;
     }
@@ -107,12 +123,28 @@ public class Dealer {
         this.address = address;
     }
 
+    public String getObservation() {
+        return observation;
+    }
+
+    public void setObservation(String observation) {
+        this.observation = observation;
+    }
+
     public User getUser() {
         return user;
     }
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public List<Partner> getPartners() {
+        return partners;
+    }
+
+    public void setPartners(List<Partner> partners) {
+        this.partners = partners;
     }
 
 }

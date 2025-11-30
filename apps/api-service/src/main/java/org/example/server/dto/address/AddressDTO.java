@@ -20,6 +20,9 @@ public record AddressDTO(
         @Size(min = 2, max = 100, message = "O bairro deve ter entre 2 e 100 caracteres")
         String neighborhood,
 
+        @Size(min = 2, max = 100, message = "A cidade deve ter entre 2 e 100 caracteres")
+        String city,
+
         @NotBlank(message = "O estado é obrigatório")
         @Size(min = 2, max = 2, message = "O estado deve ser a sigla com 2 caracteres")
         @Pattern(regexp = "[A-Z]{2}", message = "O estado deve ser uma sigla válida (ex: SP, RJ)")

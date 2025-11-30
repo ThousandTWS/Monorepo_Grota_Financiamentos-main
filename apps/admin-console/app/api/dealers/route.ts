@@ -77,22 +77,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email: rawEmail, ...rest } = body ?? {};
-    const email =
-      typeof rawEmail === "string" && rawEmail.trim().length > 0
-        ? rawEmail.trim()
-        : undefined;
-    const payload = {
-      ...rest,
-      adminRegistration: true,
-      ...(email ? { email } : {}),
-    };
+    const payload = body ?? {};
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/auth/register`, {
+    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers/admin-register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        // Endpoint é público no backend; mantemos protegido apenas pelo session check do admin.
+        Authorization: `Bearer ${session.accessToken}`,
       },
       body: JSON.stringify(payload),
       cache: "no-store",

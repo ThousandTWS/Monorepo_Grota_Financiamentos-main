@@ -17,7 +17,9 @@ public class DealerRegistrationMapper {
         return new DealerRegistrationResponseDTO(
                 dealer.getId(),
                 dealer.getUser().getFullName(),
-                user != null ? user.getEmail() : null,
+                dealer.getFullNameEnterprise(),
+                dealer.getCnpj(),
+                dealer.getReferenceCode(),
                 dealer.getPhone(),
                 dealer.getEnterprise(),
                 dealer.getUser().getVerificationStatus(),
