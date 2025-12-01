@@ -92,7 +92,7 @@ export const createDealer = async (
 };
 
 export const deleteDealer = async (id: number): Promise<void> => {
-  await request(`/api/dealers?id=${id}`, {
+  await request(`/api/dealers/${id}`, {
     method: "DELETE",
   });
 };

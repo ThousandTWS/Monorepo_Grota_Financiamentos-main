@@ -33,7 +33,15 @@ public class SellerService {
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
 
-    public SellerService(SellerRepository sellerRepository, UserRepository userRepository, PasswordEncoder passwordEncoder, SellerMapper sellerMapper, AddressMapper addressMapper, EmailService emailService, DealerRepository dealerRepository) {
+    public SellerService(
+            SellerRepository sellerRepository,
+            UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            SellerMapper sellerMapper,
+            AddressMapper addressMapper,
+            EmailService emailService,
+            DealerRepository dealerRepository
+    ) {
         this.sellerRepository = sellerRepository;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,15 +58,18 @@ public class SellerService {
         }
 
         if (userRepository.existsByEmail(sellerRequestDTO.email())) {
-            throw new DataAlreadyExistsException("Email já existe.");
+            throw new DataAlreadyExistsException("Email ja existe.");
         }
 
         if (sellerRepository.existsByPhone(sellerRequestDTO.phone())) {
-            throw new DataAlreadyExistsException("Telefone já existe.");
+            throw new DataAlreadyExistsException("Telefone ja existe.");
         }
 
-        Dealer dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = null;
+        if (sellerRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
+        }
 
         User newUser = new User();
         newUser.setFullName(sellerRequestDTO.fullName());
@@ -112,7 +123,7 @@ public class SellerService {
 
         if (dealerId != null) {
             Dealer dealer = dealerRepository.findById(dealerId)
-                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
             seller.setDealer(dealer);
         } else {
             seller.setDealer(null);
@@ -127,8 +138,11 @@ public class SellerService {
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User user = seller.getUser();
-        Dealer dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = seller.getDealer();
+        if (sellerRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(sellerRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
+        }
 
         user.setFullName(sellerRequestDTO.fullName());
         user.setEmail(sellerRequestDTO.email());

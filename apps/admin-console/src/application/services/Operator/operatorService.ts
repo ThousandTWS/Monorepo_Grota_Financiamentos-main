@@ -13,7 +13,7 @@ export type Operator = {
 };
 
 export type CreateOperatorPayload = {
-  dealerId: number;
+  dealerId?: number | null;
   fullName: string;
   email: string;
   phone: string;
@@ -85,7 +85,7 @@ export const linkOperatorToDealer = async (operatorId: number, dealerId: number 
 };
 
 export const deleteOperator = async (operatorId: number): Promise<void> => {
-  await request<void>(`/api/operators?id=${operatorId}`, {
+  await request<void>(`/api/operators/${operatorId}`, {
     method: "DELETE",
   });
 };

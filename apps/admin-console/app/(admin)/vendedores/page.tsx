@@ -19,7 +19,7 @@ import { Input } from "@/presentation/layout/components/ui/input";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
 import { Separator } from "@/presentation/layout/components/ui/separator";
-import { DealersList } from "@/presentation/features/painel-geral/components/DealersList";
+import { SellersList } from "@/presentation/features/painel-geral/components/SellersList";
 import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
 import {
   Select,
@@ -31,7 +31,7 @@ import {
 import { fetchAddressByCep } from "@/application/services/cep/cepService";
 
 const sellerSchema = z.object({
-  dealerId: z.string().min(1, "Selecione a loja"),
+  dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
   email: z.string().email("E-mail inválido"),
   phone: z.string().min(8, "Informe o telefone"),
@@ -66,15 +66,15 @@ const brazilStates = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
 
-export default function Operadores() {
+export default function Vendedores() {
   return (
     <Suspense fallback={<div>Carregando...</div>}>
-      <OperadoresContent />
+      <VendedoresContent />
     </Suspense>
   );
 }
 
-function OperadoresContent() {
+function VendedoresContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [isCepLoading, setIsCepLoading] = useState(false);
@@ -131,8 +131,9 @@ function OperadoresContent() {
   const onSubmit = async (values: SellerFormValues) => {
     setIsSubmitting(true);
     try {
+      const dealerId = values.dealerId ? Number(values.dealerId) : undefined;
       await createSeller({
-        dealerId: Number(values.dealerId),
+        dealerId,
         fullName: values.fullName.trim(),
         email: values.email.trim(),
         phone: digitsOnly(values.phone),
@@ -210,13 +211,13 @@ function OperadoresContent() {
             className="grid gap-6 md:grid-cols-2"
           >
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="dealerId">Loja</Label>
+              <Label htmlFor="dealerId">Loja (opcional)</Label>
               <Select
-                value={watch("dealerId")}
+                value={watch("dealerId") ?? ""}
                 onValueChange={(value) => setValue("dealerId", value)}
               >
                 <SelectTrigger id="dealerId">
-                  <SelectValue placeholder="Selecione a loja" />
+                  <SelectValue placeholder="Selecione a loja (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {dealers.map((dealer) => (
@@ -266,11 +267,34 @@ function OperadoresContent() {
                 <p className="text-sm text-red-500">{errors.cpf.message}</p>
               )}
             </div>
+            
             <div className="space-y-2">
               <Label htmlFor="birthData">Data de nascimento</Label>
               <Input id="birthData" type="date" {...register("birthData")} />
               {errors.birthData && (
                 <p className="text-sm text-red-500">{errors.birthData.message}</p>
+              )}
+            </div>
+                        <div className="space-y-2">
+              <Label htmlFor="zipCode">CEP</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="zipCode"
+                  {...register("zipCode")}
+                  placeholder="00000-000"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCepLookup}
+                  disabled={isCepLoading}
+                >
+                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
+                </Button>
+              </div>
+              {errors.zipCode && (
+                <p className="text-sm text-red-500">{errors.zipCode.message}</p>
               )}
             </div>
 
@@ -331,28 +355,7 @@ function OperadoresContent() {
                 <p className="text-sm text-red-500">{errors.state.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="zipCode">CEP</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="zipCode"
-                  {...register("zipCode")}
-                  placeholder="00000-000"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCepLookup}
-                  disabled={isCepLoading}
-                >
-                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
-                </Button>
-              </div>
-              {errors.zipCode && (
-                <p className="text-sm text-red-500">{errors.zipCode.message}</p>
-              )}
-            </div>
+
 
             <Separator className="md:col-span-2" />
 
@@ -423,7 +426,7 @@ function OperadoresContent() {
         </CardContent>
       </Card>
 
-      <DealersList dealerId={selectedDealerId ? Number(selectedDealerId) : undefined} />
+      <SellersList dealerId={selectedDealerId ? Number(selectedDealerId) : undefined} />
     </div>
   );
 }

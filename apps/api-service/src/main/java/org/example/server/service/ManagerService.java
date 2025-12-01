@@ -58,15 +58,18 @@ public class ManagerService {
         }
 
         if (userRepository.existsByEmail(managerRequestDTO.email())) {
-            throw new DataAlreadyExistsException("Email já existe.");
+            throw new DataAlreadyExistsException("Email ja existe.");
         }
 
         if (managerRepository.existsByPhone(managerRequestDTO.phone())) {
-            throw new DataAlreadyExistsException("Telefone já existe.");
+            throw new DataAlreadyExistsException("Telefone ja existe.");
         }
 
-        Dealer dealer = dealerRepository.findById(managerRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = null;
+        if (managerRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(managerRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
+        }
 
         User newUser = new User();
         newUser.setFullName(managerRequestDTO.fullName());
@@ -119,7 +122,7 @@ public class ManagerService {
                 .orElseThrow(() -> new RecordNotFoundException(managerId));
         if (dealerId != null) {
             Dealer dealer = dealerRepository.findById(dealerId)
-                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
             manager.setDealer(dealer);
         } else {
             manager.setDealer(null);
@@ -133,8 +136,11 @@ public class ManagerService {
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User managerUser = manager.getUser();
-        Dealer dealer = dealerRepository.findById(managerRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = manager.getDealer();
+        if (managerRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(managerRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
+        }
 
         managerUser.setFullName(managerRequestDTO.fullName());
         managerUser.setEmail(managerRequestDTO.email());
