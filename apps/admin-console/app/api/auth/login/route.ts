@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
     if (!loginResponse.ok) {
       const errorPayload = await loginResponse.json().catch(() => null);
       const message = errorPayload?.message ?? "Credenciais inválidas";
-      return NextResponse.json({ error: message }, { status: 401 });
+      const status = loginResponse.status || 401;
+      return NextResponse.json({ error: message }, { status });
     }
 
     const tokens = (await loginResponse.json()) as AuthTokens;

@@ -7,6 +7,7 @@ import org.example.server.dto.user.UserResponseDTO;
 import org.example.server.dto.user.UserProfileUpdateDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.enums.UserStatus;
+import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.auth.CodeInvalidException;
 import org.example.server.exception.auth.InvalidPasswordException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
@@ -121,6 +122,8 @@ public class UserService {
         if (user.getVerificationStatus() == UserStatus.PENDENTE) {
             throw new UserNotVerifiedException("Conta ainda não verificada. Verifique seu e-mail.");
         }
+
+        ensureDealerAssociation(user);
 
         return jwtService.generateToken(user);
     }
@@ -249,6 +252,27 @@ public class UserService {
             return request.email().trim();
         }
         throw new IllegalArgumentException("Identificador de login ausente");
+    }
+
+    private void ensureDealerAssociation(User user) {
+        UserRole role = user.getRole();
+        if (role == null) {
+            throw new AccessDeniedException("Perfil de usuário não configurado.");
+        }
+
+        boolean hasDealerAssociation = switch (role) {
+            case ADMIN -> true;
+            case LOJISTA -> user.getDealer() != null;
+            case GESTOR -> user.getManager() != null && user.getManager().getDealer() != null;
+            case OPERADOR -> user.getOperator() != null && user.getOperator().getDealer() != null;
+            case VENDEDOR -> user.getSeller() != null && user.getSeller().getDealer() != null;
+        };
+
+        if (!hasDealerAssociation) {
+            throw new AccessDeniedException(
+                    "Usuário não está associado a uma loja. Solicite o vínculo com um lojista para acessar o painel."
+            );
+        }
     }
 
 }
