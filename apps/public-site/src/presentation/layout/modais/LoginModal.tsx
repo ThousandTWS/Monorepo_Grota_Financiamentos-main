@@ -156,7 +156,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
             >
               Esqueceu sua senha?
             </button>
-            <p className="text-sm text-gray-600">
+            {/*
+                    <p className="text-sm text-gray-600">
               Não tem conta?{" "}
               <button
                 onClick={() => {
@@ -172,6 +173,8 @@ export function LoginModal({ isOpen, onClose }: LoginModalProps) {
                 Cadastre-se
               </button>
             </p>
+            */}
+    
           </div>
         </div>
       </div>

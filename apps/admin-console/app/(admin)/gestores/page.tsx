@@ -147,6 +147,7 @@ function GestoresContent() {
           number: values.number.trim(),
           complement: values.complement?.trim() ?? "",
           neighborhood: values.neighborhood.trim(),
+          //@ts-ignore
           city: values.city.trim(),
           state: values.state.trim().toUpperCase(),
           zipCode: digitsOnly(values.zipCode),
