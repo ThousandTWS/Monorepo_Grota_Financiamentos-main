@@ -9,6 +9,7 @@ import org.example.server.exception.DocumentUploadException;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
+import org.example.server.infra.security.aws.S3Service;
 import org.example.server.model.Document;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;

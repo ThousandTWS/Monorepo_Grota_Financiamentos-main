@@ -1,4 +1,4 @@
-package org.example.server.service;
+package org.example.server.infra.security.aws;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
