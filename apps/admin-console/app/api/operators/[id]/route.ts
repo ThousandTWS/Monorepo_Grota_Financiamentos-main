@@ -27,7 +27,7 @@ function unauthorized() {
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: { id?: string } },
+  { params }: { params: Promise<{ id?: string }> },
 ) {
   try {
     const session = await resolveSession();
@@ -35,7 +35,7 @@ export async function DELETE(
       return unauthorized();
     }
 
-    const id = params.id;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
         { error: "id e obrigatorio." },
@@ -52,7 +52,7 @@ export async function DELETE(
     });
 
     if (upstreamResponse.status === 204) {
-      return NextResponse.json({}, { status: 204 });
+      return new NextResponse(null, { status: 204 });
     }
 
     const payload = await upstreamResponse.json().catch(() => null);
