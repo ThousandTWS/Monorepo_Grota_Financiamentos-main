@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLogistaSession, unauthorizedResponse } from "../../../api/_lib/session";
+
 import { getLogistaApiBaseUrl } from "@/application/server/auth/config";
+import { getLogistaSession, unauthorizedResponse } from "../../../_lib/session";
 
 const API_BASE_URL = getLogistaApiBaseUrl();
 

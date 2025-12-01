@@ -15,7 +15,6 @@ import {
   type Modelo,
   type ValorVeiculo,
 } from "./fipe";
-import Image from "next/image";
 
 type BasicOption = {
   id?: number;
