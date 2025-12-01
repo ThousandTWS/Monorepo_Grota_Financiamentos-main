@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/presentation/layout/components/ui/select";
+import { fetchAddressByCep } from "@/application/services/cep/cepService";
 
 const managerSchema = z.object({
   dealerId: z.string().min(1, "Selecione a loja"),
@@ -47,6 +48,7 @@ const managerSchema = z.object({
   number: z.string().min(1, "Informe o número"),
   complement: z.string().optional(),
   neighborhood: z.string().min(3, "Informe o bairro"),
+  city: z.string().min(2, "Informe a cidade"),
   state: z
     .string()
     .min(2, "UF inválida")
@@ -61,6 +63,9 @@ const managerSchema = z.object({
 type ManagerFormValues = z.infer<typeof managerSchema>;
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
+const brazilStates = [
+  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
+];
 
 export default function Gestores() {
   return (
@@ -73,6 +78,7 @@ export default function Gestores() {
 function GestoresContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dealers, setDealers] = useState<Dealer[]>([]);
+  const [isCepLoading, setIsCepLoading] = useState(false);
   const searchParams = useSearchParams();
 
   const {
@@ -98,6 +104,7 @@ function GestoresContent() {
       number: "",
       complement: "",
       neighborhood: "",
+      city: "",
       state: "SP",
       zipCode: "",
       canView: true,
@@ -140,6 +147,7 @@ function GestoresContent() {
           number: values.number.trim(),
           complement: values.complement?.trim() ?? "",
           neighborhood: values.neighborhood.trim(),
+          city: values.city.trim(),
           state: values.state.trim().toUpperCase(),
           zipCode: digitsOnly(values.zipCode),
         },
@@ -169,6 +177,31 @@ function GestoresContent() {
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCepLookup = async () => {
+    const cep = digitsOnly(watch("zipCode") ?? "");
+    if (cep.length !== 8) {
+      toast.error("Informe um CEP com 8 dígitos.");
+      return;
+    }
+    setIsCepLoading(true);
+    try {
+      const address = await fetchAddressByCep(cep);
+      if (!address) {
+        toast.error("CEP não encontrado.");
+        return;
+      }
+      setValue("street", address.street ?? "");
+      setValue("neighborhood", address.neighborhood ?? "");
+      setValue("city", address.city ?? "");
+      setValue("state", (address.state ?? "").toUpperCase());
+    } catch (error) {
+      console.error("[gestores] CEP lookup", error);
+      toast.error("Não foi possível buscar o CEP.");
+    } finally {
+      setIsCepLoading(false);
     }
   };
 
@@ -283,20 +316,51 @@ function GestoresContent() {
               )}
             </div>
             <div className="space-y-2">
+              <Label htmlFor="city">Cidade</Label>
+              <Input id="city" {...register("city")} />
+              {errors.city && (
+                <p className="text-sm text-red-500">{errors.city.message}</p>
+              )}
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="state">UF</Label>
-              <Input
-                id="state"
-                {...register("state")}
-                placeholder="SP"
-                maxLength={2}
-              />
+              <Select
+                value={watch("state")}
+                onValueChange={(value) => setValue("state", value, { shouldValidate: true })}
+              >
+                <SelectTrigger id="state">
+                  <SelectValue placeholder="UF" />
+                </SelectTrigger>
+                <SelectContent>
+                  {brazilStates.map((uf) => (
+                    <SelectItem key={uf} value={uf}>
+                      {uf}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.state && (
                 <p className="text-sm text-red-500">{errors.state.message}</p>
               )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="zipCode">CEP</Label>
-              <Input id="zipCode" {...register("zipCode")} placeholder="00000-000" />
+              <div className="flex gap-2">
+                <Input
+                  id="zipCode"
+                  {...register("zipCode")}
+                  placeholder="00000-000"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCepLookup}
+                  disabled={isCepLoading}
+                >
+                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
+                </Button>
+              </div>
               {errors.zipCode && (
                 <p className="text-sm text-red-500">{errors.zipCode.message}</p>
               )}

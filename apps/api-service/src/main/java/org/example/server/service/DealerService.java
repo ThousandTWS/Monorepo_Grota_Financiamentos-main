@@ -10,10 +10,7 @@ import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
 import org.example.server.model.Partner;
 import org.example.server.model.User;
-import org.example.server.repository.DealerRepository;
-import org.example.server.repository.DocumentRepository;
-import org.example.server.repository.RefreshTokenRepository;
-import org.example.server.repository.UserRepository;
+import org.example.server.repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +31,11 @@ public class DealerService {
     private final AddressMapper addressMapper;
     private final DealerDetailsMapper dealerDetailsMapper;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final SellerRepository sellerRepository;
+    private final ManagerRepository managerRepository;
+    private final OperatorRepository operatorRepository;
+    private final ProposalRepository proposalRepository;
+    private final VehicleRepository vehicleRepository;
 
     public DealerService(
             DealerRepository dealerRepository,
@@ -44,7 +46,12 @@ public class DealerService {
             DealerProfileMapper dealerProfileMapper,
             AddressMapper addressMapper,
             DealerDetailsMapper dealerDetailsMapper,
-            RefreshTokenRepository refreshTokenRepository
+            RefreshTokenRepository refreshTokenRepository,
+            SellerRepository sellerRepository,
+            ManagerRepository managerRepository,
+            OperatorRepository operatorRepository,
+            ProposalRepository proposalRepository,
+            VehicleRepository vehicleRepository
     ) {
         this.dealerRepository = dealerRepository;
         this.userRepository = userRepository;
@@ -55,6 +62,11 @@ public class DealerService {
         this.addressMapper = addressMapper;
         this.dealerDetailsMapper = dealerDetailsMapper;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.sellerRepository = sellerRepository;
+        this.managerRepository = managerRepository;
+        this.operatorRepository = operatorRepository;
+        this.proposalRepository = proposalRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     @Transactional
@@ -230,6 +242,13 @@ public class DealerService {
     public void delete(Long id) {
         Dealer dealer = dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
+
+        proposalRepository.deleteAll(proposalRepository.findByDealer(dealer));
+        vehicleRepository.deleteAll(vehicleRepository.findByDealerId(id));
+        documentRepository.deleteByDealerId(id);
+        sellerRepository.deleteAll(sellerRepository.findByDealerId(id));
+        managerRepository.deleteAll(managerRepository.findByDealerId(id));
+        operatorRepository.deleteAll(operatorRepository.findByDealerId(id));
 
         User user = dealer.getUser();
         if (user != null) {

@@ -106,6 +106,7 @@ const AppHeader = () => {
               alt="Logo"
               width={150}
               height={40}
+              style={{ height: "auto" }}
               data-oid="dlos3:q" />
 
 

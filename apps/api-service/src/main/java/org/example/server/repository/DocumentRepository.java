@@ -11,4 +11,5 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     List<Document>findByDealer_UserId(Long id);
     boolean existsByDealerIdAndDocumentType(Long dealerId, DocumentType documentType);
     List<DocumentResponseDTO> findDocumentsByDealerId(Long id);
+    void deleteByDealerId(Long dealerId);
 }

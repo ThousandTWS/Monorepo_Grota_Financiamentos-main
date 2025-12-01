@@ -1,38 +1,28 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { decryptSession } from "../../../../../packages/auth";
 import {
-  LOGISTA_SESSION_COOKIE,
-  LOGISTA_SESSION_SCOPE,
   getLogistaApiBaseUrl,
-  getLogistaSessionSecret,
 } from "@/application/server/auth/config";
+import {
+  getLogistaSession,
+  resolveDealerId,
+  unauthorizedResponse,
+} from "../_lib/session";
 
 const API_BASE_URL = getLogistaApiBaseUrl();
-const SESSION_SECRET = getLogistaSessionSecret();
-
-async function resolveSession() {
-  const cookieStore = await cookies();
-  const encoded = cookieStore.get(LOGISTA_SESSION_COOKIE)?.value;
-  const session = await decryptSession(encoded, SESSION_SECRET);
-  if (!session || session.scope !== LOGISTA_SESSION_SCOPE) {
-    return null;
-  }
-  return session;
-}
-
-function unauthorized() {
-  return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
-}
 
 export async function GET() {
   try {
-    const session = await resolveSession();
+    const session = await getLogistaSession();
     if (!session) {
-      return unauthorized();
+      return unauthorizedResponse();
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers`, {
+    const dealerId = await resolveDealerId(session);
+    if (!dealerId) {
+      return NextResponse.json([]);
+    }
+
+    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers/${dealerId}/details`, {
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
       },
@@ -50,7 +40,7 @@ export async function GET() {
       });
     }
 
-    return NextResponse.json(payload ?? []);
+    return NextResponse.json(payload ? [payload] : []);
   } catch (error) {
     console.error("[logista][dealers] Falha ao buscar lojistas", error);
     return NextResponse.json(

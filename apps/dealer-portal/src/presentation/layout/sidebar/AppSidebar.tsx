@@ -222,6 +222,7 @@ const AppSidebar = () => {
                 alt="Logo"
                 width={150}
                 height={40}
+                style={{ height: "auto" }}
               />
               <Image
                 className="hidden dark:block"
@@ -229,6 +230,7 @@ const AppSidebar = () => {
                 alt="Logo"
                 width={150}
                 height={40}
+                style={{ height: "auto" }}
               />
             </>
           ) : (

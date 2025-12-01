@@ -33,6 +33,8 @@ export async function resolveDealerId(
   session: DealerPortalSession,
 ): Promise<number | null> {
   if (!session) return null;
+  const role = `${(session as { role?: string })?.role ?? ""}`.toUpperCase();
+  const normalizedEmail = session.email?.toLowerCase();
   const headers: HeadersInit = {
     Authorization: `Bearer ${session.accessToken}`,
   };
@@ -71,6 +73,55 @@ export async function resolveDealerId(
         return match.id;
       }
     }
+  }
+
+  const matchByEmail = (payload: unknown): number | null => {
+    if (!normalizedEmail || !Array.isArray(payload)) return null;
+    const entry = payload.find(
+      (item: any) =>
+        item?.email && String(item.email).toLowerCase() === normalizedEmail,
+    ) as { dealerId?: number } | undefined;
+    if (entry?.dealerId) {
+      return Number(entry.dealerId);
+    }
+    return null;
+  };
+
+  // Fallbacks for linked roles (operator / seller / manager)
+  try {
+    if (role === "OPERADOR") {
+      const res = await fetch(`${API_BASE_URL}/operators`, {
+        headers,
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const payload = await res.json().catch(() => null);
+        const found = matchByEmail(payload);
+        if (found) return found;
+      }
+    } else if (role === "VENDEDOR") {
+      const res = await fetch(`${API_BASE_URL}/sellers`, {
+        headers,
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const payload = await res.json().catch(() => null);
+        const found = matchByEmail(payload);
+        if (found) return found;
+      }
+    } else if (role === "GESTOR") {
+      const res = await fetch(`${API_BASE_URL}/managers`, {
+        headers,
+        cache: "no-store",
+      });
+      if (res.ok) {
+        const payload = await res.json().catch(() => null);
+        const found = matchByEmail(payload);
+        if (found) return found;
+      }
+    }
+  } catch (error) {
+    console.warn("[logista][session] fallback resolveDealerId falhou", error);
   }
 
   return null;
