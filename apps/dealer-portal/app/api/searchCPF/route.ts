@@ -21,7 +21,7 @@ export async function POST(req: Request) {
           "DeviceToken": `${process.env.APIBRASIL_DEVICE_TOKEN_CPF}`,
           // eslint-disable-next-line turbo/no-undeclared-env-vars
           "Authorization": `Bearer ${process.env.APIBRASIL_TOKEN}` ,
-        }
+ }
       }
     );
 

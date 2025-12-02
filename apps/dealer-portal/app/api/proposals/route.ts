@@ -92,7 +92,12 @@ export async function GET(request: NextRequest) {
       return unauthorized();
     }
 
-    const dealerId = await resolveDealerId(session);
+    const resolvedDealerId = await resolveDealerId(session);
+    const fallbackDealerId =
+      typeof session.userId === "number"
+        ? session.userId
+        : Number(session.userId) || null;
+    const dealerId = resolvedDealerId ?? fallbackDealerId;
     if (!dealerId) {
       return NextResponse.json(
         { error: "Não foi possível identificar o lojista autenticado." },

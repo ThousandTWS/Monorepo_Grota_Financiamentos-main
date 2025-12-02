@@ -26,7 +26,7 @@ const AppSidebar = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group  ${openSubmenu?.type === menuType && openSubmenu?.index === index
+              className={`menu-item group text-white hover:text-[#E0F2FF] ${openSubmenu?.type === menuType && openSubmenu?.index === index
                 ? "menu-item-active"
                 : "menu-item-inactive"
                 } cursor-pointer ${!isExpanded && !isHovered
@@ -35,7 +35,7 @@ const AppSidebar = () => {
                 }`}
             >
               <span
-                className={` ${openSubmenu?.type === menuType && openSubmenu?.index === index
+                className={`text-white group-hover:text-[#E0F2FF] ${openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-icon-active"
                   : "menu-item-icon-inactive"
                   }`}
@@ -59,15 +59,15 @@ const AppSidebar = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                className={`menu-item group text-white hover:text-[#E0F2FF] ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                   }`}
               >
                 <span
-                  className={`${isActive(nav.path)
+                  className={`text-white group-hover:text-[#E0F2FF] ${isActive(nav.path)
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
                     }`}
-                >
+              >
                   {nav.icon}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
@@ -94,7 +94,7 @@ const AppSidebar = () => {
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
-                      className={`menu-dropdown-item ${isActive(subItem.path)
+                      className={`menu-dropdown-item text-white hover:text-[#E0F2FF] ${isActive(subItem.path)
                         ? "menu-dropdown-item-active"
                         : "menu-dropdown-item-inactive"
                         }`}
@@ -197,7 +197,7 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-[#134B73] text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-[#0f3c5a] 
         ${isExpanded || isMobileOpen
           ? "w-[290px]"
           : isHovered
@@ -217,7 +217,7 @@ const AppSidebar = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
-                className="dark:hidden"
+                className="dark:hidden filter brightness-0 invert"
                 src="/images/logo/Grota_logo horizontal positivo.png"
                 alt="Logo"
                 width={150}
@@ -225,7 +225,7 @@ const AppSidebar = () => {
                 style={{ height: "auto" }}
               />
               <Image
-                className="hidden dark:block"
+                className="hidden dark:block filter brightness-0 invert"
                 src="/images/logo/Grota_logo horizontal negativo.png"
                 alt="Logo"
                 width={150}
@@ -235,6 +235,7 @@ const AppSidebar = () => {
             </>
           ) : (
             <Image
+              className="filter brightness-0 invert"
               src={
                 theme === "dark"
                   ? "/images/logo/Símbolo negativo.png" // versão branca
@@ -252,7 +253,7 @@ const AppSidebar = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-white/80 ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "justify-start"
                   }`}
@@ -268,7 +269,7 @@ const AppSidebar = () => {
 
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${!isExpanded && !isHovered
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-white/80 ${!isExpanded && !isHovered
                   ? "lg:justify-center"
                   : "justify-start"
                   }`}
@@ -283,6 +284,31 @@ const AppSidebar = () => {
             </div>
           </div>
         </nav>
+        <div className="mt-auto py-4 text-xs text-white/80 space-y-2 border-t border-[#0f3c5a]">
+          <div className="flex items-center justify-between">
+            <span>Versão</span>
+            <span className="font-semibold">2.0.2</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>LGPD</span>
+            <span className="font-semibold text-[#E0F2FF]">Conforme</span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span>Status</span>
+            <span className="font-semibold text-emerald-200">Online</span>
+          </div>
+        </div>
+        <div className="pb-4">
+          <Image
+            className="rounded-md border border-[#0f3c5a]"
+            src="/images/banner/sidebar-banner.png"
+            alt="Banner Grota"
+            width={260}
+            height={120}
+            style={{ height: "auto" }}
+            unoptimized
+          />
+        </div>
       </div>
     </aside>
   );
