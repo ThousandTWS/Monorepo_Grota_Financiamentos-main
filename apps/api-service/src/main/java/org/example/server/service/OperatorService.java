@@ -58,15 +58,18 @@ public class OperatorService {
         }
 
         if (userRepository.existsByEmail(operatorRequestDTO.email())) {
-            throw new DataAlreadyExistsException("Email já existe.");
+            throw new DataAlreadyExistsException("Email jǭ existe.");
         }
 
         if (operatorRepository.existsByPhone(operatorRequestDTO.phone())) {
-            throw new DataAlreadyExistsException("Telefone já existe.");
+            throw new DataAlreadyExistsException("Telefone jǭ existe.");
         }
 
-        Dealer dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = null;
+        if (operatorRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nǜo encontrado."));
+        }
 
         User newUser = new User();
         newUser.setFullName(operatorRequestDTO.fullName());
@@ -115,8 +118,11 @@ public class OperatorService {
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
         User operatorUser = operator.getUser();
-        Dealer dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+        Dealer dealer = operator.getDealer();
+        if (operatorRequestDTO.dealerId() != null) {
+            dealer = dealerRepository.findById(operatorRequestDTO.dealerId())
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nǜo encontrado."));
+        }
 
         operatorUser.setFullName(operatorRequestDTO.fullName());
         operatorUser.setEmail(operatorRequestDTO.email());
@@ -146,7 +152,7 @@ public class OperatorService {
                 .orElseThrow(() -> new RecordNotFoundException(operatorId));
         if (dealerId != null) {
             Dealer dealer = dealerRepository.findById(dealerId)
-                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado."));
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista nǜo encontrado."));
             operator.setDealer(dealer);
         } else {
             operator.setDealer(null);

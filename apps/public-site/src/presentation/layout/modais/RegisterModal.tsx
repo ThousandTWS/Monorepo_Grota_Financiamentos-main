@@ -13,27 +13,19 @@ interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
 const registerSchema = z
   .object({
     fullName: z.string().min(2, "O nome completo é obrigatório"),
-    email: z.preprocess(
-      (val) => {
-        if (typeof val === "string") {
-          const trimmed = val.trim();
-          return trimmed.length === 0 ? undefined : trimmed;
-        }
-        return val;
-      },
-      z.string().email("Formato de e-mail inválido").optional(),
-    ),
-    phone: z
+    email: z
       .string()
-      .regex(/^\d{10,15}$/, "Telefone inválido (apenas números)"),
+      .trim()
+      .email("Formato de e-mail inválido")
+      .optional()
+      .or(z.literal("").transform(() => undefined)),
+    phone: z.string().regex(/^\d{10,15}$/, "Telefone inválido (apenas números)"),
     enterprise: z.string().min(2, "O nome da empresa é obrigatório"),
-    password: z
-      .string()
-      .min(8, "A senha deve ter pelo menos 8 caracteres")
-      .max(50, "A senha deve ter no m\u00e1ximo 50 caracteres"),
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres").max(50, "A senha deve ter no máximo 50 caracteres"),
     confirmPassword: z.string(),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -112,21 +104,12 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
 
         <div className="p-8 sm:p-10">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">
-              Cadastre sua Revenda
-            </h2>
-            <p className="text-md text-gray-600">
-              Preencha os dados abaixo para se tornar um parceiro Grota.
-            </p>
+            <h2 className="text-3xl font-extrabold text-gray-900 mb-2">Cadastre sua Revenda</h2>
+            <p className="text-md text-gray-600">Preencha os dados abaixo para se tornar um parceiro Grota.</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            <InputGroup
-              id="fullName"
-              label="Nome Completo (Responsável)"
-              icon={<User size={20} />}
-              error={errors.fullName}
-            >
+            <InputGroup id="fullName" label="Nome Completo (Responsável)" icon={<User size={20} />} error={errors.fullName}>
               <input
                 type="text"
                 id="fullName"
@@ -137,12 +120,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
               />
             </InputGroup>
 
-            <InputGroup
-              id="email"
-              label="E-mail (opcional)"
-              icon={<Mail size={20} />}
-              error={errors.email}
-            >
+            <InputGroup id="email" label="E-mail (opcional)" icon={<Mail size={20} />} error={errors.email}>
               <input
                 type="email"
                 id="email"
@@ -154,12 +132,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             </InputGroup>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputGroup
-                id="phone"
-                label="Telefone (WhatsApp)"
-                icon={<Phone size={20} />}
-                error={errors.phone}
-              >
+              <InputGroup id="phone" label="Telefone (WhatsApp)" icon={<Phone size={20} />} error={errors.phone}>
                 <input
                   type="tel"
                   id="phone"
@@ -170,12 +143,7 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
                 />
               </InputGroup>
 
-              <InputGroup
-                id="enterprise"
-                label="Nome da Empresa (Loja)"
-                icon={<Building size={20} />}
-                error={errors.enterprise}
-              >
+              <InputGroup id="enterprise" label="Nome da Empresa (Loja)" icon={<Building size={20} />} error={errors.enterprise}>
                 <input
                   type="text"
                   id="enterprise"
@@ -188,87 +156,53 @@ export function RegisterModal({ isOpen, onClose }: RegisterModalProps) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <InputGroup
-                id="password"
-                label="Senha"
-                icon={<Lock size={20} />}
-                error={errors.password}
-              >
+              <InputGroup id="password" label="Senha" icon={<Lock size={20} />} error={errors.password}>
                 <input
                   type="password"
                   id="password"
                   {...register("password")}
                   className={inputStyle}
-                  maxLength={8}
-                  placeholder="Mnimo 8 caracteres"
+                  placeholder="Crie uma senha"
                   disabled={isLoading}
                 />
               </InputGroup>
 
-              <InputGroup
-                id="confirmPassword"
-                label="Confirme a Senha"
-                icon={<Lock size={20} />}
-                error={errors.confirmPassword}
-              >
+              <InputGroup id="confirmPassword" label="Confirmar Senha" icon={<Lock size={20} />} error={errors.confirmPassword}>
                 <input
                   type="password"
                   id="confirmPassword"
                   {...register("confirmPassword")}
                   className={inputStyle}
-                  placeholder="Repita sua senha"
+                  placeholder="Repita a senha"
                   disabled={isLoading}
                 />
               </InputGroup>
             </div>
 
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-sm text-gray-500">
+                <span className="font-medium">Senha forte:</span> use letras maiúsculas, minúsculas e números.
+              </div>
+              <div className="text-xs text-gray-400">
+                {isDirty
+                  ? isValid
+                    ? "Pronto para enviar"
+                    : "Preencha os campos obrigatórios"
+                  : "Preencha os dados para habilitar"}
+              </div>
+            </div>
+
             <button
               type="submit"
-              disabled={isLoading || !isDirty || !isValid}
-              className="w-full bg-blue-700 hover:bg-blue-800 disabled:bg-blue-400 text-white py-3 rounded-xl font-bold text-lg 
-                transition-all duration-300 ease-in-out shadow-lg shadow-blue-200/50 
-                flex items-center justify-center gap-3 mt-8"
+              disabled={!isValid || isLoading}
+              className="w-full flex items-center justify-center gap-2 bg-blue-700 text-white font-semibold py-3 rounded-xl shadow-lg hover:bg-blue-800 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  Criando conta...
-                </>
-              ) : (
-                "Criar Conta de Parceiro"
-              )}
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : null}
+              Criar conta
             </button>
           </form>
-
-          <div className="mt-6 text-center space-y-2">
-            <p className="text-sm text-gray-600">
-              Já possui sua conta?{" "}
-              <button
-                onClick={() => {
-                  onClose();
-                  setTimeout(() => {
-                    const event = new CustomEvent("openLoginModal");
-                    window.dispatchEvent(event);
-                  }, 100);
-                }}
-                disabled={isLoading}
-                className="text-blue-700 hover:text-blue-800 hover:underline disabled:text-blue-500 font-medium cursor-pointer"
-              >
-                Voltar para login
-              </button>
-            </p>
-          </div>
         </div>
       </div>
     </div>
   );
 }
-
-
-
-
-
-
-
-
-

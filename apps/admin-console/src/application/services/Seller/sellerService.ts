@@ -13,7 +13,7 @@ export type Seller = {
 };
 
 export type CreateSellerPayload = {
-  dealerId: number;
+  dealerId?: number | null;
   fullName: string;
   email: string;
   phone: string;

@@ -32,7 +32,7 @@ import {
 import { fetchAddressByCep } from "@/application/services/cep/cepService";
 
 const operatorSchema = z.object({
-  dealerId: z.string().min(1, "Selecione a loja"),
+  dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
   email: z.string().email("E-mail inválido"),
   phone: z.string().min(8, "Informe o telefone"),
@@ -133,9 +133,10 @@ function OperadoresContent() {
     setIsSubmitting(true);
     try {
       const birthDateIso = new Date(values.birthData).toISOString().split("T")[0];
+      const dealerId = values.dealerId ? Number(values.dealerId) : undefined;
 
       await createOperator({
-        dealerId: Number(values.dealerId),
+        dealerId,
         fullName: values.fullName.trim(),
         email: values.email.trim(),
         phone: digitsOnly(values.phone),
@@ -222,13 +223,13 @@ function OperadoresContent() {
             className="grid gap-6 md:grid-cols-2"
           >
             <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="dealerId">Loja</Label>
+              <Label htmlFor="dealerId">Loja (opcional)</Label>
               <Select
-                value={selectedDealerId}
+                value={selectedDealerId ?? ""}
                 onValueChange={(value) => setValue("dealerId", value)}
               >
                 <SelectTrigger id="dealerId">
-                  <SelectValue placeholder="Selecione a loja" />
+                  <SelectValue placeholder="Selecione a loja (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
                   {dealers.map((dealer) => (
@@ -283,6 +284,28 @@ function OperadoresContent() {
               <Input id="birthData" type="date" {...register("birthData")} />
               {errors.birthData && (
                 <p className="text-sm text-red-500">{errors.birthData.message}</p>
+              )}
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="zipCode">CEP</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="zipCode"
+                  {...register("zipCode")}
+                  placeholder="00000-000"
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCepLookup}
+                  disabled={isCepLoading}
+                >
+                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
+                </Button>
+              </div>
+              {errors.zipCode && (
+                <p className="text-sm text-red-500">{errors.zipCode.message}</p>
               )}
             </div>
 
@@ -343,28 +366,7 @@ function OperadoresContent() {
                 <p className="text-sm text-red-500">{errors.state.message}</p>
               )}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="zipCode">CEP</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="zipCode"
-                  {...register("zipCode")}
-                  placeholder="00000-000"
-                  className="flex-1"
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCepLookup}
-                  disabled={isCepLoading}
-                >
-                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
-                </Button>
-              </div>
-              {errors.zipCode && (
-                <p className="text-sm text-red-500">{errors.zipCode.message}</p>
-              )}
-            </div>
+           
 
             <Separator className="md:col-span-2" />
 

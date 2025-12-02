@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import {
@@ -6,7 +5,7 @@ import {
   encryptSession,
   isSessionNearExpiry,
   type SessionPayload,
-} from "../../../../../packages/auth";
+} from "../../../../../../packages/auth";
 import {
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_SCOPE,
@@ -29,7 +28,7 @@ async function resolveSession() {
 }
 
 function unauthorized() {
-  return NextResponse.json({ error: "Usuário não autenticado." }, { status: 401 });
+  return NextResponse.json({ error: "Usuario nao autenticado." }, { status: 401 });
 }
 
 interface AuthTokens {
@@ -93,115 +92,20 @@ async function ensureActiveSession() {
   return session;
 }
 
-export async function GET() {
-  try {
-    const session = await ensureActiveSession();
-    if (!session) {
-      return unauthorized();
-    }
-
-    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers`, {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-      cache: "no-store",
-    });
-
-    const payload = await upstreamResponse.json().catch(() => null);
-
-    if (!upstreamResponse.ok) {
-      const message =
-        (payload as { message?: string; error?: string })?.message ??
-        "Falha ao carregar logistas.";
-      return NextResponse.json({ error: message }, {
-        status: upstreamResponse.status,
-      });
-    }
-
-    return NextResponse.json(payload ?? []);
-  } catch (error) {
-    console.error("[admin][dealers] Falha ao buscar logistas", error);
-    return NextResponse.json(
-      { error: "Erro interno ao carregar logistas." },
-      { status: 500 },
-    );
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    const session = await ensureActiveSession();
-    if (!session) {
-      return unauthorized();
-    }
-
-    let body;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json(
-        { error: "Payload inválido." },
-        { status: 400 },
-      );
-    }
-
-    const payload = body ?? {};
-
-    const upstreamResponse = await fetch(`${API_BASE_URL}/dealers/admin-register`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.accessToken}`,
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    });
-
-    const responsePayload = await upstreamResponse.json().catch(() => null);
-
-    if (!upstreamResponse.ok) {
-      const responseErrors = Array.isArray((responsePayload as { errors?: unknown })?.errors)
-        ? (responsePayload as { errors: unknown[] }).errors.filter((err) => typeof err === "string")
-        : [];
-
-      const baseMessage =
-        (responsePayload as { message?: string; error?: string })?.message ??
-        (responsePayload as { error?: string })?.error ??
-        "Não foi possível criar o logista.";
-
-      const detailedMessage =
-        responseErrors.length > 0
-          ? `${baseMessage} - ${responseErrors.join("; ")}`
-          : baseMessage;
-
-      return NextResponse.json({ error: detailedMessage, errors: responseErrors }, {
-        status: upstreamResponse.status,
-      });
-    }
-
-    return NextResponse.json(responsePayload ?? {}, {
-      status: upstreamResponse.status,
-    });
-  } catch (error) {
-    console.error("[admin][dealers] Falha ao criar logista", error);
-    return NextResponse.json(
-      { error: "Erro interno ao criar logista." },
-      { status: 500 },
-    );
-  }
-}
-
-export async function DELETE(request: NextRequest) {
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id?: string }> },
+) {
   try {
     let session = await ensureActiveSession();
     if (!session) {
       return unauthorized();
     }
 
-    const id = request.nextUrl.searchParams.get("id");
+    const { id } = await params;
     if (!id) {
       return NextResponse.json(
-        { error: "ID do logista é obrigatório." },
+        { error: "ID do logista e obrigatorio." },
         { status: 400 },
       );
     }
@@ -233,7 +137,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (upstreamResponse.status === 204) {
-      return NextResponse.json({}, { status: 204 });
+      return new NextResponse(null, { status: 204 });
     }
 
     const payload = await upstreamResponse.json().catch(() => null);
@@ -241,7 +145,7 @@ export async function DELETE(request: NextRequest) {
     if (!upstreamResponse.ok) {
       const message =
         (payload as { message?: string; error?: string })?.message ??
-        "Não foi possível remover o logista.";
+        "Nao foi possivel remover o logista.";
       return NextResponse.json({ error: message }, {
         status: upstreamResponse.status,
       });

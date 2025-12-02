@@ -13,7 +13,7 @@ export type Manager = {
 };
 
 export type CreateManagerPayload = {
-  dealerId: number;
+  dealerId?: number | null;
   fullName: string;
   email: string;
   phone: string;
