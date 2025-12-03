@@ -55,6 +55,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<VerificationFormData>({
     resolver: zodResolver(schema),
     mode: "onTouched",
@@ -204,7 +205,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
                 </button>
               </div>
 
-              {tokenType === "redefinicao-senha" && (
+              {tokenType === "redefinicao-senha" && getValues("code")?.length === 6 && (
                 <div className="animate-element animate-delay-400 w-full">
                   <label className="text-md font-medium text-[#1B4B7C]" htmlFor="newPassword">E-mail</label>
                   <GlassInputWrapper>
