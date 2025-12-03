@@ -164,7 +164,11 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
               {tokenType === "redefinicao-senha" ? "Redefinir Senha" : "Confirmar Código"}
             </h1>
             <p className="animate-element animate-delay-200 text-[#1B4B7C]/80">
-              {tokenType === "redefinicao-senha" ? `Informe o código enviado para ${email} abaixo e redefina sua senha` : `Informe abaixo para confirmar o código enviado para seu email ${email}`}
+              {tokenType === "redefinicao-senha" ? (
+                <p>Informe o código enviado para <span className="text-[#1B4B7C]/80 font-semibold">{email}</span> abaixo e redefina sua senha</p>
+              ) : (
+                <p>Informe abaixo para confirmar o código enviado para seu email <span className="text-[#1B4B7C]/80 font-semibold">{email}</span></p>
+              )}
             </p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -196,7 +200,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
 
                 <button
                   type="button"
-                  className="mt-4 mr-2 flex items-center gap-2 text-sm md:text-base text-[#1B4B7C]/90 hover:text-[#1B4B7C] font-medium hover:cursor-pointer disabled:opacity-50"
+                  className="mt-4 mr-2 mb-2 flex items-center gap-2 text-sm md:text-base text-[#1B4B7C]/90 hover:text-[#1B4B7C] font-medium hover:cursor-pointer disabled:opacity-50"
                   disabled={isLoading}
                   onClick={() => handleResendToken(tokenType)}
                 >
@@ -229,7 +233,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="animate-element animate-delay-400 w-full rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors"
+                className="animate-element animate-delay-400 w-full rounded-2xl bg-[#1B4B7C] py-4 font-medium text-white hover:bg-[#0F2C55] transition-colors flex justify-center items-center"
               >
                 {isLoading ? (
                   <>
