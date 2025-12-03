@@ -71,16 +71,16 @@ export default function UserDropdown() {
     <div className="relative">
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
+        className="flex items-center text-white dropdown-toggle"
       >
-        <span className="mr-3 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-blue-100 text-blue-700">
+        <span className="mr-3 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-white/15 text-white border border-white/30">
           {initials ? <span className="font-semibold">{initials}</span> : <User size={22} />}
         </span>
-        <span className="block mr-1 font-medium text-theme-sm">
+        <span className="block mr-1 font-medium text-theme-sm text-white">
           {loading ? "Carregando..." : user?.fullName ?? "Administrador"}
         </span>
         <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+          className={`stroke-white transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
           width="18"

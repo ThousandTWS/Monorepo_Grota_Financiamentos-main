@@ -1,59 +1,65 @@
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { ChartBar, Users, UserSquare } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Users2, Building2, BadgeCheck, ShieldCheck, UserCog } from "lucide-react";
 
 export const navItems: NavItem[] = [
   {
-    icon: <ChartBar />,
+    icon: <LayoutDashboard />,
     name: "Painel Administrativo",
     subItems: [
       { 
         name: "Visao Geral", 
         path: "/visao-geral", 
-        pro: false 
+        pro: false,
+        icon: <LayoutDashboard size={16} />
       },
     ],
   },
    {
-    icon: <ChartBar />,
+    icon: <ClipboardList />,
     name: "Gestão de Propostas",
     subItems: [
       { 
         name: "Esteira de Propostas", 
         path: "/esteira-de-propostas", 
-        pro: false 
+        pro: false,
+        icon: <ClipboardList size={16} />
       },
     ],
   },
   {
-    icon: <UserSquare />,
+    icon: <Users2 />,
     name: "Gestão de usuarios",
     subItems: [
       { 
         name: "Cadastrar Vendedor",
         path: "/vendedores", 
-        pro: false
+        pro: false,
+        icon: <UserCog size={16} />
        },
        { 
         name: "Cadastrar Operadores",
         path: "/operadores", 
-        pro: false
+        pro: false,
+        icon: <ShieldCheck size={16} />
        },
         { 
         name: "Cadastrar Gestores",
         path: "/gestores", 
-        pro: false
+        pro: false,
+        icon: <BadgeCheck size={16} />
        },
     ],
   },
 
   {
     name: "Gestão de Lojas",
-    icon: <Users />,
+    icon: <Building2 />,
     subItems: [
       { 
         name: "Cadastrar Lojas",
          path: "/logistas", 
-         pro: false 
+         pro: false,
+         icon: <Building2 size={16} />
       }, 
     ],
   },

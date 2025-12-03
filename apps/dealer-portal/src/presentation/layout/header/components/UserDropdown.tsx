@@ -73,20 +73,20 @@ export default function UserDropdown() {
       {/* BOTÃO */}
       <button
         onClick={toggleDropdown}
-        className="flex items-center text-gray-700 dark:text-gray-400 dropdown-toggle"
+        className="flex items-center text-white dropdown-toggle"
       >
-        <span className="mr-3 overflow-hidden flex justify-center items-center rounded-full h-11 w-11 bg-zinc-400 text-black">
+        <span className="mr-3 overflow-hidden flex justify-center items-center rounded-full h-11 w-11 bg-white/15 text-white border border-white/30">
           <User size={24} />
         </span>
 
         {loading ? (
           <div className="w-28 h-4 bg-gray-300 dark:bg-gray-700 rounded animate-pulse" />
         ) : (
-          <span className="block mr-1 font-medium text-theme-sm">{user?.fullName}</span>
+          <span className="block mr-1 font-medium text-theme-sm text-white">{user?.fullName}</span>
         )}
 
         <svg
-          className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
+          className={`stroke-white transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
           }`}
           width="18"

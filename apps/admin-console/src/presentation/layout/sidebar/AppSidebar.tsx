@@ -25,7 +25,7 @@ const AppSidebar = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group  ${
+              className={`menu-item group text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "menu-item-active"
                   : "menu-item-inactive"
@@ -36,7 +36,7 @@ const AppSidebar = () => {
               }`}
             >
               <span
-                className={` ${
+                className={`text-white group-hover:text-[#E0F2FF] ${
                   openSubmenu?.type === menuType && openSubmenu?.index === index
                     ? "menu-item-icon-active"
                     : "menu-item-icon-inactive"
@@ -49,10 +49,10 @@ const AppSidebar = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200  ${
+                  className={`ml-auto w-5 h-5 text-white group-hover:text-[#E0F2FF] transition-transform duration-200  ${
                     openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
+                      ? "rotate-180 text-[#E0F2FF]"
                       : ""
                   }`}
                 />
@@ -62,12 +62,12 @@ const AppSidebar = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${
+                className={`menu-item group text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${
                   isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                 }`}
               >
                 <span
-                  className={`${
+                  className={`text-white group-hover:text-[#E0F2FF] ${
                     isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
@@ -99,13 +99,16 @@ const AppSidebar = () => {
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
-                      className={`menu-dropdown-item ${
+                      className={`menu-dropdown-item text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${
                         isActive(subItem.path)
                           ? "menu-dropdown-item-active"
                           : "menu-dropdown-item-inactive"
                       }`}
                     >
-                      {subItem.name}
+                      <span className="flex items-center gap-2">
+                        {subItem.icon && <span className="text-white">{subItem.icon}</span>}
+                        <span>{subItem.name}</span>
+                      </span>
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
@@ -207,7 +210,7 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-zinc-900 dark:border-gray-800 text-gray-300 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-[#134B73] text-white h-screen transition-all duration-300 ease-in-out z-50 border-r border-[#0f3c5a] 
         ${
           isExpanded || isMobileOpen
             ? "w-[290px]"
@@ -221,15 +224,15 @@ const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
+        className={`py-8 flex ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
-       <Link href="/">
+        <Link href="/" className="flex items-center">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
-                className="dark:hidden"
+                className="dark:hidden filter brightness-0 invert"
                 src="/images/logo/Grota_logo horizontal positivo.png"
                 alt="Logo"
                 width={150}
@@ -237,7 +240,7 @@ const AppSidebar = () => {
                 style={{ height: "auto" }}
               />
               <Image
-                className="hidden dark:block"
+                className="hidden dark:block filter brightness-0 invert"
                 src="/images/logo/Grota_logo horizontal negativo.png"
                 alt="Logo"
                 width={150}
@@ -247,14 +250,12 @@ const AppSidebar = () => {
             </>
           ) : (
             <Image
-              src={
-                theme === "dark"
-                  ? "/images/logo/Símbolo negativo.png" // versão branca
-                  : "/images/logo/Símbolo positivo.png" // versão padrão
-              }
+              className="filter brightness-0 invert"
+              src="/images/logo/Símbolo positivo.png"
               alt="Logo"
-              width={32}
-              height={32}
+              width={40}
+              height={40}
+              style={{ height: "auto" }}
             />
           )}
         </Link>
@@ -264,7 +265,7 @@ const AppSidebar = () => {
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-[#E0F2FF]/80 ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -281,7 +282,7 @@ const AppSidebar = () => {
 
             <div className="">
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 text-xs uppercase flex leading-[20px] text-[#E0F2FF]/80 ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -297,6 +298,29 @@ const AppSidebar = () => {
             </div>
           </div>
         </nav>
+        <div className="mt-auto py-4 text-xs text-white/80 space-y-2 border-t border-[#0f3c5a]">
+          <div className="grid grid-cols-[1fr_auto] gap-y-1 items-center">
+            <span>Versão</span>
+            <span className="font-semibold">2.0.2</span>
+
+            <span>LGPD</span>
+            <span className="font-semibold text-[#E0F2FF]">Conforme</span>
+
+            <span>Status</span>
+            <span className="font-semibold text-emerald-200">Online</span>
+          </div>
+        </div>
+        <div className="pb-4 flex justify-center">
+          <Image
+            className="rounded-md object-contain"
+            src="https://res.cloudinary.com/dqxcs3pwx/image/upload/v1752426023/hxbuvabufyen655hcvyi.png"
+            alt="Selo LGPD"
+            width={120}
+            height={120}
+            style={{ height: "auto" }}
+            unoptimized
+          />
+        </div>
       </div>
     </aside>
   );

@@ -1,25 +1,25 @@
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { Lightbulb, PersonStanding, Settings } from "lucide-react";
+import { BookOpen, Accessibility, Cog, Sparkles, FileQuestion, Wrench } from "lucide-react";
 
 
 export const othersItems: NavItem[] = [
   {
-    icon: <Settings />,
+    icon: <Cog className="text-white" />,
     name: "Configurações",
     path: "/",
   },
   {
-    icon: <Lightbulb />,
+    icon: <BookOpen className="text-white" />,
     name: "Dicas & Tutoriais",
     subItems: [
-      { name: "Introdução", path: "/", pro: false },
-      { name: "Guia de Funções", path: "/", pro: false },
-      { name: "Personalização", path: "/", pro: false },
-      { name: "Ajuda", path: "/", pro: false },
+      { name: "Introdução", path: "/", pro: false, icon: <Sparkles size={16} className="text-white" /> },
+      { name: "Guia de Funções", path: "/", pro: false, icon: <BookOpen size={16} className="text-white" /> },
+      { name: "Personalização", path: "/", pro: false, icon: <Wrench size={16} className="text-white" /> },
+      { name: "Ajuda", path: "/", pro: false, icon: <FileQuestion size={16} className="text-white" /> },
     ],
   },
    {
-    icon: <PersonStanding/>,
+    icon: <Accessibility className="text-white" />,
     name: "Acessibilidade",
     path: "/",
   },

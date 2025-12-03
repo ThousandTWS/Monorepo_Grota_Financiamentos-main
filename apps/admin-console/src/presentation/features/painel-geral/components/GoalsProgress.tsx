@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/presentation/layout/components/ui/card";
 import { Progress } from "@/presentation/layout/components/ui/progress";
-import { TrendingUp, Target, Zap } from "lucide-react";
+import { Gauge, Target, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Goal {
@@ -27,9 +27,9 @@ const goals: Goal[] = [
     current: 24500000,
     target: 30000000,
     unit: "R$",
-    icon: TrendingUp,
-    color: "text-blue-600",
-    bgColor: "bg-blue-100 dark:bg-blue-950",
+    icon: Gauge,
+    color: "text-[#134B73]",
+    bgColor: "bg-[#E0F2FF]/60 dark:bg-slate-900",
   },
   {
     id: "2",
@@ -38,8 +38,8 @@ const goals: Goal[] = [
     target: 5000,
     unit: "",
     icon: Target,
-    color: "text-green-600",
-    bgColor: "bg-green-100 dark:bg-green-950",
+    color: "text-[#0f3c5a]",
+    bgColor: "bg-[#E0F2FF]/60 dark:bg-slate-900",
   },
   {
     id: "3",
@@ -47,9 +47,9 @@ const goals: Goal[] = [
     current: 87,
     target: 90,
     unit: "",
-    icon: Zap,
-    color: "text-purple-600",
-    bgColor: "bg-purple-100 dark:bg-purple-950",
+    icon: Star,
+    color: "text-[#134B73]",
+    bgColor: "bg-[#E0F2FF]/60 dark:bg-slate-900",
   },
 ];
 

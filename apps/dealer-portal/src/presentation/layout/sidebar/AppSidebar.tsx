@@ -26,7 +26,7 @@ const AppSidebar = () => {
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group text-white hover:text-[#E0F2FF] ${openSubmenu?.type === menuType && openSubmenu?.index === index
+              className={`menu-item group text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${openSubmenu?.type === menuType && openSubmenu?.index === index
                 ? "menu-item-active"
                 : "menu-item-inactive"
                 } cursor-pointer ${!isExpanded && !isHovered
@@ -47,9 +47,9 @@ const AppSidebar = () => {
               )}
               {(isExpanded || isHovered || isMobileOpen) && (
                 <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200  ${openSubmenu?.type === menuType &&
+                  className={`ml-auto w-5 h-5 text-white group-hover:text-[#E0F2FF] transition-transform duration-200  ${openSubmenu?.type === menuType &&
                     openSubmenu?.index === index
-                    ? "rotate-180 text-brand-500"
+                    ? "rotate-180 text-[#E0F2FF]"
                     : ""
                     }`}
                 />
@@ -59,7 +59,7 @@ const AppSidebar = () => {
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group text-white hover:text-[#E0F2FF] ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                className={`menu-item group text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
                   }`}
               >
                 <span
@@ -94,12 +94,15 @@ const AppSidebar = () => {
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
-                      className={`menu-dropdown-item text-white hover:text-[#E0F2FF] ${isActive(subItem.path)
+                      className={`menu-dropdown-item text-white hover:text-[#E0F2FF] !bg-transparent hover:!bg-white/10 active:!bg-white/15 ${isActive(subItem.path)
                         ? "menu-dropdown-item-active"
                         : "menu-dropdown-item-inactive"
                         }`}
                     >
-                      {subItem.name}
+                      <span className="flex items-center gap-2">
+                        {subItem.icon && <span className="text-white">{subItem.icon}</span>}
+                        <span>{subItem.name}</span>
+                      </span>
                       <span className="flex items-center gap-1 ml-auto">
                         {subItem.new && (
                           <span
@@ -298,12 +301,12 @@ const AppSidebar = () => {
             <span className="font-semibold text-emerald-200">Online</span>
           </div>
         </div>
-        <div className="pb-4">
+        <div className="pb-4 flex justify-center">
           <Image
-            className="rounded-md border border-[#0f3c5a]"
-            src="/images/banner/sidebar-banner.png"
-            alt="Banner Grota"
-            width={260}
+            className="rounded-md object-contain"
+            src="https://res.cloudinary.com/dqxcs3pwx/image/upload/v1752426023/hxbuvabufyen655hcvyi.png"
+            alt="Selo LGPD"
+            width={120}
             height={120}
             style={{ height: "auto" }}
             unoptimized

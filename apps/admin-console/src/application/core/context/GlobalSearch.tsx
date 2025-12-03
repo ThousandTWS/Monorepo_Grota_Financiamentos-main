@@ -107,7 +107,7 @@ export function GlobalSearch() {
         <div className="relative w-full xl:w-[430px]" data-oid="m.81ozg">
             <div className="relative" data-oid="ccnf6iv">
                 <Search
-                    className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-gray-500 dark:text-gray-400 pointer-events-none"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-[#134B73] pointer-events-none"
                     data-oid="5wt19f2" />
 
                 <input
@@ -122,12 +122,12 @@ export function GlobalSearch() {
                     }}
                     onFocus={() => searchQuery && setIsOpen(true)}
                     onKeyDown={handleKeyDown}
-                    className="h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 transition-colors"
+                    className="h-11 w-full rounded-lg border border-white/60 bg-white py-2.5 pl-12 pr-14 text-sm text-[#134B73] placeholder:text-[#134B73]/70 shadow-sm focus:border-white focus:ring-2 focus:ring-white/70 transition-colors"
                     data-oid="mabd6oq" />
 
 
                 <kbd
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-6 select-none items-center gap-1 rounded border border-gray-200 bg-gray-100 px-1.5 font-mono text-[10px] font-medium text-gray-600 opacity-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 sm:flex"
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 hidden h-6 select-none items-center gap-1 rounded border border-white/40 bg-white/15 px-1.5 font-mono text-[10px] font-medium text-white/80 opacity-100 sm:flex"
                     data-oid="14gak9t">
 
                     <span className="text-xs" data-oid="xuk5wj:">

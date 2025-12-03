@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { FileText, Clock3, CheckCircle2, CircleOff } from "lucide-react";
+import { Send, Hourglass, BadgeCheck, Ban } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/presentation/layout/components/ui/card";
 import { fetchProposals } from "@/application/services/Proposals/proposalService";
 import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
@@ -22,29 +22,29 @@ const PANELS: StatusPanel[] = [
   {
     key: "SUBMITTED",
     title: "Propostas Enviadas",
-    accent: "from-sky-500/70 to-sky-400/40 text-sky-900 dark:text-sky-50",
-    icon: <FileText className="h-5 w-5" />,
+    accent: "bg-[#134B73] text-white",
+    icon: <Send className="h-5 w-5" />,
     statuses: ["SUBMITTED"],
   },
   {
     key: "PENDING",
     title: "Em Análise",
-    accent: "from-amber-400/70 to-amber-300/40 text-amber-900 dark:text-amber-50",
-    icon: <Clock3 className="h-5 w-5" />,
+    accent: "bg-[#134B73] text-white",
+    icon: <Hourglass className="h-5 w-5" />,
     statuses: ["PENDING"],
   },
   {
     key: "APPROVED",
     title: "Aprovadas",
-    accent: "from-emerald-400/70 to-emerald-300/40 text-emerald-900 dark:text-emerald-50",
-    icon: <CheckCircle2 className="h-5 w-5" />,
+    accent: "bg-[#134B73] text-white",
+    icon: <BadgeCheck className="h-5 w-5" />,
     statuses: ["APPROVED"],
   },
   {
     key: "REJECTED",
     title: "Reprovadas",
-    accent: "from-rose-400/70 to-rose-300/40 text-rose-900 dark:text-rose-50",
-    icon: <CircleOff className="h-5 w-5" />,
+    accent: "bg-[#134B73] text-white",
+    icon: <Ban className="h-5 w-5" />,
     statuses: ["REJECTED"],
   },
 ];
@@ -232,13 +232,13 @@ export function QuickStats() {
             key={item.key}
             className="overflow-hidden border border-border/60 shadow-sm"
           >
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <span
-                  className={cn(
-                    "inline-flex items-center justify-center rounded-lg bg-gradient-to-r px-2.5 py-1 text-xs font-semibold",
-                    item.accent,
-                  )}
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-[#134B73]">
+              <span
+                className={cn(
+                  "inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                  item.accent,
+                )}
                 >
                   {item.icon}
                 </span>
@@ -250,8 +250,8 @@ export function QuickStats() {
                 <div className="h-20 rounded-md bg-muted animate-pulse" />
               ) : (
                 <>
-                  <div className="text-3xl font-bold">{item.count}</div>
-                  <p className="text-sm text-muted-foreground">
+                  <div className="text-3xl font-bold text-[#134B73]">{item.count}</div>
+                  <p className="text-sm text-[#0f3c5a]">
                     {item.count === 1 ? "proposta" : "propostas"} · {currency(item.total)}
                   </p>
                 </>
