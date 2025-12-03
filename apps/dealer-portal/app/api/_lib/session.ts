@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { decryptSession } from "../../../../../packages/auth";
@@ -87,7 +88,6 @@ export async function resolveDealerId(
     return null;
   };
 
-  // Fallbacks for linked roles (operator / seller / manager)
   try {
     if (role === "OPERADOR") {
       const res = await fetch(`${API_BASE_URL}/operators`, {

@@ -1,7 +1,10 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
+import dynamic from "next/dynamic"
+import type ReCAPTCHA from "react-google-recaptcha"
+import type { ReCAPTCHAProps } from "react-google-recaptcha"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { SignInPageProps } from "@/application/core/@types/auth/Props/SignInPageProps"
 import z from "zod"
@@ -13,6 +16,10 @@ import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/presentation/layout/components/ui/dialog"
 import { Input } from "@/presentation/layout/components/ui/input"
 import { Button } from "@/presentation/layout/components/ui/button"
+
+const Recaptcha = dynamic<ReCAPTCHAProps>(() => import("react-google-recaptcha").then((mod) => mod.default), {
+  ssr: false,
+})
 
 const loginSchema = z.object({
   email: z.email("Email inválido"),
@@ -32,7 +39,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   description = "Acesse sua conta e continue sua jornada com a Grota Financiamentos",
   heroImageSrc,
 }) => {
-  const { signIn, isLoading, error, clearError } = useAuth();
+  const { signIn, isLoading, clearError } = useAuth();
   const {
     register,
     handleSubmit,
@@ -52,11 +59,27 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [pendingEmail, setPendingEmail] = useState("")
   const [pendingPassword, setPendingPassword] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
+  const [recaptchaToken, setRecaptchaToken] = useState("")
+  const recaptchaRef = useRef<ReCAPTCHA | null>(null)
+  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ""
+
+  const handleVerificationCodeChange = (value: string) => {
+    const digitsOnly = value.replace(/\D/g, "").slice(0, 6)
+    setVerificationCode(digitsOnly)
+  }
 
   const onSubmit = async (data: LoginForm) => {
     clearError();
 
     if (!data.email || !data.password) {
+      return;
+    }
+
+    if (!recaptchaToken || !recaptchaSiteKey) {
+      toast.error("Confirme que você não é um robô.")
+      if (!recaptchaSiteKey) {
+        console.warn("[LGPD] reCAPTCHA site key ausente. Configure NEXT_PUBLIC_RECAPTCHA_SITE_KEY.")
+      }
       return;
     }
 
@@ -68,6 +91,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       if (result.success) {
         toast.success("Login realizado com sucesso!");
+        recaptchaRef.current?.reset();
         router.push("/visao-geral");
       } else if (result.needsVerification) {
         setShowVerification(true);
@@ -206,7 +230,17 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                 >
                   Esqueci a senha
                 </a>
-              </div>
+            </div>
+
+              {recaptchaSiteKey && (
+                <div className="animate-element animate-delay-550 flex justify-center">
+                  <Recaptcha
+                    ref={recaptchaRef}
+                    sitekey={recaptchaSiteKey}
+                    onChange={(value) => setRecaptchaToken(value ?? "")}
+                  />
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -264,7 +298,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
               <label className="text-sm font-medium">Código de verificação</label>
               <Input
                 value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
+                onChange={(e) => handleVerificationCodeChange(e.target.value)}
                 maxLength={6}
                 placeholder="Digite o código (6 dígitos)"
               />
