@@ -172,7 +172,7 @@ export const VerifyTokenPage: React.FC<VerifyTokenPageProps> = ({
             </p>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-              <div className="flex flex-col items-end relative mb-0">
+              <div className="flex flex-col items-end relative mb-2">
                 <Controller
                   name="code"
                   control={control}
