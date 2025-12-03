@@ -1,4 +1,5 @@
-﻿"use client";
+﻿/* eslint-disable @typescript-eslint/no-unused-vars */
+"use client";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
@@ -6,11 +7,9 @@ import { Label } from "@/presentation/ui/label";
 import { Switch } from "@/presentation/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/ui/select";
 import { Input } from "@/presentation/ui/input";
-import { Button } from "@/presentation/ui/button";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import {
   getAnos,
   getMarcas,
@@ -21,7 +20,6 @@ import {
   type Modelo,
   type ValorVeiculo,
 } from "./fipe";
-import { SimulacaoPFForm } from "./components/SimulacaoPFForm";
 import { maskCEP, maskBRL, maskPhone } from "@/application/core/utils/masks";
 
 type BasicOption = {
@@ -117,9 +115,6 @@ export default function SimuladorNovo() {
     name_1345094538: z.string().min(1, "CEP é obrigatório"),
   });
 
-  const userForm = useForm<z.infer<typeof userFormSchema>>({
-    resolver: zodResolver(userFormSchema),
-  });
 
   const handleUserSubmit = (values: z.infer<typeof userFormSchema>) => {
     try {
@@ -474,36 +469,6 @@ export default function SimuladorNovo() {
           </CardContent>
         </Card>
       </div>
-
-      {personType === "PF" && (
-        <SimulacaoPFForm
-          summaryVehicle={{
-            personType,
-            operationType:
-              operationType === "financiamento"
-                ? "Financiamento"
-                : operationType === "autofin"
-                ? "AutoFin"
-                : "",
-            vehicleCategory:
-              vehicleCategory === "leves"
-                ? "Leves"
-                : vehicleCategory === "motos"
-                ? "Motos"
-                : vehicleCategory === "pesados"
-                ? "Pesados"
-                : "",
-            vehicleBrand: brands.find((brand) => brand.code === selectedBrand)?.name ?? "",
-            vehicleModel: models.find((model) => model.code === selectedModel)?.name ?? "",
-            vehicleYear: years.find((year) => year.code === selectedYear)?.name ?? "",
-            vehicleFuel: vehicleInfo?.fuel,
-            fipeCode: vehicleInfo?.codeFipe,
-            fipePrice: vehicleInfo?.price,
-            entryPrice: "",
-            vehiclePlate,
-          }}
-        />
-      )}
 
       {personType === "PJ" && (
         <Card>
