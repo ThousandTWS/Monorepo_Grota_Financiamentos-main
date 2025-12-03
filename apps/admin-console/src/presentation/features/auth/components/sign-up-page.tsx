@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Eye, Loader2,  } from "lucide-react"
+import { Eye, EyeOff, Loader2,  } from "lucide-react"
 import { SignUpPageProps } from "@/application/core/@types/auth/Props/SignUpPageProps"
 import z from "zod"
 import { useForm } from "react-hook-form"
@@ -10,12 +10,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useAuth } from "@/application/services/auth/hooks/useAuth"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-
-const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-[#1B4B7C]/50 bg-white backdrop-blur-sm transition-colors focus-within:border-[#1B4B7C]/80 ">
-    {children}
-  </div>
-)
+import { GlassInputWrapper } from "@/presentation/layout/components/glass-input-wrapper"
 
 const registerSchema = z
   .object({
@@ -136,9 +131,9 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                       disabled={isLoading}
                     >
                       {showPassword ? (
-                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                        <EyeOff className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       ) : (
-                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       )}
                     </button>
                   </div>
@@ -168,9 +163,9 @@ export const SignUpPage: React.FC<SignUpPageProps> = ({
                       disabled={isLoading}
                     >
                       {showConfirmPassword ? (
-                       <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                       <EyeOff className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       ) : (
-                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       )}
                     </button>
                   </div>

@@ -1,10 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useRef, useState } from "react"
-import dynamic from "next/dynamic"
-import type ReCAPTCHA from "react-google-recaptcha"
-import type { ReCAPTCHAProps } from "react-google-recaptcha"
+import { useState } from "react"
 import { Eye, EyeOff, Loader2 } from "lucide-react"
 import { SignInPageProps } from "@/application/core/@types/auth/Props/SignInPageProps"
 import z from "zod"
@@ -16,10 +13,7 @@ import { toast } from "sonner"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/presentation/layout/components/ui/dialog"
 import { Input } from "@/presentation/layout/components/ui/input"
 import { Button } from "@/presentation/layout/components/ui/button"
-
-const Recaptcha = dynamic<ReCAPTCHAProps>(() => import("react-google-recaptcha").then((mod) => mod.default), {
-  ssr: false,
-})
+import { GlassInputWrapper } from "@/presentation/layout/components/glass-input-wrapper"
 
 const loginSchema = z.object({
   email: z.email("Email inválido"),
@@ -27,12 +21,6 @@ const loginSchema = z.object({
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
-
-const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-[#1B4B7C]/50 transition-colors focus-within:border-[#1B4B7C]/80">
-    {children}
-  </div>
-)
 
 export const SignInPage: React.FC<SignInPageProps> = ({
   title = <span className="font-light text-[#1B4B7C] tracking-tighter text-4xl md:text-5xl">Bem-vindo</span>,
@@ -59,9 +47,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   const [pendingEmail, setPendingEmail] = useState("")
   const [pendingPassword, setPendingPassword] = useState("")
   const [isVerifying, setIsVerifying] = useState(false)
-  const [recaptchaToken, setRecaptchaToken] = useState("")
-  const recaptchaRef = useRef<ReCAPTCHA | null>(null)
-  const recaptchaSiteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ?? ""
 
   const handleVerificationCodeChange = (value: string) => {
     const digitsOnly = value.replace(/\D/g, "").slice(0, 6)
@@ -75,14 +60,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       return;
     }
 
-    if (!recaptchaToken || !recaptchaSiteKey) {
-      toast.error("Confirme que você não é um robô.")
-      if (!recaptchaSiteKey) {
-        console.warn("[LGPD] reCAPTCHA site key ausente. Configure NEXT_PUBLIC_RECAPTCHA_SITE_KEY.")
-      }
-      return;
-    }
-
     setPendingEmail(data.email);
     setPendingPassword(data.password);
 
@@ -91,7 +68,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
       if (result.success) {
         toast.success("Login realizado com sucesso!");
-        recaptchaRef.current?.reset();
         router.push("/visao-geral");
       } else if (result.needsVerification) {
         setShowVerification(true);
@@ -168,7 +144,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <h1 className="animate-element animate-delay-100 font-semibold leading-tight">{title}</h1>
             <p className="animate-element animate-delay-200 text-[#1B4B7C]/80">{description}</p>
             <form className="space-y-5" onSubmit={handleSubmit(onSubmit)}>
-              <div className="animate-element animate-delay-300">
+              <div className="animate-element animate-delay-300 space-y-2">
                 <label className="text-md font-medium text-[#1B4B7C]" htmlFor="email">E-mail</label>
                 <GlassInputWrapper>
                   <input
@@ -206,9 +182,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       disabled={isLoading}
                     >
                       {showPassword ? (
-                        <EyeOff className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                        <EyeOff className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       ) : (
-                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors" />
+                        <Eye className="w-5 h-5 text-[#1B4B7C] hover:text-[#0F2C55] transition-colors duration-300" />
                       )}
                     </button>
                   </div>
@@ -231,16 +207,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                   Esqueci a senha
                 </a>
             </div>
-
-              {recaptchaSiteKey && (
-                <div className="animate-element animate-delay-550 flex justify-center">
-                  <Recaptcha
-                    ref={recaptchaRef}
-                    sitekey={recaptchaSiteKey}
-                    onChange={(value) => setRecaptchaToken(value ?? "")}
-                  />
-                </div>
-              )}
 
               <button
                 type="submit"

@@ -1,17 +1,12 @@
 "use client"
 import { ResetPasswordPageProps } from "@/application/core/@types/auth/Props/ResetPasswordPageProps"
 import { useAuth } from "@/application/services/auth/hooks/useAuth"
+import { GlassInputWrapper } from "@/presentation/layout/components/glass-input-wrapper"
 import { Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import type React from "react"
 import { useState } from "react"
 import { toast } from "sonner"
-
-const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-[#1B4B7C]/50 transition-colors focus-within:border-[#1B4B7C]/80">
-    {children}
-  </div>
-)
 
 export const ResetPasswordPage: React.FC<ResetPasswordPageProps> = ({
   title = <span className="font-light text-[#1B4B7C] tracking-tighter text-4xl md:text-5xl">Redefinir Senha</span>,

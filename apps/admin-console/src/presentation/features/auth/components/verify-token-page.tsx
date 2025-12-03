@@ -2,6 +2,7 @@
 
 import { VerifyTokenPageProps } from "@/application/core/@types/auth/Props/VerifyTokenPageProps"
 import api from "@/application/services/server/api";
+import { GlassInputWrapper } from "@/presentation/layout/components/glass-input-wrapper";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/presentation/layout/components/ui/input-otp";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, RefreshCcw } from "lucide-react";
@@ -16,12 +17,6 @@ interface Message {
   message: string;
   type: "ERROR" | "SUCCESS";
 }
-
-const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
-  <div className="rounded-2xl border border-[#1B4B7C]/50 transition-colors focus-within:border-[#1B4B7C]/80">
-    {children}
-  </div>
-)
 
 const verificationSchema = z.object({
   code: z.string().length(6, "Formato do código inválido"),
