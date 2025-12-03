@@ -169,11 +169,14 @@ export async function POST(request: NextRequest) {
     const encodedSession = await encryptSession(sessionPayload, SESSION_SECRET);
 
     const cookieStore = await cookies();
+    const sameSite =
+      process.env.NODE_ENV === "production" ? "none" : ("lax" as const);
     cookieStore.set({
       name: LOGISTA_SESSION_COOKIE,
       value: encodedSession,
       httpOnly: true,
-      sameSite: "lax",
+      // SameSite=None is required for cross-site login coming from the public site.
+      sameSite,
       secure: process.env.NODE_ENV === "production",
       maxAge: LOGISTA_SESSION_MAX_AGE,
       path: "/",
