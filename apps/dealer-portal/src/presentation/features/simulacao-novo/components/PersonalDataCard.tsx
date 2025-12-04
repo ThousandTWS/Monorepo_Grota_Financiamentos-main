@@ -263,111 +263,112 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             autoComplete="address-level3"
             {...register("neighborhood")}
           />
-          {/* Parei aqui */}
-          <LabeledSelect
-            id="birthUf"
-            containerClassName="md:col-span-2"
-            label="UF"
-            value={personalBirthUf}
-            onChange={(value) => {
-              onBirthUfChange(value);
-              onCityChange(ufCapitals[value] ?? personalCity);
-            }}
-            placeholder="Selecione a UF"
-          >
-            {[
-              "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
-              "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
-              "SP","SE","TO",
-            ].map((uf) => (
-              <SelectItem key={uf} value={uf}>
-                {uf}
-              </SelectItem>
-            ))}
-          </LabeledSelect>
+          <Controller
+            name="UF"
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <LabeledSelect
+                containerClassName="md:col-span-2"
+                label="UF"
+                placeholder="Selecione a UF"
+                value={field.value}
+                onChange={field.onChange}
+              >
+                {[
+                  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
+                  "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
+                  "SP","SE","TO",
+                ].map((uf) => (
+                  <SelectItem key={uf} value={uf}>
+                    {uf}
+                  </SelectItem>
+                ))}
+              </LabeledSelect>
+            )}
+          />
           <LabeledInput
-            id="personalCity"
+            id="city"
             containerClassName="md:col-span-4"
             label="Cidade"
             placeholder="Informe a cidade"
-            value={personalCity}
-            onChange={onCityChange}
             autoComplete="address-level2"
+            {...register("city")}
           />
           <LabeledInput
-            id="birthPlace"
+            id="nationality"
             containerClassName="md:col-span-4"
             label="Naturalidade"
             placeholder="Informe a naturalidade"
-            value={personalBirthCity}
-            onChange={onBirthCityChange}
+            {...register("nationality")}
           />
           <LabeledInput
-            id="personalCompany"
+            id="enterprise"
             containerClassName="md:col-span-4"
             label="Empresa"
             placeholder="Onde trabalha"
-            value={personalCompany}
-            onChange={onCompanyChange}
+            {...register("enterprise")}
           />
           <LabeledInput
-            id="personalJobTitle"
+            id="enterpriseFunction"
             containerClassName="md:col-span-3"
             label="Função"
             placeholder="Cargo ou função"
-            value={personalJobTitle}
-            onChange={onJobTitleChange}
+            {...register("enterpriseFunction")}
           />
           <div className="space-y-2 md:col-span-3">
-            <Label htmlFor="personalAdmissionDate" className="text-[#134B73]">
+            <Label htmlFor="admissionDate" className="text-[#134B73]">
               Data de admissão
             </Label>
             <div className="relative">
               <Input
-                id="personalAdmissionDate"
+                id="admissionDate"
                 type="date"
                 className="w-full pr-10 cursor-pointer"
-                value={personalAdmissionDate}
-                onChange={(e) => onAdmissionDateChange(e.target.value)}
+                {...register("admissionDate")}
               />
               <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
             </div>
           </div>
           <LabeledInput
-            id="personalIncome"
+            id="income"
             containerClassName="md:col-span-2"
             label="Renda"
             placeholder="R$ 0,00"
-            value={personalIncome}
-            onChange={onIncomeChange}
             inputClassName="text-right"
+            {...register("income")}
           />
           <LabeledInput
-            id="personalOtherIncome"
+            id="otherIncomes"
             containerClassName="md:col-span-2"
             label="Outras rendas"
             placeholder="R$ 0,00"
-            value={personalOtherIncome}
-            onChange={onOtherIncomeChange}
             inputClassName="text-right"
+            {...register("otherIncomes")}
           />
           <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="flex items-start gap-3">
-              <Switch
-                id="privacyConsent"
-                checked={privacyConsent}
-                onCheckedChange={(checked) => onPrivacyConsentChange(!!checked)}
-              />
-              <div className="space-y-1">
-                <Label htmlFor="privacyConsent" className="text-[#134B73] font-semibold">
-                  Consentimento LGPD
-                </Label>
-                <p className="text-sm text-slate-700">
-                  Autorizo o uso dos meus dados para análise de crédito, contato e formalização,
-                  conforme a política de privacidade da Grota Financiamentos.
-                </p>
-              </div>
-            </div>
+            <Controller
+              name="privacyConsent"
+              control={control}
+              render={({ field }) => (
+                <div className="flex items-start gap-3">
+                  <Switch
+                    id="privacyConsent"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                  <div className="space-y-1">
+                    <Label htmlFor="privacyConsent" className="text-[#134B73] font-semibold">
+                      Consentimento LGPD
+                    </Label>
+                    <p className="text-sm text-slate-700">
+                      Autorizo o uso dos meus dados para análise de crédito, contato e formalização,
+                      conforme a política de privacidade da Grota Financiamentos.
+                    </p>
+                  </div>
+                </div>
+              )}
+            />
           </div>
         </div>
       </CardContent>
