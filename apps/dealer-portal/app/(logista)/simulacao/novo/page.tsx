@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { FormProvider, useForm } from "react-hook-form";
 import {
   type Ano,
   type Marca,
@@ -30,7 +32,80 @@ type BasicOption = {
   enterprise?: string;
 };
 
+const simulationSchema = z.object({
+  cpf_cnpj: z.string().min(4, "CPF ou CNPJ é obrigatório"),
+  email: z.string().min(4, "E-mail é obrigatório"),
+  phone: z.string().min(4, "Telefone é obrigatório"),
+  motherName: z.string().min(4, "Nome da mãe é obrigatório"),
+  shareholderName: z.string().min(4, "Nome do sócio é obrigatório"),
+  companyName: z.string().min(4, "Nome da empresa é obrigatório"),
+  maritalStatus: z.string().min(4, "Estado civil é obrigatório"),
+  hasCNH: z.boolean(),
+  categoryCNH: z.string().optional(),
+  CEP: z.string().min(4, "CEP é obrigatório"),
+  address: z.string().min(4, "Endereço é obrigatório"),
+  addressNumber: z.string().min(1, "Número é obrigatório"),
+  addressComplement: z.string().optional(),
+  neighborhood: z.string().min(1, "Bairro é obrigatório"),
+  UF: z.string().min(1, "UF é obrigatório"),
+  city: z.string().min(1, "Cidade é obrigatória"),
+  nationality: z.string().min(1, "Naturalidade é obrigatória"),
+  enterprise: z.string().optional(),
+  enterpriseFunction: z.string().optional(),
+  admissionDate: z.string().optional(),
+  income: z.string().optional(),
+  otherIncomes: z.string().optional(),
+  acceptLGPD: z.boolean(),
+  vehicle0KM: z.boolean(),
+  vehicleBrand: z.string().min(1, "Marca do veículo é obrigatória"),
+  vehicleModel: z.string().min(1, "Modelo do veículo é obrigatório"),
+  vehicleYear: z.string().min(1, "Ano do veículo é obrigatório"),
+  priceFIPE: z.string().min(1, "Preço FIPE é obrigatório"),
+  vehiclePlate: z.string().optional(),
+  amountFinanced: z.string().min(4, "Valor financiado é obrigatório"),
+  termMonths: z.string().min(1, "Prazo em meses é obrigatório"),
+});
+
+type SimulationFormValues = z.infer<typeof simulationSchema>;
+
 export default function SimuladorNovo() {
+  const methods = useForm<SimulationFormValues>({
+    resolver: zodResolver(simulationSchema),
+    defaultValues: {
+      cpf_cnpj: "",
+      email: "",
+      phone: "",
+      motherName: "",
+      shareholderName: "",
+      companyName: "",
+      maritalStatus: "",
+      hasCNH: false,
+      categoryCNH: "",
+      CEP: "",
+      address: "",
+      addressNumber: "",
+      addressComplement: "",
+      neighborhood: "",
+      UF: "",
+      city: "",
+      nationality: "",
+      enterprise: "",
+      enterpriseFunction: "",
+      admissionDate: "",
+      income: "",
+      otherIncomes: "",
+      acceptLGPD: false,
+      vehicle0KM: false,
+      vehicleBrand: "",
+      vehicleModel: "",
+      vehicleYear: "",
+      priceFIPE: "",
+      vehiclePlate: "",
+      amountFinanced: "",
+      termMonths: "",
+    },
+  });
+
   const [personType, setPersonType] = useState<"PF" | "PJ" | null>(null);
   const [operationType, setOperationType] = useState<"financiamento" | "autofin" | null>(null);
   const [vehicleCategory, setVehicleCategory] = useState<"leves" | "motos" | "pesados" | null>(null);
@@ -290,110 +365,113 @@ export default function SimuladorNovo() {
       <div>
         <h1 className="text-4xl font-light text-[#134B73]">Nova Simulação</h1>
       </div>
-      <div className="grid gap-2 lg:grid-cols-[0.4fr_2fr] items-start">
-        <OperationCard
-          personType={personType}
-          operationType={operationType}
-          vehicleCategory={vehicleCategory}
-          onPersonTypeChange={setPersonType}
-          onOperationTypeChange={setOperationType}
-          onVehicleCategoryChange={setVehicleCategory}
-        />
-        <PersonalDataCard
-          personalCpf={personalCpf}
-          onCpfChange={(value) => setPersonalCpf(maskCpfCnpj(value))}
-          personalEmail={personalEmail}
-          onEmailChange={setPersonalEmail}
-          personalPhone={personalPhone}
-          onPhoneChange={(value) => setPersonalPhone(maskPhone(value))}
-          personalMother={personalMother}
-          onMotherChange={setPersonalMother}
-          personalCivilStatus={personalCivilStatus}
-          onCivilStatusChange={setPersonalCivilStatus}
-          personalHasCnh={personalHasCnh}
-          onHasCnhChange={setPersonalHasCnh}
-          personalCategoryCnh={personalCategoryCnh}
-          onCategoryCnhChange={setPersonalCategoryCnh}
-          personalZip={personalZip}
-          onZipChange={handleZipChange}
-          personalAddress={personalAddress}
-          onAddressChange={setPersonalAddress}
-          personalNumber={personalNumber}
-          onNumberChange={setPersonalNumber}
-          personalComplement={personalComplement}
-          onComplementChange={setPersonalComplement}
-          personalPartnerName={personalPartnerName}
-          onPartnerNameChange={setPersonalPartnerName}
-          personalCompanyName={personalCompanyName}
-          onCompanyNameChange={setPersonalCompanyName}
-          personalNeighborhood={personalNeighborhood}
-          onNeighborhoodChange={setPersonalNeighborhood}
-          personalBirthUf={personalBirthUf}
-          onBirthUfChange={setPersonalBirthUf}
-          personalCity={personalCity}
-          onCityChange={setPersonalCity}
-          personalBirthCity={personalBirthCity}
-          onBirthCityChange={setPersonalBirthCity}
-          privacyConsent={privacyConsent}
-          onPrivacyConsentChange={setPrivacyConsent}
-          ufCapitals={UF_CAPITALS}
-        />
-      </div>
+      <FormProvider {...methods}>
+        <form className="space-y-5">
+          <div className="grid gap-2 lg:grid-cols-[0.4fr_2fr] items-start">
+            <OperationCard
+              personType={personType}
+              operationType={operationType}
+              vehicleCategory={vehicleCategory}
+              onPersonTypeChange={setPersonType}
+              onOperationTypeChange={setOperationType}
+              onVehicleCategoryChange={setVehicleCategory}
+            />
+            <PersonalDataCard
+              personalCpf={personalCpf}
+              onCpfChange={(value) => setPersonalCpf(maskCpfCnpj(value))}
+              personalEmail={personalEmail}
+              onEmailChange={setPersonalEmail}
+              personalPhone={personalPhone}
+              onPhoneChange={(value) => setPersonalPhone(maskPhone(value))}
+              personalMother={personalMother}
+              onMotherChange={setPersonalMother}
+              personalCivilStatus={personalCivilStatus}
+              onCivilStatusChange={setPersonalCivilStatus}
+              personalHasCnh={personalHasCnh}
+              onHasCnhChange={setPersonalHasCnh}
+              personalCategoryCnh={personalCategoryCnh}
+              onCategoryCnhChange={setPersonalCategoryCnh}
+              personalZip={personalZip}
+              onZipChange={handleZipChange}
+              personalAddress={personalAddress}
+              onAddressChange={setPersonalAddress}
+              personalNumber={personalNumber}
+              onNumberChange={setPersonalNumber}
+              personalComplement={personalComplement}
+              onComplementChange={setPersonalComplement}
+              personalPartnerName={personalPartnerName}
+              onPartnerNameChange={setPersonalPartnerName}
+              personalCompanyName={personalCompanyName}
+              onCompanyNameChange={setPersonalCompanyName}
+              personalNeighborhood={personalNeighborhood}
+              onNeighborhoodChange={setPersonalNeighborhood}
+              personalBirthUf={personalBirthUf}
+              onBirthUfChange={setPersonalBirthUf}
+              personalCity={personalCity}
+              onCityChange={setPersonalCity}
+              personalBirthCity={personalBirthCity}
+              onBirthCityChange={setPersonalBirthCity}
+              privacyConsent={privacyConsent}
+              onPrivacyConsentChange={setPrivacyConsent}
+              ufCapitals={UF_CAPITALS}
+              personalCompany={personalCompany}
+              onCompanyChange={setPersonalCompany}
+              personalJobTitle={personalJobTitle}
+              onJobTitleChange={setPersonalJobTitle}
+              personalAdmissionDate={personalAdmissionDate}
+              onAdmissionDateChange={setPersonalAdmissionDate}
+              personalIncome={personalIncome}
+              onIncomeChange={(value) => setPersonalIncome(maskBRL(value))}
+              personalOtherIncome={personalOtherIncome}
+              onOtherIncomeChange={(value) => setPersonalOtherIncome(maskBRL(value))}
+            />
+          </div>
 
-      <ProfessionalDataCard
-          personalCompany={personalCompany}
-          onCompanyChange={setPersonalCompany}
-          personalJobTitle={personalJobTitle}
-          onJobTitleChange={setPersonalJobTitle}
-          personalAdmissionDate={personalAdmissionDate}
-        onAdmissionDateChange={setPersonalAdmissionDate}
-        personalIncome={personalIncome}
-        onIncomeChange={(value) => setPersonalIncome(maskBRL(value))}
-        personalOtherIncome={personalOtherIncome}
-        onOtherIncomeChange={(value) => setPersonalOtherIncome(maskBRL(value))}
-      />
+          {personType === "PJ" && (
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex flex-col gap-2">
+                  <h2 className="text-lg font-semibold text-[#134B73]">Cadastro Pessoa Jurídica</h2>
+                  <p className="text-sm text-[#134B73]">
+                    Adicione aqui o fluxo de cadastro da PJ quando os campos estiverem definidos.
+                  </p>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  No momento exibimos apenas o cadastro de pessoa física. Envie os campos necessários que conecto o formulário PJ.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
-      {personType === "PJ" && (
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex flex-col gap-2">
-              <h2 className="text-lg font-semibold text-[#134B73]">Cadastro Pessoa Jurídica</h2>
-              <p className="text-sm text-[#134B73]">
-                Adicione aqui o fluxo de cadastro da PJ quando os campos estiverem definidos.
-              </p>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">
-              No momento exibimos apenas o cadastro de pessoa física. Envie os campos necessários que conecto o formulário PJ.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+          <VehicleDataCard
+            isZeroKm={isZeroKm}
+            onZeroKmChange={setIsZeroKm}
+            brands={brands}
+            models={models}
+            years={years}
+            selectedBrand={selectedBrand}
+            selectedModel={selectedModel}
+            selectedYear={selectedYear}
+            onBrandChange={handleBrandChange}
+            onModelChange={handleModelChange}
+            onYearChange={handleYearChange}
+            isBrandsLoading={isBrandsLoading}
+            isModelsLoading={isModelsLoading}
+            isYearsLoading={isYearsLoading}
+            vehicleInfoPrice={vehicleInfo?.price ?? ""}
+            vehiclePlate={vehiclePlate}
+            onPlateChange={(value) => setVehiclePlate(maskPlate(value))}
+            financedValue={financedValue}
+            onFinancedValueChange={(value) => setFinancedValue(maskBRL(value))}
+            loanTerm={loanTerm}
+            onLoanTermChange={setLoanTerm}
+          />
 
-      <VehicleDataCard
-        isZeroKm={isZeroKm}
-        onZeroKmChange={setIsZeroKm}
-        brands={brands}
-        models={models}
-        years={years}
-        selectedBrand={selectedBrand}
-        selectedModel={selectedModel}
-        selectedYear={selectedYear}
-        onBrandChange={handleBrandChange}
-        onModelChange={handleModelChange}
-        onYearChange={handleYearChange}
-        isBrandsLoading={isBrandsLoading}
-        isModelsLoading={isModelsLoading}
-        isYearsLoading={isYearsLoading}
-        vehicleInfoPrice={vehicleInfo?.price ?? ""}
-        vehiclePlate={vehiclePlate}
-        onPlateChange={(value) => setVehiclePlate(maskPlate(value))}
-        financedValue={financedValue}
-        onFinancedValueChange={(value) => setFinancedValue(maskBRL(value))}
-        loanTerm={loanTerm}
-        onLoanTermChange={setLoanTerm}
-      />
+          <button type="submit">Enviar</button>
+        </form>
+      </FormProvider>
     </section>
   );
 }

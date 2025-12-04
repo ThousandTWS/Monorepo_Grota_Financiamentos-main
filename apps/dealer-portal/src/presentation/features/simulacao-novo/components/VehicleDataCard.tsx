@@ -58,10 +58,11 @@ export function VehicleDataCard({
 
   return (
     <Card>
-      <CardHeader className="-mt-5">
-        <h2 className="text-lg font-semibold text-[#134B73] -mb-5">Dados do Veículo</h2>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5 px-0">
+        <CardHeader className="px-0">
+          <h2 className="text-lg font-semibold text-[#134B73]">Dados do Veículo</h2>
+        </CardHeader>
+
         <div className="grid gap-4 md:grid-cols-7">
           <div className="flex items-center gap-3 rounded-md border px-3 py-2 md:max-w-52">
             <Switch checked={isZeroKm} onCheckedChange={onZeroKmChange} />
