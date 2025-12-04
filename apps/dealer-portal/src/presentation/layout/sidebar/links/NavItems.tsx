@@ -13,7 +13,7 @@ export const navItems: NavItem[] = [
     name: "Financiamentos",
     icon: <BadgeDollarSign />,
     subItems: [
-      { name: "Simulador", path: "/simulacao", pro: false, icon: <Calculator size={16} /> },
+      { name: "Simulador", path: "/simulacao/novo", pro: false, icon: <Calculator size={16} /> },
     ],
   },
  
