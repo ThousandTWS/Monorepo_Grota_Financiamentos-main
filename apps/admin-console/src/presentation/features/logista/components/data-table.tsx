@@ -11,7 +11,7 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw, Eye, Users, UserPlus, UserCog, UserPlus2, Trash2 } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw, Eye, Users, UserPlus, UserCog, UserPlus2, Trash2, Unlink } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -76,7 +76,8 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [linkingType, setLinkingType] = useState<"seller" | "manager" | null>(null);
+  const [linkingType, setLinkingType] = useState<"seller" | "manager" | "operator" | null>(null);
+  const [linkAction, setLinkAction] = useState<"link" | "unlink">("link");
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [sellers, setSellers] = useState<Seller[]>([]);
@@ -90,6 +91,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [teamOperators, setTeamOperators] = useState<Operator[]>([]);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [actionsModalOpen, setActionsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const filteredData = data.filter((logista) => {
     const normalizedSearch = searchTerm.toLowerCase();
@@ -186,22 +188,26 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     }
   };
 
-  const openLinkModal = async (type: "seller" | "manager" | "operator", logista: Logista) => {
+  const openLinkModal = async (
+    type: "seller" | "manager" | "operator",
+    logista: Logista,
+    action: "link" | "unlink" = "link",
+  ) => {
     setSelectedLogista(logista);
-    //@ts-ignore
     setLinkingType(type);
+    setLinkAction(action);
     setSelectedLinkId("");
     setLinkModalOpen(true);
 
     try {
       if (type === "seller") {
-        const list = await getAllSellers();
+        const list = await getAllSellers(action === "unlink" ? Number(logista.id) : undefined);
         setSellers(Array.isArray(list) ? list : []);
       } else if (type === "manager") {
-        const list = await getAllManagers();
+        const list = await getAllManagers(action === "unlink" ? Number(logista.id) : undefined);
         setManagers(Array.isArray(list) ? list : []);
       } else {
-        const list = await getAllOperators();
+        const list = await getAllOperators(action === "unlink" ? Number(logista.id) : undefined);
         setOperators(Array.isArray(list) ? list : []);
       }
     } catch {
@@ -217,20 +223,48 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     if (!linkingType || !selectedLogista || !selectedLinkId) return;
     setIsLinking(true);
     try {
+      const targetDealerId = linkAction === "unlink" ? null : Number(selectedLogista.id);
       if (linkingType === "seller") {
-        await linkSellerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Vendedor vinculado!", description: "Vendedor associado à loja." });
+        await linkSellerToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Vendedor desvinculado!" : "Vendedor vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O vendedor foi desvinculado da loja."
+              : "Vendedor associado à loja.",
+        });
       } else if (linkingType === "manager") {
-        await linkManagerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Gestor vinculado!", description: "Gestor associado à loja." });
+        await linkManagerToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Gestor desvinculado!" : "Gestor vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O gestor foi desvinculado da loja."
+              : "Gestor associado à loja.",
+        });
       } else {
-        await linkOperatorToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Operador vinculado!", description: "Operador associado à loja." });
+        await linkOperatorToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Operador desvinculado!" : "Operador vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O operador foi desvinculado da loja."
+              : "Operador associado à loja.",
+        });
       }
       setLinkModalOpen(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível vincular.";
-      toast({ title: "Erro ao vincular", description: message, variant: "destructive" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : linkAction === "unlink"
+            ? "Não foi possível desvincular."
+            : "Não foi possível vincular.";
+      toast({
+        title: linkAction === "unlink" ? "Erro ao desvincular" : "Erro ao vincular",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsLinking(false);
     }
@@ -599,14 +633,16 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {linkingType === "seller" ? "Vincular vendedor" : "Vincular gestor"}
+              {linkAction === "unlink" ? "Desvincular usuário" : "Vincular usuário"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               {selectedLogista
-                ? `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                ? linkAction === "unlink"
+                  ? `Selecione quem deseja remover da loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                  : `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
                 : "Selecione uma loja."}
             </p>
             <Select
@@ -635,16 +671,20 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button variant="outline" onClick={() => setLinkModalOpen(false)}>
               Cancelar
             </Button>
-            <Button
-              variant="destructive"
-              onClick={handleUnlink}
-              disabled={isLinking || !selectedLinkId}
-            >
-              {isLinking ? "Removendo..." : "Desvincular"}
-            </Button>
-            <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
-              {isLinking ? "Salvando..." : "Vincular"}
-            </Button>
+            {linkAction === "unlink" && (
+              <Button
+                variant="destructive"
+                onClick={handleLink}
+                disabled={isLinking || !selectedLinkId}
+              >
+                {isLinking ? "Removendo..." : "Desvincular"}
+              </Button>
+            )}
+            {linkAction === "link" && (
+              <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
+                {isLinking ? "Salvando..." : "Vincular"}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -702,7 +742,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button
               variant="secondary"
               onClick={() => {
-                if (selectedLogista) openLinkModal("seller", selectedLogista);
+                if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
                 setActionsModalOpen(false);
               }}
               className="justify-start"
@@ -712,7 +752,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button
               variant="secondary"
               onClick={() => {
-                if (selectedLogista) openLinkModal("manager", selectedLogista);
+                if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
                 setActionsModalOpen(false);
               }}
               className="justify-start"
@@ -722,7 +762,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button
               variant="secondary"
               onClick={() => {
-                if (selectedLogista) openLinkModal("operator", selectedLogista);
+                if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
                 setActionsModalOpen(false);
               }}
               className="justify-start"
@@ -742,14 +782,73 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button
               variant="destructive"
               onClick={() => {
-                if (selectedLogista) handleDelete(selectedLogista);
-                setActionsModalOpen(false);
+                if (selectedLogista) setDeleteModalOpen(true);
               }}
               className="justify-start"
             >
               <Trash2 className="size-4 mr-2" /> Excluir
             </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular vendedor
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular gestor
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular operador
+            </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir lojista</DialogTitle>
+            <DialogDescription>
+              Esta ação removerá a loja{" "}
+              <span className="font-semibold">{selectedLogista?.enterprise ?? selectedLogista?.fullName}</span>{" "}
+              e os vínculos de equipe associados. Confirme para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedLogista) {
+                  handleDelete(selectedLogista);
+                }
+                setDeleteModalOpen(false);
+                setActionsModalOpen(false);
+              }}
+            >
+              Confirmar exclusão
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
