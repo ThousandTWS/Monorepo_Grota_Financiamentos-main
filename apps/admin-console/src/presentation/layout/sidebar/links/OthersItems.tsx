@@ -6,7 +6,7 @@ export const othersItems: NavItem[] = [
   {
     icon: <Cog className="text-white" />,
     name: "Configurações",
-    path: "/",
+    path: "/configuracoes",
   },
   {
     icon: <BookOpen className="text-white" />,

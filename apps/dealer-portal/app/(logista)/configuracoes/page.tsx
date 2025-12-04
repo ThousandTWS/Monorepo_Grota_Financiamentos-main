@@ -91,9 +91,13 @@ function ConfiguracoesPage() {
 
   const statusTone = useMemo(() => {
     const status = (dealer.status ?? "").toUpperCase();
-    if (status === "ATIVO" || status === "ACTIVE") return "bg-emerald-500/15 text-emerald-900 border border-emerald-100";
-    if (status === "PENDENTE") return "bg-amber-500/15 text-amber-900 border border-amber-100";
-    return "bg-slate-500/15 text-slate-900 border border-slate-200";
+    if (status === "ATIVO" || status === "ACTIVE") {
+      return "bg-emerald-500/25 text-white border border-emerald-100";
+    }
+    if (status === "PENDENTE") {
+      return "bg-amber-500/25 text-white border border-amber-100";
+    }
+    return "bg-slate-500/25 text-white border border-slate-200";
   }, [dealer.status]);
 
   useEffect(() => {

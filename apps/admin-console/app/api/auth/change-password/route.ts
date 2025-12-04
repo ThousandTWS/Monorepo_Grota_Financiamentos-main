@@ -4,29 +4,6 @@ import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
-export async function GET() {
-  const session = await getAdminSession();
-  if (!session) return unauthorizedResponse();
-
-  const upstream = await fetch(`${API_BASE_URL}/users/me`, {
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-    },
-    cache: "no-store",
-  });
-
-  const payload = await upstream.json().catch(() => null);
-
-  if (!upstream.ok) {
-    const message =
-      (payload as { message?: string; error?: string })?.message ??
-      "Não foi possível carregar o perfil.";
-    return NextResponse.json({ error: message }, { status: upstream.status });
-  }
-
-  return NextResponse.json(payload ?? {});
-}
-
 export async function PUT(request: NextRequest) {
   const session = await getAdminSession();
   if (!session) return unauthorizedResponse();
@@ -38,7 +15,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
-  const upstream = await fetch(`${API_BASE_URL}/users/me`, {
+  const upstream = await fetch(`${API_BASE_URL}/auth/change-password`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -53,7 +30,7 @@ export async function PUT(request: NextRequest) {
   if (!upstream.ok) {
     const message =
       (payload as { message?: string; error?: string })?.message ??
-      "Não foi possível atualizar o perfil.";
+      "Não foi possível alterar a senha.";
     return NextResponse.json({ error: message }, { status: upstream.status });
   }
 
