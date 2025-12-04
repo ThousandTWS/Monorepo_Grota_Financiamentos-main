@@ -287,7 +287,8 @@ public class AuthController {
         return ResponseEntity.ok(new Api_Response(true, "Senha alterada com sucesso"));
     }
 
-    private ResponseCookie createAuthCookie(String token, boolean expire) {
+    @SuppressWarnings("null")
+private ResponseCookie createAuthCookie(String token, boolean expire) {
         return ResponseCookie.from("access_token", expire ? "" : token)
                 .httpOnly(true)
                 .secure(true) 
@@ -298,7 +299,8 @@ public class AuthController {
                 .build();
     }
 
-    private ResponseCookie createRefreshCookie(String token, boolean expire) {
+    @SuppressWarnings("null")
+private ResponseCookie createRefreshCookie(String token, boolean expire) {
         return ResponseCookie.from("refresh_token", expire ? "" : token)
                 .httpOnly(true)
                 .secure(true)

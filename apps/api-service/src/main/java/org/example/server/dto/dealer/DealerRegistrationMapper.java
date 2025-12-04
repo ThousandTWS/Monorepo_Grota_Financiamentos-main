@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DealerRegistrationMapper {
 
+    @SuppressWarnings("unused")
     public DealerRegistrationResponseDTO toDTO(Dealer dealer){
         if (dealer == null){
             return null;

@@ -4,9 +4,6 @@ import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.example.server.model.Manager;
-import org.example.server.model.Seller;
-import org.example.server.model.Operator;
 
 @Entity
 @Table(name = "tb_dealer")

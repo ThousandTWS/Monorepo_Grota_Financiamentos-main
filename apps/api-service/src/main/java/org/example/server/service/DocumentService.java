@@ -86,6 +86,7 @@ public class DocumentService {
     @Transactional
     public java.net.URL getPresignedUrl(Long documentId, User user) {
 
+        @SuppressWarnings("null")
         Document doc = documentRepository.findById(documentId)
                 .orElseThrow(() -> new RecordNotFoundException("Documento não encontrado"));
 
@@ -106,6 +107,7 @@ public class DocumentService {
             throw new AccessDeniedException("Apenas administradores podem revisar documentos.");
         }
 
+        @SuppressWarnings("null")
         Document document = documentRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 

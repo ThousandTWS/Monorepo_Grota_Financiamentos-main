@@ -162,11 +162,13 @@ public class DealerService {
                 .collect(Collectors.toList());
     }
 
+    @SuppressWarnings("null")
     public DealerRegistrationResponseDTO findById(Long id) {
         return dealerRegistrationMapper.toDTO(dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id)));
     }
 
+    @SuppressWarnings("null")
     public List<DocumentResponseDTO> getDealerDocuments(Long id) {
         if (!dealerRepository.existsById(id)) {
             throw new RecordNotFoundException(id);
@@ -175,6 +177,7 @@ public class DealerService {
     }
 
     public DealerDetailsResponseDTO findDetailDealer(Long id) {
+        @SuppressWarnings("null")
         Dealer dealer = dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
@@ -203,6 +206,7 @@ public class DealerService {
 
     @Transactional
     public DealerRegistrationResponseDTO update(Long id, DealerRegistrationRequestDTO dealerRegistrationRequestDTO) {
+        @SuppressWarnings("null")
         Dealer dealer = dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
@@ -232,6 +236,7 @@ public class DealerService {
         return dealerRegistrationMapper.toDTO(dealer);
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public DealerProfileDTO updateProfile(Long userId, DealerProfileDTO dto) {
         Dealer dealer = dealerRepository.findByUserId(userId)
@@ -245,6 +250,7 @@ public class DealerService {
         return dealerProfileMapper.toDTO(dealerRepository.save(dealer));
     }
 
+    @SuppressWarnings("null")
     @Transactional
     public void delete(Long id) {
         Dealer dealer = dealerRepository.findById(id)

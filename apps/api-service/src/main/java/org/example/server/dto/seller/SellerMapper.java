@@ -14,6 +14,7 @@ public class SellerMapper {
         this.addressMapper = addressMapper;
     }
 
+    @SuppressWarnings("unused")
     public SellerResponseDTO toDTO(Seller seller) {
         if (seller == null) {
             return null;
