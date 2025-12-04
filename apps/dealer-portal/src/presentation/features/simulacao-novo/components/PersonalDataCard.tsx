@@ -290,6 +290,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-4"
             label="Cidade"
             placeholder="Informe a cidade"
+            //@ts-ignore
             value={personalCity}
             onChange={onCityChange}
             autoComplete="address-level2"
@@ -299,6 +300,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-4"
             label="Naturalidade"
             placeholder="Informe a naturalidade"
+                      //@ts-ignore
             value={personalBirthCity}
             onChange={onBirthCityChange}
           />
@@ -307,6 +309,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-4"
             label="Empresa"
             placeholder="Onde trabalha"
+                      //@ts-ignore
             value={personalCompany}
             onChange={onCompanyChange}
           />
@@ -315,6 +318,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-3"
             label="Função"
             placeholder="Cargo ou função"
+                      //@ts-ignore
             value={personalJobTitle}
             onChange={onJobTitleChange}
           />
@@ -338,6 +342,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-2"
             label="Renda"
             placeholder="R$ 0,00"
+                      //@ts-ignore
             value={personalIncome}
             onChange={onIncomeChange}
             inputClassName="text-right"
@@ -347,6 +352,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             containerClassName="md:col-span-2"
             label="Outras rendas"
             placeholder="R$ 0,00"
+                      //@ts-ignore
             value={personalOtherIncome}
             onChange={onOtherIncomeChange}
             inputClassName="text-right"
