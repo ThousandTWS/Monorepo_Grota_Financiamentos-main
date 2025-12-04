@@ -19,13 +19,14 @@ export function OperationCard({
   onVehicleCategoryChange,
 }: OperationCardProps) {
   return (
-    <Card className="w-[95%] h-[100%]">
-      <CardHeader className="-mt-5">
-        <div className="flex flex-col gap-2">
-          <h2 className="text-lg font-semibold text-[#134B73]">Operação</h2>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
+    <Card className="w-full h-full">
+      <CardContent className="space-y-5 px-0">
+        <CardHeader className="px-0">
+          <div className="flex flex-col gap-2">
+            <h2 className="text-lg font-semibold text-[#134B73]">Operação</h2>
+          </div>
+        </CardHeader>
+
         <div className="grid gap-4">
           <div className="space-y-2 -mt-2">
             <p className="text-sm font-medium text-[#134B73]">Pessoa</p>

@@ -1,4 +1,3 @@
-import type { ChangeEvent } from "react";
 import { Input } from "@/presentation/ui/input";
 import { Label } from "@/presentation/ui/label";
 import { cn } from "@/lib/utils";
@@ -6,9 +5,6 @@ import { cn } from "@/lib/utils";
 export type LabeledInputProps = {
   id?: string;
   label: string;
-  value: string;
-  onChange: (value: string) => void;
-  onBlur?: () => void;
   placeholder?: string;
   type?: string;
   maxLength?: number;
@@ -22,9 +18,6 @@ export type LabeledInputProps = {
 export function LabeledInput({
   id,
   label,
-  value,
-  onChange,
-  onBlur,
   placeholder,
   type = "text",
   maxLength,
@@ -33,6 +26,7 @@ export function LabeledInput({
   autoComplete,
   disabled,
   readOnly,
+  ...props
 }: LabeledInputProps) {
   return (
     <div className={cn("space-y-2", containerClassName)}>
@@ -44,13 +38,11 @@ export function LabeledInput({
         className={cn("w-full", inputClassName)}
         placeholder={placeholder}
         type={type}
-        value={value}
         maxLength={maxLength}
         autoComplete={autoComplete}
         disabled={disabled}
         readOnly={readOnly}
-        onBlur={onBlur}
-        onChange={(e: ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
+        {...props}
       />
     </div>
   );
