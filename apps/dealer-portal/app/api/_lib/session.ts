@@ -40,6 +40,22 @@ export async function resolveDealerId(
     Authorization: `Bearer ${session.accessToken}`,
   };
 
+  // Tentativa direta usando o próprio usuário autenticado
+  const meDetailsResponse = await fetch(
+    `${API_BASE_URL}/dealers/me/details`,
+    {
+      headers,
+      cache: "no-store",
+    },
+  );
+  if (meDetailsResponse.ok) {
+    const meDetails = await meDetailsResponse.json().catch(() => null);
+    const candidateId = (meDetails as { id?: number })?.id;
+    if (typeof candidateId === "number") {
+      return candidateId;
+    }
+  }
+
   const detailsResponse = await fetch(
     `${API_BASE_URL}/dealers/${session.userId}/details`,
     {

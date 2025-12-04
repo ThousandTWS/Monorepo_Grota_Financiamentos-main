@@ -1,27 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getLogistaApiBaseUrl } from "@/application/server/auth/config";
-import { getLogistaSession, unauthorizedResponse } from "../../../_lib/session";
+import { getLogistaSession, unauthorizedResponse } from "../../_lib/session";
 
 const API_BASE_URL = getLogistaApiBaseUrl();
 
-export async function PUT(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const session = await getLogistaSession();
   if (!session) return unauthorizedResponse();
 
-  let body: unknown;
+  let formData: FormData;
   try {
-    body = await request.json();
+    formData = await request.formData();
   } catch {
-    return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
+    return NextResponse.json(
+      { error: "Envie um arquivo de imagem para a logomarca." },
+      { status: 400 },
+    );
   }
 
-  const upstream = await fetch(`${API_BASE_URL}/dealers/profile/complete`, {
-    method: "PUT",
+  const file = formData.get("file");
+  if (!(file instanceof File)) {
+    return NextResponse.json(
+      { error: "Selecione um arquivo de imagem válido." },
+      { status: 400 },
+    );
+  }
+
+  const upstream = await fetch(`${API_BASE_URL}/dealers/logo`, {
+    method: "POST",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${session.accessToken}`,
     },
-    body: JSON.stringify(body),
+    body: formData,
     cache: "no-store",
   });
 
@@ -30,7 +40,7 @@ export async function PUT(request: NextRequest) {
   if (!upstream.ok) {
     const message =
       (payload as { message?: string; error?: string })?.message ??
-      "Não foi possível atualizar o perfil.";
+      "Não foi possível enviar a logomarca.";
     return NextResponse.json({ error: message }, { status: upstream.status });
   }
 

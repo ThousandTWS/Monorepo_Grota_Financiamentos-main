@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getLogistaApiBaseUrl } from "@/application/server/auth/config";
-import { getLogistaSession, unauthorizedResponse } from "../../../_lib/session";
+import { getAdminApiBaseUrl } from "@/application/server/auth/config";
+import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
 
-const API_BASE_URL = getLogistaApiBaseUrl();
+const API_BASE_URL = getAdminApiBaseUrl();
 
 export async function PUT(request: NextRequest) {
-  const session = await getLogistaSession();
+  const session = await getAdminSession();
   if (!session) return unauthorizedResponse();
 
   let body: unknown;
@@ -15,7 +15,7 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
-  const upstream = await fetch(`${API_BASE_URL}/dealers/profile/complete`, {
+  const upstream = await fetch(`${API_BASE_URL}/auth/change-password`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -30,7 +30,7 @@ export async function PUT(request: NextRequest) {
   if (!upstream.ok) {
     const message =
       (payload as { message?: string; error?: string })?.message ??
-      "Não foi possível atualizar o perfil.";
+      "Não foi possível alterar a senha.";
     return NextResponse.json({ error: message }, { status: upstream.status });
   }
 

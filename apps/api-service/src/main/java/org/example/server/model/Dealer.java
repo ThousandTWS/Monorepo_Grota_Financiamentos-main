@@ -31,6 +31,12 @@ public class Dealer {
     @Column(unique = true, length = 30)
     private String referenceCode;
 
+    @Column(length = 500)
+    private String logoUrl;
+
+    @Column(length = 255)
+    private String logoPublicId;
+
     @Embedded
     private Address address;
 
@@ -125,6 +131,22 @@ public class Dealer {
 
     public void setReferenceCode(String referenceCode) {
         this.referenceCode = referenceCode;
+    }
+
+    public String getLogoUrl() {
+        return logoUrl;
+    }
+
+    public void setLogoUrl(String logoUrl) {
+        this.logoUrl = logoUrl;
+    }
+
+    public String getLogoPublicId() {
+        return logoPublicId;
+    }
+
+    public void setLogoPublicId(String logoPublicId) {
+        this.logoPublicId = logoPublicId;
     }
 
     public Address getAddress() {

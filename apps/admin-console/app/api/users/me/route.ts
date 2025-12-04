@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
 import { getAdminApiBaseUrl } from "@/application/server/auth/config";
+import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
@@ -18,7 +18,9 @@ export async function GET() {
   const payload = await upstream.json().catch(() => null);
 
   if (!upstream.ok) {
-    const message = (payload as { message?: string; error?: string })?.message ?? "Falha ao carregar perfil.";
+    const message =
+      (payload as { message?: string; error?: string })?.message ??
+      "Não foi possível carregar o perfil.";
     return NextResponse.json({ error: message }, { status: upstream.status });
   }
 
@@ -33,7 +35,7 @@ export async function PUT(request: NextRequest) {
   try {
     body = await request.json();
   } catch {
-    return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
+    return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
   const upstream = await fetch(`${API_BASE_URL}/users/me`, {
@@ -49,7 +51,9 @@ export async function PUT(request: NextRequest) {
   const payload = await upstream.json().catch(() => null);
 
   if (!upstream.ok) {
-    const message = (payload as { message?: string; error?: string })?.message ?? "Não foi possível atualizar o perfil.";
+    const message =
+      (payload as { message?: string; error?: string })?.message ??
+      "Não foi possível atualizar o perfil.";
     return NextResponse.json({ error: message }, { status: upstream.status });
   }
 

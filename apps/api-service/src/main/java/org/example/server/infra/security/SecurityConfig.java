@@ -47,6 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents").hasAnyRole("ADMIN", "LOJISTA")
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/documents/*/url").hasAnyRole("ADMIN", "LOJISTA")
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/documents/*/review").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/dealers/logo").hasRole("LOJISTA")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

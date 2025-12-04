@@ -1,17 +1,6 @@
 "use client";
 
 import { Button } from "@/presentation/layout/components/ui/button";
-import { useRouter } from "next/navigation";
-import { MoreHorizontal, Trash2, Eye, } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from
-  "@/presentation/layout/components/ui/dropdown-menu";
 import { StatusBadge } from "./status-badge";
 
 export type Logista = {
@@ -28,161 +17,101 @@ export type Logista = {
 
 type LogistaActionsProps = {
   logista: Logista;
-  onView: (logista: Logista) => void;
-  onDelete: (logista: Logista) => void;
-  onLinkSeller: (logista: Logista) => void;
-  onLinkManager: (logista: Logista) => void;
-  onLinkOperator: (logista: Logista) => void;
+  onOpenActions: (logista: Logista) => void;
 };
 
-export function LogistaActions({
-  logista,
-  onView,
-  onDelete,
-  onLinkSeller,
-  onLinkManager,
-  onLinkOperator,
-}: LogistaActionsProps) {
-  const router = useRouter();
-
-  const handleNavigate = (path: string) => {
-    const params = new URLSearchParams({
-      dealerId: String(logista.id),
-      dealerName: logista.fullName,
-    });
-    router.push(`${path}?${params.toString()}`);
-  };
-
+export function LogistaActions({ logista, onOpenActions }: LogistaActionsProps) {
   return (
-    <DropdownMenu data-oid="8xat6mv">
-      <DropdownMenuTrigger asChild data-oid="puq9q_b">
-        <Button variant="ghost" size="icon" data-oid="s30lt:h">
-          <MoreHorizontal className="size-4" data-oid="gzs5wj7" />
-          <span className="sr-only" data-oid="tmfnits">
-            Abrir menu
-          </span>
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" data-oid="ldr2mjd">
-        <DropdownMenuLabel data-oid="7udh9n_">Ações</DropdownMenuLabel>
-        <DropdownMenuSeparator data-oid="3s.-cik" />
-        <DropdownMenuItem onClick={() => onLinkSeller(logista)} data-oid="add-seller">
-          Adicionar Vendedor
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onLinkManager(logista)} data-oid="add-manager">
-          Adicionar Gestor
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onLinkOperator(logista)} data-oid="add-operator">
-          Adicionar Operador
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => onView(logista)} data-oid="1h.xlk7">
-          <Eye className="size-4 mr-2" data-oid="zteg2rm" />
-          Visualizar
-        </DropdownMenuItem>
-        <DropdownMenuSeparator data-oid=".7-hwtv" />
-        <DropdownMenuItem
-          className="text-destructive focus:text-destructive"
-          onClick={() => onDelete(logista)}
-          data-oid=":0w01:x">
-
-          <Trash2 className="size-4 mr-2" data-oid="qpsyu28" />
-          Excluir
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>);
-
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => onOpenActions(logista)}
+      className="h-8"
+      title="Ações do lojista"
+    >
+      Ações
+    </Button>
+  );
 }
 
 export const getLogistaColumns = (actions: {
-  onView: (logista: Logista) => void;
-  onDelete: (logista: Logista) => void;
-  onLinkSeller: (logista: Logista) => void;
-  onLinkManager: (logista: Logista) => void;
-  onLinkOperator: (logista: Logista) => void;
+  onOpenActions: (logista: Logista) => void;
 }) => [
-    {
-      key: "referenceCode",
-      header: "Código Ref.",
-      cell: (logista: Logista) =>
-        <div className="font-mono text-sm" data-oid="refCode">
-          {logista.referenceCode || "--"}
-        </div>
-    },
-    {
-      key: "fullName",
-      header: "Nome",
-      cell: (logista: Logista) =>
-        <div className="font-medium" data-oid="prv:wgx">
-          {logista.fullName}
-        </div>
-
-    },
-    {
-      key: "enterprise",
-      header: "Empresa",
-      cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid="c6-jzwr">
-          {logista.enterprise}
-        </div>
-    },
-    {
-      key: "razaoSocial",
-      header: "Razão Social",
-      cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid="razao">
-          {logista.razaoSocial || "--"}
-        </div>
-    },
-    {
-      key: "cnpj",
-      header: "CNPJ",
-      cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid="cnpj">
-          {logista.cnpj || "--"}
-        </div>
-    },
-    {
-      key: "telefone",
-      header: "Telefone",
-      cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid="ao67jhu">
-          {logista.phone}
-        </div>
-
-    },
-    {
-      key: "status",
-      header: "Status",
-      cell: (logista: Logista) => {
-        return (
-         <StatusBadge status={logista.status} />
-          );
-
-      }
-    },
-    {
-      key: "dataRegistro",
-      header: "Data de Registro",
-      cell: (logista: Logista) =>
-        <div className="text-muted-foreground" data-oid=":_wr2bt">
-          {logista.createdAt
-            ? new Date(logista.createdAt).toLocaleDateString("pt-BR")
-            : "--"}
-        </div>
-
-    },
-    {
-      key: "acoes",
-      header: "Ações",
-      cell: (logista: Logista) =>
-        <LogistaActions
-          logista={logista}
-          onView={actions.onView}
-          onDelete={actions.onDelete}
-          onLinkSeller={actions.onLinkSeller}
-          onLinkManager={actions.onLinkManager}
-          onLinkOperator={actions.onLinkOperator}
-          data-oid="j-ksfjm" />
-
-
-    }];
+  {
+    key: "referenceCode",
+    header: "Código Ref.",
+    cell: (logista: Logista) => (
+      <div className="font-mono text-sm" data-oid="refCode">
+        {logista.referenceCode || "--"}
+      </div>
+    ),
+  },
+  {
+    key: "fullName",
+    header: "Nome",
+    cell: (logista: Logista) => (
+      <div className="font-medium" data-oid="prv:wgx">
+        {logista.fullName}
+      </div>
+    ),
+  },
+  {
+    key: "enterprise",
+    header: "Empresa",
+    cell: (logista: Logista) => (
+      <div className="text-muted-foreground" data-oid="c6-jzwr">
+        {logista.enterprise}
+      </div>
+    ),
+  },
+  {
+    key: "razaoSocial",
+    header: "Razão Social",
+    cell: (logista: Logista) => (
+      <div className="text-muted-foreground" data-oid="razao">
+        {logista.razaoSocial || "--"}
+      </div>
+    ),
+  },
+  {
+    key: "cnpj",
+    header: "CNPJ",
+    cell: (logista: Logista) => (
+      <div className="text-muted-foreground" data-oid="cnpj">
+        {logista.cnpj || "--"}
+      </div>
+    ),
+  },
+  {
+    key: "telefone",
+    header: "Telefone",
+    cell: (logista: Logista) => (
+      <div className="text-muted-foreground" data-oid="ao67jhu">
+        {logista.phone}
+      </div>
+    ),
+  },
+  {
+    key: "status",
+    header: "Status",
+    cell: (logista: Logista) => <StatusBadge status={logista.status} />,
+  },
+  {
+    key: "dataRegistro",
+    header: "Data de Registro",
+    cell: (logista: Logista) => (
+      <div className="text-muted-foreground" data-oid=":_wr2bt">
+        {logista.createdAt
+          ? new Date(logista.createdAt).toLocaleDateString("pt-BR")
+          : "--"}
+      </div>
+    ),
+  },
+  {
+    key: "acoes",
+    header: "Ações",
+    cell: (logista: Logista) => (
+      <LogistaActions logista={logista} onOpenActions={actions.onOpenActions} data-oid="j-ksfjm" />
+    ),
+  },
+];

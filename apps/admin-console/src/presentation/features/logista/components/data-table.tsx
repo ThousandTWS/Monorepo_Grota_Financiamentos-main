@@ -11,7 +11,7 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw } from "lucide-react";
+import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw, Eye, Users, UserPlus, UserCog, UserPlus2, Trash2, Unlink } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -51,7 +51,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/presentation/layout/components/ui/dialog";
+import { Badge } from "@/presentation/layout/components/ui/badge";
+import { Separator } from "@/presentation/layout/components/ui/separator";
+import { Card, CardContent } from "@/presentation/layout/components/ui/card";
 
 interface DataTableProps {
   data: Logista[];
@@ -72,13 +76,22 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [linkingType, setLinkingType] = useState<"seller" | "manager" | null>(null);
+  const [linkingType, setLinkingType] = useState<"seller" | "manager" | "operator" | null>(null);
+  const [linkAction, setLinkAction] = useState<"link" | "unlink">("link");
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [operators, setOperators] = useState<Operator[]>([]);
   const [isLinking, setIsLinking] = useState(false);
+  const [teamModalOpen, setTeamModalOpen] = useState(false);
+  const [teamLoading, setTeamLoading] = useState(false);
+  const [teamSellers, setTeamSellers] = useState<Seller[]>([]);
+  const [teamManagers, setTeamManagers] = useState<Manager[]>([]);
+  const [teamOperators, setTeamOperators] = useState<Operator[]>([]);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [actionsModalOpen, setActionsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const filteredData = data.filter((logista) => {
     const normalizedSearch = searchTerm.toLowerCase();
@@ -114,8 +127,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   // Ações
   const handleView = (logista: Logista) => {
     setSelectedLogista(logista);
-    setDialogMode("view");
-    setDialogOpen(true);
+    setViewModalOpen(true);
   };
 
   const handleDelete = (logista: Logista) => {
@@ -155,22 +167,47 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     setDialogOpen(true);
   };
 
-  const openLinkModal = async (type: "seller" | "manager" | "operator", logista: Logista) => {
+  const openTeamModal = async (logista: Logista) => {
     setSelectedLogista(logista);
-    //@ts-ignore
+    setTeamModalOpen(true);
+    setTeamLoading(true);
+    try {
+      const [s, m, o] = await Promise.all([
+        getAllSellers(Number(logista.id)),
+        getAllManagers(Number(logista.id)),
+        getAllOperators(Number(logista.id)),
+      ]);
+      setTeamSellers(Array.isArray(s) ? s : []);
+      setTeamManagers(Array.isArray(m) ? m : []);
+      setTeamOperators(Array.isArray(o) ? o : []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Não foi possível carregar a equipe.";
+      toast({ title: "Erro ao buscar equipe", description: message, variant: "destructive" });
+    } finally {
+      setTeamLoading(false);
+    }
+  };
+
+  const openLinkModal = async (
+    type: "seller" | "manager" | "operator",
+    logista: Logista,
+    action: "link" | "unlink" = "link",
+  ) => {
+    setSelectedLogista(logista);
     setLinkingType(type);
+    setLinkAction(action);
     setSelectedLinkId("");
     setLinkModalOpen(true);
 
     try {
       if (type === "seller") {
-        const list = await getAllSellers();
+        const list = await getAllSellers(action === "unlink" ? Number(logista.id) : undefined);
         setSellers(Array.isArray(list) ? list : []);
       } else if (type === "manager") {
-        const list = await getAllManagers();
+        const list = await getAllManagers(action === "unlink" ? Number(logista.id) : undefined);
         setManagers(Array.isArray(list) ? list : []);
       } else {
-        const list = await getAllOperators();
+        const list = await getAllOperators(action === "unlink" ? Number(logista.id) : undefined);
         setOperators(Array.isArray(list) ? list : []);
       }
     } catch {
@@ -186,20 +223,48 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     if (!linkingType || !selectedLogista || !selectedLinkId) return;
     setIsLinking(true);
     try {
+      const targetDealerId = linkAction === "unlink" ? null : Number(selectedLogista.id);
       if (linkingType === "seller") {
-        await linkSellerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Vendedor vinculado!", description: "Vendedor associado à loja." });
+        await linkSellerToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Vendedor desvinculado!" : "Vendedor vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O vendedor foi desvinculado da loja."
+              : "Vendedor associado à loja.",
+        });
       } else if (linkingType === "manager") {
-        await linkManagerToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Gestor vinculado!", description: "Gestor associado à loja." });
+        await linkManagerToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Gestor desvinculado!" : "Gestor vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O gestor foi desvinculado da loja."
+              : "Gestor associado à loja.",
+        });
       } else {
-        await linkOperatorToDealer(Number(selectedLinkId), Number(selectedLogista.id));
-        toast({ title: "Operador vinculado!", description: "Operador associado à loja." });
+        await linkOperatorToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Operador desvinculado!" : "Operador vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O operador foi desvinculado da loja."
+              : "Operador associado à loja.",
+        });
       }
       setLinkModalOpen(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Não foi possível vincular.";
-      toast({ title: "Erro ao vincular", description: message, variant: "destructive" });
+      const message =
+        error instanceof Error
+          ? error.message
+          : linkAction === "unlink"
+            ? "Não foi possível desvincular."
+            : "Não foi possível vincular.";
+      toast({
+        title: linkAction === "unlink" ? "Erro ao desvincular" : "Erro ao vincular",
+        description: message,
+        variant: "destructive",
+      });
     } finally {
       setIsLinking(false);
     }
@@ -272,11 +337,10 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   };
 
   const columns = getLogistaColumns({
-    onView: handleView,
-    onDelete: handleDelete,
-    onLinkSeller: (logista) => openLinkModal("seller", logista),
-    onLinkManager: (logista) => openLinkModal("manager", logista),
-    onLinkOperator: (logista) => openLinkModal("operator", logista),
+    onOpenActions: (logista) => {
+      setSelectedLogista(logista);
+      setActionsModalOpen(true);
+    },
   });
 
   return (
@@ -497,29 +561,88 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
       {/* Modais */}
       {dialogMode === "view" && (
-        <LogistaDialog
-          logista={selectedLogista}
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onSave={handleSave}
-          mode={dialogMode}
-          isSubmitting={isSaving}
-          data-oid="tiu-a96"
-        />
+        <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
+          <DialogContent className="max-w-3xl">
+            <DialogHeader>
+              <DialogTitle className="sr-only">Visualizar lojista</DialogTitle>
+            </DialogHeader>
+            <Card className="border-none shadow-none">
+              <div className="rounded-2xl bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white p-5 border border-white/10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-[0.25em] text-white/70">
+                      Loja • {selectedLogista?.referenceCode || "--"}
+                    </p>
+                    <h2 className="text-2xl font-bold leading-tight">
+                      {selectedLogista?.enterprise || selectedLogista?.fullName || "Lojista"}
+                    </h2>
+                    <div className="flex flex-wrap gap-2 text-sm text-white/85">
+                      <Badge className="bg-white/15 text-white border border-white/30">
+                        Resp.: {selectedLogista?.fullName || "--"}
+                      </Badge>
+                      <Badge className="bg-white/15 text-white border border-white/30">
+                        CNPJ: {selectedLogista?.cnpj || "--"}
+                      </Badge>
+                      {selectedLogista?.status && (
+                        <Badge className="bg-[#0f3c5a] text-white border border-white/20">
+                          {selectedLogista.status}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right text-sm text-white/80 space-y-1">
+                    <div>Código Ref.</div>
+                    <div className="text-lg font-semibold">
+                      {selectedLogista?.referenceCode || "--"}
+                    </div>
+                    <div className="text-xs">
+                      Criado em{" "}
+                      {selectedLogista?.createdAt
+                        ? new Date(selectedLogista.createdAt).toLocaleDateString("pt-BR")
+                        : "--"}
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <CardContent className="pt-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <InfoItem label="Telefone" value={selectedLogista?.phone} />
+                  <InfoItem label="Razão social" value={selectedLogista?.razaoSocial} />
+                  <InfoItem label="Empresa" value={selectedLogista?.enterprise} />
+                  <InfoItem label="Responsável" value={selectedLogista?.fullName} />
+                </div>
+                <Separator />
+                <div className="flex flex-col gap-2">
+                  <p className="text-sm font-semibold text-[#134B73]">Equipe associada</p>
+                  <p className="text-xs text-muted-foreground">
+                    Use o menu de ações para vincular operadores, gestores e vendedores.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+            <DialogFooter>
+              <Button variant="secondary" onClick={() => setViewModalOpen(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {linkingType === "seller" ? "Vincular vendedor" : "Vincular gestor"}
+              {linkAction === "unlink" ? "Desvincular usuário" : "Vincular usuário"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               {selectedLogista
-                ? `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                ? linkAction === "unlink"
+                  ? `Selecione quem deseja remover da loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                  : `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
                 : "Selecione uma loja."}
             </p>
             <Select
@@ -548,15 +671,182 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button variant="outline" onClick={() => setLinkModalOpen(false)}>
               Cancelar
             </Button>
+            {linkAction === "unlink" && (
+              <Button
+                variant="destructive"
+                onClick={handleLink}
+                disabled={isLinking || !selectedLinkId}
+              >
+                {isLinking ? "Removendo..." : "Desvincular"}
+              </Button>
+            )}
+            {linkAction === "link" && (
+              <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
+                {isLinking ? "Salvando..." : "Vincular"}
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={teamModalOpen} onOpenChange={setTeamModalOpen}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Equipe vinculada</DialogTitle>
+            <DialogDescription>
+              Usuários associados à loja{" "}
+              <span className="font-semibold">{selectedLogista?.enterprise ?? selectedLogista?.fullName}</span>
+            </DialogDescription>
+          </DialogHeader>
+          {teamLoading ? (
+            <div className="py-6 text-sm text-muted-foreground">Carregando equipe...</div>
+          ) : (
+            <div className="space-y-4">
+              <TeamList title="Operadores" items={teamOperators} emptyLabel="Nenhum operador vinculado" />
+              <Separator />
+              <TeamList title="Gestores" items={teamManagers} emptyLabel="Nenhum gestor vinculado" />
+              <Separator />
+              <TeamList title="Vendedores" items={teamSellers} emptyLabel="Nenhum vendedor vinculado" />
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setTeamModalOpen(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={actionsModalOpen} onOpenChange={setActionsModalOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Ações do lojista</DialogTitle>
+            <DialogDescription>
+              Escolha uma ação para{" "}
+              <span className="font-semibold">
+                {selectedLogista?.enterprise ?? selectedLogista?.fullName ?? "a loja"}
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (selectedLogista) openTeamModal(selectedLogista);
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Users className="size-4 mr-2" /> Equipe vinculada
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <UserPlus className="size-4 mr-2" /> Adicionar vendedor
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <UserCog className="size-4 mr-2" /> Adicionar gestor
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <UserPlus2 className="size-4 mr-2" /> Adicionar operador
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) handleView(selectedLogista);
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Eye className="size-4 mr-2" /> Visualizar
+            </Button>
             <Button
               variant="destructive"
-              onClick={handleUnlink}
-              disabled={isLinking || !selectedLinkId}
+              onClick={() => {
+                if (selectedLogista) setDeleteModalOpen(true);
+              }}
+              className="justify-start"
             >
-              {isLinking ? "Removendo..." : "Desvincular"}
+              <Trash2 className="size-4 mr-2" /> Excluir
             </Button>
-            <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
-              {isLinking ? "Salvando..." : "Vincular"}
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular vendedor
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular gestor
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Unlink className="size-4 mr-2" /> Desvincular operador
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir lojista</DialogTitle>
+            <DialogDescription>
+              Esta ação removerá a loja{" "}
+              <span className="font-semibold">{selectedLogista?.enterprise ?? selectedLogista?.fullName}</span>{" "}
+              e os vínculos de equipe associados. Confirme para continuar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="justify-end gap-2">
+            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (selectedLogista) {
+                  handleDelete(selectedLogista);
+                }
+                setDeleteModalOpen(false);
+                setActionsModalOpen(false);
+              }}
+            >
+              Confirmar exclusão
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -564,4 +854,63 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
     </>);
 
+}
+
+type TeamMember = {
+  id?: number;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  status?: string;
+};
+
+function TeamList({
+  title,
+  items,
+  emptyLabel,
+}: {
+  title: string;
+  items: TeamMember[];
+  emptyLabel: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <h4 className="text-sm font-semibold text-[#134B73]">{title}</h4>
+        <Badge variant="secondary" className="bg-[#134B73]/10 text-[#134B73] border-[#134B73]/20">
+          {items.length} {items.length === 1 ? "item" : "itens"}
+        </Badge>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
+      ) : (
+        <div className="grid gap-2 sm:grid-cols-2">
+          {items.map((member) => (
+            <div
+              key={member.id ?? member.email ?? member.fullName}
+              className="rounded-xl border border-slate-200 p-3 shadow-sm bg-white"
+            >
+              <div className="font-medium text-[#134B73]">{member.fullName || "--"}</div>
+              <div className="text-xs text-muted-foreground">{member.email || "sem e-mail"}</div>
+              <div className="text-xs text-muted-foreground">{member.phone || "sem telefone"}</div>
+              {member.status && (
+                <Badge className="mt-2 bg-[#0f3c5a] text-white border border-white/20 w-fit">
+                  {member.status}
+                </Badge>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value?: string | null }) {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-[#134B73]">{value || "--"}</p>
+    </div>
+  );
 }

@@ -181,10 +181,17 @@ public class DealerService {
         return dealerDetailsMapper.toDTO(dealer);
     }
 
+    @Transactional(readOnly = true)
+    public DealerDetailsResponseDTO findDetailDealerByUserId(Long userId) {
+        Dealer dealer = dealerRepository.findByUserId(userId)
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado para o usuário informado."));
+        return dealerDetailsMapper.toDTO(dealer);
+    }
+
     @Transactional
-    public DealerProfileDTO completeProfile(Long id, DealerProfileDTO dealerProfileDTO) {
-        Dealer dealer = dealerRepository.findById(id)
-                .orElseThrow(() -> new RecordNotFoundException(id));
+    public DealerProfileDTO completeProfile(Long userId, DealerProfileDTO dealerProfileDTO) {
+        Dealer dealer = dealerRepository.findByUserId(userId)
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado para o usuário informado."));
 
         dealer.setFullNameEnterprise(dealerProfileDTO.fullNameEnterprise());
         dealer.setBirthData(dealerProfileDTO.birthData());
@@ -226,9 +233,9 @@ public class DealerService {
     }
 
     @Transactional
-    public DealerProfileDTO updateProfile(Long dealerId, DealerProfileDTO dto) {
-        Dealer dealer = dealerRepository.findById(dealerId)
-                .orElseThrow(() -> new RecordNotFoundException(dealerId));
+    public DealerProfileDTO updateProfile(Long userId, DealerProfileDTO dto) {
+        Dealer dealer = dealerRepository.findByUserId(userId)
+                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado para o usuário informado."));
 
         if (dto.fullNameEnterprise() != null) dealer.setFullNameEnterprise(dto.fullNameEnterprise());
         if (dto.birthData() != null) dealer.setBirthData(dto.birthData());
