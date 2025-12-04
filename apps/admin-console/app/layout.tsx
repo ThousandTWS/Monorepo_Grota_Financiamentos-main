@@ -6,6 +6,7 @@ import { SidebarProvider } from "@/application/core/context/SidebarContext";
 import { ThemeProvider } from "@/application/core/context/ThemeContext";
 import { Metadata } from "next";
 import { Toaster } from "sonner";
+import { ToasterProvider } from "@/presentation/layout/components/toasterProvider";
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -30,7 +31,7 @@ export default function RootLayout({
           <ThemeProvider>
             <SidebarProvider>
               {children}
-              <Toaster richColors position="top-right" />
+              <ToasterProvider />
             </SidebarProvider>
           </ThemeProvider>
         </NotificationProvider>
