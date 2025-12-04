@@ -12,6 +12,7 @@ public record DealerDetailsResponseDTO(
         String email,
         String phone,
         String enterprise,
+        String referenceCode,
         String logoUrl,
         UserStatus status,
         String fullNameEnterprise,

@@ -48,6 +48,7 @@ type DealerDetails = DealerProfile & {
   email?: string;
   phone?: string;
   enterprise?: string;
+  referenceCode?: string;
   status?: string;
   createdAt?: string;
   logoUrl?: string;
@@ -123,6 +124,7 @@ function ConfiguracoesPage() {
           email: data.email ?? "",
           phone: data.phone ?? "",
           enterprise: data.enterprise ?? "",
+          referenceCode: data.referenceCode ?? "",
           status: data.status ?? "",
           createdAt: data.createdAt ?? "",
           logoUrl: data.logoUrl ?? "",
@@ -489,8 +491,8 @@ function ConfiguracoesPage() {
           </div>
           <div className="flex flex-col gap-2 rounded-2xl bg-white/10 border border-white/20 p-4 min-w-[260px]">
             <div className="flex items-center justify-between text-sm text-white/80">
-              <span>E-mail</span>
-              <span className="font-semibold">{dealer.email || "--"}</span>
+              <span>Código Ref.</span>
+              <span className="font-semibold">{dealer.referenceCode || "--"}</span>
             </div>
             <Separator className="bg-white/20" />
             <div className="flex items-center justify-between text-sm text-white/80">
