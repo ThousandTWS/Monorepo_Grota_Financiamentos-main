@@ -1,7 +1,6 @@
 package org.example.server.dto.address;
 
 import org.example.server.model.Address;
-import org.example.server.dto.address.AdminAddressDTO;
 import org.springframework.stereotype.Component;
 
 @Component

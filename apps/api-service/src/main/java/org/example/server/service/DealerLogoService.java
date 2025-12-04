@@ -37,6 +37,7 @@ public class DealerLogoService {
         this.cloudinary = cloudinary;
     }
 
+    @SuppressWarnings("unchecked")
     @Transactional
     public DealerLogoResponseDTO uploadLogo(User user, MultipartFile file) {
         if (user == null || user.getRole() != UserRole.LOJISTA) {

@@ -1,7 +1,6 @@
 package org.example.server.dto.document;
 
 import org.example.server.enums.ReviewStatus;
-import org.example.server.model.Dealer;
 import org.example.server.model.Document;
 import org.example.server.model.User;
 import org.springframework.stereotype.Component;

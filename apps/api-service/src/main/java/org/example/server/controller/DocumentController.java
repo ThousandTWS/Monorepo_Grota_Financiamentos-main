@@ -13,7 +13,6 @@ import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
 import org.example.server.enums.DocumentType;
-import org.example.server.model.Dealer;
 import org.example.server.model.User;
 import org.example.server.service.DocumentService;
 import org.springframework.http.ResponseEntity;

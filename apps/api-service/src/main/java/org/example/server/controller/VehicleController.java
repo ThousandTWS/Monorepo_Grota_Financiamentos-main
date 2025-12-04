@@ -8,7 +8,6 @@ import jakarta.validation.Valid;
 import org.example.server.dto.vehicle.VehicleRequestDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
 import org.example.server.dto.vehicle.VehicleStatusUpdateDTO;
-import org.example.server.enums.VehicleStatus;
 import org.example.server.model.User;
 import org.example.server.service.VehicleService;
 import org.springframework.http.HttpStatus;

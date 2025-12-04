@@ -1,6 +1,5 @@
 package org.example.server.dto.seller;
 
-import org.example.server.dto.address.AddressDTO;
 import org.example.server.enums.UserStatus;
 
 import java.time.LocalDate;
