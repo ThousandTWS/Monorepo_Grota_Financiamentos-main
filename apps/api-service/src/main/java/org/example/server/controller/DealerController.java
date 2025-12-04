@@ -90,6 +90,24 @@ public class DealerController {
         return ResponseEntity.ok().body(dealer);
     }
 
+    @GetMapping("/me/details")
+    @Operation(
+            summary = "Perfil completo do lojista autenticado",
+            description = "Retorna o perfil completo do lojista vinculado ao usuário autenticado."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Perfil completo retornado com sucesso"),
+            @ApiResponse(responseCode = "404", description = "Lojista não encontrado para o usuário autenticado"),
+            @ApiResponse(responseCode = "401", description = "Não Autorizado"),
+            @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
+    })
+    public ResponseEntity<DealerDetailsResponseDTO> findDetailsDealerForCurrentUser(
+            @AuthenticationPrincipal(expression = "id") Long userId
+    ){
+        DealerDetailsResponseDTO dealerDetails = dealerService.findDetailDealerByUserId(userId);
+        return ResponseEntity.ok(dealerDetails);
+    }
+
     @GetMapping("/{id}/documents")
     @Operation(
             summary = "Obter documentos",

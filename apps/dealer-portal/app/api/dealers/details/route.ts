@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { getLogistaSession, unauthorizedResponse } from "../../_lib/session";
+import {
+  getLogistaSession,
+  resolveDealerId,
+  unauthorizedResponse,
+} from "../../_lib/session";
 import { getLogistaApiBaseUrl } from "@/application/server/auth/config";
 
 const API_BASE_URL = getLogistaApiBaseUrl();
@@ -8,7 +12,12 @@ export async function GET() {
   const session = await getLogistaSession();
   if (!session) return unauthorizedResponse();
 
-  const upstream = await fetch(`${API_BASE_URL}/dealers/${session.userId}/details`, {
+  const dealerId = await resolveDealerId(session);
+  const endpoint = dealerId
+    ? `${API_BASE_URL}/dealers/${dealerId}/details`
+    : `${API_BASE_URL}/dealers/me/details`;
+
+  const upstream = await fetch(endpoint, {
     headers: {
       Authorization: `Bearer ${session.accessToken}`,
     },
