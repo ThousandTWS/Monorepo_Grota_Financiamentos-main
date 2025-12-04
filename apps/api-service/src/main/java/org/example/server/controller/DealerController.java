@@ -7,17 +7,23 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.example.server.dto.dealer.DealerAdminRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerDetailsResponseDTO;
+import org.example.server.dto.dealer.DealerLogoResponseDTO;
+import org.example.server.dto.dealer.DealerLogoUploadRequest;
 import org.example.server.dto.dealer.DealerProfileDTO;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
 import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
+import org.example.server.model.User;
 import org.example.server.service.DealerService;
+import org.example.server.service.DealerLogoService;
 import org.example.server.service.VehicleService;
+import org.springframework.http.MediaType;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 import java.util.List;
 
@@ -28,10 +34,12 @@ public class DealerController {
 
     private final DealerService dealerService;
     private final VehicleService vehicleService;
+    private final DealerLogoService dealerLogoService;
 
-    public DealerController(DealerService dealerService, VehicleService vehicleService) {
+    public DealerController(DealerService dealerService, VehicleService vehicleService, DealerLogoService dealerLogoService) {
         this.dealerService = dealerService;
         this.vehicleService = vehicleService;
+        this.dealerLogoService = dealerLogoService;
     }
 
     @PostMapping("/admin-register")
@@ -164,6 +172,36 @@ public class DealerController {
     public ResponseEntity<DealerProfileDTO> updateProfile(@AuthenticationPrincipal(expression = "id") Long userId, @Valid @RequestBody DealerProfileDTO dto) {
         DealerProfileDTO updated = dealerService.updateProfile(userId, dto);
         return ResponseEntity.ok(updated);
+    }
+
+    @PostMapping(value = "/logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "Upload da logomarca do lojista",
+            description = "Permite ao lojista enviar uma nova logomarca para o painel.",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            mediaType = MediaType.MULTIPART_FORM_DATA_VALUE,
+                            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = DealerLogoUploadRequest.class)
+                    )
+            )
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Logomarca atualizada com sucesso",
+                    content = @io.swagger.v3.oas.annotations.media.Content(
+                            schema = @io.swagger.v3.oas.annotations.media.Schema(implementation = DealerLogoResponseDTO.class)
+                    )),
+            @ApiResponse(responseCode = "400", description = "Arquivo inválido"),
+            @ApiResponse(responseCode = "401", description = "Não autorizado"),
+            @ApiResponse(responseCode = "403", description = "Usuário sem permissão para alterar a logomarca"),
+            @ApiResponse(responseCode = "500", description = "Erro ao enviar a imagem para o Cloudinary")
+    })
+    public ResponseEntity<DealerLogoResponseDTO> uploadLogo(
+            @AuthenticationPrincipal User user,
+            @ModelAttribute DealerLogoUploadRequest uploadRequest
+    ) {
+        DealerLogoResponseDTO response = dealerLogoService.uploadLogo(user, uploadRequest.getFile());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}/details")

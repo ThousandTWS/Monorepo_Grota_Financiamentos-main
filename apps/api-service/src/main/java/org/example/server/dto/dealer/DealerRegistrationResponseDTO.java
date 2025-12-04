@@ -12,6 +12,7 @@ public record DealerRegistrationResponseDTO(
         String referenceCode,
         String phone,
         String enterprise,
+        String logoUrl,
         UserStatus status,
         LocalDateTime createdAt
 ){} 

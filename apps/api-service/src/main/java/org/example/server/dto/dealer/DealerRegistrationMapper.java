@@ -22,6 +22,7 @@ public class DealerRegistrationMapper {
                 dealer.getReferenceCode(),
                 dealer.getPhone(),
                 dealer.getEnterprise(),
+                dealer.getLogoUrl(),
                 dealer.getUser().getVerificationStatus(),
                 dealer.getUser().getCreatedAt()
         );
