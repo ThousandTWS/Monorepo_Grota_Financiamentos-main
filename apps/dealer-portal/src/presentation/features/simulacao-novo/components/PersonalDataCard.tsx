@@ -7,109 +7,27 @@ import { LabeledSelect } from "./LabeledSelect";
 import { Input } from "@/presentation/ui/input";
 import { CalendarDays } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
+import { useEffect } from "react";
 
 type PersonalDataCardProps = {
-  personalCpf: string;
-  onCpfChange: (value: string) => void;
-  personalEmail: string;
-  onEmailChange: (value: string) => void;
-  personalPhone: string;
-  onPhoneChange: (value: string) => void;
-  personalMother: string;
-  onMotherChange: (value: string) => void;
-  personalCivilStatus: string;
-  onCivilStatusChange: (value: string) => void;
-  personalHasCnh: boolean;
-  onHasCnhChange: (value: boolean) => void;
-  personalCategoryCnh: string;
-  onCategoryCnhChange: (value: string) => void;
-  personalZip: string;
   onZipChange: (value: string) => void;
-  personalAddress: string;
-  onAddressChange: (value: string) => void;
-  personalNumber: string;
-  onNumberChange: (value: string) => void;
-  personalComplement: string;
-  onComplementChange: (value: string) => void;
-  personalPartnerName: string;
-  onPartnerNameChange: (value: string) => void;
-  personalCompanyName: string;
-  onCompanyNameChange: (value: string) => void;
-  personalNeighborhood: string;
-  onNeighborhoodChange: (value: string) => void;
-  personalBirthUf: string;
-  onBirthUfChange: (value: string) => void;
-  personalCity: string;
-  onCityChange: (value: string) => void;
-  personalBirthCity: string;
-  onBirthCityChange: (value: string) => void;
-  privacyConsent: boolean;
-  onPrivacyConsentChange: (value: boolean) => void;
-  ufCapitals: Record<string, string>;
-  personalCompany: string;
-  onCompanyChange: (value: string) => void;
-  personalJobTitle: string;
-  onJobTitleChange: (value: string) => void;
-  personalAdmissionDate: string;
-  onAdmissionDateChange: (value: string) => void;
-  personalIncome: string;
-  onIncomeChange: (value: string) => void;
-  personalOtherIncome: string;
-  onOtherIncomeChange: (value: string) => void;
 };
 
 export function PersonalDataCard(props: PersonalDataCardProps) {
   const {
-    personalCpf,
-    onCpfChange,
-    personalEmail,
-    onEmailChange,
-    personalPhone,
-    onPhoneChange,
-    personalMother,
-    onMotherChange,
-    personalCivilStatus,
-    onCivilStatusChange,
-    personalHasCnh,
-    onHasCnhChange,
-    personalCategoryCnh,
-    onCategoryCnhChange,
-    personalZip,
     onZipChange,
-    personalAddress,
-    onAddressChange,
-    personalNumber,
-    onNumberChange,
-    personalComplement,
-    onComplementChange,
-    personalPartnerName,
-    onPartnerNameChange,
-    personalCompanyName,
-    onCompanyNameChange,
-    personalNeighborhood,
-    onNeighborhoodChange,
-    personalBirthUf,
-    onBirthUfChange,
-    personalCity,
-    onCityChange,
-    personalBirthCity,
-    onBirthCityChange,
-    privacyConsent,
-    onPrivacyConsentChange,
-    ufCapitals,
-    personalCompany,
-    onCompanyChange,
-    personalJobTitle,
-    onJobTitleChange,
-    personalAdmissionDate,
-    onAdmissionDateChange,
-    personalIncome,
-    onIncomeChange,
-    personalOtherIncome,
-    onOtherIncomeChange,
   } = props;
 
-  const { register, watch, setValue, control } = useFormContext();
+  const { register, setValue, watch } = useFormContext();
+
+  const hasCnh = watch("hasCNH");
+
+  useEffect(() => {
+    if (!hasCnh) {
+      setValue("categoryCNH", "");
+    }
+  }, [hasCnh, setValue]);
+
 
   return (
     <Card className="w-full">
@@ -145,21 +63,21 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             {...register("phone")}
           />
           <LabeledInput
-            id="personalMother"
+            id="motherName"
             containerClassName="md:col-span-4"
             label="Nome da Mãe"
             placeholder="Digite nome da mãe"
             {...register("motherName")}
           />
           <LabeledInput
-            id="personalPartnerName"
+            id="shareholderName"
             containerClassName="md:col-span-4"
             label="Nome do Sócio"
             placeholder="Informe o nome do sócio"
             {...register("shareholderName")}
           />
           <LabeledInput
-            id="personalCompanyName"
+            id="companyName"
             containerClassName="md:col-span-4"
             label="Nome da Empresa"
             placeholder="Informe a empresa"
@@ -167,7 +85,6 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
           />
           <Controller
             name="maritalStatus"
-            control={control}
             render={({ field }) => (
               <LabeledSelect
                 id="maritalStatus"
@@ -186,32 +103,29 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             )}
           />
           <Controller
-            name="hasCnh"
-            control={control}
+            name="hasCNH"
             render={({ field }) => (
               <div className="space-y-2 md:col-span-4">
-                <Label htmlFor="haveCNH" className="text-[#134B73]">Possui CNH?</Label>
+                <Label htmlFor="hasCNH" className="text-[#134B73]">Possui CNH?</Label>
                 <div className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2">
                   <Switch
-                    id="hasCnh-inline"
+                    id="hasCNH"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
-                  <span className="text-sm text-muted-foreground">{personalHasCnh ? "Sim" : "Não"}</span>
+                  <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "Não"}</span>
                 </div>
               </div>
             )}
           />
           <Controller
             name="categoryCNH"
-            control={control}
-            defaultValue=""
             render={({ field }) => (
               <LabeledSelect
                 containerClassName="md:col-span-3"
                 label="Categoria da CNH"
                 placeholder="Selecione a categoria"
-                disabled={!personalHasCnh}
+                disabled={!hasCnh}
                 value={field.value}
                 onChange={field.onChange}
               >
@@ -230,7 +144,12 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             placeholder="00000-000"
             maxLength={9}
             autoComplete="postal-code"
-            {...register("CEP")}
+            {...register("CEP", {
+              onChange: (e) => {
+                const value = e.target.value;
+                onZipChange(value);
+              }
+            })}
           />
           <LabeledInput
             id="address"
@@ -265,8 +184,6 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
           />
           <Controller
             name="UF"
-            control={control}
-            defaultValue=""
             render={({ field }) => (
               <LabeledSelect
                 containerClassName="md:col-span-2"
@@ -346,19 +263,18 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             inputClassName="text-right"
             {...register("otherIncomes")}
           />
-          <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 px-4 py-3">
+          <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 p-5">
             <Controller
-              name="privacyConsent"
-              control={control}
+              name="acceptLGPD"
               render={({ field }) => (
                 <div className="flex items-start gap-3">
                   <Switch
-                    id="privacyConsent"
+                    id="acceptLGPD"
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
                   <div className="space-y-1">
-                    <Label htmlFor="privacyConsent" className="text-[#134B73] font-semibold">
+                    <Label htmlFor="acceptLGPD" className="text-[#134B73] font-semibold">
                       Consentimento LGPD
                     </Label>
                     <p className="text-sm text-slate-700">
