@@ -5,6 +5,7 @@ import { Label } from "@/presentation/ui/label";
 import { Input } from "@/presentation/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/ui/select";
 import { Ano, Marca, Modelo } from "@/application/services/fipe";
+import { maskBRL } from "@/application/core/utils/masks";
 import { Controller, useFormContext } from "react-hook-form";
 
 type VehicleDataCardProps = {
@@ -37,7 +38,7 @@ export function VehicleDataCard({
   isYearsLoading,
   onLoanTermChange,
 }: VehicleDataCardProps) {
-  const { register, getValues } = useFormContext();
+  const { register, getValues, setValue } = useFormContext();
 
   const [showTermDropdown, setShowTermDropdown] = useState(false);
   const loanTerms = ["12", "24", "36", "48", "60"];
@@ -214,11 +215,28 @@ export function VehicleDataCard({
                     <Label className="text-white text-base font-semibold">Valor Financiado</Label>
                     <Input
                       className="w-full font-bold text-3xl md:text-4xl text-[#134B73] bg-white/95 backdrop-blur-sm h-16 md:h-20 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 focus-visible:scale-[1.02] focus-visible:border-white"
-                      // value={financedValue}
-                      // onChange={(e) => onFinancedValueChange(e.target.value)}
                       placeholder="R$ 0,00"
                       maxLength={18}
-                      {...register("amountFinanced")}
+                      {...register("amountFinanced", {
+                        onChange: (event) => {
+                          const masked = maskBRL(event.target.value);
+                          setValue("amountFinanced", masked);
+                        },
+                      })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white text-base font-semibold">Entrada</Label>
+                    <Input
+                      className="w-full font-bold text-3xl md:text-4xl text-[#134B73] bg-white/95 backdrop-blur-sm h-16 md:h-20 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 focus-visible:scale-[1.02] focus-visible:border-white"
+                      placeholder="R$ 0,00"
+                      maxLength={18}
+                      {...register("downPayment", {
+                        onChange: (event) => {
+                          const masked = maskBRL(event.target.value);
+                          setValue("downPayment", masked);
+                        },
+                      })}
                     />
                   </div>
                   {/* Fazer um select */}

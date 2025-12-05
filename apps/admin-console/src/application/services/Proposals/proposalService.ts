@@ -19,7 +19,7 @@ const ProposalSchema = z.object({
   sellerId: z.coerce.number().nullable().optional(),
   customerName: z.string(),
   customerCpf: z.string(),
-  customerBirthDate: z.string(),
+  customerBirthDate: z.string().nullable(),
   customerEmail: z.string(),
   customerPhone: z.string(),
   cnhCategory: z.string(),
@@ -32,13 +32,40 @@ const ProposalSchema = z.object({
   vehicleYear: z.coerce.number(),
   downPaymentValue: z.coerce.number(),
   financedValue: z.coerce.number(),
+  termMonths: z.coerce.number().nullable().optional(),
+  vehicle0km: z.coerce.boolean().nullable().optional(),
   status: statusSchema,
   notes: z.string().nullable().optional(),
+  maritalStatus: z.string().nullable().optional(),
+  cep: z.string().nullable().optional(),
+  address: z.string().nullable().optional(),
+  addressNumber: z.string().nullable().optional(),
+  addressComplement: z.string().nullable().optional(),
+  neighborhood: z.string().nullable().optional(),
+  uf: z.string().nullable().optional(),
+  city: z.string().nullable().optional(),
+  income: z.coerce.number().nullable().optional(),
+  otherIncomes: z.coerce.number().nullable().optional(),
+  metadata: z.union([z.record(z.string(), z.any()), z.string()]).nullable().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
 
 const ProposalListSchema = z.array(ProposalSchema);
+
+const ProposalEventSchema = z.object({
+  id: z.coerce.number(),
+  proposalId: z.coerce.number(),
+  type: z.string(),
+  statusFrom: statusSchema.nullable().optional(),
+  statusTo: statusSchema.nullable().optional(),
+  note: z.string().nullable().optional(),
+  actor: z.string().nullable().optional(),
+  payload: z.unknown().nullable().optional(),
+  createdAt: z.string(),
+});
+
+const ProposalEventListSchema = z.array(ProposalEventSchema);
 
 const buildQueryString = (filters: ProposalFilters) => {
   const params = new URLSearchParams();
@@ -117,4 +144,20 @@ export const updateProposalStatus = async (
 
   const payloadResponse = await handleResponse<unknown>(response);
   return ProposalSchema.parse(payloadResponse);
+};
+
+export const fetchProposalTimeline = async (
+  proposalId: number,
+): Promise<z.infer<typeof ProposalEventSchema>[]> => {
+  const response = await fetch(
+    `${PROPOSALS_ENDPOINT}/${proposalId}/events`,
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    },
+  );
+
+  const payload = await handleResponse<unknown>(response);
+  return ProposalEventListSchema.parse(Array.isArray(payload) ? payload : []);
 };

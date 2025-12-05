@@ -298,6 +298,7 @@ export default function EsteiraDePropostasFeature() {
       const updated = await updateProposalStatus(proposal.id, {
         status: nextStatus,
         notes: proposal.notes ?? undefined,
+        actor: "admin-console",
       });
       applyRealtimeSnapshot(updated);
       toast({
@@ -307,6 +308,13 @@ export default function EsteiraDePropostasFeature() {
       dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_STATUS_UPDATED, {
         proposal: updated,
         source: ADMIN_PROPOSALS_IDENTITY,
+      });
+      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_EVENT_APPENDED, {
+        proposalId: proposal.id,
+        statusFrom: proposal.status,
+        statusTo: nextStatus,
+        actor: "admin-console",
+        note: proposal.notes ?? null,
       });
     } catch (error) {
       console.error("[Admin Esteira] Falha ao atualizar status", error);

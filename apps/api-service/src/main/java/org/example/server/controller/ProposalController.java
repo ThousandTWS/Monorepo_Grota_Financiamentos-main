@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.example.server.dto.proposal.ProposalRequestDTO;
 import org.example.server.dto.proposal.ProposalResponseDTO;
 import org.example.server.dto.proposal.ProposalStatusUpdateDTO;
+import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.enums.ProposalStatus;
 import org.example.server.service.ProposalService;
 import org.springframework.http.ResponseEntity;
@@ -41,5 +42,12 @@ public class ProposalController {
             @Valid @RequestBody ProposalStatusUpdateDTO dto
     ) {
         return ResponseEntity.ok(proposalService.updateStatus(id, dto));
+    }
+
+    @GetMapping("/{id}/events")
+    public ResponseEntity<List<ProposalEventResponseDTO>> timeline(
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(proposalService.listEvents(id));
     }
 }

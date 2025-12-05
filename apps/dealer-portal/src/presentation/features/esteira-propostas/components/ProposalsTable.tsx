@@ -11,6 +11,7 @@ import { ScrollArea } from "@/presentation/ui/scroll-area";
 import { Skeleton } from "@/presentation/ui/skeleton";
 import { Clock3 } from "lucide-react";
 import { StatusBadge } from "./status-badge";
+import { ProposalTimelineSheet } from "./ProposalTimelineSheet";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
@@ -154,6 +155,7 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                           <p className="text-xs font-semibold uppercase">
                             Equipe Grota
                           </p>
+                          <ProposalTimelineSheet proposalId={proposal.id} />
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">

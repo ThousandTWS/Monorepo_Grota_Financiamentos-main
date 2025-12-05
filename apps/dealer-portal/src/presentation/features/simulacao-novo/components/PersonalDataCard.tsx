@@ -38,6 +38,28 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
     
         <div className="grid gap-4 md:grid-cols-12">
           <LabeledInput
+            id="fullName"
+            containerClassName="md:col-span-6"
+            label="Nome completo"
+            placeholder="Informe o nome completo"
+            autoComplete="name"
+            {...register("fullName")}
+          />
+          <div className="space-y-2 md:col-span-3">
+            <Label htmlFor="birthDate" className="text-[#134B73]">
+              Data de nascimento
+            </Label>
+            <div className="relative">
+              <Input
+                id="birthDate"
+                type="date"
+                className="w-full pr-10 cursor-pointer"
+                {...register("birthDate")}
+              />
+              <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
+            </div>
+          </div>
+          <LabeledInput
             containerClassName="md:col-span-3"
             label="CPF/CNPJ"
             placeholder="Digite seu CPF ou CNPJ"

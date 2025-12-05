@@ -1,5 +1,6 @@
 package org.example.server.service;
 
+import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.dto.proposal.ProposalRequestDTO;
 import org.example.server.dto.proposal.ProposalResponseDTO;
 import org.example.server.dto.proposal.ProposalStatusUpdateDTO;
@@ -7,8 +8,10 @@ import org.example.server.enums.ProposalStatus;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
 import org.example.server.model.Proposal;
+import org.example.server.model.ProposalEvent;
 import org.example.server.model.Seller;
 import org.example.server.repository.DealerRepository;
+import org.example.server.repository.ProposalEventRepository;
 import org.example.server.repository.ProposalRepository;
 import org.example.server.repository.SellerRepository;
 import org.springframework.stereotype.Service;
@@ -23,15 +26,18 @@ public class ProposalService {
     private final ProposalRepository proposalRepository;
     private final DealerRepository dealerRepository;
     private final SellerRepository sellerRepository;
+    private final ProposalEventRepository proposalEventRepository;
 
     public ProposalService(
             ProposalRepository proposalRepository,
             DealerRepository dealerRepository,
-            SellerRepository sellerRepository
+            SellerRepository sellerRepository,
+            ProposalEventRepository proposalEventRepository
     ) {
         this.proposalRepository = proposalRepository;
         this.dealerRepository = dealerRepository;
         this.sellerRepository = sellerRepository;
+        this.proposalEventRepository = proposalEventRepository;
     }
 
     @Transactional
@@ -39,6 +45,7 @@ public class ProposalService {
         Proposal proposal = new Proposal();
         applyRequestData(proposal, dto);
         Proposal saved = proposalRepository.save(proposal);
+        appendEvent(saved, "CREATED", null, saved.getStatus(), "system", dto.notes(), dto.metadata());
         return toResponse(saved);
     }
 
@@ -69,13 +76,27 @@ public class ProposalService {
         @SuppressWarnings("null")
         Proposal proposal = proposalRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException("Proposta não encontrada"));
+        ProposalStatus previousStatus = proposal.getStatus();
         if (dto.status() != null) {
             proposal.setStatus(dto.status());
         }
         if (dto.notes() != null) {
             proposal.setNotes(dto.notes());
         }
-        return toResponse(proposalRepository.save(proposal));
+        Proposal saved = proposalRepository.save(proposal);
+        appendEvent(saved, "STATUS_UPDATED", previousStatus, saved.getStatus(), dto.actor(), dto.notes(), null);
+        return toResponse(saved);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProposalEventResponseDTO> listEvents(Long proposalId) {
+        @SuppressWarnings("null")
+        Proposal proposal = proposalRepository.findById(proposalId)
+                .orElseThrow(() -> new RecordNotFoundException("Proposta não encontrada"));
+        return proposalEventRepository.findByProposalOrderByCreatedAtAsc(proposal)
+                .stream()
+                .map(this::toEventResponse)
+                .toList();
     }
 
     private void applyRequestData(Proposal proposal, ProposalRequestDTO dto) {
@@ -107,7 +128,20 @@ public class ProposalService {
         proposal.setVehicleYear(dto.vehicleYear());
         proposal.setDownPaymentValue(dto.downPaymentValue());
         proposal.setFinancedValue(dto.financedValue());
+        proposal.setTermMonths(dto.termMonths());
+        proposal.setVehicle0km(Boolean.TRUE.equals(dto.vehicle0km()));
         proposal.setNotes(dto.notes());
+        proposal.setMaritalStatus(dto.maritalStatus());
+        proposal.setCep(dto.cep());
+        proposal.setAddress(dto.address());
+        proposal.setAddressNumber(dto.addressNumber());
+        proposal.setAddressComplement(dto.addressComplement());
+        proposal.setNeighborhood(dto.neighborhood());
+        proposal.setUf(dto.uf());
+        proposal.setCity(dto.city());
+        proposal.setIncome(dto.income());
+        proposal.setOtherIncomes(dto.otherIncomes());
+        proposal.setMetadata(dto.metadata());
     }
 
     private ProposalResponseDTO toResponse(Proposal proposal) {
@@ -130,10 +164,57 @@ public class ProposalService {
                 proposal.getVehicleYear(),
                 proposal.getDownPaymentValue(),
                 proposal.getFinancedValue(),
+                proposal.getTermMonths(),
+                proposal.getVehicle0km(),
                 proposal.getStatus(),
                 proposal.getNotes(),
+                proposal.getMaritalStatus(),
+                proposal.getCep(),
+                proposal.getAddress(),
+                proposal.getAddressNumber(),
+                proposal.getAddressComplement(),
+                proposal.getNeighborhood(),
+                proposal.getUf(),
+                proposal.getCity(),
+                proposal.getIncome(),
+                proposal.getOtherIncomes(),
+                proposal.getMetadata(),
                 proposal.getCreatedAt(),
                 proposal.getUpdatedAt()
         );
+    }
+
+    private ProposalEventResponseDTO toEventResponse(ProposalEvent event) {
+        return new ProposalEventResponseDTO(
+                event.getId(),
+                event.getProposal() != null ? event.getProposal().getId() : null,
+                event.getType(),
+                event.getStatusFrom(),
+                event.getStatusTo(),
+                event.getNote(),
+                event.getActor(),
+                event.getPayload(),
+                event.getCreatedAt()
+        );
+    }
+
+    private void appendEvent(
+            Proposal proposal,
+            String type,
+            ProposalStatus statusFrom,
+            ProposalStatus statusTo,
+            String actor,
+            String note,
+            String payload
+    ) {
+        ProposalEvent event = new ProposalEvent();
+        event.setProposal(proposal);
+        event.setType(type);
+        event.setStatusFrom(statusFrom);
+        event.setStatusTo(statusTo);
+        event.setActor(actor != null ? actor : "system");
+        event.setNote(note);
+        event.setPayload(payload);
+        proposalEventRepository.save(event);
     }
 }

@@ -18,6 +18,7 @@ import {
 } from "@/presentation/layout/components/ui/select";
 import { Clock3 } from "lucide-react";
 import { StatusBadge } from "../../logista/components/status-badge";
+import { ProposalTimelineSheet } from "./ProposalTimelineSheet";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
@@ -163,6 +164,7 @@ export function ProposalsTable({
                           <p className="text-xs font-semibold uppercase">
                             Operações Grota
                           </p>
+                          <ProposalTimelineSheet proposalId={proposal.id} />
                         </div>
                         <Select
                           value={proposal.status}

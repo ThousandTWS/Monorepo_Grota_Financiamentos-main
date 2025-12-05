@@ -21,6 +21,19 @@ public record ProposalRequestDTO(
         Integer vehicleYear,
         BigDecimal downPaymentValue,
         BigDecimal financedValue,
+        Integer termMonths,
+        Boolean vehicle0km,
+        String maritalStatus,
+        String cep,
+        String address,
+        String addressNumber,
+        String addressComplement,
+        String neighborhood,
+        String uf,
+        String city,
+        BigDecimal income,
+        BigDecimal otherIncomes,
+        String metadata,
         String notes
 ) {
 }

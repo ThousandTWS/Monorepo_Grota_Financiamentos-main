@@ -334,7 +334,7 @@ export function EsteiraDePropostasFeature() {
   };
 
   const handleCreate = () => {
-    router.push("/(logista)/simulacao");
+    router.push("/simulacao/novo");
   };
 
   return (

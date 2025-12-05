@@ -65,11 +65,46 @@ public class Proposal {
 
     private BigDecimal financedValue;
 
+    private Integer termMonths;
+
+    private Boolean vehicle0km = false;
+
     @Enumerated(EnumType.STRING)
     private ProposalStatus status = ProposalStatus.SUBMITTED;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
+
+    @Column(length = 40)
+    private String maritalStatus;
+
+    @Column(length = 12)
+    private String cep;
+
+    @Column(length = 160)
+    private String address;
+
+    @Column(length = 20)
+    private String addressNumber;
+
+    @Column(length = 120)
+    private String addressComplement;
+
+    @Column(length = 120)
+    private String neighborhood;
+
+    @Column(length = 4)
+    private String uf;
+
+    @Column(length = 120)
+    private String city;
+
+    private BigDecimal income;
+
+    private BigDecimal otherIncomes;
+
+    @Column(columnDefinition = "TEXT")
+    private String metadata;
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -220,6 +255,22 @@ public class Proposal {
         this.financedValue = financedValue;
     }
 
+    public Integer getTermMonths() {
+        return termMonths;
+    }
+
+    public void setTermMonths(Integer termMonths) {
+        this.termMonths = termMonths;
+    }
+
+    public Boolean getVehicle0km() {
+        return vehicle0km;
+    }
+
+    public void setVehicle0km(Boolean vehicle0km) {
+        this.vehicle0km = vehicle0km;
+    }
+
     public ProposalStatus getStatus() {
         return status;
     }
@@ -234,6 +285,94 @@ public class Proposal {
 
     public void setNotes(String notes) {
         this.notes = notes;
+    }
+
+    public String getMaritalStatus() {
+        return maritalStatus;
+    }
+
+    public void setMaritalStatus(String maritalStatus) {
+        this.maritalStatus = maritalStatus;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public void setCep(String cep) {
+        this.cep = cep;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    public String getAddressNumber() {
+        return addressNumber;
+    }
+
+    public void setAddressNumber(String addressNumber) {
+        this.addressNumber = addressNumber;
+    }
+
+    public String getAddressComplement() {
+        return addressComplement;
+    }
+
+    public void setAddressComplement(String addressComplement) {
+        this.addressComplement = addressComplement;
+    }
+
+    public String getNeighborhood() {
+        return neighborhood;
+    }
+
+    public void setNeighborhood(String neighborhood) {
+        this.neighborhood = neighborhood;
+    }
+
+    public String getUf() {
+        return uf;
+    }
+
+    public void setUf(String uf) {
+        this.uf = uf;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public BigDecimal getIncome() {
+        return income;
+    }
+
+    public void setIncome(BigDecimal income) {
+        this.income = income;
+    }
+
+    public BigDecimal getOtherIncomes() {
+        return otherIncomes;
+    }
+
+    public void setOtherIncomes(BigDecimal otherIncomes) {
+        this.otherIncomes = otherIncomes;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
     }
 
     public LocalDateTime getCreatedAt() {

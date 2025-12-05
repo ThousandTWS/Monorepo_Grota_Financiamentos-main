@@ -1,6 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +15,8 @@ import {
   getModelos,
   getValorVeiculo,
 } from "@/application/services/fipe";
-import { maskCEP, maskBRL, maskPhone, maskCpfCnpj } from "@/application/core/utils/masks";
+import { maskCEP } from "@/application/core/utils/masks";
+import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import {
   OperationCard,
@@ -24,6 +25,14 @@ import {
   VehicleDataCard,
 } from "@/presentation/features/simulacao-novo/components";
 import { Button } from "@/presentation/ui/button";
+import { createProposal } from "@/application/services/Proposals/proposalService";
+import { useRouter } from "next/navigation";
+import {
+  REALTIME_CHANNELS,
+  REALTIME_EVENT_TYPES,
+  dispatchBridgeEvent,
+  useRealtimeChannel,
+} from "@grota/realtime-client";
 
 type BasicOption = {
   id?: number;
@@ -34,7 +43,9 @@ type BasicOption = {
 };
 
 const simulationSchema = z.object({
+  fullName: z.string().min(4, "Nome completo é obrigatório"),
   cpf_cnpj: z.string().min(4, "CPF ou CNPJ é obrigatório"),
+  birthDate: z.string().min(4, "Data de nascimento é obrigatória"),
   email: z.string().min(4, "E-mail é obrigatório"),
   phone: z.string().min(4, "Telefone é obrigatório"),
   motherName: z.string().min(4, "Nome da mãe é obrigatório"),
@@ -64,16 +75,20 @@ const simulationSchema = z.object({
   priceFIPE: z.string().min(1, "Preço FIPE é obrigatório"),
   vehiclePlate: z.string().optional(),
   amountFinanced: z.string().min(4, "Valor financiado é obrigatório"),
+  downPayment: z.string().min(1, "Entrada é obrigatória"),
   termMonths: z.string().min(1, "Prazo em meses é obrigatório"),
 });
 
 type SimulationFormValues = z.infer<typeof simulationSchema>;
 
 export default function SimuladorNovo() {
+  const router = useRouter();
   const methods = useForm<SimulationFormValues>({
     resolver: zodResolver(simulationSchema),
     defaultValues: {
+      fullName: "",
       cpf_cnpj: "",
+      birthDate: "",
       email: "",
       phone: "",
       motherName: "",
@@ -103,6 +118,7 @@ export default function SimuladorNovo() {
       priceFIPE: "",
       vehiclePlate: "",
       amountFinanced: "",
+      downPayment: "",
       termMonths: "",
     },
   });
@@ -125,6 +141,7 @@ export default function SimuladorNovo() {
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [isYearsLoading, setIsYearsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getVehicleTypeId = (category: typeof vehicleCategory) => {
     if (category === "motos") return 2;
@@ -132,6 +149,16 @@ export default function SimuladorNovo() {
     return 1;
   };
   const vehicleTypeId = getVehicleTypeId(vehicleCategory);
+
+  const realtimeUrl = useMemo(
+    () => process.env.NEXT_PUBLIC_REALTIME_WS_URL,
+    [],
+  );
+  const { sendMessage } = useRealtimeChannel({
+    channel: REALTIME_CHANNELS.PROPOSALS,
+    identity: "logista-simulador",
+    url: realtimeUrl,
+  });
 
   const loadBrands = async (category: typeof vehicleCategory) => {
     if (!category) return;
@@ -226,21 +253,88 @@ export default function SimuladorNovo() {
     }
   };
 
-  const onSubmit = (data: SimulationFormValues) => {
-    console.log("🔥 SUBMIT DISPAROU!");
+  const parseCurrency = (value?: string | null) => {
+    if (!value) return 0;
+    const normalized = value
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^0-9.]/g, "");
+    const parsed = Number(normalized);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+    const digits = value.replace(/\D/g, "");
+    return digits ? Number(digits) / 100 : 0;
+  };
+
+  const toNumber = (value?: string | null) => {
+    if (!value) return null;
+    const parsed = Number(value.toString().replace(/\D/g, ""));
+    return Number.isNaN(parsed) ? null : parsed;
+  };
+
+  const onSubmit = async (data: SimulationFormValues) => {
+    setIsSubmitting(true);
     try {
-      console.log("🔥 SUBMIT DISPAROU!");
-      console.log("Form Data:", data);
-      toast(
-        <pre className="mt-2 w-[340px] rounded-md bg-slate-950 p-4">
-          <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-        </pre>,
-      );
+      const payload: CreateProposalPayload = {
+        customerName: data.fullName,
+        customerCpf: data.cpf_cnpj,
+        customerBirthDate: data.birthDate,
+        customerEmail: data.email,
+        customerPhone: data.phone,
+        cnhCategory: data.categoryCNH ?? "",
+        hasCnh: data.hasCNH,
+        vehiclePlate: data.vehiclePlate ?? "",
+        fipeCode: data.priceFIPE ?? "",
+        fipeValue: parseCurrency(data.priceFIPE),
+        vehicleBrand: data.vehicleBrand,
+        vehicleModel: data.vehicleModel,
+        vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
+        downPaymentValue: parseCurrency(data.downPayment),
+        financedValue: parseCurrency(data.amountFinanced),
+        termMonths: toNumber(data.termMonths) ?? undefined,
+        vehicle0km: data.vehicle0KM,
+        maritalStatus: data.maritalStatus,
+        cep: data.CEP,
+        address: data.address,
+        addressNumber: data.addressNumber,
+        addressComplement: data.addressComplement,
+        neighborhood: data.neighborhood,
+        uf: data.UF,
+        city: data.city,
+        income: parseCurrency(data.income),
+        otherIncomes: parseCurrency(data.otherIncomes),
+        metadata: JSON.stringify({
+          personType,
+          operationType,
+          vehicleCategory,
+        }),
+      };
+
+      const proposal = await createProposal(payload);
+      toast.success("Ficha enviada para a esteira.");
+      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
+        proposal,
+        source: "logista-simulador",
+      });
+      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_EVENT_APPENDED, {
+        proposalId: proposal.id,
+        statusFrom: null,
+        statusTo: proposal.status,
+        actor: "logista-simulador",
+      });
+      router.push("/esteira-propostas");
     } catch (error) {
       console.error("Form submission error", error);
-      toast.error("Failed to submit the form. Please try again.");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Falha ao enviar a ficha. Tente novamente.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   useEffect(() => {
     methods.setValue("vehicleBrand", "");
@@ -329,7 +423,9 @@ export default function SimuladorNovo() {
             onLoanTermChange={setLoanTerm}
           />
 
-          <Button type="submit">Enviar</Button>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Enviando..." : "Enviar"}
+          </Button>
         </form>
       </FormProvider>
     </section>
