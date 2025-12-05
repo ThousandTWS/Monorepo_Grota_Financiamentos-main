@@ -67,8 +67,4 @@ public class S3Service {
         s3Client.deleteObject(delReq);
 
     }
-
-
-
-
 }
