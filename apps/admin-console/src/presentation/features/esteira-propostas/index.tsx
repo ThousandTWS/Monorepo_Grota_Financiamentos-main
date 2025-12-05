@@ -281,6 +281,40 @@ export default function EsteiraDePropostasFeature() {
     }));
   };
 
+  const handleExport = async () => {
+    const params = new URLSearchParams();
+    if (filters.status !== "ALL") {
+      params.set("status", filters.status);
+    }
+    if (filters.dealerId) {
+      params.set("dealerId", filters.dealerId);
+    }
+    const query = params.toString();
+    const url = `/api/proposals/export${query ? `?${query}` : ""}`;
+    try {
+      const response = await fetch(url, { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Falha ao exportar CSV.");
+      }
+      const blob = await response.blob();
+      const href = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = href;
+      anchor.download = "propostas.csv";
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(href);
+    } catch (error) {
+      console.error("[Admin Esteira] export", error);
+      toast({
+        title: "Não foi possível exportar",
+        description: error instanceof Error ? error.message : "Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleRefresh = () => {
     loadProposals();
     dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
@@ -304,17 +338,6 @@ export default function EsteiraDePropostasFeature() {
       toast({
         title: "Status atualizado",
         description: `${proposal.customerName} agora está ${statusOptions.find((item) => item.value === nextStatus)?.label}.`,
-      });
-      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_STATUS_UPDATED, {
-        proposal: updated,
-        source: ADMIN_PROPOSALS_IDENTITY,
-      });
-      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_EVENT_APPENDED, {
-        proposalId: proposal.id,
-        statusFrom: proposal.status,
-        statusTo: nextStatus,
-        actor: "admin-console",
-        note: proposal.notes ?? null,
       });
     } catch (error) {
       console.error("[Admin Esteira] Falha ao atualizar status", error);
@@ -350,6 +373,7 @@ export default function EsteiraDePropostasFeature() {
         onFiltersChange={handleFiltersChange}
         onRefresh={handleRefresh}
         onCreate={handleCreate}
+        onExport={handleExport}
         isRefreshing={isRefreshing}
       />
 

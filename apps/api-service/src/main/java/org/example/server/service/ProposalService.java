@@ -1,5 +1,7 @@
 package org.example.server.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.dto.proposal.ProposalRequestDTO;
 import org.example.server.dto.proposal.ProposalResponseDTO;
@@ -19,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class ProposalService {
@@ -27,25 +31,37 @@ public class ProposalService {
     private final DealerRepository dealerRepository;
     private final SellerRepository sellerRepository;
     private final ProposalEventRepository proposalEventRepository;
+    private final RealtimeBridgeClient realtimeBridgeClient;
+    private final ObjectMapper objectMapper;
+
+    private static final String REALTIME_CHANNEL = "proposals-bridge";
+    private static final String REALTIME_SENDER = "api-service";
 
     public ProposalService(
             ProposalRepository proposalRepository,
             DealerRepository dealerRepository,
             SellerRepository sellerRepository,
-            ProposalEventRepository proposalEventRepository
+            ProposalEventRepository proposalEventRepository,
+            RealtimeBridgeClient realtimeBridgeClient,
+            ObjectMapper objectMapper
     ) {
         this.proposalRepository = proposalRepository;
         this.dealerRepository = dealerRepository;
         this.sellerRepository = sellerRepository;
         this.proposalEventRepository = proposalEventRepository;
+        this.realtimeBridgeClient = realtimeBridgeClient;
+        this.objectMapper = objectMapper;
     }
 
     @Transactional
-    public ProposalResponseDTO createProposal(ProposalRequestDTO dto) {
+    public ProposalResponseDTO createProposal(ProposalRequestDTO dto, String originIp) {
         Proposal proposal = new Proposal();
         applyRequestData(proposal, dto);
         Proposal saved = proposalRepository.save(proposal);
-        appendEvent(saved, "CREATED", null, saved.getStatus(), "system", dto.notes(), dto.metadata());
+        String payload = buildPayload(dto.metadata(), originIp, null);
+        appendEvent(saved, "CREATED", null, saved.getStatus(), "system", dto.notes(), payload);
+        publishRealtime("PROPOSAL_CREATED", Map.of("proposal", toResponse(saved)));
+        publishRealtime("PROPOSAL_EVENT_APPENDED", Map.of("proposalId", saved.getId()));
         return toResponse(saved);
     }
 
@@ -72,7 +88,7 @@ public class ProposalService {
 
     @SuppressWarnings("null")
     @Transactional
-    public ProposalResponseDTO updateStatus(Long id, ProposalStatusUpdateDTO dto) {
+    public ProposalResponseDTO updateStatus(Long id, ProposalStatusUpdateDTO dto, String originIp) {
         @SuppressWarnings("null")
         Proposal proposal = proposalRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException("Proposta não encontrada"));
@@ -84,7 +100,10 @@ public class ProposalService {
             proposal.setNotes(dto.notes());
         }
         Proposal saved = proposalRepository.save(proposal);
-        appendEvent(saved, "STATUS_UPDATED", previousStatus, saved.getStatus(), dto.actor(), dto.notes(), null);
+        String payload = buildPayload(null, originIp, dto.actor());
+        appendEvent(saved, "STATUS_UPDATED", previousStatus, saved.getStatus(), dto.actor(), dto.notes(), payload);
+        publishRealtime("PROPOSAL_STATUS_UPDATED", Map.of("proposal", toResponse(saved), "source", dto.actor()));
+        publishRealtime("PROPOSAL_EVENT_APPENDED", Map.of("proposalId", saved.getId(), "statusFrom", previousStatus, "statusTo", saved.getStatus(), "actor", dto.actor()));
         return toResponse(saved);
     }
 
@@ -216,5 +235,30 @@ public class ProposalService {
         event.setNote(note);
         event.setPayload(payload);
         proposalEventRepository.save(event);
+    }
+
+    private void publishRealtime(String event, Map<String, Object> payload) {
+        realtimeBridgeClient.publish(event, payload, REALTIME_CHANNEL, REALTIME_SENDER);
+    }
+
+    private String buildPayload(String metadata, String ip, String actor) {
+        Map<String, Object> map = new HashMap<>();
+        if (metadata != null && !metadata.isBlank()) {
+            map.put("metadata", metadata);
+        }
+        if (ip != null && !ip.isBlank()) {
+            map.put("ip", ip);
+        }
+        if (actor != null && !actor.isBlank()) {
+            map.put("actor", actor);
+        }
+        if (map.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(map);
+        } catch (JsonProcessingException e) {
+            return map.toString();
+        }
     }
 }

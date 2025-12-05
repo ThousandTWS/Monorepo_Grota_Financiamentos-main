@@ -8,7 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/presentation/layout/components/ui/select";
-import { Filter, Plus, RefreshCw, Search } from "lucide-react";
+import { Download, Filter, Plus, RefreshCw, Search } from "lucide-react";
 
 type QueueFiltersProps = {
   filters: {
@@ -24,6 +24,7 @@ type QueueFiltersProps = {
   onFiltersChange: (partial: Partial<QueueFiltersProps["filters"]>) => void;
   onRefresh: () => void;
   onCreate?: () => void;
+  onExport?: () => void;
   isRefreshing?: boolean;
 };
 
@@ -35,6 +36,7 @@ export function QueueFilters({
   onFiltersChange,
   onRefresh,
   onCreate,
+  onExport,
   isRefreshing,
 }: QueueFiltersProps) {
   const handleReset = () => {
@@ -160,6 +162,12 @@ export function QueueFilters({
               <RefreshCw className="size-4" />
               Atualizar
             </Button>
+            {onExport ? (
+              <Button variant="outline" className="gap-2" onClick={onExport}>
+                <Download className="size-4" />
+                Exportar CSV
+              </Button>
+            ) : null}
             {onCreate ? (
               <Button className="gap-2" onClick={onCreate}>
                 <Plus className="size-4" />

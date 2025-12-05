@@ -1,4 +1,5 @@
 const { WebSocketServer, WebSocket } = require("ws");
+const http = require("http");
 const { randomUUID } = require("crypto");
 
 const PORT = Number(process.env.WS_PORT ?? 4545);
@@ -28,7 +29,56 @@ const rooms = new Map();
  * @property {string} connectedAt
  */
 
-const wss = new WebSocketServer({ port: PORT });
+const server = http.createServer(async (req, res) => {
+  if (req.method === "POST" && req.url && req.url.startsWith("/broadcast")) {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString();
+    });
+    req.on("end", () => {
+      try {
+        const parsed = JSON.parse(body || "{}");
+        const channel = parsed.channel || DEFAULT_CHANNEL;
+        const event = parsed.event;
+        const sender = parsed.sender || "backend";
+        const payload = parsed.payload ?? {};
+        if (!event) {
+          res.statusCode = 400;
+          res.end("Missing event");
+          return;
+        }
+        const room = getRoom(channel);
+        const message = {
+          type: "MESSAGE",
+          payload: normalizeMessage(
+            {
+              body: JSON.stringify({ event, payload }),
+              sender,
+              channel,
+              meta: { eventType: event },
+            },
+            { sender, channel }
+          ),
+        };
+        room.history.push(message.payload);
+        room.history = room.history.slice(-HISTORY_LIMIT);
+        broadcast(room, message);
+        res.statusCode = 200;
+        res.end("OK");
+      } catch (error) {
+        console.error("broadcast error", error);
+        res.statusCode = 500;
+        res.end("error");
+      }
+    });
+    return;
+  }
+
+  res.statusCode = 200;
+  res.end("ok");
+});
+
+const wss = new WebSocketServer({ server });
 
 const getRoom = (channel) => {
   if (!rooms.has(channel)) {
@@ -198,6 +248,10 @@ const heartbeat = () => {
 
 const heartbeatInterval = setInterval(heartbeat, HEARTBEAT_INTERVAL);
 heartbeatInterval.unref?.();
+
+server.listen(PORT, () => {
+  console.log(`[realtime] WebSocket + HTTP bridge listening on ${PORT}`);
+});
 
 console.log(
   `[Realtime] Servidor WebSocket iniciado na porta ${PORT} (canal padrão: ${DEFAULT_CHANNEL})`

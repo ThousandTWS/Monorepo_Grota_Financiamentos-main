@@ -1,6 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,12 +27,6 @@ import {
 import { Button } from "@/presentation/ui/button";
 import { createProposal } from "@/application/services/Proposals/proposalService";
 import { useRouter } from "next/navigation";
-import {
-  REALTIME_CHANNELS,
-  REALTIME_EVENT_TYPES,
-  dispatchBridgeEvent,
-  useRealtimeChannel,
-} from "@grota/realtime-client";
 
 type BasicOption = {
   id?: number;
@@ -149,16 +143,6 @@ export default function SimuladorNovo() {
     return 1;
   };
   const vehicleTypeId = getVehicleTypeId(vehicleCategory);
-
-  const realtimeUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_REALTIME_WS_URL,
-    [],
-  );
-  const { sendMessage } = useRealtimeChannel({
-    channel: REALTIME_CHANNELS.PROPOSALS,
-    identity: "logista-simulador",
-    url: realtimeUrl,
-  });
 
   const loadBrands = async (category: typeof vehicleCategory) => {
     if (!category) return;
@@ -313,16 +297,6 @@ export default function SimuladorNovo() {
 
       const proposal = await createProposal(payload);
       toast.success("Ficha enviada para a esteira.");
-      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_CREATED, {
-        proposal,
-        source: "logista-simulador",
-      });
-      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSAL_EVENT_APPENDED, {
-        proposalId: proposal.id,
-        statusFrom: null,
-        statusTo: proposal.status,
-        actor: "logista-simulador",
-      });
       router.push("/esteira-propostas");
     } catch (error) {
       console.error("Form submission error", error);

@@ -24,8 +24,11 @@ public class ProposalController {
     }
 
     @PostMapping
-    public ResponseEntity<ProposalResponseDTO> create(@Valid @RequestBody ProposalRequestDTO dto) {
-        return ResponseEntity.ok(proposalService.createProposal(dto));
+    public ResponseEntity<ProposalResponseDTO> create(
+            @Valid @RequestBody ProposalRequestDTO dto,
+            jakarta.servlet.http.HttpServletRequest request
+    ) {
+        return ResponseEntity.ok(proposalService.createProposal(dto, request.getRemoteAddr()));
     }
 
     @GetMapping
@@ -39,9 +42,10 @@ public class ProposalController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<ProposalResponseDTO> updateStatus(
             @PathVariable Long id,
-            @Valid @RequestBody ProposalStatusUpdateDTO dto
+            @Valid @RequestBody ProposalStatusUpdateDTO dto,
+            jakarta.servlet.http.HttpServletRequest request
     ) {
-        return ResponseEntity.ok(proposalService.updateStatus(id, dto));
+        return ResponseEntity.ok(proposalService.updateStatus(id, dto, request.getRemoteAddr()));
     }
 
     @GetMapping("/{id}/events")
