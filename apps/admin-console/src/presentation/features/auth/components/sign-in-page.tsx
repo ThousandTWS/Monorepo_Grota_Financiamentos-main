@@ -69,11 +69,13 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       if (result.success) {
         toast.success("Login realizado com sucesso!");
         router.push("/visao-geral");
+        return;
       } else if (result.needsVerification) {
         setShowVerification(true);
         toast.message("Código de verificação necessário", {
           description: "Enviamos um código para o e-mail informado.",
         });
+        return;
       }
     } catch (error) {
       const errorMessage = "Erro de conexão. Tente novamente.";
