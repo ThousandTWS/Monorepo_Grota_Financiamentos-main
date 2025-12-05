@@ -37,9 +37,7 @@ type BasicOption = {
 };
 
 const simulationSchema = z.object({
-  fullName: z.string().min(4, "Nome completo é obrigatório"),
   cpf_cnpj: z.string().min(4, "CPF ou CNPJ é obrigatório"),
-  birthDate: z.string().min(4, "Data de nascimento é obrigatória"),
   email: z.string().min(4, "E-mail é obrigatório"),
   phone: z.string().min(4, "Telefone é obrigatório"),
   motherName: z.string().min(4, "Nome da mãe é obrigatório"),
@@ -69,7 +67,6 @@ const simulationSchema = z.object({
   priceFIPE: z.string().min(1, "Preço FIPE é obrigatório"),
   vehiclePlate: z.string().optional(),
   amountFinanced: z.string().min(4, "Valor financiado é obrigatório"),
-  downPayment: z.string().min(1, "Entrada é obrigatória"),
   termMonths: z.string().min(1, "Prazo em meses é obrigatório"),
 });
 
@@ -80,9 +77,7 @@ export default function SimuladorNovo() {
   const methods = useForm<SimulationFormValues>({
     resolver: zodResolver(simulationSchema),
     defaultValues: {
-      fullName: "",
       cpf_cnpj: "",
-      birthDate: "",
       email: "",
       phone: "",
       motherName: "",
@@ -112,7 +107,6 @@ export default function SimuladorNovo() {
       priceFIPE: "",
       vehiclePlate: "",
       amountFinanced: "",
-      downPayment: "",
       termMonths: "",
     },
   });
@@ -261,9 +255,9 @@ export default function SimuladorNovo() {
     setIsSubmitting(true);
     try {
       const payload: CreateProposalPayload = {
-        customerName: data.fullName,
+        customerName: data.shareholderName || data.companyName || "Cliente",
         customerCpf: data.cpf_cnpj,
-        customerBirthDate: data.birthDate,
+        customerBirthDate: null,
         customerEmail: data.email,
         customerPhone: data.phone,
         cnhCategory: data.categoryCNH ?? "",
@@ -274,7 +268,7 @@ export default function SimuladorNovo() {
         vehicleBrand: data.vehicleBrand,
         vehicleModel: data.vehicleModel,
         vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
-        downPaymentValue: parseCurrency(data.downPayment),
+        downPaymentValue: 0,
         financedValue: parseCurrency(data.amountFinanced),
         termMonths: toNumber(data.termMonths) ?? undefined,
         vehicle0km: data.vehicle0KM,
