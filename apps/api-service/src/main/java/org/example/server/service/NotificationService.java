@@ -14,9 +14,11 @@ import java.util.List;
 public class NotificationService {
 
     private final NotificationRepository notificationRepository;
+    private final NotificationStreamService notificationStreamService;
 
-    public NotificationService(NotificationRepository notificationRepository) {
+    public NotificationService(NotificationRepository notificationRepository, NotificationStreamService notificationStreamService) {
         this.notificationRepository = notificationRepository;
+        this.notificationStreamService = notificationStreamService;
     }
 
     @Transactional
@@ -28,7 +30,12 @@ public class NotificationService {
         notification.setTargetType(dto.targetType());
         notification.setTargetId(dto.targetId());
         notification.setHref(dto.href());
-        return toResponse(notificationRepository.save(notification));
+        NotificationResponseDTO response = toResponse(notificationRepository.save(notification));
+
+        // Dispara em tempo real para os assinantes SSE
+        notificationStreamService.broadcast(response);
+
+        return response;
     }
 
     @Transactional(readOnly = true)

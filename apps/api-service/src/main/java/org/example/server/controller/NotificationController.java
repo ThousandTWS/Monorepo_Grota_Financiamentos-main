@@ -4,8 +4,10 @@ import jakarta.validation.Valid;
 import org.example.server.dto.notification.NotificationRequestDTO;
 import org.example.server.dto.notification.NotificationResponseDTO;
 import org.example.server.service.NotificationService;
+import org.example.server.service.NotificationStreamService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
 
@@ -14,9 +16,11 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
+    private final NotificationStreamService notificationStreamService;
 
-    public NotificationController(NotificationService notificationService) {
+    public NotificationController(NotificationService notificationService, NotificationStreamService notificationStreamService) {
         this.notificationService = notificationService;
+        this.notificationStreamService = notificationStreamService;
     }
 
     @PostMapping
@@ -36,5 +40,13 @@ public class NotificationController {
     public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
         notificationService.markAsRead(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping(value = "/stream", produces = "text/event-stream")
+    public SseEmitter stream(
+            @RequestParam String targetType,
+            @RequestParam(required = false) Long targetId
+    ) {
+        return notificationStreamService.register(targetType, targetId);
     }
 }

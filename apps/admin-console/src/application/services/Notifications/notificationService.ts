@@ -8,6 +8,8 @@ export type NotificationItem = {
   href?: string;
   createdAt?: string;
   read?: boolean;
+  // Campo retornado pela API
+  readFlag?: boolean;
 };
 
 async function request<T>(
@@ -40,7 +42,13 @@ export const getNotifications = async (): Promise<NotificationItem[]> => {
   const payload = await request<NotificationItem[]>("/api/notifications", {
     method: "GET",
   });
-  return Array.isArray(payload) ? payload : [];
+  if (!Array.isArray(payload)) return [];
+
+  // Normaliza a resposta do backend (readFlag -> read)
+  return payload.map((item) => ({
+    ...item,
+    read: item.read ?? item.readFlag ?? false,
+  }));
 };
 
 export const markNotificationAsRead = async (id: number): Promise<void> => {

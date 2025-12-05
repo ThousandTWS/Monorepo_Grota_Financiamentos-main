@@ -33,7 +33,7 @@ export async function GET() {
     }
 
     const upstreamResponse = await fetch(
-      `${API_BASE_URL}/notifications?targetType=ADMIN&targetId=${session.userId}`,
+      `${API_BASE_URL}/notifications?targetType=ADMIN`,
       {
         headers: {
           Authorization: `Bearer ${session.accessToken}`,

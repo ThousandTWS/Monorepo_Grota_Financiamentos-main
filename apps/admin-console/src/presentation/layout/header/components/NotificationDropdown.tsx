@@ -9,8 +9,13 @@ import {
   type NotificationItem,
 } from "@/application/services/Notifications/notificationService";
 import { Loader2, Bell } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+const normalizeNotification = (item: NotificationItem): NotificationItem => ({
+  ...item,
+  read: item.read ?? item.readFlag ?? false,
+});
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,7 +32,8 @@ export default function NotificationDropdown() {
     setLoading(true);
     try {
       const data = await getNotifications();
-      setItems(Array.isArray(data) ? data : []);
+      const normalized = Array.isArray(data) ? data.map(normalizeNotification) : [];
+      setItems(normalized);
       setError(null);
     } catch (err) {
       const message =
@@ -42,6 +48,46 @@ export default function NotificationDropdown() {
     load();
     const interval = setInterval(load, 60_000);
     return () => clearInterval(interval);
+  }, []);
+
+  // SSE para novas notificações em tempo real
+  useEffect(() => {
+    let source: EventSource | null = null;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    const connect = () => {
+      source = new EventSource("/api/notifications/stream");
+      source.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data) as NotificationItem;
+          const normalized = normalizeNotification(data);
+
+          setItems((current) => {
+            const without = current.filter((item) => item.id !== normalized.id);
+            return [normalized, ...without].sort((a, b) => {
+              const aDate = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+              const bDate = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+              return bDate - aDate;
+            });
+          });
+        } catch (e) {
+          console.error("Falha ao processar evento SSE de notificação", e);
+        }
+      };
+
+      source.onerror = () => {
+        if (source) source.close();
+        // tenta reconectar após 5s
+        retryTimeout = setTimeout(connect, 5000);
+      };
+    };
+
+    connect();
+
+    return () => {
+      if (source) source.close();
+      if (retryTimeout) clearTimeout(retryTimeout);
+    };
   }, []);
 
   const toggleDropdown = () => setIsOpen((prev) => !prev);
@@ -119,7 +165,12 @@ export default function NotificationDropdown() {
               <span>{item.actor ?? "Sistema"}</span>
               {item.createdAt && (
                 <span>
-                  {formatDistanceToNow(new Date(item.createdAt), {
+                  {/* Mostra horário real e relativo */}
+                  {format(parseISO(item.createdAt), "dd/MM/yyyy HH:mm", {
+                    locale: ptBR,
+                  })}{" "}
+                  ·{" "}
+                  {formatDistanceToNow(parseISO(item.createdAt), {
                     addSuffix: true,
                     locale: ptBR,
                   })}
