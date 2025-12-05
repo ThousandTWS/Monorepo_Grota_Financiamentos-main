@@ -138,7 +138,8 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    const upstreamResponse = await fetch(`${API_BASE_URL}/sellers/${sellerId}/dealer?dealerId=${dealerId}`, {
+    const dealerQuery = dealerId === null || dealerId === undefined ? "" : `?dealerId=${dealerId}`;
+    const upstreamResponse = await fetch(`${API_BASE_URL}/sellers/${sellerId}/dealer${dealerQuery}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${session.accessToken}`,
