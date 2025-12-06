@@ -4,6 +4,7 @@ import {
   REVIEW_STATUSES,
   DocumentRecord,
 } from "@/application/core/@types/Documents/Document";
+import { toPagedResponse } from "@/application/core/@types/pagination";
 
 const DOCUMENTS_ENDPOINT = "/api/documents";
 
@@ -24,7 +25,8 @@ const DocumentSchema = z.object({
 const DocumentListSchema = z.array(DocumentSchema);
 
 export async function fetchDocuments(): Promise<DocumentRecord[]> {
-  const response = await fetch(DOCUMENTS_ENDPOINT, {
+  const params = new URLSearchParams({ page: "0", size: "10" });
+  const response = await fetch(`${DOCUMENTS_ENDPOINT}?${params.toString()}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -39,8 +41,8 @@ export async function fetchDocuments(): Promise<DocumentRecord[]> {
     throw new Error(message);
   }
 
-  const normalized = Array.isArray(payload) ? payload : [];
-  return DocumentListSchema.parse(normalized);
+  const page = toPagedResponse<unknown>(payload);
+  return DocumentListSchema.parse(page.content);
 }
 
 export async function reviewDocument(

@@ -6,6 +6,7 @@ import {
   ProposalStatus,
   UpdateProposalStatusPayload,
 } from "@/application/core/@types/Proposals/Proposal";
+import { PagedResponse, toPagedResponse } from "@/application/core/@types/pagination";
 
 const PROPOSALS_ENDPOINT = "/api/proposals";
 
@@ -53,6 +54,16 @@ const ProposalSchema = z.object({
 
 const ProposalListSchema = z.array(ProposalSchema);
 
+const PagedProposalSchema = z.object({
+  content: ProposalListSchema,
+  totalElements: z.number(),
+  totalPages: z.number(),
+  page: z.number(),
+  size: z.number(),
+  hasNext: z.boolean(),
+  hasPrevious: z.boolean(),
+});
+
 const ProposalEventSchema = z.object({
   id: z.coerce.number(),
   proposalId: z.coerce.number(),
@@ -75,6 +86,12 @@ const buildQueryString = (filters: ProposalFilters) => {
   if (filters.status) {
     params.set("status", filters.status);
   }
+  if (typeof filters.page === "number") {
+    params.set("page", String(filters.page));
+  }
+  if (typeof filters.size === "number") {
+    params.set("size", String(filters.size));
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 };
@@ -92,11 +109,27 @@ async function handleResponse<T>(response: Response): Promise<T> {
   return (payload ?? {}) as T;
 }
 
+const DEFAULT_PAGE_SIZE = 10;
+
 export const fetchProposals = async (
   filters: ProposalFilters = {},
 ): Promise<Proposal[]> => {
+  const paged = await fetchProposalsPaged(filters);
+  return paged.content;
+};
+
+export const fetchProposalsPaged = async (
+  filters: ProposalFilters = {},
+): Promise<PagedResponse<Proposal>> => {
+  const page = typeof filters.page === "number" ? filters.page : 0;
+  const size = typeof filters.size === "number" ? filters.size : DEFAULT_PAGE_SIZE;
+
   const response = await fetch(
-    `${PROPOSALS_ENDPOINT}${buildQueryString(filters)}`,
+    `${PROPOSALS_ENDPOINT}${buildQueryString({
+      page,
+      size,
+      ...filters,
+    })}`,
     {
       method: "GET",
       credentials: "include",
@@ -104,8 +137,17 @@ export const fetchProposals = async (
     },
   );
 
-  const payload = await handleResponse<unknown[]>(response);
-  return ProposalListSchema.parse(payload);
+  const payload = await handleResponse<unknown>(response);
+  const parsed = PagedProposalSchema.safeParse(payload);
+  if (parsed.success) {
+    return parsed.data;
+  }
+
+  const normalized = toPagedResponse<unknown>(payload);
+  return {
+    ...normalized,
+    content: normalized.content.map((item) => ProposalSchema.parse(item)),
+  };
 };
 
 export const createProposal = async (

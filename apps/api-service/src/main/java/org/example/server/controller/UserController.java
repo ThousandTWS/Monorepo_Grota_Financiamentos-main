@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
 import org.example.server.dto.user.UserProfileUpdateDTO;
@@ -52,8 +53,11 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<UserResponseDTO>> findAll(){
-        List<UserResponseDTO> userResponseDTOs = userService.findAll();
+    public ResponseEntity<PagedResponseDTO<UserResponseDTO>> findAll(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<UserResponseDTO> userResponseDTOs = userService.findAll(page, size);
         return ResponseEntity.ok(userResponseDTOs);
     }
 

@@ -1,6 +1,7 @@
 package org.example.server.service;
 
 import org.example.server.dto.auth.*;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.user.UserMapper;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
@@ -17,7 +18,11 @@ import org.example.server.exception.user.UserNotVerifiedException;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.UserRepository;
+import org.example.server.util.PaginationUtils;
 import org.example.server.util.VerificationCodeGenerator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -27,9 +32,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 public class UserService {
 
@@ -200,11 +202,10 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAll() {
-        List<User> users = userRepository.findAll();
-        return users.stream()
-                .map(userMapper::toDto)
-                .collect(Collectors.toList());
+    public PagedResponseDTO<UserResponseDTO> findAll(int page, int size) {
+        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<User> users = userRepository.findAll(pageable);
+        return PagedResponseDTO.fromPage(users.map(userMapper::toDto));
     }
 
     @Transactional(readOnly = true)

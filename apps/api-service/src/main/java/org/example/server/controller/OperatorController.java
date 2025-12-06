@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.operator.OperatorRequestDTO;
 import org.example.server.dto.operator.OperatorResponseDTO;
 import org.example.server.model.User;
@@ -12,8 +13,6 @@ import org.example.server.service.OperatorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/grota-financiamentos/operators")
@@ -50,8 +49,12 @@ public class OperatorController {
             @ApiResponse(responseCode = "200", description = "Lista de Operadores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<OperatorResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
-        List<OperatorResponseDTO> operators = operatorService.findAll(dealerId);
+    public ResponseEntity<PagedResponseDTO<OperatorResponseDTO>> findAll(
+            @RequestParam(required = false) Long dealerId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<OperatorResponseDTO> operators = operatorService.findAll(dealerId, page, size);
         return ResponseEntity.ok().body(operators);
     }
 

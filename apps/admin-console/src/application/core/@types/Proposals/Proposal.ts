@@ -42,6 +42,8 @@ export interface ProposalFilters {
   search?: string;
   dealerId?: number;
   status?: ProposalStatus;
+  page?: number;
+  size?: number;
 }
 
 export interface CreateProposalPayload {

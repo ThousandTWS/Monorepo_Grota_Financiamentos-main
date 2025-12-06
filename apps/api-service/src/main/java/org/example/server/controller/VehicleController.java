@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.vehicle.VehicleRequestDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
 import org.example.server.dto.vehicle.VehicleStatusUpdateDTO;
@@ -57,8 +58,11 @@ public class VehicleController {
             @ApiResponse(responseCode = "401", description = "Não autorizado."),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor.")
     })
-    public ResponseEntity<List<VehicleResponseDTO>> findAll(){
-        List<VehicleResponseDTO> vehicleResponseDTO = vehicleService.findAll();
+    public ResponseEntity<PagedResponseDTO<VehicleResponseDTO>> findAll(
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<VehicleResponseDTO> vehicleResponseDTO = vehicleService.findAll(page, size);
         return ResponseEntity.ok().body(vehicleResponseDTO);
     }
 
@@ -121,4 +125,3 @@ public class VehicleController {
         return ResponseEntity.ok(vehicleUpdate);
     }
 }
-

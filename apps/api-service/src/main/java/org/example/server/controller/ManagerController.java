@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.manager.ManagerRequestDTO;
 import org.example.server.dto.manager.ManagerResponseDTO;
 import org.example.server.model.User;
@@ -12,8 +13,6 @@ import org.example.server.service.ManagerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/grota-financiamentos/managers")
@@ -50,8 +49,12 @@ public class ManagerController {
             @ApiResponse(responseCode = "200", description = "Lista de Gestores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<ManagerResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
-        List<ManagerResponseDTO> managers = managerService.findAll(dealerId);
+    public ResponseEntity<PagedResponseDTO<ManagerResponseDTO>> findAll(
+            @RequestParam(required = false) Long dealerId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<ManagerResponseDTO> managers = managerService.findAll(dealerId, page, size);
         return ResponseEntity.ok().body(managers);
     }
 

@@ -2,6 +2,7 @@ package org.example.server.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.dto.proposal.ProposalRequestDTO;
 import org.example.server.dto.proposal.ProposalResponseDTO;
@@ -16,13 +17,17 @@ import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ProposalEventRepository;
 import org.example.server.repository.ProposalRepository;
 import org.example.server.repository.SellerRepository;
+import org.example.server.util.PaginationUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 public class ProposalService {
@@ -66,24 +71,25 @@ public class ProposalService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProposalResponseDTO> listProposals(Optional<Long> dealerId, Optional<ProposalStatus> status) {
-        List<Proposal> proposals;
+    public PagedResponseDTO<ProposalResponseDTO> listProposals(Optional<Long> dealerId, Optional<ProposalStatus> status, int page, int size) {
+        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Proposal> proposals;
         if (dealerId.isPresent() && status.isPresent()) {
             @SuppressWarnings("null")
             Dealer dealer = dealerRepository.findById(dealerId.get())
                     .orElseThrow(() -> new RecordNotFoundException("Dealer não encontrado"));
-            proposals = proposalRepository.findByDealerAndStatus(dealer, status.get());
+            proposals = proposalRepository.findByDealerAndStatus(dealer, status.get(), pageable);
         } else if (dealerId.isPresent()) {
             @SuppressWarnings("null")
             Dealer dealer = dealerRepository.findById(dealerId.get())
                     .orElseThrow(() -> new RecordNotFoundException("Dealer não encontrado"));
-            proposals = proposalRepository.findByDealer(dealer);
+            proposals = proposalRepository.findByDealer(dealer, pageable);
         } else if (status.isPresent()) {
-            proposals = proposalRepository.findByStatus(status.get());
+            proposals = proposalRepository.findByStatus(status.get(), pageable);
         } else {
-            proposals = proposalRepository.findAll();
+            proposals = proposalRepository.findAll(pageable);
         }
-        return proposals.stream().map(this::toResponse).toList();
+        return PagedResponseDTO.fromPage(proposals.map(this::toResponse));
     }
 
     @SuppressWarnings("null")

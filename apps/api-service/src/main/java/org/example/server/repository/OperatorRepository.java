@@ -1,6 +1,8 @@
 package org.example.server.repository;
 
 import org.example.server.model.Operator;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -8,4 +10,5 @@ import java.util.List;
 public interface OperatorRepository extends JpaRepository<Operator, Long> {
     boolean existsByPhone(String phone);
     List<Operator> findByDealerId(Long dealerId);
+    Page<Operator> findByDealerId(Long dealerId, Pageable pageable);
 }

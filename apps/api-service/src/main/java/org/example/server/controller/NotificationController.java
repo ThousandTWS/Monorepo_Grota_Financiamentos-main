@@ -3,13 +3,12 @@ package org.example.server.controller;
 import jakarta.validation.Valid;
 import org.example.server.dto.notification.NotificationRequestDTO;
 import org.example.server.dto.notification.NotificationResponseDTO;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.service.NotificationService;
 import org.example.server.service.NotificationStreamService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/grota-financiamentos/notifications")
@@ -29,11 +28,13 @@ public class NotificationController {
     }
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponseDTO>> list(
+    public ResponseEntity<PagedResponseDTO<NotificationResponseDTO>> list(
             @RequestParam String targetType,
-            @RequestParam(required = false) Long targetId
+            @RequestParam(required = false) Long targetId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(notificationService.listByTarget(targetType, targetId));
+        return ResponseEntity.ok(notificationService.listByTarget(targetType, targetId, page, size));
     }
 
     @PatchMapping("/{id}/read")

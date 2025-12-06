@@ -1,3 +1,5 @@
+import { toPagedResponse } from "@/application/core/@types/pagination";
+
 export type Operator = {
   createdAt: string;
   id: number;
@@ -61,11 +63,15 @@ async function request<T>(
 }
 
 export const getAllOperators = async (dealerId?: number): Promise<Operator[]> => {
-  const query = dealerId ? `?dealerId=${dealerId}` : "";
-  const payload = await request<Operator[]>(`/api/operators${query}`, {
+  const params = new URLSearchParams({ page: "0", size: "10" });
+  if (dealerId) {
+    params.set("dealerId", String(dealerId));
+  }
+  const payload = await request<unknown>(`/api/operators?${params.toString()}`, {
     method: "GET",
   });
-  return Array.isArray(payload) ? payload : [];
+  const page = toPagedResponse<Operator>(payload);
+  return page.content;
 };
 
 export const createOperator = async (

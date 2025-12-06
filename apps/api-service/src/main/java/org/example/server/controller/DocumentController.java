@@ -13,6 +13,7 @@ import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
 import org.example.server.enums.DocumentType;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.model.User;
 import org.example.server.service.DocumentService;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
-import java.util.List;
-
 @Controller
 @Tag(name = "Documents", description = "Documents s3")
 @RequestMapping("/api/v1/grota-financiamentos/documents")
@@ -83,8 +82,12 @@ public class DocumentController {
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
             @ApiResponse(responseCode = "500", description = "Error interno no servidor")
     })
-    public ResponseEntity<List<DocumentResponseDTO>> listUserDocuments(@AuthenticationPrincipal User user){
-        List<DocumentResponseDTO> docs = documentService.listUserDocuments(user);
+    public ResponseEntity<PagedResponseDTO<DocumentResponseDTO>> listUserDocuments(
+            @AuthenticationPrincipal User user,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<DocumentResponseDTO> docs = documentService.listUserDocuments(user, page, size);
         return ResponseEntity.ok(docs);
     }
 
@@ -103,5 +106,3 @@ public class DocumentController {
         return ResponseEntity.ok(url.toString());
     }
 }
-
-

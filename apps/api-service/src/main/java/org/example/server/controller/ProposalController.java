@@ -1,10 +1,11 @@
 package org.example.server.controller;
 
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
+import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.dto.proposal.ProposalRequestDTO;
 import org.example.server.dto.proposal.ProposalResponseDTO;
 import org.example.server.dto.proposal.ProposalStatusUpdateDTO;
-import org.example.server.dto.proposal.ProposalEventResponseDTO;
 import org.example.server.enums.ProposalStatus;
 import org.example.server.service.ProposalService;
 import org.springframework.http.ResponseEntity;
@@ -32,11 +33,15 @@ public class ProposalController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProposalResponseDTO>> list(
+    public ResponseEntity<PagedResponseDTO<ProposalResponseDTO>> list(
             @RequestParam(name = "dealerId", required = false) Long dealerId,
-            @RequestParam(name = "status", required = false) ProposalStatus status
+            @RequestParam(name = "status", required = false) ProposalStatus status,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
     ) {
-        return ResponseEntity.ok(proposalService.listProposals(Optional.ofNullable(dealerId), Optional.ofNullable(status)));
+        return ResponseEntity.ok(
+                proposalService.listProposals(Optional.ofNullable(dealerId), Optional.ofNullable(status), page, size)
+        );
     }
 
     @PatchMapping("/{id}/status")

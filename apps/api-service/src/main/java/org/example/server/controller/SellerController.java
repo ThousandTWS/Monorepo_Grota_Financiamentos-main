@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.seller.SellerRequestDTO;
 import org.example.server.dto.seller.SellerResponseDTO;
 import org.example.server.model.User;
@@ -12,8 +13,6 @@ import org.example.server.service.SellerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/grota-financiamentos/sellers")
@@ -50,9 +49,13 @@ public class SellerController {
             @ApiResponse(responseCode = "200", description = "Lista de Vendedores retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<List<SellerResponseDTO>> findAll(@RequestParam(required = false) Long dealerId){
-        List<SellerResponseDTO> selles = sellerService.findAll(dealerId);
-        return ResponseEntity.ok().body(selles);
+    public ResponseEntity<PagedResponseDTO<SellerResponseDTO>> findAll(
+            @RequestParam(required = false) Long dealerId,
+            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "size", defaultValue = "10") int size
+    ){
+        PagedResponseDTO<SellerResponseDTO> sellers = sellerService.findAll(dealerId, page, size);
+        return ResponseEntity.ok().body(sellers);
     }
 
     @GetMapping("/{id}")

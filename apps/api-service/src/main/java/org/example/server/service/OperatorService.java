@@ -1,6 +1,7 @@
 package org.example.server.service;
 
 import org.example.server.dto.address.AddressMapper;
+import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.operator.OperatorMapper;
 import org.example.server.dto.operator.OperatorRequestDTO;
 import org.example.server.dto.operator.OperatorResponseDTO;
@@ -15,12 +16,13 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.OperatorRepository;
 import org.example.server.repository.UserRepository;
+import org.example.server.util.PaginationUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OperatorService {
@@ -97,15 +99,13 @@ public class OperatorService {
         return operatorMapper.toDTO(operatorRepository.save(operator));
     }
 
-    public List<OperatorResponseDTO> findAll(Long dealerId) {
-        List<Operator> operators = dealerId != null
-                ? operatorRepository.findByDealerId(dealerId)
-                : operatorRepository.findAll();
+    public PagedResponseDTO<OperatorResponseDTO> findAll(Long dealerId, int page, int size) {
+        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Operator> operators = dealerId != null
+                ? operatorRepository.findByDealerId(dealerId, pageable)
+                : operatorRepository.findAll(pageable);
 
-        return operators
-                .stream()
-                .map(operatorMapper::toDTO)
-                .collect(Collectors.toList());
+        return PagedResponseDTO.fromPage(operators.map(operatorMapper::toDTO));
     }
 
     public OperatorResponseDTO findById(@PathVariable Long id) {
