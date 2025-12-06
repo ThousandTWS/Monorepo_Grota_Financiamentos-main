@@ -8,15 +8,19 @@ import { Input } from "@/presentation/ui/input";
 import { CalendarDays } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useEffect } from "react";
+import { maskBRL, maskCPF, maskPhone } from "@/lib/masks";
+import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
+import { formatName } from "@/lib/formatters";
 
 type PersonalDataCardProps = {
   onZipChange: (value: string) => void;
   handleDocumentChange: (value: string) => void;
   cpfSituation: string;
   searchingLoading: boolean;
+  personType: "PF" | "PJ" | null;
 };
 
-export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading   }: PersonalDataCardProps) {
+export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading, personType }: PersonalDataCardProps) {
   const { register, setValue, watch } = useFormContext();
 
   const hasCnh = watch("hasCNH");
@@ -42,7 +46,10 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="Digite seu CPF ou CNPJ"
             autoComplete="off"
             {...register("cpf_cnpj", {
-              onChange: (e) => {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = personType === "PJ"
+                  ? maskCNPJ(e.target.value)
+                  : maskCPF(e.target.value);
                 const value = e.target.value;
                 handleDocumentChange(value);
               }
@@ -52,10 +59,14 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
           />
           <LabeledInput
             containerClassName="md:col-span-5"
-            label="Nome Completo / Razão Social"
-            placeholder="Digite seu nome completo ou razão social"
+            label="Nome Completo"
+            placeholder="Digite seu nome completo"
             autoComplete="off"
-            {...register("name")}
+            {...register("name", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = formatName(e.target.value);
+              }
+            })}
           />
           <LabeledInput
             id="motherName"
@@ -150,7 +161,11 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="(11) 99999-9999"
             maxLength={15}
             autoComplete="tel"
-            {...register("phone")}
+            {...register("phone", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskPhone(e.target.value);
+              }
+            })}
           />
           <LabeledInput
             id="companyName"
@@ -173,7 +188,8 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             maxLength={9}
             autoComplete="postal-code"
             {...register("CEP", {
-              onChange: (e) => {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskCEP(e.target.value);
                 const value = e.target.value;
                 onZipChange(value);
               }
@@ -281,7 +297,11 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Renda"
             placeholder="R$ 0,00"
             inputClassName="text-right"
-            {...register("income")}
+            {...register("income", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskBRL(e.target.value);
+              }
+            })}
           />
           <LabeledInput
             id="otherIncomes"
@@ -289,7 +309,11 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Outras rendas"
             placeholder="R$ 0,00"
             inputClassName="text-right"
-            {...register("otherIncomes")}
+            {...register("otherIncomes", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskBRL(e.target.value);
+              }
+            })}
           />
           <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 p-5">
             <Controller
