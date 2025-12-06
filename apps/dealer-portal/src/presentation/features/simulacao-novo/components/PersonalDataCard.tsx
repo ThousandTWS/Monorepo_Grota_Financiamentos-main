@@ -17,10 +17,11 @@ type PersonalDataCardProps = {
   handleDocumentChange: (value: string) => void;
   cpfSituation: string;
   searchingLoading: boolean;
+  searchingCPFLoading: boolean;
   personType: "PF" | "PJ" | null;
 };
 
-export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading, personType }: PersonalDataCardProps) {
+export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading, searchingCPFLoading, personType }: PersonalDataCardProps) {
   const { register, setValue, watch } = useFormContext();
 
   const hasCnh = watch("hasCNH");
@@ -56,6 +57,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             })}
             warning={cpfSituation}
             loading={searchingLoading}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             containerClassName="md:col-span-5"
@@ -67,6 +69,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 e.target.value = formatName(e.target.value);
               }
             })}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="motherName"
@@ -74,6 +77,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Nome da Mãe"
             placeholder="Digite nome da mãe"
             {...register("motherName")}
+            disabled={searchingLoading || !personType}
           />
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="birthday" className="text-[#134B73]">
@@ -85,6 +89,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 type="date"
                 className="w-full pr-10 cursor-pointer"
                 {...register("birthday")}
+                disabled={searchingLoading || !personType}
               />
               <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
             </div>
@@ -99,6 +104,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 placeholder="Estado civil"
                 value={field.value}
                 onChange={field.onChange}
+                disabled={!personType}
               >
                 <SelectItem value="Solteiro">Solteiro</SelectItem>
                 <SelectItem value="Casado">Casado</SelectItem>
@@ -119,6 +125,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
+                    disabled={!personType}
                   />
                   <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "Não"}</span>
                 </div>
@@ -132,7 +139,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 containerClassName="md:col-span-2"
                 label="Categoria da CNH"
                 placeholder="Categoria CNH"
-                disabled={!hasCnh}
+                disabled={!hasCnh || !personType}
                 value={field.value}
                 onChange={field.onChange}
               >
@@ -153,6 +160,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             type="email"
             autoComplete="email"
             {...register("email")}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="personalPhone"
@@ -166,6 +174,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 e.target.value = maskPhone(e.target.value);
               }
             })}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="companyName"
@@ -173,6 +182,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Nome da Empresa"
             placeholder="Informe a empresa"
             {...register("companyName")}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="shareholderName"
@@ -180,6 +190,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Nome do Sócio"
             placeholder="Informe o nome do sócio"
             {...register("shareholderName")}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             containerClassName="md:col-span-2"
@@ -194,6 +205,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 onZipChange(value);
               }
             })}
+            disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="address"
@@ -202,6 +214,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="Rua Exemplo, 123 - Apto 45"
             autoComplete="address-line1"
             {...register("address")}
+            disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="addressNumber"
@@ -210,6 +223,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="123"
             autoComplete="address-line2"
             {...register("addressNumber")}
+            disabled={!personType}
           />
           <LabeledInput
             id="addressComplement"
@@ -217,6 +231,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Complemento"
             placeholder="Apto, bloco, referência"
             {...register("addressComplement")}
+            disabled={!personType}
           />
           <LabeledInput
             id="neighborhood"
@@ -225,6 +240,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="Informe o bairro"
             autoComplete="address-level3"
             {...register("neighborhood")}
+            disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="city"
@@ -233,6 +249,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             placeholder="Informe a cidade"
             autoComplete="address-level2"
             {...register("city")}
+            disabled={searchingCPFLoading || !personType}
           />
           <Controller
             name="UF"
@@ -243,6 +260,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 placeholder="UF"
                 value={field.value}
                 onChange={field.onChange}
+                disabled={searchingCPFLoading || !personType}
               >
                 {[
                   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
@@ -262,6 +280,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Naturalidade"
             placeholder="Informe a naturalidade"
             {...register("nationality")}
+            disabled={!personType}
           />
           <LabeledInput
             id="enterprise"
@@ -269,6 +288,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Empresa"
             placeholder="Onde trabalha"
             {...register("enterprise")}
+            disabled={!personType}
           />
           <LabeledInput
             id="enterpriseFunction"
@@ -276,6 +296,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             label="Função"
             placeholder="Cargo ou função"
             {...register("enterpriseFunction")}
+            disabled={!personType}
           />
           <div className="space-y-2 md:col-span-2">
             <Label htmlFor="admissionDate" className="text-[#134B73]">
@@ -287,6 +308,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 type="date"
                 className="w-full pr-10 cursor-pointer"
                 {...register("admissionDate")}
+                disabled={!personType}
               />
               <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
             </div>
@@ -302,6 +324,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 e.target.value = maskBRL(e.target.value);
               }
             })}
+            disabled={!personType}
           />
           <LabeledInput
             id="otherIncomes"
@@ -314,6 +337,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 e.target.value = maskBRL(e.target.value);
               }
             })}
+            disabled={!personType}
           />
           <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 p-5">
             <Controller
