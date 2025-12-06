@@ -11,6 +11,11 @@ const DEFAULT_CLIENT_ORIGIN =
   process.env.CLIENT_APP_ORIGIN ??
   "http://localhost:3001";
 
+const DEFAULT_WEBSITE_ORIGIN =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  process.env.NEXT_PUBLIC_WEBSITE_URL ??
+  "";
+
 const EXTRA_ALLOWED_ORIGINS =
   process.env.LOGISTA_ALLOWED_ORIGINS ??
   process.env.NEXT_PUBLIC_LOGISTA_ALLOWED_ORIGINS ??
@@ -35,17 +40,24 @@ export function getLogistaAllowedOrigins(): string[] {
 
   if (process.env.NODE_ENV !== "production") {
     return Array.from(
-      new Set([
-        "http://localhost:3000",
-        "http://localhost:3001",
-        "http://localhost:3002",
-        DEFAULT_CLIENT_ORIGIN,
-        ...entries,
-      ]),
+      new Set(
+        [
+          "http://localhost:3000",
+          "http://localhost:3001",
+          "http://localhost:3002",
+          DEFAULT_CLIENT_ORIGIN,
+          DEFAULT_WEBSITE_ORIGIN,
+          ...entries,
+        ].filter(Boolean),
+      ),
     );
   }
 
-  return Array.from(new Set([DEFAULT_CLIENT_ORIGIN, ...entries]));
+  return Array.from(
+    new Set(
+      [DEFAULT_CLIENT_ORIGIN, DEFAULT_WEBSITE_ORIGIN, ...entries].filter(Boolean),
+    ),
+  );
 }
 
 export function getLogistaSessionSecret(): string {
