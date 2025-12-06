@@ -38,21 +38,17 @@ function forbidden(message = "Permissão insuficiente.") {
   return NextResponse.json({ error: message }, { status: 403 });
 }
 
-async function resolveDealerId(
-  session: SessionLike,
-): Promise<number | null> {
+async function resolveDealerId(session: SessionLike): Promise<number | null> {
   if (!session) return null;
   const headers: HeadersInit = {
     Authorization: `Bearer ${session.accessToken}`,
   };
 
-  const detailsResponse = await fetch(
-    `${API_BASE_URL}/dealers/${session.userId}/details`,
-    {
-      headers,
-      cache: "no-store",
-    },
-  );
+  // 1) Tenta pegar o dealer vinculado ao usuário autenticado
+  const detailsResponse = await fetch(`${API_BASE_URL}/dealers/me/details`, {
+    headers,
+    cache: "no-store",
+  });
 
   if (detailsResponse.ok) {
     const details = await detailsResponse.json().catch(() => null);
@@ -85,6 +81,47 @@ async function resolveDealerId(
   return null;
 }
 
+async function resolveSeller(
+  session: SessionLike,
+): Promise<{ sellerId: number | null; dealerId: number | null }> {
+  if (!session) {
+    return { sellerId: null, dealerId: null };
+  }
+
+  const headers: HeadersInit = {
+    Authorization: `Bearer ${session.accessToken}`,
+  };
+
+  // Lista de vendedores e tenta casar pelo email do usuário autenticado
+  const sellersResponse = await fetch(`${API_BASE_URL}/sellers`, {
+    headers,
+    cache: "no-store",
+  });
+
+  if (sellersResponse.ok) {
+    const sellers = (await sellersResponse.json().catch(() => null)) as
+      | Array<{ id?: number; email?: string; dealerId?: number | null }>
+      | null;
+
+    if (Array.isArray(sellers) && session.email) {
+      const match = sellers.find(
+        (seller) =>
+          seller.email &&
+          seller.email.toLowerCase() === session.email.toLowerCase(),
+      );
+      if (match?.id) {
+        return {
+          sellerId: match.id,
+          dealerId:
+            typeof match.dealerId === "number" ? match.dealerId : null,
+        };
+      }
+    }
+  }
+
+  return { sellerId: null, dealerId: null };
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -93,11 +130,12 @@ export async function GET(request: NextRequest) {
     }
 
     const resolvedDealerId = await resolveDealerId(session);
+    const { dealerId: sellerDealerId } = await resolveSeller(session);
     const fallbackDealerId =
       typeof session.userId === "number"
         ? session.userId
         : Number(session.userId) || null;
-    const dealerId = resolvedDealerId ?? fallbackDealerId;
+    const dealerId = resolvedDealerId ?? sellerDealerId ?? fallbackDealerId;
     if (!dealerId) {
       return NextResponse.json(
         { error: "Não foi possível identificar o lojista autenticado." },
@@ -155,14 +193,6 @@ export async function POST(request: NextRequest) {
       return forbidden("Você não tem permissão para criar propostas.");
     }
 
-    const dealerId = await resolveDealerId(session);
-    if (!dealerId) {
-      return NextResponse.json(
-        { error: "Lojista não encontrado para este usuário." },
-        { status: 404 },
-      );
-    }
-
     let body: Record<string, unknown>;
     try {
       body = (await request.json()) as Record<string, unknown>;
@@ -173,9 +203,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const bodyDealerId =
+      typeof body.dealerId === "number"
+        ? body.dealerId
+        : Number(body.dealerId) || null;
+
+    const { sellerId: matchedSellerId, dealerId: sellerDealerId } =
+      await resolveSeller(session);
+    const resolvedDealerId = await resolveDealerId(session);
+    const fallbackDealerId =
+      typeof session.userId === "number"
+        ? session.userId
+        : Number(session.userId) || null;
+
+    const dealerId =
+      resolvedDealerId ?? bodyDealerId ?? sellerDealerId ?? fallbackDealerId;
+    if (!dealerId) {
+      return NextResponse.json(
+        { error: "Lojista não encontrado para este usuário." },
+        { status: 404 },
+      );
+    }
+
+    const bodySellerId =
+      typeof body.sellerId === "number"
+        ? body.sellerId
+        : Number(body.sellerId) || null;
+
+    const sellerId =
+      bodySellerId ??
+      matchedSellerId ??
+      (typeof session.userId === "number"
+        ? session.userId
+        : Number(session.userId) || null);
+
     const normalizedPayload = {
       ...body,
       dealerId,
+      sellerId,
     };
 
     const upstreamResponse = await fetch(`${API_BASE_URL}/proposals`, {

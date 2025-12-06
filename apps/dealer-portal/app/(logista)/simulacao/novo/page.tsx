@@ -1,6 +1,6 @@
 ﻿/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -27,6 +27,15 @@ import {
 import { Button } from "@/presentation/ui/button";
 import { createProposal } from "@/application/services/Proposals/proposalService";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/presentation/ui/dialog";
+import { Separator } from "@/presentation/ui/separator";
 
 type BasicOption = {
   id?: number;
@@ -129,7 +138,10 @@ export default function SimuladorNovo() {
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [isYearsLoading, setIsYearsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+  const [isReviewOpen, setIsReviewOpen] = useState(false);
+  const [reviewData, setReviewData] = useState<SimulationFormValues | null>(null);
+  const [pendingPayload, setPendingPayload] = useState<CreateProposalPayload | null>(null);
 
   const getVehicleTypeId = (category: typeof vehicleCategory) => {
     if (category === "motos") return 2;
@@ -252,45 +264,56 @@ export default function SimuladorNovo() {
   };
 
   const onSubmit = async (data: SimulationFormValues) => {
-    setIsSubmitting(true);
-    try {
-      const payload: CreateProposalPayload = {
-        customerName: data.shareholderName || data.companyName || "Cliente",
-        customerCpf: data.cpf_cnpj,
-        customerBirthDate: null,
-        customerEmail: data.email,
-        customerPhone: data.phone,
-        cnhCategory: data.categoryCNH ?? "",
-        hasCnh: data.hasCNH,
-        vehiclePlate: data.vehiclePlate ?? "",
-        fipeCode: data.priceFIPE ?? "",
-        fipeValue: parseCurrency(data.priceFIPE),
-        vehicleBrand: data.vehicleBrand,
-        vehicleModel: data.vehicleModel,
-        vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
-        downPaymentValue: 0,
-        financedValue: parseCurrency(data.amountFinanced),
-        termMonths: toNumber(data.termMonths) ?? undefined,
-        vehicle0km: data.vehicle0KM,
-        maritalStatus: data.maritalStatus,
-        cep: data.CEP,
-        address: data.address,
-        addressNumber: data.addressNumber,
-        addressComplement: data.addressComplement,
-        neighborhood: data.neighborhood,
-        uf: data.UF,
-        city: data.city,
-        income: parseCurrency(data.income),
-        otherIncomes: parseCurrency(data.otherIncomes),
-        metadata: JSON.stringify({
-          personType,
-          operationType,
-          vehicleCategory,
-        }),
-      };
+    const payload: CreateProposalPayload = {
+      customerName: data.shareholderName || data.companyName || "Cliente",
+      customerCpf: data.cpf_cnpj,
+      customerBirthDate: null,
+      customerEmail: data.email,
+      customerPhone: data.phone,
+      cnhCategory: data.categoryCNH ?? "",
+      hasCnh: data.hasCNH,
+      vehiclePlate: data.vehiclePlate ?? "",
+      fipeCode: data.priceFIPE ?? "",
+      fipeValue: parseCurrency(data.priceFIPE),
+      vehicleBrand: data.vehicleBrand,
+      vehicleModel: data.vehicleModel,
+      vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
+      downPaymentValue: 0,
+      financedValue: parseCurrency(data.amountFinanced),
+      termMonths: toNumber(data.termMonths) ?? undefined,
+      vehicle0km: data.vehicle0KM,
+      maritalStatus: data.maritalStatus,
+      cep: data.CEP,
+      address: data.address,
+      addressNumber: data.addressNumber,
+      addressComplement: data.addressComplement,
+      neighborhood: data.neighborhood,
+      uf: data.UF,
+      city: data.city,
+      income: parseCurrency(data.income),
+      otherIncomes: parseCurrency(data.otherIncomes),
+      metadata: JSON.stringify({
+        personType,
+        operationType,
+        vehicleCategory,
+      }),
+    };
 
-      const proposal = await createProposal(payload);
+    setPendingPayload(payload);
+    setReviewData(data);
+    setIsReviewOpen(true);
+  };
+
+  const handleConfirmSend = async () => {
+    if (!pendingPayload) {
+      toast.error("Não foi possível preparar os dados para envio.");
+      return;
+    }
+    setIsSending(true);
+    try {
+      await createProposal(pendingPayload);
       toast.success("Ficha enviada para a esteira.");
+      setIsReviewOpen(false);
       router.push("/esteira-propostas");
     } catch (error) {
       console.error("Form submission error", error);
@@ -300,9 +323,35 @@ export default function SimuladorNovo() {
           : "Falha ao enviar a ficha. Tente novamente.",
       );
     } finally {
-      setIsSubmitting(false);
+      setIsSending(false);
     }
   };
+
+  const formattedReview = useMemo(() => {
+    if (!reviewData) return null;
+    const currency = (value?: string) =>
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+      }).format(parseCurrency(value));
+
+    return {
+      cliente: reviewData.shareholderName || reviewData.companyName || "Cliente",
+      documento: reviewData.cpf_cnpj,
+      email: reviewData.email,
+      telefone: reviewData.phone,
+      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel || "--"} / ${reviewData.vehicleYear || "--"}`,
+      placa: reviewData.vehiclePlate || "—",
+      fipe: currency(reviewData.priceFIPE),
+      financiado: currency(reviewData.amountFinanced),
+      prazo: reviewData.termMonths ? `${reviewData.termMonths} meses` : "—",
+      operacao: operationType || "—",
+      categoria: vehicleCategory || "—",
+      pessoa: personType || "—",
+      endereco: `${reviewData.address || ""}, ${reviewData.addressNumber || ""} - ${reviewData.neighborhood || ""} / ${reviewData.city || ""} - ${reviewData.UF || ""}`,
+    };
+  }, [reviewData, personType, operationType, vehicleCategory]);
 
   useEffect(() => {
     methods.setValue("vehicleBrand", "");
@@ -391,11 +440,89 @@ export default function SimuladorNovo() {
             onLoanTermChange={setLoanTerm}
           />
 
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Enviando..." : "Enviar"}
+          <Button type="submit" disabled={isSending}>
+            {pendingPayload ? "Revisar envio" : "Revisar envio"}
           </Button>
         </form>
       </FormProvider>
+
+      <Dialog open={isReviewOpen} onOpenChange={setIsReviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirmar dados antes de enviar</DialogTitle>
+            <DialogDescription>
+              Revise as principais informações. Se estiverem corretas, envie para a esteira do administrador.
+            </DialogDescription>
+          </DialogHeader>
+
+          {formattedReview && (
+            <div className="space-y-3">
+              <div className="grid gap-2 rounded-md border p-3">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Cliente</span>
+                  <span className="font-semibold">{formattedReview.cliente}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Documento</span>
+                  <span className="font-semibold">{formattedReview.documento}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Contato</span>
+                  <span className="font-semibold">{formattedReview.email} · {formattedReview.telefone}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Veículo</span>
+                  <span className="font-semibold">{formattedReview.veiculo}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Placa</span>
+                  <span className="font-semibold">{formattedReview.placa}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Valor FIPE</span>
+                  <span className="font-semibold">{formattedReview.fipe}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Valor financiado</span>
+                  <span className="font-semibold">{formattedReview.financiado}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Prazo</span>
+                  <span className="font-semibold">{formattedReview.prazo}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Operação</span>
+                  <span className="font-semibold">{formattedReview.operacao}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Categoria</span>
+                  <span className="font-semibold">{formattedReview.categoria}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Pessoa</span>
+                  <span className="font-semibold">{formattedReview.pessoa}</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Endereço</span>
+                  <span className="font-semibold text-right">{formattedReview.endereco}</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsReviewOpen(false)} disabled={isSending}>
+              Voltar e editar
+            </Button>
+            <Button onClick={handleConfirmSend} disabled={isSending}>
+              {isSending ? "Enviando..." : "Enviar para esteira"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }
