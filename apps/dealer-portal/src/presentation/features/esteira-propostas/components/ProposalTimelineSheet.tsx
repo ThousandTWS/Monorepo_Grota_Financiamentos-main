@@ -95,7 +95,7 @@ export function ProposalTimelineSheet({ proposalId }: ProposalTimelineSheetProps
   }, [loadTimeline, open]);
 
   useEffect(() => {
-    if (!open || messages.length === 0) return;
+    if (messages.length === 0) return;
     const latest = messages[messages.length - 1];
     if (processedRealtimeIds.current.has(latest.id)) return;
     processedRealtimeIds.current.add(latest.id);
