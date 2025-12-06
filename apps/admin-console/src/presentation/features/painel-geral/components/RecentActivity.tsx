@@ -7,6 +7,7 @@ import {
   useRealtimeChannel,
 } from "@grota/realtime-client";
 import { getAllSellers, Seller } from "@/application/services/Seller/sellerService";
+import { getRealtimeUrl } from "@/application/config/realtime";
 import {
   Card,
   CardContent,
@@ -63,7 +64,6 @@ const typeConfig = {
 
 type ActivityStatus = keyof typeof typeConfig;
 
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const SALES_CHANNEL = REALTIME_CHANNELS.NOTIFICATIONS;
 const SALES_IDENTITY = "admin-sellers-activity";
 
@@ -108,7 +108,7 @@ export function RecentActivity() {
   const { messages } = useRealtimeChannel({
     channel: SALES_CHANNEL,
     identity: SALES_IDENTITY,
-    url: REALTIME_URL,
+    url: getRealtimeUrl(),
   });
 
   const lastMessage = messages[messages.length - 1];

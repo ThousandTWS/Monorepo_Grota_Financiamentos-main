@@ -23,8 +23,8 @@ import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
 import { fetchAllSellers } from "@/application/services/Sellers/sellerService";
 import { fetchAllDealers } from "@/application/services/DealerServices/dealerService";
+import { getRealtimeUrl } from "@/application/config/realtime";
 
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const LOGISTA_PROPOSALS_IDENTITY = "logista-esteira";
 
 const statusConfig: Record<
@@ -101,7 +101,7 @@ export function EsteiraDePropostasFeature() {
   const { messages, sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
     identity: LOGISTA_PROPOSALS_IDENTITY,
-    url: REALTIME_URL,
+    url: getRealtimeUrl(),
   });
 
   const latestRealtimeMessage =

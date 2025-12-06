@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/presentation/ui/button";
 import {
   Sheet,
@@ -19,6 +19,7 @@ import {
   parseBridgeEvent,
   useRealtimeChannel,
 } from "@grota/realtime-client";
+import { getRealtimeUrl } from "@/application/config/realtime";
 
 type ProposalTimelineSheetProps = {
   proposalId: number;
@@ -45,14 +46,10 @@ export function ProposalTimelineSheet({ proposalId }: ProposalTimelineSheetProps
   const [events, setEvents] = useState<ProposalEvent[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const realtimeUrl = useMemo(
-    () => process.env.NEXT_PUBLIC_REALTIME_WS_URL,
-    [],
-  );
   const { messages } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
     identity: `logista-timeline-${proposalId}`,
-    url: realtimeUrl,
+    url: getRealtimeUrl(),
   });
 
   const loadTimeline = useCallback(async () => {

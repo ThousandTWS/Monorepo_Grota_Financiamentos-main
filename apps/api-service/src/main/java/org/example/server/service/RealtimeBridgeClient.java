@@ -22,7 +22,7 @@ public class RealtimeBridgeClient {
     private final String broadcastUrl;
 
     public RealtimeBridgeClient(
-            @Value("${realtime.bridge.url:http://localhost:4545/broadcast}") String broadcastUrl
+            @Value("${realtime.bridge.url:https://websocket-production-6330.up.railway.app/broadcast}") String broadcastUrl
     ) {
         this.broadcastUrl = broadcastUrl;
     }

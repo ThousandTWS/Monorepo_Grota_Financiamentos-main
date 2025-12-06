@@ -26,8 +26,8 @@ import {
 import { StatusLegend } from "./components/StatusLegend";
 import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
+import { getRealtimeUrl } from "@/application/config/realtime";
 
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const ADMIN_PROPOSALS_IDENTITY = "admin-esteira";
 
 const statusConfig: Record<
@@ -91,7 +91,7 @@ export default function EsteiraDePropostasFeature() {
   const { messages, sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
     identity: ADMIN_PROPOSALS_IDENTITY,
-    url: REALTIME_URL,
+    url: getRealtimeUrl(),
   });
 
   const latestRealtimeMessage =

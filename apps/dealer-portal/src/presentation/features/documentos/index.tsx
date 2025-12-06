@@ -63,8 +63,7 @@ import {
 import { Badge } from "@/presentation/ui/badge";
 import { Progress } from "@/presentation/ui/progress";
 import { cn } from "@/lib/utils";
-
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
+import { getRealtimeUrl } from "@/application/config/realtime";
 const LOGISTA_DOCUMENTS_IDENTITY = "logista-documentos";
 
 const documentTypeConfig: Record<
@@ -233,7 +232,7 @@ export function DocumentosFeature() {
   const { messages, sendMessage, status, participants } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.DOCUMENTS,
     identity: LOGISTA_DOCUMENTS_IDENTITY,
-    url: REALTIME_URL,
+    url: getRealtimeUrl(),
     metadata: { area: "logista-documents" },
   });
 

@@ -18,8 +18,8 @@ import {
 } from "@/presentation/layout/components/ui/card";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
+import { getRealtimeUrl } from "@/application/config/realtime";
 
-const REALTIME_URL = process.env.NEXT_PUBLIC_REALTIME_WS_URL;
 const CHANNEL = "admin-logista";
 const IDENTITY = "admin";
 
@@ -71,7 +71,7 @@ export function RealtimeBridgePanel() {
   const { messages, participants, sendMessage, status } = useRealtimeChannel({
     channel: CHANNEL,
     identity: IDENTITY,
-    url: REALTIME_URL,
+    url: getRealtimeUrl(),
     metadata: { displayName: "Painel Administrativo" },
   });
 
