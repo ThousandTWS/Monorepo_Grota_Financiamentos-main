@@ -306,7 +306,7 @@ export default function SimuladorNovo() {
       const response = await res.json();
       if (!response.success) return;
       const data = response.data.data.cnpj;
-      methods.setValue("enterprise", formatName(data.nome_fantasia));
+      methods.setValue("enterprise", formatName(data.empresa.razao_social));
       methods.setValue("shareholderName", formatName(data.socios[0]?.nome_socio));
     } catch (error) {
       console.error("[cnpj] erro ao buscar dados", error);
@@ -508,6 +508,7 @@ export default function SimuladorNovo() {
               handleDocumentChange={handleDocumentChange}
               cpfSituation={cpfSituation}
               searchingLoading={searchingLoading}
+              personType={personType}
             />
           </div>
 
