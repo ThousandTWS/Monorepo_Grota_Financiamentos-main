@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import { Switch } from "@/presentation/ui/switch";
 import { Label } from "@/presentation/ui/label";
@@ -6,6 +5,7 @@ import { Input } from "@/presentation/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/ui/select";
 import { Ano, Marca, Modelo } from "@/application/services/fipe";
 import { Controller, useFormContext } from "react-hook-form";
+import { maskBRL } from "@/lib/masks";
 
 type VehicleDataCardProps = {
   brands: Marca[];
@@ -20,7 +20,6 @@ type VehicleDataCardProps = {
   isBrandsLoading: boolean;
   isModelsLoading: boolean;
   isYearsLoading: boolean;
-  onLoanTermChange: (value: string) => void;
 };
 
 export function VehicleDataCard({
@@ -35,11 +34,8 @@ export function VehicleDataCard({
   isBrandsLoading,
   isModelsLoading,
   isYearsLoading,
-  onLoanTermChange,
 }: VehicleDataCardProps) {
   const { register, getValues } = useFormContext();
-
-  const [showTermDropdown, setShowTermDropdown] = useState(false);
   const loanTerms = ["12", "24", "36", "48", "60"];
 
   return (
@@ -59,6 +55,7 @@ export function VehicleDataCard({
                     checked={field.value}
                     onCheckedChange={field.onChange}
                     className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
+                    disabled={!brands.length}
                   />
                   <span className="text-md font-medium text-[#134B73]">Veículo 0km</span>
                 </div>
@@ -109,8 +106,9 @@ export function VehicleDataCard({
                   disabled={!getValues("vehicleBrand") || isModelsLoading}
                   value={field.value}
                   onValueChange={(value) => {
+                    const[modelCode, modelName] = value.split("+");
                     field.onChange(value);
-                    onModelChange(value);
+                    onModelChange(modelCode);
                   }}
                 >
                   <SelectTrigger className="w-full min-h-12 md:max-w-64">
@@ -127,7 +125,7 @@ export function VehicleDataCard({
                   </SelectTrigger>
                   <SelectContent>
                     {models.map((model) => (
-                      <SelectItem key={model.code} value={model.code}>
+                      <SelectItem key={model.code} value={`${model.code}+${model.name}`}>
                         {model.name}
                       </SelectItem>
                     ))}
@@ -182,6 +180,7 @@ export function VehicleDataCard({
               readOnly
               placeholder="Aguardando FIPE"
               {...register("priceFIPE")}
+              disabled={!brands.length || isBrandsLoading || isModelsLoading || isYearsLoading}
             />
           </div>
           <div className="space-y-2">
@@ -220,7 +219,11 @@ export function VehicleDataCard({
                       className="w-full font-bold text-3xl md:text-4xl text-[#134B73] bg-white/95 backdrop-blur-sm h-16 md:h-20 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 focus-visible:scale-[1.02] focus-visible:border-white"
                       placeholder="R$ 0,00"
                       maxLength={18}
-                      {...register("amountFinanced")}
+                      {...register("amountFinanced", {
+                        onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                          e.target.value = maskBRL(e.target.value);
+                        }
+                      })}
                     />
                   </div>
                   {/* Fazer um select */}
