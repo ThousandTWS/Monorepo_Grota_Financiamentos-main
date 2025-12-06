@@ -8,4 +8,5 @@ import java.util.List;
 public interface SellerRepository extends JpaRepository<Seller, Long> {
     boolean existsByPhone(String phone);
     List<Seller> findByDealerId(Long dealerId);
+    java.util.Optional<Seller> findByUserId(Long userId);
 }

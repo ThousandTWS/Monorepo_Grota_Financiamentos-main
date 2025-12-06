@@ -97,6 +97,8 @@ export function EsteiraDePropostasFeature() {
   const [dealerOptions, setDealerOptions] = useState<
     { value: string; label: string }[]
   >([]);
+  const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
+  const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
 
   const { messages, sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
@@ -170,6 +172,31 @@ export function EsteiraDePropostasFeature() {
               `Lojista #${dealer.id}`,
           })),
         );
+
+        const dealerMap = dealers.reduce<Record<number, { name: string; enterprise?: string }>>((acc, dealer) => {
+          if (dealer.id) {
+            acc[dealer.id] = {
+              name:
+                dealer.fullName ??
+                dealer.fullNameEnterprise ??
+                dealer.enterprise ??
+                `Lojista #${dealer.id}`,
+              enterprise:
+                dealer.enterprise ??
+                dealer.fullNameEnterprise ??
+                undefined,
+            };
+          }
+          return acc;
+        }, {});
+        const sellerMap = sellers.reduce<Record<number, string>>((acc, seller) => {
+          if (seller.id) {
+            acc[seller.id] = seller.fullName ?? seller.email ?? `Vendedor #${seller.id}`;
+          }
+          return acc;
+        }, {});
+        setDealerIndex(dealerMap);
+        setSellerIndex(sellerMap);
       } catch (error) {
         console.error("[Logista Esteira] Falha ao listar vendedores/lojistas", error);
         toast.error("Não foi possível sincronizar operadores/lojistas.");
@@ -356,7 +383,12 @@ export function EsteiraDePropostasFeature() {
         isRefreshing={isRefreshing}
       />
 
-      <ProposalsTable proposals={filteredProposals} isLoading={isLoading} />
+      <ProposalsTable
+        proposals={filteredProposals}
+        isLoading={isLoading}
+        dealersById={dealerIndex}
+        sellersById={sellerIndex}
+      />
     </div>
   );
 }

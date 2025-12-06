@@ -23,7 +23,8 @@ const EXTRA_ALLOWED_ORIGINS =
 
 export const LOGISTA_SESSION_COOKIE = "grota.logista.session";
 export const LOGISTA_SESSION_SCOPE: SessionScope = "logista";
-export const LOGISTA_SESSION_MAX_AGE = 60 * 60 * 24 * 7; 
+// Keep dealers logged in longer (align with admin: 30 days)
+export const LOGISTA_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 export function getLogistaApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;

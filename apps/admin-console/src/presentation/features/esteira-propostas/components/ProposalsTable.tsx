@@ -25,6 +25,8 @@ type ProposalsTableProps = {
   isLoading?: boolean;
   updatingId: number | null;
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
+  dealersById?: Record<number, { name: string; enterprise?: string }>;
+  sellersById?: Record<number, string>;
 };
 
 const proposalStatusLabels: Record<ProposalStatus, string> = {
@@ -67,19 +69,21 @@ export function ProposalsTable({
   isLoading,
   updatingId,
   onStatusChange,
+  dealersById = {},
+  sellersById = {},
 }: ProposalsTableProps) {
   return (
-    <div className="rounded-lg border bg-card" data-oid="admin-table">
+    <div className="rounded-lg border bg-card shadow-sm" data-oid="admin-table">
       <ScrollArea className="w-full" data-oid="scroll">
-        <Table className="min-w-[950px]" data-oid="table">
+        <Table className="min-w-[1050px]" data-oid="table">
           <TableHeader data-oid="thead">
-            <TableRow className="bg-muted/50" data-oid="header-row">
-              <TableHead className="w-10" />
-              <TableHead>Nome / CPF / Proposta</TableHead>
-              <TableHead>Bem / Valor / Prazo / Parcela</TableHead>
+            <TableRow className="bg-slate-50 text-slate-600" data-oid="header-row">
+              <TableHead className="w-12" />
+              <TableHead>Nome / CPF</TableHead>
+              <TableHead>Valor</TableHead>
               <TableHead>Lojista</TableHead>
-              <TableHead>Banco / Produto</TableHead>
-              <TableHead>Status atual / Analista</TableHead>
+              <TableHead>FIPE</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead>Enviado / Operador</TableHead>
             </TableRow>
           </TableHeader>
@@ -96,58 +100,61 @@ export function ProposalsTable({
                 ))
               : proposals.map((proposal) => {
                   return (
-                    <TableRow key={proposal.id} className="align-top" data-oid="data-row">
+                    <TableRow
+                      key={proposal.id}
+                      className="align-top border-b hover:bg-slate-50/60 transition-colors"
+                      data-oid="data-row"
+                    >
                       <TableCell className="pt-5">
                         <div className="flex items-start justify-center">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full border text-muted-foreground">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 bg-slate-100">
                             <Clock3 className="size-4" />
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1">
-                          <p className="text-sm font-semibold uppercase tracking-tight">
+                          <p className="text-sm font-semibold uppercase tracking-tight text-[#134B73]">
                             {proposal.customerName}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {maskCpf(proposal.customerCpf)}
                           </p>
-                          <p className="text-xs font-medium text-sky-600">
-                            Proposta #{proposal.id}
-                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1 text-sm">
-                          <p className="font-semibold uppercase">
-                            {proposal.vehicleBrand}
-                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {proposal.vehicleModel} ({proposal.vehicleYear})
+                            Valor financiado
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            Entrada {formatCurrency(proposal.downPaymentValue)}
-                          </p>
-                          <p className="text-xs font-semibold text-emerald-600">
-                            {formatCurrency(proposal.financedValue)} financiado
+                          <p className="text-sm font-semibold text-emerald-600">
+                            {formatCurrency(proposal.financedValue)}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="text-sm">
                           <p className="font-medium">
-                            Dealer #{proposal.dealerId ?? "—"}
+                            {proposal.dealerId
+                              ? dealersById[proposal.dealerId]?.enterprise ??
+                                dealersById[proposal.dealerId]?.name ??
+                                `Lojista #${proposal.dealerId}`
+                              : "Lojista não informado"}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            Seller #{proposal.sellerId ?? "—"}
+                            {proposal.sellerId
+                              ? sellersById[proposal.sellerId] ??
+                                `Responsável #${proposal.sellerId}`
+                              : "Responsável não informado"}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>Banco parceiro</p>
-                          <p>Produto personalizado</p>
-                          <p className="text-xs">FIPE {proposal.fipeCode}</p>
+                        <div className="text-sm">
+                          <p className="text-xs text-muted-foreground">FIPE</p>
+                          <p className="font-semibold">
+                            {formatCurrency(proposal.fipeValue)}
+                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5 space-y-2">
@@ -191,7 +198,10 @@ export function ProposalsTable({
                             {formatDateTime(proposal.createdAt)}
                           </p>
                           <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Seller #{proposal.sellerId ?? "—"}
+                            {proposal.sellerId
+                              ? sellersById[proposal.sellerId] ??
+                                `Vendedor #${proposal.sellerId}`
+                              : "Vendedor não informado"}
                           </p>
                         </div>
                       </TableCell>

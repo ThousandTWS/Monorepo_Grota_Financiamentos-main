@@ -16,6 +16,8 @@ import { ProposalTimelineSheet } from "./ProposalTimelineSheet";
 type ProposalsTableProps = {
   proposals: Proposal[];
   isLoading?: boolean;
+  dealersById?: Record<number, { name: string; enterprise?: string }>;
+  sellersById?: Record<number, string>;
 };
 
 const statusLabels: Record<ProposalStatus, string> = {
@@ -46,28 +48,25 @@ const maskCpf = (cpf: string) => {
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
 
-export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
+export function ProposalsTable({
+  proposals,
+  isLoading,
+  dealersById = {},
+  sellersById = {},
+}: ProposalsTableProps) {
   return (
-    <div className="rounded-lg border bg-card">
+    <div className="rounded-lg border bg-card shadow-sm">
       <ScrollArea className="w-full">
-        <Table className="min-w-[950px]">
+        <Table className="min-w-[1050px]">
           <TableHeader>
-            <TableRow className="bg-muted/50">
-              <TableHead className="w-10" />
-              <TableHead className="font-semibold">
-                Nome / CPF / Proposta
-              </TableHead>
-              <TableHead className="font-semibold">
-                Bem / Valor / Prazo / Parcela
-              </TableHead>
+            <TableRow className="bg-slate-50 text-slate-600">
+              <TableHead className="w-12" />
+              <TableHead className="font-semibold">Nome / CPF</TableHead>
+              <TableHead className="font-semibold">Valor</TableHead>
               <TableHead className="font-semibold">Lojista</TableHead>
-              <TableHead className="font-semibold">Banco / Produto</TableHead>
-              <TableHead className="font-semibold">
-                Status atual / Analista
-              </TableHead>
-              <TableHead className="font-semibold">
-                Enviado / Operador
-              </TableHead>
+              <TableHead className="font-semibold">FIPE</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="font-semibold">Enviado / Operador</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -83,48 +82,50 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                 ))
               : proposals.map((proposal) => {
                   return (
-                    <TableRow key={proposal.id} className="align-top">
+                    <TableRow
+                      key={proposal.id}
+                      className="align-top border-b hover:bg-slate-50/60 transition-colors"
+                    >
                       <TableCell className="pt-5">
                         <div className="flex items-start justify-center">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full border text-muted-foreground">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 bg-slate-100">
                             <Clock3 className="size-4" />
                           </div>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1">
-                          <p className="text-sm font-semibold uppercase tracking-tight">
+                          <p className="text-sm font-semibold uppercase tracking-tight text-[#134B73]">
                             {proposal.customerName}
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {maskCpf(proposal.customerCpf)}
                           </p>
-                          <p className="text-xs font-medium text-sky-600">
-                            Proposta #{proposal.id}
-                          </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="space-y-1 text-sm">
-                          <p className="font-semibold uppercase">
-                            {proposal.vehicleBrand}
-                          </p>
                           <p className="text-xs text-muted-foreground">
-                            {proposal.vehicleModel} ({proposal.vehicleYear})
+                            Valor financiado
                           </p>
-                          <p className="text-xs text-muted-foreground">
-                            Entrada {formatCurrency(proposal.downPaymentValue)}
-                          </p>
-                          <p className="text-xs font-semibold text-emerald-600">
-                            {formatCurrency(proposal.financedValue)} financiado
+                          <p className="text-sm font-semibold text-emerald-600">
+                            {formatCurrency(proposal.financedValue)}
                           </p>
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
                         <div className="text-sm">
                           <p className="font-medium">
-                            Dealer #{proposal.dealerId ?? "—"}
+                            {proposal.dealerId
+                              ? dealersById[proposal.dealerId]?.name ??
+                                `Lojista #${proposal.dealerId}`
+                              : "Lojista não informado"}
                           </p>
+                          {proposal.dealerId && dealersById[proposal.dealerId]?.enterprise ? (
+                            <p className="text-xs text-muted-foreground">
+                              {dealersById[proposal.dealerId]?.enterprise}
+                            </p>
+                          ) : null}
                           {proposal.vehiclePlate ? (
                             <p className="text-xs text-muted-foreground">
                               Placa {proposal.vehiclePlate}
@@ -133,11 +134,10 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
-                        <div className="space-y-1 text-sm text-muted-foreground">
-                          <p>Banco parceiro</p>
-                          <p>Produto personalizado</p>
-                          <p className="text-xs">
-                            FIPE {proposal.fipeCode || "N/D"}
+                        <div className="text-sm">
+                          <p className="text-xs text-muted-foreground">FIPE</p>
+                          <p className="font-semibold">
+                            {formatCurrency(proposal.fipeValue)}
                           </p>
                         </div>
                       </TableCell>
@@ -164,7 +164,10 @@ export function ProposalsTable({ proposals, isLoading }: ProposalsTableProps) {
                             {formatDateTime(proposal.createdAt)}
                           </p>
                           <p className="text-xs font-medium uppercase text-muted-foreground">
-                            Seller #{proposal.sellerId ?? "—"}
+                            {proposal.sellerId
+                              ? sellersById[proposal.sellerId] ??
+                                `Vendedor #${proposal.sellerId}`
+                              : "Vendedor não informado"}
                           </p>
                         </div>
                       </TableCell>

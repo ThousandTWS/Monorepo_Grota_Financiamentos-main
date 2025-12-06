@@ -26,6 +26,8 @@ import {
 import { StatusLegend } from "./components/StatusLegend";
 import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
+import { getAllLogistics } from "@/application/services/Logista/logisticService";
+import { getAllSellers } from "@/application/services/Seller/sellerService";
 import { getRealtimeUrl } from "@/application/config/realtime";
 
 const ADMIN_PROPOSALS_IDENTITY = "admin-esteira";
@@ -87,6 +89,8 @@ export default function EsteiraDePropostasFeature() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
+  const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
 
   const { messages, sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
@@ -147,6 +151,46 @@ export default function EsteiraDePropostasFeature() {
   useEffect(() => {
     loadProposals();
   }, [loadProposals]);
+
+  useEffect(() => {
+    const loadNames = async () => {
+      try {
+        const [dealers, sellers] = await Promise.all([
+          getAllLogistics(),
+          getAllSellers(),
+        ]);
+
+        const dealerMap = dealers.reduce<Record<number, { name: string; enterprise?: string }>>((acc, dealer) => {
+          if (dealer.id) {
+            const name =
+              dealer.fullName ||
+              dealer.enterprise ||
+              `Lojista #${dealer.id}`;
+            acc[dealer.id] = {
+              name,
+              enterprise: dealer.enterprise || undefined,
+            };
+          }
+          return acc;
+        }, {});
+
+        const sellerMap = sellers.reduce<Record<number, string>>((acc, seller) => {
+          if (seller.id) {
+            const name = seller.fullName || seller.email || `Operador #${seller.id}`;
+            acc[seller.id] = name;
+          }
+          return acc;
+        }, {});
+
+        setDealerIndex(dealerMap);
+        setSellerIndex(sellerMap);
+      } catch (error) {
+        console.warn("[Admin Esteira] Não foi possível carregar nomes de lojistas/vendedores", error);
+      }
+    };
+
+    loadNames();
+  }, []);
 
   useEffect(() => {
     if (!latestRealtimeMessage) return;
@@ -257,9 +301,9 @@ export default function EsteiraDePropostasFeature() {
     });
     return Array.from(ids).map((value) => ({
       value,
-      label: `Operador #${value}`,
+      label: sellerIndex[Number(value)] ?? `Operador #${value}`,
     }));
-  }, [proposals]);
+  }, [proposals, sellerIndex]);
 
   const availableDealers = useMemo(() => {
     const ids = new Set<string>();
@@ -270,9 +314,13 @@ export default function EsteiraDePropostasFeature() {
     });
     return Array.from(ids).map((value) => ({
       value,
-      label: `Lojista #${value}`,
+      label: dealerIndex[Number(value)]
+        ? dealerIndex[Number(value)].enterprise
+          ? `${dealerIndex[Number(value)].name} (${dealerIndex[Number(value)].enterprise})`
+          : dealerIndex[Number(value)].name
+        : `Lojista #${value}`,
     }));
-  }, [proposals]);
+  }, [proposals, dealerIndex]);
 
   const handleFiltersChange = (partial: Partial<LocalFilters>) => {
     setFilters((prev) => ({
@@ -382,6 +430,8 @@ export default function EsteiraDePropostasFeature() {
         isLoading={isLoading}
         onStatusChange={handleStatusUpdate}
         updatingId={updatingId}
+        dealersById={dealerIndex}
+        sellersById={sellerIndex}
       />
     </div>
   );
