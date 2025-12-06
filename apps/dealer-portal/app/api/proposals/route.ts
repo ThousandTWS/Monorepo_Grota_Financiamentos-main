@@ -189,8 +189,11 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return unauthorized();
     }
-    if (session.canCreate === false) {
-      return forbidden("Você não tem permissão para criar propostas.");
+    const role = session.role?.toLowerCase?.() ?? "";
+    const isManager =
+      role === "gestor" || role === "manager" || role === "gerente";
+    if (isManager) {
+      return forbidden("Gestores apenas acompanham as fichas.");
     }
 
     let body: Record<string, unknown>;
