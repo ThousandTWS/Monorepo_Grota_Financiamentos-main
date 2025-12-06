@@ -1,5 +1,5 @@
-﻿/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
+﻿"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,7 +9,6 @@ import {
   type Ano,
   type Marca,
   type Modelo,
-  type ValorVeiculo,
   getAnos,
   getMarcas,
   getModelos,
@@ -17,11 +16,9 @@ import {
 } from "@/application/services/fipe";
 import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
 import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
-import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import {
   OperationCard,
   PersonalDataCard,
-  ProfessionalDataCard,
   VehicleDataCard,
 } from "@/presentation/features/simulacao-novo/components";
 import { Button } from "@/presentation/ui/button";
@@ -37,7 +34,6 @@ import {
 } from "@/presentation/ui/dialog";
 import { Separator } from "@/presentation/ui/separator";
 import { unmaskCPF } from "@/lib/masks";
-import axios from "axios";
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
 
@@ -142,7 +138,6 @@ export default function SimuladorNovo() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [personalZip, setPersonalZip] = useState("");
-  const [loanTerm, setLoanTerm] = useState("");
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [isYearsLoading, setIsYearsLoading] = useState(false);
@@ -152,6 +147,7 @@ export default function SimuladorNovo() {
   const [pendingPayload, setPendingPayload] = useState<CreateProposalPayload | null>(null);
   const [cpfSituation, setCpfSituation] = useState("");
   const [searchingLoading, setSearchingLoading] = useState(false);
+  const [searchCEPLoading, setSearchCEPLoading] = useState(false);
 
   const getVehicleTypeId = (category: typeof vehicleCategory) => {
     if (category === "motos") return 2;
@@ -215,9 +211,10 @@ export default function SimuladorNovo() {
   const handleYearChange = async (yearId: string) => {
     if (!methods.getValues("vehicleBrand") || !methods.getValues("vehicleModel")) return;
     setSelectedYear(yearId);
+    const [modelCode, modelName] = methods.getValues("vehicleModel").split("+");
 
     try {
-      const response = await getValorVeiculo(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", methods.getValues("vehicleModel" )?? "", yearId);
+      const response = await getValorVeiculo(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", modelCode, yearId);
       methods.setValue("priceFIPE", response.price);
     } catch (error) {
       toast.error("Não foi possível carregar os dados do veículo FIPE.");
@@ -225,14 +222,9 @@ export default function SimuladorNovo() {
     }
   };
 
-  const maskPlate = (value: string) => {
-    const sanitized = (value || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 7);
-    const prefix = sanitized.slice(0, 3);
-    const suffix = sanitized.slice(3);
-    return suffix ? `${prefix}-${suffix}` : prefix;
-  };
-
   const handleZipChange = async (value: string) => {
+    setSearchCEPLoading(true);
+
     const masked = maskCEP(value);
     setPersonalZip(masked);
     const digits = masked.replace(/\D/g, "");
@@ -250,6 +242,8 @@ export default function SimuladorNovo() {
       methods.setValue("UF", data.uf);
     } catch (error) {
       console.error("[cep] erro ao buscar endereço", error);
+    } finally {
+      setSearchCEPLoading(false);
     }
   };
 
@@ -358,7 +352,7 @@ export default function SimuladorNovo() {
       fipeCode: data.priceFIPE ?? "",
       fipeValue: parseCurrency(data.priceFIPE),
       vehicleBrand: data.vehicleBrand,
-      vehicleModel: data.vehicleModel,
+      vehicleModel: data.vehicleModel.split("+")[1]?.trim(),
       vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
       downPaymentValue: 0,
       financedValue: parseCurrency(data.amountFinanced),
@@ -396,6 +390,7 @@ export default function SimuladorNovo() {
       await createProposal(pendingPayload);
       toast.success("Ficha enviada para a esteira.");
       setIsReviewOpen(false);
+      methods.reset();
       router.push("/esteira-propostas");
     } catch (error) {
       console.error("Form submission error", error);
@@ -419,11 +414,11 @@ export default function SimuladorNovo() {
       }).format(parseCurrency(value));
 
     return {
-      cliente: reviewData.shareholderName || reviewData.companyName || "Cliente",
+      cliente: reviewData.name || "Cliente",
       documento: reviewData.cpf_cnpj,
       email: reviewData.email,
       telefone: reviewData.phone,
-      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel || "--"} / ${reviewData.vehicleYear || "--"}`,
+      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel.split("+")[1]?.trim() || "--"} / ${reviewData.vehicleYear || "--"}`,
       placa: reviewData.vehiclePlate || "—",
       fipe: currency(reviewData.priceFIPE),
       financiado: currency(reviewData.amountFinanced),
@@ -482,7 +477,6 @@ export default function SimuladorNovo() {
     };
 
     loadOriginOptions();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -491,7 +485,7 @@ export default function SimuladorNovo() {
         <h1 className="text-4xl font-light text-[#134B73]">Nova Simulação</h1>
       </div>
       <FormProvider {...methods}>
-        <form className="space-y-5" onSubmit={methods.handleSubmit(onSubmit, (errors) => console.log(errors))}>
+        <form className="space-y-5" onSubmit={methods.handleSubmit(onSubmit)}>
           <div className="grid gap-5 lg:grid-cols-[0.4fr_2fr] items-start">
             <OperationCard
               personType={personType}
@@ -508,6 +502,7 @@ export default function SimuladorNovo() {
               handleDocumentChange={handleDocumentChange}
               cpfSituation={cpfSituation}
               searchingLoading={searchingLoading}
+              searchingCPFLoading={searchCEPLoading}
               personType={personType}
             />
           </div>
@@ -525,7 +520,6 @@ export default function SimuladorNovo() {
             isBrandsLoading={isBrandsLoading}
             isModelsLoading={isModelsLoading}
             isYearsLoading={isYearsLoading}
-            onLoanTermChange={setLoanTerm}
           />
         </form>
       </FormProvider>
