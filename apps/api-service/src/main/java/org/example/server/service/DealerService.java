@@ -8,7 +8,10 @@ import org.example.server.enums.UserRole;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
+import org.example.server.model.Manager;
+import org.example.server.model.Operator;
 import org.example.server.model.Partner;
+import org.example.server.model.Seller;
 import org.example.server.model.User;
 import org.example.server.repository.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -185,8 +188,30 @@ public class DealerService {
 
     @Transactional(readOnly = true)
     public DealerDetailsResponseDTO findDetailDealerByUserId(Long userId) {
-        Dealer dealer = dealerRepository.findByUserId(userId)
-                .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado para o usuário informado."));
+        Dealer dealer = dealerRepository.findByUserId(userId).orElse(null);
+
+        if (dealer == null) {
+            dealer = sellerRepository.findByUserId(userId)
+                    .map(Seller::getDealer)
+                    .orElse(null);
+        }
+
+        if (dealer == null) {
+            dealer = managerRepository.findByUserId(userId)
+                    .map(Manager::getDealer)
+                    .orElse(null);
+        }
+
+        if (dealer == null) {
+            dealer = operatorRepository.findByUserId(userId)
+                    .map(Operator::getDealer)
+                    .orElse(null);
+        }
+
+        if (dealer == null) {
+            throw new RecordNotFoundException("Lojista não encontrado para o usuário informado.");
+        }
+
         return dealerDetailsMapper.toDTO(dealer);
     }
 
