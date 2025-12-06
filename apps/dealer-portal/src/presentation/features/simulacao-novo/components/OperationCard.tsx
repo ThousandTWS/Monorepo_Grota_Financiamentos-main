@@ -1,5 +1,9 @@
+import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
+import { Button } from "@/presentation/ui/button";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/ui/select";
+import { Separator } from "@/presentation/ui/separator";
+import { useFormContext } from "react-hook-form";
 
 type OperationCardProps = {
   personType: "PF" | "PJ" | null;
@@ -8,6 +12,8 @@ type OperationCardProps = {
   onPersonTypeChange: (value: "PF" | "PJ") => void;
   onOperationTypeChange: (value: "financiamento" | "autofin") => void;
   onVehicleCategoryChange: (value: "leves" | "motos" | "pesados") => void;
+  isLoading: boolean;
+  waitingPayload: CreateProposalPayload | null;
 };
 
 export function OperationCard({
@@ -17,60 +23,145 @@ export function OperationCard({
   onPersonTypeChange,
   onOperationTypeChange,
   onVehicleCategoryChange,
+  isLoading,
+  waitingPayload
 }: OperationCardProps) {
+  const { watch } = useFormContext();
+
+  const name = watch("name");
+  const cpf_cnpj = watch("cpf_cnpj");
+  const email = watch("email");
+  const phone = watch("phone");
+  const vehicleModel = watch("vehicleModel");
+  const vehiclePlate = watch("vehiclePlate");
+  const priceFIPE = watch("priceFIPE");
+  const amountFinanced = watch("amountFinanced");
+  const termMonths = watch("termMonths");
+  const address = watch("address");
+
   return (
-    <Card className="w-full h-full">
+    <Card className="w-full md:min-w-96 h-full bg-gradient-to-b from-[#134B73] via-[#134B73] to-[#134B73]">
+      <div className="pointer-events-none absolute inset-0 opacity-40 blur-3xl">
+        <div className="mx-auto h-full w-full max-w-2xl bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_65%)]" />
+      </div>
       <CardContent className="space-y-5 px-0">
         <CardHeader className="px-0">
           <div className="flex flex-col gap-2">
-            <h2 className="text-lg font-semibold text-[#134B73]">Operação</h2>
+            <h2 className="text-lg font-semibold text-white">Operação</h2>
           </div>
         </CardHeader>
 
         <div className="grid gap-4">
           <div className="space-y-2 -mt-2">
-            <p className="text-sm font-medium text-[#134B73]">Pessoa</p>
+            <p className="text-sm font-medium text-white">Pessoa</p>
             <Select value={personType ?? ""} onValueChange={(value: "PF" | "PJ") => onPersonTypeChange(value)}>
-              <SelectTrigger className="text-[#134B73] w-[100%]">
+              <SelectTrigger className="w-[100%] bg-white">
                 <SelectValue placeholder="Selecione PF ou PJ" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PF">Pessoa Fisica</SelectItem>
-                <SelectItem value="PJ">Pessoa Juridica</SelectItem>
+                <SelectItem value="PF" className="text-black">Pessoa Fisica</SelectItem>
+                <SelectItem value="PJ" className="text-black">Pessoa Juridica</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2 -mt-2">
-            <p className="text-sm font-medium text-[#134B73]">Tipo de operação</p>
+            <p className="text-sm font-medium text-white">Tipo de operação</p>
             <Select
               value={operationType ?? ""}
               onValueChange={(value: "financiamento" | "autofin") => onOperationTypeChange(value)}
             >
-              <SelectTrigger className="w-[100%]">
+              <SelectTrigger className="w-[100%] bg-white">
                 <SelectValue placeholder="Selecione a operação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="financiamento">Financiamento</SelectItem>
-                <SelectItem value="autofin">AutoFin</SelectItem>
+                <SelectItem value="financiamento" className="text-black">Financiamento</SelectItem>
+                <SelectItem value="autofin" className="text-black">AutoFin</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2 -mt-2">
-            <p className="text-sm font-medium text-[#134B73]">Categoria do veículo</p>
+            <p className="text-sm font-medium text-white">Categoria do veículo</p>
             <Select
               value={vehicleCategory ?? ""}
               onValueChange={(value: "leves" | "motos" | "pesados") => onVehicleCategoryChange(value)}
             >
-              <SelectTrigger className="w-[100%]">
+              <SelectTrigger className="w-[100%] bg-white">
                 <SelectValue placeholder="Selecione a categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="leves">Leves</SelectItem>
-                <SelectItem value="motos">Motos</SelectItem>
-                <SelectItem value="pesados">Pesados</SelectItem>
+                <SelectItem value="leves" className="text-black">Leves</SelectItem>
+                <SelectItem value="motos" className="text-black">Motos</SelectItem>
+                <SelectItem value="pesados" className="text-black">Pesados</SelectItem>
               </SelectContent>
             </Select>
           </div>
+            <div className="space-y-3 border-white/25 bg-white/10 backdrop-blur-md">
+                <div className="grid gap-2 rounded-md border p-3">
+                  <h3 className="text-white font-semibold text-xl">Acompanhe a simulação</h3>
+                  {name && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Cliente</span>
+                      <span className="font-medium text-white">{name}</span>
+                    </div>
+                  )}
+                  {cpf_cnpj && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Documento</span>
+                      <span className="font-medium text-white">{cpf_cnpj}</span>
+                    </div>
+                  )}
+                  {email && phone && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Contato</span>
+                      <aside>
+                        <p className="font-medium text-white">{email}</p>
+                        <p className="font-medium text-white">{phone}</p>
+                      </aside>
+                    </div>
+                  )}
+                  {((name || cpf_cnpj || email) && (vehicleModel || vehiclePlate || priceFIPE || amountFinanced || termMonths)) && <Separator className="bg-slate-50/50" />}
+                  {vehicleModel && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Veículo</span>
+                      <span className="font-medium text-white">{vehicleModel}</span>
+                    </div>
+                  )}
+                  {vehiclePlate && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Placa</span>
+                      <span className="font-medium text-white">{vehiclePlate}</span>
+                    </div>
+                  )}
+                  {priceFIPE && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Valor FIPE</span>
+                      <span className="font-medium text-white">{priceFIPE}</span>
+                    </div>
+                  )}
+                  {amountFinanced && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Valor financiado</span>
+                      <span className="font-medium text-white">{amountFinanced}</span>
+                    </div>
+                  )}
+                  {termMonths && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Prazo</span>
+                      <span className="font-medium text-white">{termMonths} meses</span>
+                    </div>
+                  )}
+                  {((vehicleModel || vehiclePlate || priceFIPE || amountFinanced || termMonths) && (address)) && <Separator className="bg-slate-50/50" />}
+                  {address && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Endereço</span>
+                      <span className="font-medium text-right text-white">{address}</span>
+                    </div>
+                  )}   
+                  <Button type="submit" disabled={isLoading} className="text-[#134B73] bg-white hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+                    {waitingPayload ? "Revisar envio" : "Revisar envio"}
+                  </Button>           
+                </div>
+            </div>
         </div>
       </CardContent>
     </Card>
