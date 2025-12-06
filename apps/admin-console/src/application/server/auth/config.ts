@@ -9,7 +9,8 @@ const DEFAULT_API_BASE_URL =
 
 export const ADMIN_SESSION_COOKIE = "grota.admin.session";
 export const ADMIN_SESSION_SCOPE: SessionScope = "admin";
-export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 7;
+// Duração do cookie de sessão (em segundos). Aumentado para 30 dias.
+export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 export function getAdminApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;
