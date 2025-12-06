@@ -26,13 +26,14 @@ export function OperationCard({
   isLoading,
   waitingPayload
 }: OperationCardProps) {
-  const { watch } = useFormContext();
+  const { watch, setValue } = useFormContext();
 
   const name = watch("name");
   const cpf_cnpj = watch("cpf_cnpj");
   const email = watch("email");
   const phone = watch("phone");
-  const vehicleModel = watch("vehicleModel");
+  const vehicleModelMasked = watch("vehicleModel");
+  const vehicleModel = vehicleModelMasked?.split("+")[1]?.trim();
   const vehiclePlate = watch("vehiclePlate");
   const priceFIPE = watch("priceFIPE");
   const amountFinanced = watch("amountFinanced");
@@ -54,7 +55,10 @@ export function OperationCard({
         <div className="grid gap-4">
           <div className="space-y-2 -mt-2">
             <p className="text-sm font-medium text-white">Pessoa</p>
-            <Select value={personType ?? ""} onValueChange={(value: "PF" | "PJ") => onPersonTypeChange(value)}>
+            <Select value={personType ?? ""} onValueChange={(value: "PF" | "PJ") => {
+              onPersonTypeChange(value);
+              setValue("cpf_cnpj", "");
+            }}>
               <SelectTrigger className="w-[100%] bg-white">
                 <SelectValue placeholder="Selecione PF ou PJ" />
               </SelectTrigger>
