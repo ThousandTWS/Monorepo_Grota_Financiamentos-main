@@ -49,3 +49,8 @@ export function formatDateISO(data: string): string {
 
   return `${ano}-${mes}-${dia}`;
 }
+
+export function convertBRtoISO(date: string) {
+  const [day, month, year] = date.split("/");
+  return `${year}-${month}-${day}`;
+}
