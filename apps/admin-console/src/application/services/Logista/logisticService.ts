@@ -39,6 +39,20 @@ export type CreateDealerPayload = {
   observation?: string;
 };
 
+function extractArrayPayload(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    const candidates = ["content", "data", "items", "results"];
+    for (const key of candidates) {
+      if (Array.isArray(record[key])) return record[key] as unknown[];
+    }
+  }
+
+  return [];
+}
+
 async function request<T>(
   input: RequestInfo | URL,
   init?: RequestInit,
@@ -76,10 +90,11 @@ async function request<T>(
 }
 
 export const getAllLogistics = async (): Promise<Dealer[]> => {
-  const payload = await request<Dealer[]>("/api/dealers", {
+  const payload = await request<unknown>("/api/dealers", {
     method: "GET",
   });
-  return Array.isArray(payload) ? payload : [];
+  const listPayload = extractArrayPayload(payload);
+  return (listPayload as Dealer[]).map((dealer) => dealer as Dealer);
 };
 
 export const createDealer = async (

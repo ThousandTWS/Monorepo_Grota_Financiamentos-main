@@ -67,6 +67,24 @@ const ProposalEventSchema = z.object({
 
 const ProposalEventListSchema = z.array(ProposalEventSchema);
 
+function extractArrayPayload(payload: unknown): unknown[] {
+  if (Array.isArray(payload)) return payload;
+
+  if (payload && typeof payload === "object") {
+    const record = payload as Record<string, unknown>;
+    const candidates = ["content", "data", "items", "results"];
+
+    for (const key of candidates) {
+      if (Array.isArray(record[key])) {
+        return record[key] as unknown[];
+      }
+    }
+  }
+
+  // fallback for unexpected shapes to avoid crashing zod parsing
+  return [];
+}
+
 const buildQueryString = (filters: ProposalFilters) => {
   const params = new URLSearchParams();
   if (typeof filters.dealerId === "number") {
@@ -104,8 +122,9 @@ export const fetchProposals = async (
     },
   );
 
-  const payload = await handleResponse<unknown[]>(response);
-  return ProposalListSchema.parse(payload);
+  const payload = await handleResponse<unknown>(response);
+  const listPayload = extractArrayPayload(payload);
+  return ProposalListSchema.parse(listPayload);
 };
 
 export const createProposal = async (
@@ -159,5 +178,6 @@ export const fetchProposalTimeline = async (
   );
 
   const payload = await handleResponse<unknown>(response);
-  return ProposalEventListSchema.parse(Array.isArray(payload) ? payload : []);
+  const listPayload = extractArrayPayload(payload);
+  return ProposalEventListSchema.parse(listPayload);
 };
