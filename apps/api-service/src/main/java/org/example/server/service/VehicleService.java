@@ -1,6 +1,5 @@
 package org.example.server.service;
 
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.vehicle.VehicleMapper;
 import org.example.server.dto.vehicle.VehicleRequestDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
@@ -13,10 +12,6 @@ import org.example.server.model.User;
 import org.example.server.model.Vehicle;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.VehicleRepository;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -43,10 +38,10 @@ public class VehicleService {
         return vehicleMapper.toDTO(vehicleRepository.save(vehicle));
     }
 
-    public PagedResponseDTO<VehicleResponseDTO> findAll(int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Vehicle> vehicles = vehicleRepository.findAll(pageable);
-        return PagedResponseDTO.fromPage(vehicles.map(vehicleMapper::toDTO));
+    public java.util.List<VehicleResponseDTO> findAll() {
+        return vehicleRepository.findAll().stream()
+                .map(vehicleMapper::toDTO)
+                .toList();
     }
 
     public VehicleResponseDTO findById(Long id) {
@@ -77,10 +72,10 @@ public class VehicleService {
         return vehicleMapper.toDTO(vehicleRepository.save(vehicleUpdate));
     }
 
-    public PagedResponseDTO<VehicleResponseDTO> getVehicleByDealer(Long id, int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Vehicle> vehicles = vehicleRepository.findByDealerId(id, pageable);
-        return PagedResponseDTO.fromPage(vehicles.map(vehicleMapper::toDTO));
+    public java.util.List<VehicleResponseDTO> getVehicleByDealer(Long id) {
+        return vehicleRepository.findByDealerId(id).stream()
+                .map(vehicleMapper::toDTO)
+                .toList();
     }
 
     public VehicleResponseDTO updateStatus(User user, Long id, VehicleStatus status) {

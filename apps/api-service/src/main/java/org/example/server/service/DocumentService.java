@@ -4,7 +4,6 @@ import org.example.server.dto.document.DocumentMapper;
 import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.exception.DocumentUploadException;
 import org.example.server.exception.auth.AccessDeniedException;
@@ -15,10 +14,6 @@ import org.example.server.model.Document;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.DocumentRepository;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -126,16 +121,17 @@ public class DocumentService {
     }
 
 
-    public PagedResponseDTO<DocumentResponseDTO> listUserDocuments(User user, int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+    public java.util.List<DocumentResponseDTO> listUserDocuments(User user) {
 
         if (user.getRole() == UserRole.ADMIN) {
-            Page<Document> documents = documentRepository.findAll(pageable);
-            return PagedResponseDTO.fromPage(documents.map(mapper::toDTO));
+            return documentRepository.findAll()
+                    .stream().map(mapper::toDTO)
+                    .collect(java.util.stream.Collectors.toList());
         }
 
-        Page<Document> documents = documentRepository.findByDealer_UserId(user.getId(), pageable);
-        return PagedResponseDTO.fromPage(documents.map(mapper::toDTO));
+        return documentRepository.findByDealer_UserId(user.getId())
+                .stream().map(mapper::toDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     private String buildS3Key(Long dealerId, String originalFilename) {

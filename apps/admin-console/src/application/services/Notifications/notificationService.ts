@@ -1,5 +1,3 @@
-import { toPagedResponse } from "@/application/core/@types/pagination";
-
 export type NotificationItem = {
   id: number;
   title: string;
@@ -41,13 +39,13 @@ async function request<T>(
 }
 
 export const getNotifications = async (): Promise<NotificationItem[]> => {
-  const params = new URLSearchParams({ page: "0", size: "10" });
-  const payload = await request<unknown>(`/api/notifications?${params.toString()}`, {
+  const payload = await request<NotificationItem[]>("/api/notifications", {
     method: "GET",
   });
-  const page = toPagedResponse<NotificationItem>(payload);
+  if (!Array.isArray(payload)) return [];
 
-  return page.content.map((item) => ({
+  // Normaliza a resposta do backend (readFlag -> read)
+  return payload.map((item) => ({
     ...item,
     read: item.read ?? item.readFlag ?? false,
   }));

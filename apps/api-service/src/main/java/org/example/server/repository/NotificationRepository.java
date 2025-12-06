@@ -1,8 +1,6 @@
 package org.example.server.repository;
 
 import org.example.server.model.Notification;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,6 +8,4 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findByTargetTypeOrderByCreatedAtDesc(String targetType);
     List<Notification> findByTargetTypeAndTargetIdOrderByCreatedAtDesc(String targetType, Long targetId);
-    Page<Notification> findByTargetTypeOrderByCreatedAtDesc(String targetType, Pageable pageable);
-    Page<Notification> findByTargetTypeAndTargetIdOrderByCreatedAtDesc(String targetType, Long targetId, Pageable pageable);
 }

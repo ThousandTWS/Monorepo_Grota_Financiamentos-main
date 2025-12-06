@@ -1,5 +1,3 @@
-import { toPagedResponse } from "@/application/core/@types/pagination";
-
 export type Manager = {
   createdAt: string;
   id: number;
@@ -63,15 +61,11 @@ async function request<T>(
 }
 
 export const getAllManagers = async (dealerId?: number): Promise<Manager[]> => {
-  const params = new URLSearchParams({ page: "0", size: "10" });
-  if (dealerId) {
-    params.set("dealerId", String(dealerId));
-  }
-  const payload = await request<unknown>(`/api/managers?${params.toString()}`, {
+  const query = dealerId ? `?dealerId=${dealerId}` : "";
+  const payload = await request<Manager[]>(`/api/managers${query}`, {
     method: "GET",
   });
-  const page = toPagedResponse<Manager>(payload);
-  return page.content;
+  return Array.isArray(payload) ? payload : [];
 };
 
 export const createManager = async (

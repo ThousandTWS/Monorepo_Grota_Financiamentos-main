@@ -13,7 +13,6 @@ import org.example.server.dto.dealer.DealerProfileDTO;
 import org.example.server.dto.dealer.DealerRegistrationRequestDTO;
 import org.example.server.dto.dealer.DealerRegistrationResponseDTO;
 import org.example.server.dto.document.DocumentResponseDTO;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.vehicle.VehicleResponseDTO;
 import org.example.server.model.User;
 import org.example.server.service.DealerService;
@@ -70,11 +69,8 @@ public class DealerController {
             @ApiResponse(responseCode = "200", description = "Lista de Lojistas retornada com sucesso"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor. Tente novamente mais tarde.")
     })
-    public ResponseEntity<PagedResponseDTO<DealerRegistrationResponseDTO>> findAll(
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ){
-        PagedResponseDTO<DealerRegistrationResponseDTO> dealerList = dealerService.findAll(page, size);
+    public ResponseEntity<List<DealerRegistrationResponseDTO>> findAll(){
+        List<DealerRegistrationResponseDTO> dealerList = dealerService.findAll();
         return ResponseEntity.ok().body(dealerList);
     }
 
@@ -139,12 +135,8 @@ public class DealerController {
             @ApiResponse(responseCode = "404", description = "Lojista não encontrado"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<PagedResponseDTO<VehicleResponseDTO>> getVehicleByDealer(
-            @PathVariable Long id,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ){
-        PagedResponseDTO<VehicleResponseDTO> vehiclesDto = vehicleService.getVehicleByDealer(id, page, size);
+    public ResponseEntity<List<VehicleResponseDTO>> getVehicleByDealer(@PathVariable Long id){
+        List<VehicleResponseDTO> vehiclesDto = vehicleService.getVehicleByDealer(id);
         return ResponseEntity.ok().body(vehiclesDto);
     }
 

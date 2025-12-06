@@ -13,7 +13,6 @@ import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
 import org.example.server.enums.DocumentType;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.model.User;
 import org.example.server.service.DocumentService;
 import org.springframework.http.ResponseEntity;
@@ -82,12 +81,8 @@ public class DocumentController {
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
             @ApiResponse(responseCode = "500", description = "Error interno no servidor")
     })
-    public ResponseEntity<PagedResponseDTO<DocumentResponseDTO>> listUserDocuments(
-            @AuthenticationPrincipal User user,
-            @RequestParam(name = "page", defaultValue = "0") int page,
-            @RequestParam(name = "size", defaultValue = "10") int size
-    ){
-        PagedResponseDTO<DocumentResponseDTO> docs = documentService.listUserDocuments(user, page, size);
+    public ResponseEntity<java.util.List<DocumentResponseDTO>> listUserDocuments(@AuthenticationPrincipal User user){
+        java.util.List<DocumentResponseDTO> docs = documentService.listUserDocuments(user);
         return ResponseEntity.ok(docs);
     }
 

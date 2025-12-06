@@ -1,7 +1,6 @@
 package org.example.server.service;
 
 import org.example.server.dto.address.AddressMapper;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.seller.SellerMapper;
 import org.example.server.dto.seller.SellerRequestDTO;
 import org.example.server.dto.seller.SellerResponseDTO;
@@ -16,10 +15,6 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.SellerRepository;
 import org.example.server.repository.UserRepository;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,13 +94,15 @@ public class SellerService {
         return sellerMapper.toDTO(sellerRepository.save(seller));
     }
 
-    public PagedResponseDTO<SellerResponseDTO> findAll(Long dealerId, int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Seller> sellers = dealerId != null
-                ? sellerRepository.findByDealerId(dealerId, pageable)
-                : sellerRepository.findAll(pageable);
+    public java.util.List<SellerResponseDTO> findAll(Long dealerId) {
+        java.util.List<Seller> sellers = dealerId != null
+                ? sellerRepository.findByDealerId(dealerId)
+                : sellerRepository.findAll();
 
-        return PagedResponseDTO.fromPage(sellers.map(sellerMapper::toDTO));
+        return sellers
+                .stream()
+                .map(sellerMapper::toDTO)
+                .toList();
     }
 
     public SellerResponseDTO findById(@PathVariable Long id) {

@@ -4,7 +4,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.dealer.*;
 import org.example.server.dto.document.DocumentResponseDTO;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
@@ -12,10 +11,6 @@ import org.example.server.model.Dealer;
 import org.example.server.model.Partner;
 import org.example.server.model.User;
 import org.example.server.repository.*;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -159,10 +154,11 @@ public class DealerService {
         return dealerRegistrationMapper.toDTO(dealer);
     }
 
-    public PagedResponseDTO<DealerRegistrationResponseDTO> findAll(int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.ASC, "enterprise"));
-        Page<Dealer> dealerList = dealerRepository.findAll(pageable);
-        return PagedResponseDTO.fromPage(dealerList.map(dealerRegistrationMapper::toDTO));
+    public List<DealerRegistrationResponseDTO> findAll() {
+        List<Dealer> dealerList = dealerRepository.findAll();
+        return dealerList.stream()
+                .map(dealerRegistrationMapper::toDTO)
+                .toList();
     }
 
     @SuppressWarnings("null")

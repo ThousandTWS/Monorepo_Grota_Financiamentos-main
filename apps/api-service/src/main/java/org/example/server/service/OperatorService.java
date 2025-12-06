@@ -1,7 +1,6 @@
 package org.example.server.service;
 
 import org.example.server.dto.address.AddressMapper;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.dto.operator.OperatorMapper;
 import org.example.server.dto.operator.OperatorRequestDTO;
 import org.example.server.dto.operator.OperatorResponseDTO;
@@ -16,10 +15,6 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.OperatorRepository;
 import org.example.server.repository.UserRepository;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,13 +94,15 @@ public class OperatorService {
         return operatorMapper.toDTO(operatorRepository.save(operator));
     }
 
-    public PagedResponseDTO<OperatorResponseDTO> findAll(Long dealerId, int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Operator> operators = dealerId != null
-                ? operatorRepository.findByDealerId(dealerId, pageable)
-                : operatorRepository.findAll(pageable);
+    public java.util.List<OperatorResponseDTO> findAll(Long dealerId) {
+        java.util.List<Operator> operators = dealerId != null
+                ? operatorRepository.findByDealerId(dealerId)
+                : operatorRepository.findAll();
 
-        return PagedResponseDTO.fromPage(operators.map(operatorMapper::toDTO));
+        return operators
+                .stream()
+                .map(operatorMapper::toDTO)
+                .toList();
     }
 
     public OperatorResponseDTO findById(@PathVariable Long id) {

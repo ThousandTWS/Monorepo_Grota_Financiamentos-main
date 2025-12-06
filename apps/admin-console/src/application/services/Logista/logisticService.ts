@@ -1,5 +1,3 @@
-import { toPagedResponse } from "@/application/core/@types/pagination";
-
 export type Dealer = {
   id: number;
   fullName: string;
@@ -78,12 +76,10 @@ async function request<T>(
 }
 
 export const getAllLogistics = async (): Promise<Dealer[]> => {
-  const params = new URLSearchParams({ page: "0", size: "10" });
-  const payload = await request<unknown>(`/api/dealers?${params.toString()}`, {
+  const payload = await request<Dealer[]>("/api/dealers", {
     method: "GET",
   });
-  const page = toPagedResponse<Dealer>(payload);
-  return page.content;
+  return Array.isArray(payload) ? payload : [];
 };
 
 export const createDealer = async (

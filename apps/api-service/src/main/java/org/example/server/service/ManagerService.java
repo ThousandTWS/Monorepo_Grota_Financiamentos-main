@@ -4,7 +4,6 @@ import org.example.server.dto.address.AddressMapper;
 import org.example.server.dto.manager.ManagerMapper;
 import org.example.server.dto.manager.ManagerRequestDTO;
 import org.example.server.dto.manager.ManagerResponseDTO;
-import org.example.server.dto.pagination.PagedResponseDTO;
 import org.example.server.enums.UserRole;
 import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
@@ -16,13 +15,11 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ManagerRepository;
 import org.example.server.repository.UserRepository;
-import org.example.server.util.PaginationUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.List;
 
 @Service
 public class ManagerService {
@@ -99,13 +96,15 @@ public class ManagerService {
         return managerMapper.toDTO(managerRepository.save(manager));
     }
 
-    public PagedResponseDTO<ManagerResponseDTO> findAll(Long dealerId, int page, int size) {
-        Pageable pageable = PaginationUtils.buildPageRequest(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Manager> managers = dealerId != null
-                ? managerRepository.findByDealerId(dealerId, pageable)
-                : managerRepository.findAll(pageable);
+    public List<ManagerResponseDTO> findAll(Long dealerId) {
+        List<Manager> managers = dealerId != null
+                ? managerRepository.findByDealerId(dealerId)
+                : managerRepository.findAll();
 
-        return PagedResponseDTO.fromPage(managers.map(managerMapper::toDTO));
+        return managers
+                .stream()
+                .map(managerMapper::toDTO)
+                .collect(java.util.stream.Collectors.toList());
     }
 
     public ManagerResponseDTO findById(@PathVariable Long id) {
