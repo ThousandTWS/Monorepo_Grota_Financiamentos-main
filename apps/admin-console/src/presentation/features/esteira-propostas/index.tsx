@@ -162,10 +162,13 @@ export default function EsteiraDePropostasFeature() {
 
         const dealerMap = dealers.reduce<Record<number, { name: string; enterprise?: string }>>((acc, dealer) => {
           if (dealer.id) {
-            const name = dealer.fullName || dealer.enterprise || dealer.razaoSocial || `Lojista #${dealer.id}`;
+            const name =
+              dealer.fullName ||
+              dealer.enterprise ||
+              `Lojista #${dealer.id}`;
             acc[dealer.id] = {
               name,
-              enterprise: dealer.enterprise || dealer.razaoSocial || dealer.fullNameEnterprise || undefined,
+              enterprise: dealer.enterprise || undefined,
             };
           }
           return acc;

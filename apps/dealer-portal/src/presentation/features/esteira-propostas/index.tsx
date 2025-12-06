@@ -180,12 +180,10 @@ export function EsteiraDePropostasFeature() {
                 dealer.fullName ??
                 dealer.fullNameEnterprise ??
                 dealer.enterprise ??
-                dealer.razaoSocial ??
                 `Lojista #${dealer.id}`,
               enterprise:
                 dealer.enterprise ??
                 dealer.fullNameEnterprise ??
-                dealer.razaoSocial ??
                 undefined,
             };
           }
