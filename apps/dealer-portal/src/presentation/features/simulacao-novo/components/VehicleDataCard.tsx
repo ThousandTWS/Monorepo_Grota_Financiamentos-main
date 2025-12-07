@@ -70,8 +70,9 @@ export function VehicleDataCard({
                   disabled={!brands.length || isBrandsLoading}
                   value={field.value}
                   onValueChange={(value) => {
+                    const[brandCode, brandName] = value.split("+");
                     field.onChange(value);
-                    onBrandChange(value);
+                    onBrandChange(brandCode);
                   }}
                 >
                   <SelectTrigger className="w-full min-h-12 md:max-w-52">
@@ -88,7 +89,7 @@ export function VehicleDataCard({
                   </SelectTrigger>
                   <SelectContent>
                     {brands.map((brand) => (
-                      <SelectItem key={brand.code} value={brand.code}>
+                      <SelectItem key={brand.code} value={`${brand.code}+${brand.name}`}>
                         {brand.name}
                       </SelectItem>
                     ))}
