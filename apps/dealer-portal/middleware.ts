@@ -37,6 +37,9 @@ export async function middleware(request: NextRequest) {
     return buildRedirectResponse("/visao-geral", request);
   }
 
+  // PERMISSÕES: Todos os usuários autenticados (VENDEDOR, OPERADOR, ADMIN)
+  // podem acessar todas as rotas, incluindo criação de fichas (/simulacao/novo)
+  // Não há restrição por role neste middleware
   return NextResponse.next();
 }
 

@@ -34,6 +34,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(DASHBOARD_ROUTE, request.url));
   }
 
+  // PERMISSÕES: Todos os usuários autenticados (ADMIN e outros roles)
+  // podem acessar todas as rotas protegidas, incluindo criação de fichas
+  // Não há restrição por role neste middleware
   return NextResponse.next();
 }
 

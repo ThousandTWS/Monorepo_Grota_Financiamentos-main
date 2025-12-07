@@ -125,11 +125,11 @@ public class ProposalService {
                     .orElseThrow(() -> new RecordNotFoundException("Dealer não encontrado"));
             proposal.setDealer(dealer);
         }
+        // sellerId é opcional - permite operadores sem cadastro de vendedor
         if (dto.sellerId() != null) {
             @SuppressWarnings("null")
-            Seller seller = sellerRepository.findById(dto.sellerId())
-                    .orElseThrow(() -> new RecordNotFoundException("Vendedor não encontrado"));
-            proposal.setSeller(seller);
+            Optional<Seller> sellerOpt = sellerRepository.findById(dto.sellerId());
+            sellerOpt.ifPresent(proposal::setSeller);
         }
         proposal.setCustomerName(dto.customerName());
         proposal.setCustomerCpf(dto.customerCpf());

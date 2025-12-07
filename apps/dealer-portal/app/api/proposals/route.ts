@@ -93,6 +93,7 @@ async function resolveSeller(
   };
 
   // Lista de vendedores e tenta casar pelo email do usuário autenticado
+  // NÃO é obrigatório ter vendedor - operadores podem criar fichas sem sellerId
   const sellersResponse = await fetch(`${API_BASE_URL}/sellers`, {
     headers,
     cache: "no-store",
@@ -119,6 +120,7 @@ async function resolveSeller(
     }
   }
 
+  // Retorna null para sellerId - isso é permitido (operadores sem cadastro de vendedor)
   return { sellerId: null, dealerId: null };
 }
 
@@ -189,12 +191,8 @@ export async function POST(request: NextRequest) {
     if (!session) {
       return unauthorized();
     }
-    const role = session.role?.toLowerCase?.() ?? "";
-    const isManager =
-      role === "gestor" || role === "manager" || role === "gerente";
-    if (isManager) {
-      return forbidden("Gestores apenas acompanham as fichas.");
-    }
+    // Permite ADMIN, VENDEDOR e OPERADOR criarem fichas
+    // Apenas GESTOR não pode criar
 
     let body: Record<string, unknown>;
     try {
@@ -240,11 +238,15 @@ export async function POST(request: NextRequest) {
         ? session.userId
         : Number(session.userId) || null);
 
-    const normalizedPayload = {
+    // Permite criar proposta sem sellerId (operadores que não são vendedores)
+    const normalizedPayload: Record<string, unknown> = {
       ...body,
       dealerId,
-      sellerId,
     };
+    
+    if (sellerId) {
+      normalizedPayload.sellerId = sellerId;
+    }
 
     const upstreamResponse = await fetch(`${API_BASE_URL}/proposals`, {
       method: "POST",
