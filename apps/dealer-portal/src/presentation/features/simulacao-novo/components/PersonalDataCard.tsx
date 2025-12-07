@@ -8,16 +8,20 @@ import { Input } from "@/presentation/ui/input";
 import { CalendarDays } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useEffect } from "react";
+import { maskBRL, maskCPF, maskPhone } from "@/lib/masks";
+import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
+import { formatName } from "@/lib/formatters";
 
 type PersonalDataCardProps = {
   onZipChange: (value: string) => void;
+  handleDocumentChange: (value: string) => void;
+  cpfSituation: string;
+  searchingLoading: boolean;
+  searchingCPFLoading: boolean;
+  personType: "PF" | "PJ" | null;
 };
 
-export function PersonalDataCard(props: PersonalDataCardProps) {
-  const {
-    onZipChange,
-  } = props;
-
+export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading, searchingCPFLoading, personType }: PersonalDataCardProps) {
   const { register, setValue, watch } = useFormContext();
 
   const hasCnh = watch("hasCNH");
@@ -30,7 +34,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
 
 
   return (
-    <Card className="w-full">
+    <Card className="w-full h-full">
       <CardContent className="space-y-5 px-0">
         <CardHeader className="px-0">
           <h2 className="text-lg font-semibold text-[#134B73]">Dados Pessoais</h2>
@@ -42,25 +46,30 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             label="CPF/CNPJ"
             placeholder="Digite seu CPF ou CNPJ"
             autoComplete="off"
-            {...register("cpf_cnpj")}
+            {...register("cpf_cnpj", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = personType === "PJ"
+                  ? maskCNPJ(e.target.value)
+                  : maskCPF(e.target.value);
+                const value = e.target.value;
+                handleDocumentChange(value);
+              }
+            })}
+            warning={cpfSituation}
+            loading={searchingLoading}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
-            id="personalEmail"
             containerClassName="md:col-span-5"
-            label="E-mail"
-            placeholder="Informe seu e-mail"
-            type="email"
-            autoComplete="email"
-            {...register("email")}
-          />
-          <LabeledInput
-            id="personalPhone"
-            containerClassName="md:col-span-4"
-            label="Telefone"
-            placeholder="(11) 99999-9999"
-            maxLength={15}
-            autoComplete="tel"
-            {...register("phone")}
+            label="Nome Completo"
+            placeholder="Digite seu nome completo"
+            autoComplete="off"
+            {...register("name", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = formatName(e.target.value);
+              }
+            })}
+            disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="motherName"
@@ -68,31 +77,34 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             label="Nome da Mãe"
             placeholder="Digite nome da mãe"
             {...register("motherName")}
+            disabled={searchingLoading || !personType}
           />
-          <LabeledInput
-            id="shareholderName"
-            containerClassName="md:col-span-4"
-            label="Nome do Sócio"
-            placeholder="Informe o nome do sócio"
-            {...register("shareholderName")}
-          />
-          <LabeledInput
-            id="companyName"
-            containerClassName="md:col-span-4"
-            label="Nome da Empresa"
-            placeholder="Informe a empresa"
-            {...register("companyName")}
-          />
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="birthday" className="text-[#134B73]">
+              Data de nascimento
+            </Label>
+            <div className="relative">
+              <Input
+                id="birthday"
+                type="date"
+                className="w-full pr-10 cursor-pointer"
+                {...register("birthday")}
+                disabled={searchingLoading || !personType}
+              />
+              <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
+            </div>
+          </div>
           <Controller
             name="maritalStatus"
             render={({ field }) => (
               <LabeledSelect
                 id="maritalStatus"
-                containerClassName="md:col-span-5"
+                containerClassName="md:col-span-2"
                 label="Estado Civil"
-                placeholder="Selecione o estado civil"
+                placeholder="Estado civil"
                 value={field.value}
                 onChange={field.onChange}
+                disabled={!personType}
               >
                 <SelectItem value="Solteiro">Solteiro</SelectItem>
                 <SelectItem value="Casado">Casado</SelectItem>
@@ -105,13 +117,15 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
           <Controller
             name="hasCNH"
             render={({ field }) => (
-              <div className="space-y-2 md:col-span-4">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="hasCNH" className="text-[#134B73]">Possui CNH?</Label>
                 <div className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2">
                   <Switch
                     id="hasCNH"
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
+                    disabled={!personType}
                   />
                   <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "Não"}</span>
                 </div>
@@ -122,10 +136,10 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             name="categoryCNH"
             render={({ field }) => (
               <LabeledSelect
-                containerClassName="md:col-span-3"
+                containerClassName="md:col-span-2"
                 label="Categoria da CNH"
-                placeholder="Selecione a categoria"
-                disabled={!hasCnh}
+                placeholder="Categoria CNH"
+                disabled={!hasCnh || !personType}
                 value={field.value}
                 onChange={field.onChange}
               >
@@ -139,17 +153,59 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             )}
           />
           <LabeledInput
+            id="personalEmail"
+            containerClassName="md:col-span-4"
+            label="E-mail"
+            placeholder="Informe seu e-mail"
+            type="email"
+            autoComplete="email"
+            {...register("email")}
+            disabled={searchingLoading || !personType}
+          />
+          <LabeledInput
+            id="personalPhone"
+            containerClassName="md:col-span-2"
+            label="Telefone"
+            placeholder="(11) 99999-9999"
+            maxLength={15}
+            autoComplete="tel"
+            {...register("phone", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskPhone(e.target.value);
+              }
+            })}
+            disabled={searchingLoading || !personType}
+          />
+          <LabeledInput
+            id="companyName"
+            containerClassName="md:col-span-5"
+            label="Nome da Empresa"
+            placeholder="Informe a empresa"
+            {...register("companyName")}
+            disabled={searchingLoading || !personType}
+          />
+          <LabeledInput
+            id="shareholderName"
+            containerClassName="md:col-span-5"
+            label="Nome do Sócio"
+            placeholder="Informe o nome do sócio"
+            {...register("shareholderName")}
+            disabled={searchingLoading || !personType}
+          />
+          <LabeledInput
             containerClassName="md:col-span-2"
             label="CEP"
             placeholder="00000-000"
             maxLength={9}
             autoComplete="postal-code"
             {...register("CEP", {
-              onChange: (e) => {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskCEP(e.target.value);
                 const value = e.target.value;
                 onZipChange(value);
               }
             })}
+            disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="address"
@@ -158,21 +214,24 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             placeholder="Rua Exemplo, 123 - Apto 45"
             autoComplete="address-line1"
             {...register("address")}
+            disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="addressNumber"
-            containerClassName="md:col-span-2"
+            containerClassName="md:col-span-1"
             label="Número"
             placeholder="123"
             autoComplete="address-line2"
             {...register("addressNumber")}
+            disabled={!personType}
           />
           <LabeledInput
             id="addressComplement"
-            containerClassName="md:col-span-2"
+            containerClassName="md:col-span-3"
             label="Complemento"
             placeholder="Apto, bloco, referência"
             {...register("addressComplement")}
+            disabled={!personType}
           />
           <LabeledInput
             id="neighborhood"
@@ -181,16 +240,27 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             placeholder="Informe o bairro"
             autoComplete="address-level3"
             {...register("neighborhood")}
+            disabled={searchingCPFLoading || !personType}
+          />
+          <LabeledInput
+            id="city"
+            containerClassName="md:col-span-4"
+            label="Cidade"
+            placeholder="Informe a cidade"
+            autoComplete="address-level2"
+            {...register("city")}
+            disabled={searchingCPFLoading || !personType}
           />
           <Controller
             name="UF"
             render={({ field }) => (
               <LabeledSelect
-                containerClassName="md:col-span-2"
+                containerClassName="md:col-span-1"
                 label="UF"
-                placeholder="Selecione a UF"
+                placeholder="UF"
                 value={field.value}
                 onChange={field.onChange}
+                disabled={searchingCPFLoading || !personType}
               >
                 {[
                   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
@@ -205,19 +275,12 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             )}
           />
           <LabeledInput
-            id="city"
-            containerClassName="md:col-span-4"
-            label="Cidade"
-            placeholder="Informe a cidade"
-            autoComplete="address-level2"
-            {...register("city")}
-          />
-          <LabeledInput
             id="nationality"
-            containerClassName="md:col-span-4"
+            containerClassName="md:col-span-5"
             label="Naturalidade"
             placeholder="Informe a naturalidade"
             {...register("nationality")}
+            disabled={!personType}
           />
           <LabeledInput
             id="enterprise"
@@ -225,15 +288,17 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             label="Empresa"
             placeholder="Onde trabalha"
             {...register("enterprise")}
+            disabled={!personType}
           />
           <LabeledInput
             id="enterpriseFunction"
-            containerClassName="md:col-span-3"
+            containerClassName="md:col-span-2"
             label="Função"
             placeholder="Cargo ou função"
             {...register("enterpriseFunction")}
+            disabled={!personType}
           />
-          <div className="space-y-2 md:col-span-3">
+          <div className="space-y-2 md:col-span-2">
             <Label htmlFor="admissionDate" className="text-[#134B73]">
               Data de admissão
             </Label>
@@ -243,6 +308,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
                 type="date"
                 className="w-full pr-10 cursor-pointer"
                 {...register("admissionDate")}
+                disabled={!personType}
               />
               <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
             </div>
@@ -253,7 +319,12 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             label="Renda"
             placeholder="R$ 0,00"
             inputClassName="text-right"
-            {...register("income")}
+            {...register("income", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskBRL(e.target.value);
+              }
+            })}
+            disabled={!personType}
           />
           <LabeledInput
             id="otherIncomes"
@@ -261,7 +332,12 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
             label="Outras rendas"
             placeholder="R$ 0,00"
             inputClassName="text-right"
-            {...register("otherIncomes")}
+            {...register("otherIncomes", {
+              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
+                e.target.value = maskBRL(e.target.value);
+              }
+            })}
+            disabled={!personType}
           />
           <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 p-5">
             <Controller
@@ -272,6 +348,7 @@ export function PersonalDataCard(props: PersonalDataCardProps) {
                     id="acceptLGPD"
                     checked={field.value}
                     onCheckedChange={field.onChange}
+                    className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
                   />
                   <div className="space-y-1">
                     <Label htmlFor="acceptLGPD" className="text-[#134B73] font-semibold">

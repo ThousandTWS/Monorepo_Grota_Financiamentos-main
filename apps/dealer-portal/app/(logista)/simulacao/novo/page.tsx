@@ -1,5 +1,5 @@
-﻿/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client";
+﻿"use client";
+
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -9,19 +9,16 @@ import {
   type Ano,
   type Marca,
   type Modelo,
-  type ValorVeiculo,
   getAnos,
   getMarcas,
   getModelos,
   getValorVeiculo,
 } from "@/application/services/fipe";
-import { maskCEP } from "@/application/core/utils/masks";
+import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
 import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
-import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import {
   OperationCard,
   PersonalDataCard,
-  ProfessionalDataCard,
   VehicleDataCard,
 } from "@/presentation/features/simulacao-novo/components";
 import { Button } from "@/presentation/ui/button";
@@ -36,6 +33,9 @@ import {
   DialogTitle,
 } from "@/presentation/ui/dialog";
 import { Separator } from "@/presentation/ui/separator";
+import { unmaskCPF } from "@/lib/masks";
+import { formatName } from "@/lib/formatters";
+import { convertBRtoISO } from "@/application/core/utils/formatters";
 
 type BasicOption = {
   id?: number;
@@ -47,9 +47,11 @@ type BasicOption = {
 
 const simulationSchema = z.object({
   cpf_cnpj: z.string().min(4, "CPF ou CNPJ é obrigatório"),
+  name:z.string().min(4, "Nome é obrigatório"),
   email: z.string().min(4, "E-mail é obrigatório"),
   phone: z.string().min(4, "Telefone é obrigatório"),
   motherName: z.string().min(4, "Nome da mãe é obrigatório"),
+  birthday: z.string().min(4, "Data de nascimento é obrigatória"),
   shareholderName: z.string().min(4, "Nome do sócio é obrigatório"),
   companyName: z.string().min(4, "Nome da empresa é obrigatório"),
   maritalStatus: z.string().min(4, "Estado civil é obrigatório"),
@@ -87,9 +89,11 @@ export default function SimuladorNovo() {
     resolver: zodResolver(simulationSchema),
     defaultValues: {
       cpf_cnpj: "",
+      name: "",
       email: "",
       phone: "",
       motherName: "",
+      birthday: "",
       shareholderName: "",
       companyName: "",
       maritalStatus: "",
@@ -134,7 +138,6 @@ export default function SimuladorNovo() {
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [personalZip, setPersonalZip] = useState("");
-  const [loanTerm, setLoanTerm] = useState("");
   const [isBrandsLoading, setIsBrandsLoading] = useState(false);
   const [isModelsLoading, setIsModelsLoading] = useState(false);
   const [isYearsLoading, setIsYearsLoading] = useState(false);
@@ -142,6 +145,9 @@ export default function SimuladorNovo() {
   const [isReviewOpen, setIsReviewOpen] = useState(false);
   const [reviewData, setReviewData] = useState<SimulationFormValues | null>(null);
   const [pendingPayload, setPendingPayload] = useState<CreateProposalPayload | null>(null);
+  const [cpfSituation, setCpfSituation] = useState("");
+  const [searchingLoading, setSearchingLoading] = useState(false);
+  const [searchCEPLoading, setSearchCEPLoading] = useState(false);
 
   const getVehicleTypeId = (category: typeof vehicleCategory) => {
     if (category === "motos") return 2;
@@ -205,9 +211,10 @@ export default function SimuladorNovo() {
   const handleYearChange = async (yearId: string) => {
     if (!methods.getValues("vehicleBrand") || !methods.getValues("vehicleModel")) return;
     setSelectedYear(yearId);
+    const [modelCode, modelName] = methods.getValues("vehicleModel").split("+");
 
     try {
-      const response = await getValorVeiculo(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", methods.getValues("vehicleModel" )?? "", yearId);
+      const response = await getValorVeiculo(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", modelCode, yearId);
       methods.setValue("priceFIPE", response.price);
     } catch (error) {
       toast.error("Não foi possível carregar os dados do veículo FIPE.");
@@ -215,14 +222,9 @@ export default function SimuladorNovo() {
     }
   };
 
-  const maskPlate = (value: string) => {
-    const sanitized = (value || "").replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 7);
-    const prefix = sanitized.slice(0, 3);
-    const suffix = sanitized.slice(3);
-    return suffix ? `${prefix}-${suffix}` : prefix;
-  };
-
   const handleZipChange = async (value: string) => {
+    setSearchCEPLoading(true);
+
     const masked = maskCEP(value);
     setPersonalZip(masked);
     const digits = masked.replace(/\D/g, "");
@@ -240,8 +242,82 @@ export default function SimuladorNovo() {
       methods.setValue("UF", data.uf);
     } catch (error) {
       console.error("[cep] erro ao buscar endereço", error);
+    } finally {
+      setSearchCEPLoading(false);
     }
   };
+
+  const handleCPFChange = async (value: string) => {
+    setSearchingLoading(true);
+
+    try {
+      const masked = unmaskCPF(value);
+      const digits = masked.replace(/\D/g, "");
+      if (digits.length !== 11) {
+        return;
+      }
+      
+      const res = await fetch("/api/searchCPF", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cpf: digits }),
+      });
+      const response = await res.json();
+      if (!response.success) return;
+      const data = response?.data?.response?.content;
+      methods.setValue("name", formatName(data?.nome?.conteudo?.nome));
+      setCpfSituation(data?.nome?.conteudo?.situacao_receita);
+      methods.setValue("motherName", formatName(data?.nome?.conteudo?.mae));
+      methods.setValue("birthday", convertBRtoISO(data?.nome?.conteudo?.data_nascimento));
+      methods.setValue("email", data?.emails?.conteudo[0]?.email || "");
+      methods.setValue("phone", data?.pesquisa_telefones?.conteudo[0]?.numero || "");
+    } catch (error) {
+      console.error("[cpf] erro ao buscar dados", error);
+    } finally {
+      setSearchingLoading(false);
+    }
+  };
+
+  const handleCNPJChange = async (value: string) => {
+    setSearchingLoading(true);
+
+    try {
+      const masked = maskCNPJ(value);
+      const digits = masked.replace(/\D/g, "");
+      if (digits.length !== 14) {
+        return;
+      }
+
+      const res = await fetch("/api/searchCNPJ", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cnpj: digits }),
+      });
+      const response = await res.json();
+      if (!response.success) return;
+      const data = response.data.data.cnpj;
+      methods.setValue("enterprise", formatName(data.empresa.razao_social));
+      methods.setValue("shareholderName", formatName(data.socios[0]?.nome_socio));
+    } catch (error) {
+      console.error("[cnpj] erro ao buscar dados", error);
+    } finally {
+      setSearchingLoading(false);
+    }
+  };
+
+  const handleDocumentChange = (value: string) => {
+    if(!personType) return;
+
+    if(personType === "PF") {
+      handleCPFChange(value);
+    } else if (personType === "PJ") {
+      handleCNPJChange(value);
+    }
+  }
 
   const parseCurrency = (value?: string | null) => {
     if (!value) return 0;
@@ -265,9 +341,9 @@ export default function SimuladorNovo() {
 
   const onSubmit = async (data: SimulationFormValues) => {
     const payload: CreateProposalPayload = {
-      customerName: data.shareholderName || data.companyName || "Cliente",
+      customerName: data.name || "Cliente",
       customerCpf: data.cpf_cnpj,
-      customerBirthDate: null,
+      customerBirthDate: data.birthday || "",
       customerEmail: data.email,
       customerPhone: data.phone,
       cnhCategory: data.categoryCNH ?? "",
@@ -276,7 +352,7 @@ export default function SimuladorNovo() {
       fipeCode: data.priceFIPE ?? "",
       fipeValue: parseCurrency(data.priceFIPE),
       vehicleBrand: data.vehicleBrand,
-      vehicleModel: data.vehicleModel,
+      vehicleModel: data.vehicleModel.split("+")[1]?.trim(),
       vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
       downPaymentValue: 0,
       financedValue: parseCurrency(data.amountFinanced),
@@ -314,6 +390,7 @@ export default function SimuladorNovo() {
       await createProposal(pendingPayload);
       toast.success("Ficha enviada para a esteira.");
       setIsReviewOpen(false);
+      methods.reset();
       router.push("/esteira-propostas");
     } catch (error) {
       console.error("Form submission error", error);
@@ -337,11 +414,11 @@ export default function SimuladorNovo() {
       }).format(parseCurrency(value));
 
     return {
-      cliente: reviewData.shareholderName || reviewData.companyName || "Cliente",
+      cliente: reviewData.name || "Cliente",
       documento: reviewData.cpf_cnpj,
       email: reviewData.email,
       telefone: reviewData.phone,
-      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel || "--"} / ${reviewData.vehicleYear || "--"}`,
+      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel.split("+")[1]?.trim() || "--"} / ${reviewData.vehicleYear || "--"}`,
       placa: reviewData.vehiclePlate || "—",
       fipe: currency(reviewData.priceFIPE),
       financiado: currency(reviewData.amountFinanced),
@@ -400,7 +477,6 @@ export default function SimuladorNovo() {
     };
 
     loadOriginOptions();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -409,7 +485,7 @@ export default function SimuladorNovo() {
         <h1 className="text-4xl font-light text-[#134B73]">Nova Simulação</h1>
       </div>
       <FormProvider {...methods}>
-        <form className="space-y-5" onSubmit={methods.handleSubmit(onSubmit, (errors) => console.log(errors))}>
+        <form className="space-y-5" onSubmit={methods.handleSubmit(onSubmit)}>
           <div className="grid gap-5 lg:grid-cols-[0.4fr_2fr] items-start">
             <OperationCard
               personType={personType}
@@ -418,9 +494,16 @@ export default function SimuladorNovo() {
               onPersonTypeChange={setPersonType}
               onOperationTypeChange={setOperationType}
               onVehicleCategoryChange={setVehicleCategory}
+              isLoading={isSending}
+              waitingPayload={pendingPayload}
             />
             <PersonalDataCard
               onZipChange={handleZipChange}
+              handleDocumentChange={handleDocumentChange}
+              cpfSituation={cpfSituation}
+              searchingLoading={searchingLoading}
+              searchingCPFLoading={searchCEPLoading}
+              personType={personType}
             />
           </div>
 
@@ -437,12 +520,7 @@ export default function SimuladorNovo() {
             isBrandsLoading={isBrandsLoading}
             isModelsLoading={isModelsLoading}
             isYearsLoading={isYearsLoading}
-            onLoanTermChange={setLoanTerm}
           />
-
-          <Button type="submit" disabled={isSending}>
-            {pendingPayload ? "Revisar envio" : "Revisar envio"}
-          </Button>
         </form>
       </FormProvider>
 
