@@ -1,5 +1,8 @@
-import Link from "next/link";
+/* eslint-disable react-hooks/exhaustive-deps */
+"use client";
+
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   createColumnHelper,
   flexRender,
@@ -80,6 +83,8 @@ export function ProposalsTable({
   dealersById = {},
   sellersById = {},
 }: ProposalsTableProps) {
+  const router = useRouter();
+
   const data = useMemo(() => {
     return proposals.map((proposal) => {
       const dealerLabel = proposal.dealerId
@@ -178,14 +183,14 @@ export function ProposalsTable({
               </p>
               <p className="text-xs font-semibold uppercase">Operações Grota</p>
               <Button
-                asChild
                 variant="outline"
                 size="sm"
                 className="w-full justify-center gap-2 border-[#0F456A] bg-[#134B73] text-white hover:bg-[#0F456A] hover:text-white"
+                onClick={() =>
+                  router.push(`/esteira-de-propostas/${ctx.row.original.id}/historico`)
+                }
               >
-                <Link href={`/esteira-de-propostas/${ctx.row.original.id}/historico`}>
-                  Histórico
-                </Link>
+                Histórico
               </Button>
             </div>
             <Select

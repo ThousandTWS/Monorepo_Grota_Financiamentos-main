@@ -1,4 +1,5 @@
 export type Seller = {
+  name: string;
   id: number;
   fullName?: string;
   email?: string;
