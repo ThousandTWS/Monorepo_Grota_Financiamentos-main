@@ -75,8 +75,6 @@ Este repositório é um **starter Turborepo** adaptado para o projeto **Grota Fi
 └─ turbo.json
 ```
 
-## Comunicação em tempo real (Admin ↔ Logista)
-
 Foi adicionado um canal WebSocket compartilhado para permitir que o painel administrativo envie recados imediatos aos lojistas diretamente do dashboard:
 
 1. **Suba o servidor** dedicado no workspace:
