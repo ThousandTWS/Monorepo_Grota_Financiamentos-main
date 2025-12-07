@@ -1,5 +1,4 @@
 "use client";
-import { ThemeToggleButton } from "@/presentation/layout/common/ThemeToggleButton";
 import NotificationDropdown from "@/presentation/layout/header/components/NotificationDropdown";
 import UserDropdown from "@/presentation/layout/header/components/UserDropdown";
 
@@ -146,10 +145,6 @@ const AppHeader = () => {
           <div
             className="flex items-center gap-2 2xsm:gap-3"
             data-oid="4hv.v.8">
-
-            {/* <!-- Dark Mode Toggler --> */}
-            <ThemeToggleButton data-oid=":kop:a9" />
-            {/* <!-- Dark Mode Toggler --> */}
 
             <NotificationDropdown data-oid="36dhrs0" />
             {/* <!-- Notification Menu Area --> */}
