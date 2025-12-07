@@ -36,6 +36,7 @@ import { Separator } from "@/presentation/ui/separator";
 import { unmaskCPF } from "@/lib/masks";
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
+import { Card, CardContent } from "@/presentation/ui/card";
 
 type BasicOption = {
   id?: number;
@@ -124,9 +125,9 @@ export default function SimuladorNovo() {
     },
   });
 
-  const [personType, setPersonType] = useState<"PF" | "PJ" | null>(null);
-  const [operationType, setOperationType] = useState<"financiamento" | "autofin" | null>(null);
-  const [vehicleCategory, setVehicleCategory] = useState<"leves" | "motos" | "pesados" | null>(null);
+  const [personType, setPersonType] = useState<"PF" | "PJ">("PF");
+  const [operationType, setOperationType] = useState<"financiamento" | "autofin">("financiamento");
+  const [vehicleCategory, setVehicleCategory] = useState<"leves" | "motos" | "pesados">("leves");
   const [, setDealers] = useState<BasicOption[]>([]);
   const [, setOperators] = useState<BasicOption[]>([]);
   const [, setSellers] = useState<BasicOption[]>([]);
@@ -194,11 +195,12 @@ export default function SimuladorNovo() {
     methods.setValue("vehicleYear", "");
     methods.setValue("priceFIPE", "");
     setYears([]);
+    const [brandCode, brandName] = methods.getValues("vehicleBrand").split("+");
 
     try {
       setIsYearsLoading(true);
       if (!methods.getValues("vehicleBrand")) return;
-      const response = await getAnos(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", modelId);
+      const response = await getAnos(vehicleTypeId, brandCode, modelId);
       setYears(response);
     } catch (error) {
       toast.error("Não foi possível carregar os anos FIPE.");
@@ -211,10 +213,11 @@ export default function SimuladorNovo() {
   const handleYearChange = async (yearId: string) => {
     if (!methods.getValues("vehicleBrand") || !methods.getValues("vehicleModel")) return;
     setSelectedYear(yearId);
+    const [brandCode, brandName] = methods.getValues("vehicleBrand").split("+");
     const [modelCode, modelName] = methods.getValues("vehicleModel").split("+");
 
     try {
-      const response = await getValorVeiculo(vehicleTypeId, methods.getValues("vehicleBrand") ?? "", modelCode, yearId);
+      const response = await getValorVeiculo(vehicleTypeId, brandCode, modelCode, yearId);
       methods.setValue("priceFIPE", response.price);
     } catch (error) {
       toast.error("Não foi possível carregar os dados do veículo FIPE.");
@@ -225,13 +228,14 @@ export default function SimuladorNovo() {
   const handleZipChange = async (value: string) => {
     setSearchCEPLoading(true);
 
-    const masked = maskCEP(value);
-    setPersonalZip(masked);
-    const digits = masked.replace(/\D/g, "");
-    if (digits.length !== 8) {
-      return;
-    }
     try {
+      const masked = maskCEP(value);
+      setPersonalZip(masked);
+      const digits = masked.replace(/\D/g, "");
+      if (digits.length !== 8) {
+        return;
+      }
+
       const response = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
       if (!response.ok) return;
       const data = await response.json();
@@ -351,7 +355,7 @@ export default function SimuladorNovo() {
       vehiclePlate: data.vehiclePlate ?? "",
       fipeCode: data.priceFIPE ?? "",
       fipeValue: parseCurrency(data.priceFIPE),
-      vehicleBrand: data.vehicleBrand,
+      vehicleBrand: data.vehicleBrand.split("+")[1]?.trim(),
       vehicleModel: data.vehicleModel.split("+")[1]?.trim(),
       vehicleYear: toNumber(data.vehicleYear) ?? new Date().getFullYear(),
       downPaymentValue: 0,
@@ -418,13 +422,13 @@ export default function SimuladorNovo() {
       documento: reviewData.cpf_cnpj,
       email: reviewData.email,
       telefone: reviewData.phone,
-      veiculo: `${reviewData.vehicleBrand || "--"} / ${reviewData.vehicleModel.split("+")[1]?.trim() || "--"} / ${reviewData.vehicleYear || "--"}`,
+      veiculo: `${reviewData.vehicleBrand.split("+")[1]?.trim() || "--"} / ${reviewData.vehicleModel.split("+")[1]?.trim() || "--"} / ${reviewData.vehicleYear || "--"}`,
       placa: reviewData.vehiclePlate || "—",
       fipe: currency(reviewData.priceFIPE),
       financiado: currency(reviewData.amountFinanced),
       prazo: reviewData.termMonths ? `${reviewData.termMonths} meses` : "—",
-      operacao: operationType || "—",
-      categoria: vehicleCategory || "—",
+      operacao: formatName(operationType) || "—",
+      categoria: formatName(vehicleCategory) || "—",
       pessoa: personType || "—",
       endereco: `${reviewData.address || ""}, ${reviewData.addressNumber || ""} - ${reviewData.neighborhood || ""} / ${reviewData.city || ""} - ${reviewData.UF || ""}`,
     };
@@ -534,61 +538,65 @@ export default function SimuladorNovo() {
           </DialogHeader>
 
           {formattedReview && (
-            <div className="space-y-3">
-              <div className="grid gap-2 rounded-md border p-3">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Cliente</span>
-                  <span className="font-semibold">{formattedReview.cliente}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Documento</span>
-                  <span className="font-semibold">{formattedReview.documento}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Contato</span>
-                  <span className="font-semibold">{formattedReview.email} · {formattedReview.telefone}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Veículo</span>
-                  <span className="font-semibold">{formattedReview.veiculo}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Placa</span>
-                  <span className="font-semibold">{formattedReview.placa}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Valor FIPE</span>
-                  <span className="font-semibold">{formattedReview.fipe}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Valor financiado</span>
-                  <span className="font-semibold">{formattedReview.financiado}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Prazo</span>
-                  <span className="font-semibold">{formattedReview.prazo}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Operação</span>
-                  <span className="font-semibold">{formattedReview.operacao}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Categoria</span>
-                  <span className="font-semibold">{formattedReview.categoria}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Pessoa</span>
-                  <span className="font-semibold">{formattedReview.pessoa}</span>
-                </div>
-                <Separator />
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Endereço</span>
-                  <span className="font-semibold text-right">{formattedReview.endereco}</span>
-                </div>
+            <Card className="space-y-3 bg-gradient-to-b from-[#134B73] via-[#134B73] to-[#134B73]">
+              <div className="pointer-events-none absolute inset-0 opacity-40 blur-3xl">
+                <div className="mx-auto h-full w-full max-w-2xl bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.35),_transparent_65%)]" />
               </div>
-            </div>
+
+              <CardContent className="grid gap-2 p-0">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Cliente</span>
+                    <span className="font-medium text-white">{formattedReview.cliente}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Documento</span>
+                    <span className="font-medium text-white">{formattedReview.documento}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Contato</span>
+                    <span className="font-medium text-white">{formattedReview.email} · {formattedReview.telefone}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Veículo</span>
+                    <span className="font-medium text-white">{formattedReview.veiculo}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Placa</span>
+                    <span className="font-medium text-white">{formattedReview.placa}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Valor FIPE</span>
+                    <span className="font-medium text-white">{formattedReview.fipe}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Valor financiado</span>
+                    <span className="font-medium text-white">{formattedReview.financiado}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Prazo</span>
+                    <span className="font-medium text-white">{formattedReview.prazo}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Operação</span>
+                    <span className="font-medium text-white">{formattedReview.operacao}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Categoria</span>
+                    <span className="font-medium text-white">{formattedReview.categoria}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Pessoa</span>
+                    <span className="font-medium text-white">{formattedReview.pessoa}</span>
+                  </div>
+                  <Separator />
+                  <div className="flex justify-between text-sm">
+                    <span className="text-white/80">Endereço</span>
+                    <span className="font-medium text-right text-white">{formattedReview.endereco}</span>
+                  </div>
+              </CardContent>
+            </Card>
           )}
 
           <DialogFooter>
