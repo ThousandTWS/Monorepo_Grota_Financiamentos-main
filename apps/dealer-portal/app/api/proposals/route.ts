@@ -124,6 +124,16 @@ async function resolveSeller(
   return { sellerId: null, dealerId: null };
 }
 
+function buildActorHeader(session: SessionLike | null) {
+  if (!session) return null;
+  const role = session.role?.trim() || "LOGISTA";
+  const subject =
+    session.fullName?.trim() ||
+    session.email?.trim() ||
+    (typeof session.userId === "number" ? `Usuário ${session.userId}` : "Usuário desconhecido");
+  return `${role.toUpperCase()} - ${subject}`;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await getSession();
@@ -248,11 +258,13 @@ export async function POST(request: NextRequest) {
       normalizedPayload.sellerId = sellerId;
     }
 
+    const actorHeader = buildActorHeader(session);
     const upstreamResponse = await fetch(`${API_BASE_URL}/proposals`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
+        ...(actorHeader ? { "X-Actor": actorHeader } : {}),
       },
       body: JSON.stringify(normalizedPayload),
       cache: "no-store",

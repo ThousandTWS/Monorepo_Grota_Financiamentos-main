@@ -54,12 +54,20 @@ public class ProposalService {
     }
 
     @Transactional
-    public ProposalResponseDTO createProposal(ProposalRequestDTO dto, String originIp) {
+    public ProposalResponseDTO createProposal(ProposalRequestDTO dto, String originIp, String actor) {
         Proposal proposal = new Proposal();
         applyRequestData(proposal, dto);
         Proposal saved = proposalRepository.save(proposal);
         String payload = buildPayload(dto.metadata(), originIp, null);
-        appendEvent(saved, "CREATED", null, saved.getStatus(), "system", dto.notes(), payload);
+        appendEvent(
+                saved,
+                "CREATED",
+                null,
+                saved.getStatus(),
+                normalizeActor(actor),
+                dto.notes(),
+                payload
+        );
         publishRealtime("PROPOSAL_CREATED", Map.of("proposal", toResponse(saved)));
         publishRealtime("PROPOSAL_EVENT_APPENDED", Map.of("proposalId", saved.getId()));
         return toResponse(saved);
@@ -235,6 +243,14 @@ public class ProposalService {
         event.setNote(note);
         event.setPayload(payload);
         proposalEventRepository.save(event);
+    }
+
+    private String normalizeActor(String actor) {
+        if (actor == null) {
+            return null;
+        }
+        String trimmed = actor.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private void publishRealtime(String event, Map<String, Object> payload) {

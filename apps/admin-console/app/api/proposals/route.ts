@@ -21,6 +21,16 @@ async function resolveSession() {
   return session;
 }
 
+function buildActorHeader(session: Awaited<ReturnType<typeof resolveSession>> | null) {
+  if (!session) return null;
+  const role = session.role?.trim() || "ADMIN";
+  const subject =
+    session.fullName?.trim() ||
+    session.email?.trim() ||
+    (typeof session.userId === "number" ? `Usuário ${session.userId}` : "Usuário desconhecido");
+  return `${role.toUpperCase()} - ${subject}`;
+}
+
 function unauthorized() {
   return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
 }
@@ -73,6 +83,8 @@ export async function POST(request: NextRequest) {
     return unauthorized();
   }
 
+  const actorHeader = buildActorHeader(session);
+
   let body: unknown;
   try {
     body = await request.json();
@@ -86,6 +98,7 @@ export async function POST(request: NextRequest) {
   return proxyRequest(session, `${API_BASE_URL}/proposals`, {
     method: "POST",
     headers: {
+      ...(actorHeader ? { "X-Actor": actorHeader } : {}),
       "Content-Type": "application/json",
     },
     body: JSON.stringify(body),

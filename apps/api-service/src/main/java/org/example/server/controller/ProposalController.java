@@ -25,10 +25,13 @@ public class ProposalController {
 
     @PostMapping
     public ResponseEntity<ProposalResponseDTO> create(
+            @RequestHeader(value = "X-Actor", required = false) String actor,
             @Valid @RequestBody ProposalRequestDTO dto,
             jakarta.servlet.http.HttpServletRequest request
     ) {
-        return ResponseEntity.ok(proposalService.createProposal(dto, request.getRemoteAddr()));
+        return ResponseEntity.ok(
+                proposalService.createProposal(dto, request.getRemoteAddr(), actor)
+        );
     }
 
     @GetMapping
