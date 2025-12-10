@@ -460,41 +460,70 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
         )}
 
         {/* Tabela */}
-        <div className="rounded-lg border" data-oid="zu73duo">
-          <Table data-oid="xc.amp3">
-            <TableHeader data-oid="8zjtqij">
-              <TableRow data-oid="nky:coh">
-                {columns.map((column) =>
-                <TableHead key={column.key} data-oid="shaikwn">
-                    {column.header}
-                  </TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody data-oid="in:jlr8">
-              {paginatedData.length > 0 ?
-              paginatedData.map((logista) =>
-              <TableRow key={logista.id} data-oid="u1s8tcn">
-                    {columns.map((column) =>
-                <TableCell key={column.key} data-oid="4jlxlw7">
-                        {column.cell(logista)}
-                      </TableCell>
-                )}
-                  </TableRow>
-              ) :
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-sm" data-oid="zu73duo">
+          <div className="border-b border-slate-100 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Resultados ({filteredData.length})
+          </div>
+          <div className="md:hidden space-y-3 px-4 py-3" data-oid="tableCards">
+            {paginatedData.length > 0 ? (
+              paginatedData.map((logista) => (
+                <LogistaCard key={logista.id} logista={logista} />
+              ))
+            ) : (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-5 text-sm text-muted-foreground text-center">
+                Nenhum logista encontrado.
+              </div>
+            )}
+          </div>
 
-              <TableRow data-oid=".qn5dod">
-                  <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                  data-oid="07-f9:p">
-
-                    Nenhum logista encontrado.
-                  </TableCell>
+          <div className="hidden md:block overflow-x-auto" data-oid="tableWrapper">
+            <Table className="min-w-full divide-y divide-slate-100" data-oid="xc.amp3">
+              <TableHeader data-oid="8zjtqij">
+                <TableRow className="bg-slate-50" data-oid="nky:coh">
+                  {columns.map((column) => (
+                    <TableHead
+                      key={column.key}
+                      className="text-xs font-semibold uppercase tracking-wide text-slate-500"
+                      data-oid="shaikwn"
+                    >
+                      {column.header}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              }
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody data-oid="in:jlr8">
+                {paginatedData.length > 0 ? (
+                  paginatedData.map((logista) => (
+                    <TableRow
+                      key={logista.id}
+                      className="transition-colors hover:bg-slate-50"
+                      data-oid="u1s8tcn"
+                    >
+                      {columns.map((column) => (
+                        <TableCell
+                          key={column.key}
+                          className="px-3 py-2 text-sm text-slate-700"
+                          data-oid="4jlxlw7"
+                        >
+                          {column.cell(logista)}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow data-oid=".qn5dod">
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center text-sm text-muted-foreground"
+                      data-oid="07-f9:p"
+                    >
+                      Nenhum logista encontrado.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
 
         {/* Paginação */}
@@ -1017,6 +1046,41 @@ function InfoItem({ label, value }: { label: string; value?: string | null }) {
     <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
       <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-semibold text-[#134B73]">{value || "--"}</p>
+    </div>
+  );
+}
+
+function LogistaCard({ logista }: { logista: Logista }) {
+  return (
+    <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            Loja {logista.referenceCode ?? "--"}
+          </p>
+          <p className="text-base font-bold text-slate-900">{logista.fullName || logista.enterprise || "Lojista"}</p>
+          <p className="text-sm text-slate-500">{logista.enterprise || "Sem empresa informada"}</p>
+        </div>
+        {logista.status && (
+          <Badge className="text-xs font-semibold uppercase tracking-wide">
+            {logista.status}
+          </Badge>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-3 text-sm text-slate-600">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">Telefone</p>
+          <p className="font-semibold text-slate-900">{logista.phone || "--"}</p>
+        </div>
+        <div>
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">CNPJ</p>
+          <p className="font-semibold text-slate-900">{logista.cnpj || "--"}</p>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>Criado em {logista.createdAt ? new Date(logista.createdAt).toLocaleDateString("pt-BR") : "--"}</span>
+        <ChevronRight className="size-4 text-slate-400" />
+      </div>
     </div>
   );
 }
