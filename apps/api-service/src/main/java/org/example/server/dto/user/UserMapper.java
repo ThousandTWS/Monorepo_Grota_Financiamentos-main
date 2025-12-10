@@ -21,7 +21,8 @@ public class UserMapper {
                 user.getEmail(),
                 user.getVerificationStatus(),
                 user.getRole().name(),
-                user.getCreatedAt()
+                user.getCreatedAt(),
+                user.getDealer() != null ? user.getDealer().getId() : null
         );
     }
 }

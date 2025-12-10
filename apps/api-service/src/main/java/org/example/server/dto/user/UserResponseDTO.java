@@ -11,4 +11,5 @@ public record UserResponseDTO(
         UserStatus status,
         String role,
         LocalDateTime createdAt
+        Long dealerId
 ) {}

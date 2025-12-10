@@ -61,6 +61,12 @@ public class UserController {
         return ResponseEntity.ok(userResponseDTOs);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "Buscar usuário por ID")
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.findById(id));
+    }
+
     @PatchMapping("/{id}/dealer")
     @Operation(summary = "Atualizar vínculo do lojista", description = "Associa ou remove o usuário de um lojista")
     public ResponseEntity<UserResponseDTO> updateDealer(

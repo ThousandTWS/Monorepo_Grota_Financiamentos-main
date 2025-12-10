@@ -104,7 +104,32 @@ export async function resolveDealerId(
     return null;
   };
 
+  const parseDealerFromPayload = (payload: unknown): number | null => {
+    const candidate = (payload as { dealerId?: unknown })?.dealerId;
+    if (typeof candidate === "number") {
+      return candidate;
+    }
+    const parsed = Number(candidate);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const tryAdminDealer = async () => {
+    if (!session.userId || role !== "ADMIN") return null;
+    const userResponse = await fetch(`${API_BASE_URL}/users/${session.userId}`, {
+      headers,
+      cache: "no-store",
+    });
+    if (!userResponse.ok) return null;
+    const payload = await userResponse.json().catch(() => null);
+    return parseDealerFromPayload(payload);
+  };
+
   try {
+    const adminOverride = await tryAdminDealer();
+    if (adminOverride) {
+      return adminOverride;
+    }
+
     if (role === "OPERADOR") {
       const res = await fetch(`${API_BASE_URL}/operators`, {
         headers,
