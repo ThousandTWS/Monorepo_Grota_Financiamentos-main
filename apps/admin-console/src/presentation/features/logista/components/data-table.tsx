@@ -11,7 +11,23 @@ import {
 "@/presentation/layout/components/ui/table";
 import { Input } from "@/presentation/layout/components/ui/input";
 import { Button } from "@/presentation/layout/components/ui/button";
-import { Search, Filter, ChevronLeft, ChevronRight, Plus, RefreshCcw, Eye, Users, UserPlus, UserCog, UserPlus2, Trash2, Unlink } from "lucide-react";
+import {
+  Search,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  RefreshCcw,
+  Eye,
+  Users,
+  UserPlus,
+  UserCog,
+  UserPlus2,
+  Shield,
+  ShieldClose,
+  Trash2,
+  Unlink,
+} from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
 import {
   Select,
@@ -45,6 +61,7 @@ import {
   Operator,
   deleteOperator,
 } from "@/application/services/Operator/operatorService";
+import userServices, { AdminUser } from "@/application/services/UserServices/UserServices";
 import {
   Dialog,
   DialogContent,
@@ -76,13 +93,14 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [dialogMode, setDialogMode] = useState<"view" | "create">("view");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [linkingType, setLinkingType] = useState<"seller" | "manager" | "operator" | null>(null);
+  const [linkingType, setLinkingType] = useState<"seller" | "manager" | "operator" | "admin" | null>(null);
   const [linkAction, setLinkAction] = useState<"link" | "unlink">("link");
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [selectedLinkId, setSelectedLinkId] = useState<string>("");
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
   const [operators, setOperators] = useState<Operator[]>([]);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [isLinking, setIsLinking] = useState(false);
   const [teamModalOpen, setTeamModalOpen] = useState(false);
   const [teamLoading, setTeamLoading] = useState(false);
@@ -200,7 +218,10 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     setLinkModalOpen(true);
 
     try {
-      if (type === "seller") {
+      if (type === "admin") {
+        const list = await userServices.getAllAdmins();
+        setAdmins(Array.isArray(list) ? list : []);
+      } else if (type === "seller") {
         const list = await getAllSellers(action === "unlink" ? Number(logista.id) : undefined);
         setSellers(Array.isArray(list) ? list : []);
       } else if (type === "manager") {
@@ -224,7 +245,16 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     setIsLinking(true);
     try {
       const targetDealerId = linkAction === "unlink" ? null : Number(selectedLogista.id);
-      if (linkingType === "seller") {
+      if (linkingType === "admin") {
+        await userServices.linkAdminToDealer(Number(selectedLinkId), targetDealerId);
+        toast({
+          title: linkAction === "unlink" ? "Admin desvinculado!" : "Admin vinculado!",
+          description:
+            linkAction === "unlink"
+              ? "O admin foi desvinculado da loja."
+              : "Admin associado à loja.",
+        });
+      } else if (linkingType === "seller") {
         await linkSellerToDealer(Number(selectedLinkId), targetDealerId);
         toast({
           title: linkAction === "unlink" ? "Vendedor desvinculado!" : "Vendedor vinculado!",
@@ -653,11 +683,14 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                {(linkingType === "seller"
-                  ? sellers
-                  : linkingType === "manager"
-                    ? managers
-                    : operators
+                {(
+                  linkingType === "admin"
+                    ? admins
+                    : linkingType === "seller"
+                      ? sellers
+                      : linkingType === "manager"
+                        ? managers
+                        : operators
                 ).map((item) => (
                   <SelectItem key={item.id} value={String(item.id)}>
                     {item.fullName} — {item.email ?? item.phone ?? `ID ${item.id}`}
@@ -762,6 +795,16 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             <Button
               variant="secondary"
               onClick={() => {
+                if (selectedLogista) openLinkModal("admin", selectedLogista, "link");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <Shield className="size-4 mr-2" /> Adicionar admin
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
                 if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
                 setActionsModalOpen(false);
               }}
@@ -807,6 +850,16 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
               className="justify-start"
             >
               <Unlink className="size-4 mr-2" /> Desvincular gestor
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (selectedLogista) openLinkModal("admin", selectedLogista, "unlink");
+                setActionsModalOpen(false);
+              }}
+              className="justify-start"
+            >
+              <ShieldClose className="size-4 mr-2" /> Desvincular admin
             </Button>
             <Button
               variant="outline"

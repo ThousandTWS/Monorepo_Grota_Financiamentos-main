@@ -11,6 +11,7 @@ import jakarta.validation.Valid;
 import org.example.server.dto.user.UserRequestDTO;
 import org.example.server.dto.user.UserResponseDTO;
 import org.example.server.dto.user.UserProfileUpdateDTO;
+import org.example.server.enums.UserRole;
 import org.example.server.service.UserService;
 import org.example.server.model.User;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("api/v1/grota-financiamentos/users")
@@ -52,9 +54,20 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Credenciais inválidas"),
             @ApiResponse(responseCode = "500", description = "Erro interno no servidor")
     })
-    public ResponseEntity<List<UserResponseDTO>> findAll(){
-        List<UserResponseDTO> userResponseDTOs = userService.findAll();
+    public ResponseEntity<List<UserResponseDTO>> findAll(
+            @RequestParam(name = "role", required = false) UserRole role
+    ){
+        List<UserResponseDTO> userResponseDTOs = userService.findAll(Optional.ofNullable(role));
         return ResponseEntity.ok(userResponseDTOs);
+    }
+
+    @PatchMapping("/{id}/dealer")
+    @Operation(summary = "Atualizar vínculo do lojista", description = "Associa ou remove o usuário de um lojista")
+    public ResponseEntity<UserResponseDTO> updateDealer(
+            @PathVariable Long id,
+            @RequestParam(name = "dealerId", required = false) Long dealerId
+    ) {
+        return ResponseEntity.ok(userService.updateDealer(id, dealerId));
     }
 
     @GetMapping("/me")

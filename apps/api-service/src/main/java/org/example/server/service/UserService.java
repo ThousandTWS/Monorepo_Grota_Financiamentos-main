@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 @Service
 public class UserService {
@@ -199,8 +200,9 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public List<UserResponseDTO> findAll() {
-        List<User> users = userRepository.findAll();
+    public List<UserResponseDTO> findAll(Optional<UserRole> role) {
+        List<User> users = role.map(userRepository::findByRole)
+                .orElseGet(userRepository::findAll);
         return users.stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
@@ -229,6 +231,26 @@ public class UserService {
 
         if (dto.fullName() != null && !dto.fullName().isBlank()) {
             user.setFullName(dto.fullName().trim());
+        }
+
+        return userMapper.toDto(userRepository.save(user));
+    }
+
+    @Transactional
+    public UserResponseDTO updateDealer(Long userId, Long dealerId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RecordNotFoundException("Usuário não encontrado"));
+
+        if (user.getRole() != UserRole.ADMIN) {
+            throw new AccessDeniedException("Apenas administradores podem ser vinculados diretamente a um lojista.");
+        }
+
+        if (dealerId != null && dealerId > 0) {
+            var dealer = dealerRepository.findById(dealerId)
+                    .orElseThrow(() -> new RecordNotFoundException("Lojista não encontrado"));
+            user.setDealer(dealer);
+        } else {
+            user.setDealer(null);
         }
 
         return userMapper.toDto(userRepository.save(user));
