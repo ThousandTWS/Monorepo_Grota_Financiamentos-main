@@ -110,6 +110,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [actionsModalOpen, setActionsModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const filteredData = data.filter((logista) => {
     const normalizedSearch = searchTerm.toLowerCase();
@@ -750,131 +751,181 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
         </DialogContent>
       </Dialog>
 
-      <Dialog open={actionsModalOpen} onOpenChange={setActionsModalOpen}>
-        <DialogContent className="max-w-lg">
+        <Dialog open={actionsModalOpen} onOpenChange={setActionsModalOpen}>
+          <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Ações do lojista</DialogTitle>
+            <DialogTitle>Acoes do lojista</DialogTitle>
             <DialogDescription>
-              Escolha uma ação para{" "}
+              Escolha uma acao rapida para {" "}
               <span className="font-semibold">
                 {selectedLogista?.enterprise ?? selectedLogista?.fullName ?? "a loja"}
               </span>
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (selectedLogista) openTeamModal(selectedLogista);
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Users className="size-4 mr-2" /> Equipe vinculada
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <UserPlus className="size-4 mr-2" /> Adicionar vendedor
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <UserCog className="size-4 mr-2" /> Adicionar gestor
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("admin", selectedLogista, "link");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Shield className="size-4 mr-2" /> Adicionar admin
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <UserPlus2 className="size-4 mr-2" /> Adicionar operador
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (selectedLogista) handleView(selectedLogista);
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Eye className="size-4 mr-2" /> Visualizar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (selectedLogista) setDeleteModalOpen(true);
-              }}
-              className="justify-start"
-            >
-              <Trash2 className="size-4 mr-2" /> Excluir
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Unlink className="size-4 mr-2" /> Desvincular vendedor
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Unlink className="size-4 mr-2" /> Desvincular gestor
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("admin", selectedLogista, "unlink");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <ShieldClose className="size-4 mr-2" /> Desvincular admin
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => {
-                if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
-                setActionsModalOpen(false);
-              }}
-              className="justify-start"
-            >
-              <Unlink className="size-4 mr-2" /> Desvincular operador
-            </Button>
+
+          <div className="space-y-4">
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Operacoes principais
+              </p>
+              <p className="text-sm text-muted-foreground">
+                As acoes mais utilizadas em um unico bloco.
+              </p>
+              <div className="mt-3 flex flex-col gap-2">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openTeamModal(selectedLogista);
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Equipe vinculada</span>
+                  <Users className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) handleView(selectedLogista);
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Visualizar</span>
+                  <Eye className="size-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="w-full justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) {
+                      setInfoModalOpen(true);
+                      toast({
+                        title: "Remova os vínculos primeiro",
+                        description:
+                          "Desvincule vendedores, gestores e operadores antes de excluir a loja.",
+                        variant: "warning",
+                      });
+                    }
+                  }}
+                >
+                  <span>Excluir lojista</span>
+                  <Trash2 className="size-4" />
+                </Button>
+              </div>
+            </section>
+
+            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Gerenciar vinculos
+                </p>
+                <span className="text-xs text-muted-foreground">Adicionar ou remover</span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <Button
+                  variant="secondary"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Adicionar vendedor</span>
+                  <UserPlus className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Desvincular vendedor</span>
+                  <Unlink className="size-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Adicionar gestor</span>
+                  <UserCog className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Desvincular gestor</span>
+                  <Unlink className="size-4" />
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Adicionar operador</span>
+                  <UserPlus2 className="size-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-between px-3"
+                  onClick={() => {
+                    if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
+                    setActionsModalOpen(false);
+                  }}
+                >
+                  <span>Desvincular operador</span>
+                  <Unlink className="size-4" />
+                </Button>
+              </div>
+            </section>
           </div>
         </DialogContent>
-      </Dialog>
+        </Dialog>
 
+        <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Desvincule antes de excluir</DialogTitle>
+              <DialogDescription>
+                Para remover esta loja, é necessário desvincular todos os vendedores, gestores e operadores
+                vinculados. Caso contrário, os vínculos impedirão a exclusão.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                Uma vez que todos os usuários forem desvinculados, você poderá confirmar a exclusão no diálogo
+                seguinte.
+              </p>
+              <p>Deseja abrir o modal de confirmação agora?</p>
+            </div>
+            <DialogFooter className="justify-end gap-2">
+              <Button variant="outline" onClick={() => setInfoModalOpen(false)}>
+                Voltar
+              </Button>
+              <Button
+                onClick={() => {
+                  setInfoModalOpen(false);
+                  setDeleteModalOpen(true);
+                }}
+              >
+                Abrir confirmação
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
         <DialogContent>
           <DialogHeader>
