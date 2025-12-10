@@ -6,6 +6,8 @@ import {
   type SessionPayload,
 } from "../../../../../../packages/auth";
 import {
+  ADMIN_COOKIE_SAME_SITE,
+  ADMIN_COOKIE_SECURE,
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_MAX_AGE,
   ADMIN_SESSION_SCOPE,
@@ -101,8 +103,8 @@ export async function POST(request: NextRequest) {
       name: ADMIN_SESSION_COOKIE,
       value: encoded,
       httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      sameSite: ADMIN_COOKIE_SAME_SITE,
+      secure: ADMIN_COOKIE_SECURE,
       maxAge: ADMIN_SESSION_MAX_AGE,
       path: "/",
     });

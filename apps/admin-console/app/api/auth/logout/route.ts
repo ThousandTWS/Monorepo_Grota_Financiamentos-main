@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { decryptSession } from "../../../../../../packages/auth";
 import {
+  ADMIN_COOKIE_SAME_SITE,
+  ADMIN_COOKIE_SECURE,
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_SCOPE,
   getAdminApiBaseUrl,
@@ -18,8 +20,8 @@ async function clearSession() {
     name: ADMIN_SESSION_COOKIE,
     value: "",
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: ADMIN_COOKIE_SAME_SITE,
+    secure: ADMIN_COOKIE_SECURE,
     maxAge: 0,
     path: "/",
   });

@@ -7,6 +7,8 @@ import {
   type SessionPayload,
 } from "../../../../../../packages/auth";
 import {
+  ADMIN_COOKIE_SAME_SITE,
+  ADMIN_COOKIE_SECURE,
   ADMIN_SESSION_COOKIE,
   ADMIN_SESSION_SCOPE,
   ADMIN_SESSION_MAX_AGE,
@@ -16,16 +18,6 @@ import {
 
 const API_BASE_URL = getAdminApiBaseUrl();
 const SESSION_SECRET = getAdminSessionSecret();
-
-async function resolveSession() {
-  const cookieStore = await cookies();
-  const encodedSession = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
-  const session = await decryptSession(encodedSession, SESSION_SECRET);
-  if (!session || session.scope !== ADMIN_SESSION_SCOPE) {
-    return null;
-  }
-  return session;
-}
 
 function unauthorized() {
   return NextResponse.json({ error: "Usuario nao autenticado." }, { status: 401 });
@@ -60,17 +52,21 @@ async function persistSession(updated: SessionPayload) {
     name: ADMIN_SESSION_COOKIE,
     value: encoded,
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: ADMIN_COOKIE_SAME_SITE,
+    secure: ADMIN_COOKIE_SECURE,
     maxAge: ADMIN_SESSION_MAX_AGE,
     path: "/",
   });
 }
 
-async function ensureActiveSession() {
-  const cookieStore = await cookies();
-  const encodedSession = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
-  const session = await decryptSession(encodedSession, SESSION_SECRET);
+async function ensureActiveSession(encodedSession?: string) {
+  const resolved =
+    encodedSession ??
+    (await cookies()).get(ADMIN_SESSION_COOKIE)?.value;
+  if (!resolved) {
+    return null;
+  }
+  const session = await decryptSession(resolved, SESSION_SECRET);
   if (!session || session.scope !== ADMIN_SESSION_SCOPE) {
     return null;
   }
@@ -93,11 +89,11 @@ async function ensureActiveSession() {
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id?: string }> },
 ) {
   try {
-    let session = await ensureActiveSession();
+    let session = await ensureActiveSession(request.cookies.get(ADMIN_SESSION_COOKIE)?.value);
     if (!session) {
       return unauthorized();
     }
