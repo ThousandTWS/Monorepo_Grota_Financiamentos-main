@@ -10,6 +10,6 @@ public record UserResponseDTO(
         String email,
         UserStatus status,
         String role,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
         Long dealerId
 ) {}
