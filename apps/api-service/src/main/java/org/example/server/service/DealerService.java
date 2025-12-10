@@ -11,6 +11,7 @@ import org.example.server.model.Dealer;
 import org.example.server.model.Manager;
 import org.example.server.model.Operator;
 import org.example.server.model.Partner;
+import org.example.server.model.Proposal;
 import org.example.server.model.Seller;
 import org.example.server.model.User;
 import org.example.server.repository.*;
