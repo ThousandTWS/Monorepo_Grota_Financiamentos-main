@@ -40,11 +40,15 @@ export const getLogistaColumns = (actions: {
   {
     key: "referenceCode",
     header: "Código Ref.",
-    cell: (logista: Logista) => (
-      <div className="font-mono text-sm" data-oid="refCode">
-        {logista.referenceCode || "--"}
-      </div>
-    ),
+    cell: (logista: Logista) => {
+      const numberOnly =
+        logista.referenceCode?.match(/\d+/g)?.join("") || logista.referenceCode || "--";
+      return (
+        <div className="font-mono text-sm" data-oid="refCode">
+          {numberOnly}
+        </div>
+      );
+    },
   },
   {
     key: "fullName",

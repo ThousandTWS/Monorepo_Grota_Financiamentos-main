@@ -476,8 +476,8 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
             )}
           </div>
 
-          <div className="hidden md:block overflow-x-auto" data-oid="tableWrapper">
-            <Table className="min-w-full divide-y divide-slate-100" data-oid="xc.amp3">
+          <div className="hidden md:block overflow-hidden" data-oid="tableWrapper">
+            <Table className="w-full divide-y divide-slate-100 table-auto" data-oid="xc.amp3">
               <TableHeader data-oid="8zjtqij">
                 <TableRow className="bg-slate-50" data-oid="nky:coh">
                   {columns.map((column) => (
@@ -502,7 +502,7 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
                       {columns.map((column) => (
                         <TableCell
                           key={column.key}
-                          className="px-3 py-2 text-sm text-slate-700"
+                          className="px-3 py-2 text-sm text-slate-700 break-words whitespace-normal"
                           data-oid="4jlxlw7"
                         >
                           {column.cell(logista)}
@@ -1051,15 +1051,18 @@ function InfoItem({ label, value }: { label: string; value?: string | null }) {
 }
 
 function LogistaCard({ logista }: { logista: Logista }) {
+  const referenceNumber =
+    logista.referenceCode?.match(/\d+/g)?.join("") || logista.referenceCode || "--";
   return (
     <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-            Loja {logista.referenceCode ?? "--"}
+            Loja {referenceNumber}
           </p>
-          <p className="text-base font-bold text-slate-900">{logista.fullName || logista.enterprise || "Lojista"}</p>
-          <p className="text-sm text-slate-500">{logista.enterprise || "Sem empresa informada"}</p>
+          {logista.enterprise && (
+            <p className="text-base font-bold text-slate-900">{logista.enterprise}</p>
+          )}
         </div>
         {logista.status && (
           <Badge className="text-xs font-semibold uppercase tracking-wide">
