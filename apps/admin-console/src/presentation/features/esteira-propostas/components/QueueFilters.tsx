@@ -50,28 +50,25 @@ export function QueueFilters({
   };
 
   return (
-    <div className="space-y-4" data-oid="queue-filters">
-      <div className="rounded-lg border bg-card p-4">
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Nome/CPF
-            </label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Pesquise por cliente ou CPF"
-                value={filters.search}
-                onChange={(event) => onFiltersChange({ search: event.target.value })}
-                className="pl-9"
-              />
-            </div>
+    <div className="rounded-2xl border border-slate-200 bg-white/80 p-5 shadow-sm">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
+        <div className="flex-1 space-y-1">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+            Foco no cliente
+          </p>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Pesquise por cliente, CPF ou placa"
+              value={filters.search}
+              onChange={(event) => onFiltersChange({ search: event.target.value })}
+              className="pl-10"
+            />
           </div>
-
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Operador
-            </label>
+        </div>
+        <div className="grid flex-1 grid-cols-2 gap-3 lg:grid-cols-3">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Operador</p>
             <Select
               value={filters.operatorId ?? "all"}
               onValueChange={(value) =>
@@ -91,11 +88,8 @@ export function QueueFilters({
               </SelectContent>
             </Select>
           </div>
-
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Lojista
-            </label>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Lojista</p>
             <Select
               value={filters.dealerId ?? "all"}
               onValueChange={(value) =>
@@ -115,35 +109,8 @@ export function QueueFilters({
               </SelectContent>
             </Select>
           </div>
-        </div>
-
-        <div className="mt-2 flex flex-col gap-4 lg:mt-4 lg:flex-row">
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Status
-            </label>
-            <Select
-              value={filters.status}
-              onValueChange={(value) =>
-                onFiltersChange({ status: value as ProposalStatus | "ALL" })
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="(todos)" />
-              </SelectTrigger>
-              <SelectContent>
-                {statuses.map((status) => (
-                  <SelectItem key={status.value} value={status.value}>
-                    {status.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex-1 space-y-2">
-            <label className="text-sm font-medium text-muted-foreground">
-              Código Lojista
-            </label>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Cód. lojista</p>
             <Input
               placeholder="0000"
               value={filters.dealerCode ?? ""}
@@ -152,38 +119,65 @@ export function QueueFilters({
               }
             />
           </div>
-          <div className="mt-6 flex w-full flex-col items-stretch gap-2 self-end sm:flex-row sm:justify-end lg:mt-6 lg:w-auto">
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={onRefresh}
-              disabled={isRefreshing}
-            >
-              <RefreshCw className="size-4" />
-              Atualizar
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 lg:grid-cols-[1fr_auto_auto]">
+        <div className="space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">Status</p>
+          <Select
+            value={filters.status}
+            onValueChange={(value) =>
+              onFiltersChange({ status: value as ProposalStatus | "ALL" })
+            }
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="(todos)" />
+            </SelectTrigger>
+            <SelectContent>
+              {statuses.map((status) => (
+                <SelectItem key={status.value} value={status.value}>
+                  {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            className="gap-2"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className="size-4" />
+            Atualizar
+          </Button>
+          {onExport ? (
+            <Button variant="ghost" className="gap-2" onClick={onExport}>
+              <Download className="size-4" />
+              Exportar CSV
             </Button>
-            {onExport ? (
-              <Button variant="outline" className="gap-2" onClick={onExport}>
-                <Download className="size-4" />
-                Exportar CSV
-              </Button>
-            ) : null}
-            {onCreate ? (
-              <Button className="gap-2" onClick={onCreate}>
-                <Plus className="size-4" />
-                Nova Ficha
-              </Button>
-            ) : null}
-            <Button
-              variant="outline"
-              size="icon"
-              className="shrink-0"
-              onClick={handleReset}
-              aria-label="Limpar filtros"
-            >
-              <Filter className="size-4" />
+          ) : null}
+        </div>
+
+        <div className="flex items-center justify-end gap-2">
+          {onCreate ? (
+            <Button className="gap-2" onClick={onCreate}>
+              <Plus className="size-4" />
+              Nova ficha
             </Button>
-          </div>
+          ) : null}
+          <Button
+            variant="outline"
+            size="icon"
+            className="shrink-0"
+            onClick={handleReset}
+            aria-label="Limpar filtros"
+          >
+            <Filter className="size-4" />
+          </Button>
         </div>
       </div>
     </div>

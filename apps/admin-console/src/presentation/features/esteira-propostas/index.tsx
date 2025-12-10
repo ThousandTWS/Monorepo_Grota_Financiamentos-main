@@ -26,6 +26,11 @@ import {
 import { StatusLegend } from "./components/StatusLegend";
 import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/presentation/layout/components/ui/alert";
 import { getAllLogistics } from "@/application/services/Logista/logisticService";
 import { getAllSellers } from "@/application/services/Seller/sellerService";
 import { getRealtimeUrl } from "@/application/config/realtime";
@@ -413,6 +418,14 @@ export default function EsteiraDePropostasFeature() {
         <StatusLegend summary={summary} />
       </div>
 
+      <Alert className="rounded-2xl border-slate-200 bg-slate-50">
+        <AlertTitle>Websocket ativo</AlertTitle>
+        <AlertDescription>
+          O painel recebe notificações em tempo real sempre que uma nova ficha chega ou muda de status. O indicador
+          de “Pipeline Admin” reflete esse fluxo, então você já pode agir no mesmo instante.
+        </AlertDescription>
+      </Alert>
+
       <QueueFilters
         filters={filters}
         operators={availableOperators}
@@ -424,6 +437,14 @@ export default function EsteiraDePropostasFeature() {
         onExport={handleExport}
         isRefreshing={isRefreshing}
       />
+
+      <Alert className="rounded-2xl border-slate-200 bg-white/70">
+        <AlertTitle>Conteúdo disponível</AlertTitle>
+        <AlertDescription>
+          Utilize o botão “Exportar CSV” para compartilhar lista filtrada com sua equipe, ou abra “Histórico” para revisar
+          o processo completo do cliente.
+        </AlertDescription>
+      </Alert>
 
       <ProposalsTable
         proposals={filteredProposals}

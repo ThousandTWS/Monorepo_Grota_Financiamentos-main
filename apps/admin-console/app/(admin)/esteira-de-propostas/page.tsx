@@ -4,7 +4,7 @@ import React from "react";
 export default function EsteiraDePropostasPage() {
   return (
     <div
-      className="min-h-screen bg-[#0F456A] px-4 py-6 animate-in fade-in duration-500"
+      className=" bg-[#0F456A] px-4 py-6 animate-in fade-in duration-500"
       data-oid="w9w2t9k"
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">

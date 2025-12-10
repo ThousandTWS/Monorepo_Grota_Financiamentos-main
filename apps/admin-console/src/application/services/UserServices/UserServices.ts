@@ -6,6 +6,7 @@ export interface AuthenticatedUser {
 }
 
 export type AdminUser = {
+  phone: string | undefined;
   id: number;
   email?: string;
   fullName?: string;

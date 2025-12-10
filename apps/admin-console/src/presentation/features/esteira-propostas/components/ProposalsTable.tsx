@@ -1,35 +1,13 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-"use client";
-
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
 import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/presentation/layout/components/ui/table";
+import { Button } from "@/presentation/layout/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/layout/components/ui/select";
 import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/presentation/layout/components/ui/select";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Clock3 } from "lucide-react";
 import { StatusBadge } from "../../logista/components/status-badge";
+import { Clock3, Eye, RefreshCw } from "lucide-react";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
@@ -47,12 +25,7 @@ const proposalStatusLabels: Record<ProposalStatus, string> = {
   REJECTED: "Recusada",
 };
 
-const statusOptions: ProposalStatus[] = [
-  "SUBMITTED",
-  "PENDING",
-  "APPROVED",
-  "REJECTED",
-];
+const statusOptions: ProposalStatus[] = ["SUBMITTED", "PENDING", "APPROVED", "REJECTED"];
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -85,7 +58,7 @@ export function ProposalsTable({
 }: ProposalsTableProps) {
   const router = useRouter();
 
-  const data = useMemo(() => {
+  const cards = useMemo(() => {
     return proposals.map((proposal) => {
       const dealerLabel = proposal.dealerId
         ? dealersById[proposal.dealerId]?.enterprise ??
@@ -104,197 +77,128 @@ export function ProposalsTable({
     });
   }, [dealersById, proposals, sellersById]);
 
-  const columnHelper = createColumnHelper<typeof data[number]>();
+  if (isLoading) {
+    return (
+      <div className="space-y-3">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Card key={`skeleton-${index}`}>
+            <CardHeader className="space-y-2">
+              <Skeleton className="h-3 w-1/3" />
+              <Skeleton className="h-5 w-1/2" />
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              {Array.from({ length: 4 }).map((__, cellIndex) => (
+                <Skeleton key={cellIndex} className="h-12 w-full" />
+              ))}
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
-  const columns = useMemo(
-    () => [
-      columnHelper.display({
-        id: "icon",
-        header: () => null,
-        cell: () => (
-          <div className="flex items-start justify-center">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-slate-100 text-slate-500">
-              <Clock3 className="size-4" />
-            </div>
-          </div>
-        ),
-        size: 48,
-      }),
-      columnHelper.accessor("customerName", {
-        header: "Nome / CPF",
-        cell: (ctx) => (
-          <div className="space-y-1">
-            <p className="text-sm font-semibold uppercase tracking-tight text-[#134B73]">
-              {ctx.getValue()}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {maskCpf(ctx.row.original.customerCpf)}
-            </p>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("financedValue", {
-        header: "Valor",
-        cell: (ctx) => (
-          <div className="space-y-1 text-sm">
-            <p className="text-xs text-muted-foreground">Valor financiado</p>
-            <p className="text-sm font-semibold text-emerald-600">
-              {formatCurrency(ctx.getValue())}
-            </p>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("dealerLabel", {
-        header: "Lojista",
-        cell: (ctx) => (
-          <div className="text-sm">
-            <p className="font-medium">{ctx.getValue()}</p>
-            <p className="text-xs text-muted-foreground">
-              {ctx.row.original.sellerId
-                ? sellersById[ctx.row.original.sellerId] ??
-                  `Responsável #${ctx.row.original.sellerId}`
-                : "Responsável não informado"}
-            </p>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("fipeValue", {
-        header: "FIPE",
-        cell: (ctx) => (
-          <div className="text-sm">
-            <p className="text-xs text-muted-foreground">FIPE</p>
-            <p className="font-semibold">{formatCurrency(ctx.getValue())}</p>
-          </div>
-        ),
-      }),
-      columnHelper.accessor("status", {
-        header: "Status",
-        cell: (ctx) => (
-          <div className="space-y-2">
-            <div className="space-y-3 rounded-md border px-3 py-2 text-sm">
-              <StatusBadge
-                status={ctx.getValue()}
-                className="shadow-none px-2.5 py-1 text-[11px]"
-              >
-                {proposalStatusLabels[ctx.getValue()]}
-              </StatusBadge>
-              <p className="text-xs text-muted-foreground">
-                Atualizado em {formatDateTime(ctx.row.original.updatedAt)}
-              </p>
-              <p className="text-xs font-semibold uppercase">Operações Grota</p>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full justify-center gap-2 border-[#0F456A] bg-[#134B73] text-white hover:bg-[#0F456A] hover:text-white"
-                onClick={() =>
-                  router.push(`/esteira-de-propostas/${ctx.row.original.id}/historico`)
-                }
-              >
-                Histórico
-              </Button>
-            </div>
-            <Select
-              value={ctx.getValue()}
-              onValueChange={(value) =>
-                onStatusChange(ctx.row.original, value as ProposalStatus)
-              }
-              disabled={updatingId === ctx.row.original.id}
-            >
-              <SelectTrigger className="w-full text-xs" data-oid="status-trigger">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {statusOptions.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {proposalStatusLabels[status]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        ),
-        size: 260,
-      }),
-      columnHelper.display({
-        id: "meta",
-        header: "Enviado / Operador",
-        cell: (ctx) => (
-          <div className="space-y-1 text-sm">
-            <p className="font-semibold">{formatDateTime(ctx.row.original.createdAt)}</p>
-            <p className="text-xs font-medium uppercase text-muted-foreground">
-              {ctx.row.original.sellerId
-                ? sellersById[ctx.row.original.sellerId] ??
-                  `Vendedor #${ctx.row.original.sellerId}`
-                : "Vendedor não informado"}
-            </p>
-          </div>
-        ),
-      }),
-    ],
-    [columnHelper, onStatusChange, sellersById, updatingId],
-  );
-
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
+  if (cards.length === 0) {
+    return (
+      <Card>
+        <CardContent className="text-center text-sm text-muted-foreground">
+          Nenhuma proposta encontrada com os filtros selecionados.
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div className="rounded-lg border bg-card shadow-sm" data-oid="admin-table">
-      <ScrollArea className="w-full" data-oid="scroll">
-        <Table className="min-w-[1050px]" data-oid="table">
-          <TableHeader data-oid="thead">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow
-                key={headerGroup.id}
-                className="bg-slate-50 text-slate-600"
-                data-oid="header-row"
+    <div className="space-y-4">
+      {cards.map((proposal) => (
+        <Card key={proposal.id} className="bg-gradient-to-br from-white via-slate-50 to-white shadow-sm">
+          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                {proposal.customerCpf ? maskCpf(proposal.customerCpf) : "CPF não informado"}
+              </p>
+              <h3 className="text-lg font-semibold text-[#134B73]">{proposal.customerName}</h3>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
+                <Clock3 className="size-4" />
+                {formatDateTime(proposal.createdAt)}
+              </div>
+              <StatusBadge status={proposal.status} className="px-3 py-1 text-xs shadow-none" />
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-[2fr_1fr]">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-muted-foreground">Lojista</p>
+                  <p className="font-semibold text-slate-700">{proposal.dealerLabel}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Operador</p>
+                  <p className="font-semibold text-slate-700">{proposal.sellerLabel}</p>
+                </div>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
+                  <p className="text-xs text-muted-foreground">Valor financiado</p>
+                  <p className="font-semibold text-emerald-600">{formatCurrency(proposal.financedValue)}</p>
+                </div>
+                <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
+                  <p className="text-xs text-muted-foreground">Valor FIPE</p>
+                  <p className="font-semibold text-slate-700">{formatCurrency(proposal.fipeValue)}</p>
+                </div>
+                <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
+                  <p className="text-xs text-muted-foreground">Status atualizado</p>
+                  <p className="font-semibold text-slate-700">{formatDateTime(proposal.updatedAt)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Select
+                value={proposal.status}
+                onValueChange={(value) =>
+                  onStatusChange(proposal, value as ProposalStatus)
+                }
+                disabled={updatingId === proposal.id}
               >
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} style={{ width: header.getSize() ?? undefined }}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(header.column.columnDef.header, header.getContext())}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody data-oid="tbody">
-            {isLoading
-              ? Array.from({ length: 4 }).map((_, index) => (
-                  <TableRow key={`skeleton-${index}`} data-oid="skeleton-row">
-                    {Array.from({ length: 7 }).map((__, colIndex) => (
-                      <TableCell key={colIndex} data-oid="skeleton-cell">
-                        <Skeleton className="h-12 w-full" />
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))
-              : table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    className="align-top border-b hover:bg-slate-50/60 transition-colors"
-                    data-oid="data-row"
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="pt-5 align-top">
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </TableCell>
-                    ))}
-                  </TableRow>
-                ))}
-            {!isLoading && proposals.length === 0 ? (
-              <TableRow data-oid="empty-row">
-                <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
-                  Nenhuma proposta encontrada com os filtros selecionados.
-                </TableCell>
-              </TableRow>
-            ) : null}
-          </TableBody>
-        </Table>
-      </ScrollArea>
+                <SelectTrigger className="w-full text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {statusOptions.map((status) => (
+                    <SelectItem key={status} value={status}>
+                      {proposalStatusLabels[status]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() =>
+                    router.push(`/esteira-de-propostas/${proposal.id}/historico`)
+                  }
+                >
+                  <Eye className="size-4" />
+                  Ver histórico
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="gap-2 border border-dashed border-slate-300"
+                  onClick={() => {
+                    router.push(`/esteira-de-propostas/${proposal.id}`);
+                  }}
+                >
+                  <RefreshCw className="size-4" />
+                  Sincronizar
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   );
 }
