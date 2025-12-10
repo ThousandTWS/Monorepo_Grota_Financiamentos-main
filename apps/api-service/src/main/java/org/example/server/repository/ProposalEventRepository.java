@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ProposalEventRepository extends JpaRepository<ProposalEvent, Long> {
     List<ProposalEvent> findByProposalOrderByCreatedAtAsc(Proposal proposal);
+    void deleteAllByProposalIn(List<Proposal> proposals);
 }

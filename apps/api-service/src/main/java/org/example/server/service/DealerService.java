@@ -38,6 +38,7 @@ public class DealerService {
     private final OperatorRepository operatorRepository;
     private final ProposalRepository proposalRepository;
     private final VehicleRepository vehicleRepository;
+    private final ProposalEventRepository proposalEventRepository;
 
     public DealerService(
             DealerRepository dealerRepository,
@@ -53,7 +54,8 @@ public class DealerService {
             ManagerRepository managerRepository,
             OperatorRepository operatorRepository,
             ProposalRepository proposalRepository,
-            VehicleRepository vehicleRepository
+            VehicleRepository vehicleRepository,
+            ProposalEventRepository proposalEventRepository
     ) {
         this.dealerRepository = dealerRepository;
         this.userRepository = userRepository;
@@ -69,6 +71,7 @@ public class DealerService {
         this.operatorRepository = operatorRepository;
         this.proposalRepository = proposalRepository;
         this.vehicleRepository = vehicleRepository;
+        this.proposalEventRepository = proposalEventRepository;
     }
 
     @Transactional
@@ -280,7 +283,11 @@ public class DealerService {
         Dealer dealer = dealerRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException(id));
 
-        proposalRepository.deleteAll(proposalRepository.findByDealer(dealer));
+        List<Proposal> proposals = proposalRepository.findByDealer(dealer);
+        if (!proposals.isEmpty()) {
+            proposalEventRepository.deleteAllByProposalIn(proposals);
+        }
+        proposalRepository.deleteAll(proposals);
         vehicleRepository.deleteAll(vehicleRepository.findByDealerId(id));
         documentRepository.deleteByDealerId(id);
         sellerRepository.deleteAll(sellerRepository.findByDealerId(id));

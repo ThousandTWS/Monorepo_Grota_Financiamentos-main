@@ -91,7 +91,7 @@ export function StatusBadge({ status, children, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md cursor-default",
+    "inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-xs font-semibold border transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-md cursor-default",
         config?.className,
         className
       )}
