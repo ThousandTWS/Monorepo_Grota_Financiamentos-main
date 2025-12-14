@@ -1,29 +1,30 @@
 package org.example.server.service;
 
-import jakarta.mail.internet.MimeMessage;
 import org.example.server.exception.EmailException;
 import org.example.server.model.Document;
+import org.example.server.service.factory.EmailMessageFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.thymeleaf.spring6.SpringTemplateEngine;
-
 import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 
 @Service
 public class EmailService {
 
     private final JavaMailSender mailSender;
     private final SpringTemplateEngine springTemplateEngine;
+    private final EmailMessageFactory emailMessageFactory;
 
     @Value("${app.mail.from}")
     private String fromEmail;
 
-    public EmailService(JavaMailSender mailSender, SpringTemplateEngine springTemplateEngine) {
+    public EmailService(JavaMailSender mailSender, SpringTemplateEngine springTemplateEngine, EmailMessageFactory emailMessageFactory) {
         this.mailSender = mailSender;
         this.springTemplateEngine = springTemplateEngine;
+        this.emailMessageFactory = emailMessageFactory;
     }
 
     @Async
@@ -51,15 +52,9 @@ public class EmailService {
 
             String html = springTemplateEngine.process("document-review", ctx);
 
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-
-            helper.setTo(to);
-            helper.setSubject("Atualização no status do seu documento");
+            MimeMessageHelper helper = emailMessageFactory.create(to, "Atualização no status do seu documento", fromEmail);
             helper.setText(html, true);
-            helper.setFrom(fromEmail);
-
-            mailSender.send(mimeMessage);
+            mailSender.send(helper.getMimeMessage());
 
         } catch (Exception e) {
             throw new EmailException("Não foi possível enviar e-mail de revisão de documento", e);
@@ -74,15 +69,9 @@ public class EmailService {
 
             String html = springTemplateEngine.process(templateName, ctx);
 
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
-
-            helper.setTo(to);
-            helper.setSubject(subject);
+            MimeMessageHelper helper = emailMessageFactory.create(to, subject, fromEmail);
             helper.setText(html, true);
-            helper.setFrom(fromEmail);
-
-            mailSender.send(mimeMessage);
+            mailSender.send(helper.getMimeMessage());
 
         } catch (Exception e) {
             throw new EmailException("Não foi possível enviar e-mail", e);

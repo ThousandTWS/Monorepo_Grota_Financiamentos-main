@@ -5,7 +5,6 @@ import org.example.server.dto.manager.ManagerMapper;
 import org.example.server.dto.manager.ManagerRequestDTO;
 import org.example.server.dto.manager.ManagerResponseDTO;
 import org.example.server.enums.UserRole;
-import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
@@ -15,7 +14,7 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ManagerRepository;
 import org.example.server.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.example.server.service.factory.ManagerUserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -26,28 +25,28 @@ public class ManagerService {
 
     private final ManagerRepository managerRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final ManagerMapper managerMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
+    private final ManagerUserFactory managerUserFactory;
 
     public ManagerService(
             ManagerRepository managerRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
             ManagerMapper managerMapper,
             AddressMapper addressMapper,
             EmailService emailService,
-            DealerRepository dealerRepository
+            DealerRepository dealerRepository,
+            ManagerUserFactory managerUserFactory
     ) {
         this.managerRepository = managerRepository;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.managerMapper = managerMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
+        this.managerUserFactory = managerUserFactory;
     }
 
     public ManagerResponseDTO create(User user, ManagerRequestDTO managerRequestDTO) {
@@ -70,12 +69,11 @@ public class ManagerService {
                     .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
         }
 
-        User newUser = new User();
-        newUser.setFullName(managerRequestDTO.fullName());
-        newUser.setEmail(managerRequestDTO.email());
-        newUser.setPassword(passwordEncoder.encode(managerRequestDTO.password()));
-        newUser.setRole(UserRole.GESTOR);
-        newUser.setStatus(UserStatus.ATIVO);
+        User newUser = managerUserFactory.create(
+                managerRequestDTO.fullName(),
+                managerRequestDTO.email(),
+                managerRequestDTO.password()
+        );
 
         Manager manager = new Manager();
         manager.setPhone(managerRequestDTO.phone());

@@ -5,7 +5,6 @@ import org.example.server.dto.operator.OperatorMapper;
 import org.example.server.dto.operator.OperatorRequestDTO;
 import org.example.server.dto.operator.OperatorResponseDTO;
 import org.example.server.enums.UserRole;
-import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
@@ -15,7 +14,7 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.OperatorRepository;
 import org.example.server.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.example.server.service.factory.OperatorUserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -24,28 +23,28 @@ public class OperatorService {
 
     private final OperatorRepository operatorRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final OperatorMapper operatorMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
+    private final OperatorUserFactory operatorUserFactory;
 
     public OperatorService(
             OperatorRepository operatorRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
             OperatorMapper operatorMapper,
             AddressMapper addressMapper,
             EmailService emailService,
-            DealerRepository dealerRepository
+            DealerRepository dealerRepository,
+            OperatorUserFactory operatorUserFactory
     ) {
         this.operatorRepository = operatorRepository;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.operatorMapper = operatorMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
+        this.operatorUserFactory = operatorUserFactory;
     }
 
     public OperatorResponseDTO create(User user, OperatorRequestDTO operatorRequestDTO) {
@@ -68,12 +67,11 @@ public class OperatorService {
                     .orElseThrow(() -> new RecordNotFoundException("Lojista nǜo encontrado."));
         }
 
-        User newUser = new User();
-        newUser.setFullName(operatorRequestDTO.fullName());
-        newUser.setEmail(operatorRequestDTO.email());
-        newUser.setPassword(passwordEncoder.encode(operatorRequestDTO.password()));
-        newUser.setRole(UserRole.OPERADOR);
-        newUser.setStatus(UserStatus.ATIVO);
+        User newUser = operatorUserFactory.create(
+                operatorRequestDTO.fullName(),
+                operatorRequestDTO.email(),
+                operatorRequestDTO.password()
+        );
 
         Operator operator = new Operator();
         operator.setPhone(operatorRequestDTO.phone());

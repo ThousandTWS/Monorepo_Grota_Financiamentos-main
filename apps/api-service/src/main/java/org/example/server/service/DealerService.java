@@ -15,7 +15,7 @@ import org.example.server.model.Proposal;
 import org.example.server.model.Seller;
 import org.example.server.model.User;
 import org.example.server.repository.*;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.example.server.service.factory.DealerUserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +29,7 @@ public class DealerService {
     private final UserRepository userRepository;
     private final DocumentRepository documentRepository;
     private final DealerRegistrationMapper dealerRegistrationMapper;
-    private final PasswordEncoder passwordEncoder;
+    private final DealerUserFactory dealerUserFactory;
     private final DealerProfileMapper dealerProfileMapper;
     private final AddressMapper addressMapper;
     private final DealerDetailsMapper dealerDetailsMapper;
@@ -46,7 +46,7 @@ public class DealerService {
             UserRepository userRepository,
             DocumentRepository documentRepository,
             DealerRegistrationMapper dealerRegistrationMapper,
-            PasswordEncoder passwordEncoder,
+            DealerUserFactory dealerUserFactory,
             DealerProfileMapper dealerProfileMapper,
             AddressMapper addressMapper,
             DealerDetailsMapper dealerDetailsMapper,
@@ -62,7 +62,7 @@ public class DealerService {
         this.userRepository = userRepository;
         this.documentRepository = documentRepository;
         this.dealerRegistrationMapper = dealerRegistrationMapper;
-        this.passwordEncoder = passwordEncoder;
+        this.dealerUserFactory = dealerUserFactory;
         this.dealerProfileMapper = dealerProfileMapper;
         this.addressMapper = addressMapper;
         this.dealerDetailsMapper = dealerDetailsMapper;
@@ -86,12 +86,11 @@ public class DealerService {
             throw new DataAlreadyExistsException("Empresa já cadastrada");
         }
 
-        User user = new User();
-        user.setFullName(dealerRegistrationRequestDTO.fullName());
-        user.setEmail(generateFallbackEmail(normalizedEnterprise, dealerRegistrationRequestDTO.phone()));
-        user.setPassword(passwordEncoder.encode(dealerRegistrationRequestDTO.password()));
-        user.setRole(UserRole.LOJISTA);
-        user.markAsVerified();
+        User user = dealerUserFactory.create(
+                dealerRegistrationRequestDTO.fullName(),
+                generateFallbackEmail(normalizedEnterprise, dealerRegistrationRequestDTO.phone()),
+                dealerRegistrationRequestDTO.password()
+        );
 
         Dealer dealer = new Dealer();
         dealer.setUser(user);
@@ -119,12 +118,11 @@ public class DealerService {
             throw new DataAlreadyExistsException("Empresa já cadastrada");
         }
 
-        User user = new User();
-        user.setFullName(dto.fullName());
-        user.setEmail(generateFallbackEmail(normalizedEnterprise, dto.phone()));
-        user.setPassword(passwordEncoder.encode(dto.password()));
-        user.setRole(UserRole.LOJISTA);
-        user.markAsVerified();
+        User user = dealerUserFactory.create(
+                dto.fullName(),
+                generateFallbackEmail(normalizedEnterprise, dto.phone()),
+                dto.password()
+        );
 
         Dealer dealer = new Dealer();
         dealer.setUser(user);

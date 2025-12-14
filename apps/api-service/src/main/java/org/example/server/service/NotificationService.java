@@ -5,6 +5,7 @@ import org.example.server.dto.notification.NotificationResponseDTO;
 import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Notification;
 import org.example.server.repository.NotificationRepository;
+import org.example.server.service.factory.NotificationFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,22 +14,18 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final NotificationStreamService notificationStreamService;
+    private final NotificationFactory notificationFactory;
 
-    public NotificationService(NotificationRepository notificationRepository, NotificationStreamService notificationStreamService) {
+    public NotificationService(NotificationRepository notificationRepository, NotificationStreamService notificationStreamService, NotificationFactory notificationFactory) {
         this.notificationRepository = notificationRepository;
         this.notificationStreamService = notificationStreamService;
+        this.notificationFactory = notificationFactory;
     }
 
     @Transactional
     public NotificationResponseDTO create(NotificationRequestDTO dto) {
-        Notification notification = new Notification();
-        notification.setTitle(dto.title());
-        notification.setDescription(dto.description());
-        notification.setActor(dto.actor());
-        notification.setTargetType(dto.targetType());
-        notification.setTargetId(dto.targetId());
-        notification.setHref(dto.href());
-        NotificationResponseDTO response = toResponse(notificationRepository.save(notification));
+        Notification notification = notificationFactory.create(dto);
+        NotificationResponseDTO response = notificationFactory.toResponse(notificationRepository.save(notification));
 
         // Dispara em tempo real para os assinantes SSE
         notificationStreamService.broadcast(response);
@@ -44,7 +41,7 @@ public class NotificationService {
         } else {
             list = notificationRepository.findByTargetTypeOrderByCreatedAtDesc(targetType);
         }
-        return list.stream().map(this::toResponse).toList();
+        return list.stream().map(notificationFactory::toResponse).toList();
     }
 
     @Transactional
@@ -55,17 +52,5 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    private NotificationResponseDTO toResponse(Notification notification) {
-        return new NotificationResponseDTO(
-                notification.getId(),
-                notification.getTitle(),
-                notification.getDescription(),
-                notification.getActor(),
-                notification.getTargetType(),
-                notification.getTargetId(),
-                notification.getHref(),
-                notification.isReadFlag(),
-                notification.getCreatedAt()
-        );
-    }
 }
+

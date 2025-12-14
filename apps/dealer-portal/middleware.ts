@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isAuthenticated && pathname === "/") {
-    return buildRedirectResponse("/visao-geral", request);
+    return buildRedirectResponse("/simulacao/novo", request);
   }
 
   // PERMISSÕES: Todos os usuários autenticados (VENDEDOR, OPERADOR, ADMIN)

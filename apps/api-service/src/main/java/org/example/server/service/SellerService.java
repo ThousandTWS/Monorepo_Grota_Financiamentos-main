@@ -5,7 +5,6 @@ import org.example.server.dto.seller.SellerMapper;
 import org.example.server.dto.seller.SellerRequestDTO;
 import org.example.server.dto.seller.SellerResponseDTO;
 import org.example.server.enums.UserRole;
-import org.example.server.enums.UserStatus;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
@@ -15,7 +14,7 @@ import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.SellerRepository;
 import org.example.server.repository.UserRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.example.server.service.factory.SellerUserFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -24,28 +23,28 @@ public class SellerService {
 
     private final SellerRepository sellerRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final SellerMapper sellerMapper;
     private final AddressMapper addressMapper;
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
+    private final SellerUserFactory sellerUserFactory;
 
     public SellerService(
             SellerRepository sellerRepository,
             UserRepository userRepository,
-            PasswordEncoder passwordEncoder,
             SellerMapper sellerMapper,
             AddressMapper addressMapper,
             EmailService emailService,
-            DealerRepository dealerRepository
+            DealerRepository dealerRepository,
+            SellerUserFactory sellerUserFactory
     ) {
         this.sellerRepository = sellerRepository;
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
         this.sellerMapper = sellerMapper;
         this.addressMapper = addressMapper;
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
+        this.sellerUserFactory = sellerUserFactory;
     }
 
     public SellerResponseDTO create(User user, SellerRequestDTO sellerRequestDTO) {
@@ -68,12 +67,11 @@ public class SellerService {
                     .orElseThrow(() -> new RecordNotFoundException("Lojista nao encontrado."));
         }
 
-        User newUser = new User();
-        newUser.setFullName(sellerRequestDTO.fullName());
-        newUser.setEmail(sellerRequestDTO.email());
-        newUser.setPassword(passwordEncoder.encode(sellerRequestDTO.password()));
-        newUser.setRole(UserRole.VENDEDOR);
-        newUser.setStatus(UserStatus.ATIVO);
+        User newUser = sellerUserFactory.create(
+                sellerRequestDTO.fullName(),
+                sellerRequestDTO.email(),
+                sellerRequestDTO.password()
+        );
 
         Seller seller = new Seller();
         seller.setPhone(sellerRequestDTO.phone());

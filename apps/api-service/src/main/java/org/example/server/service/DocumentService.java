@@ -4,6 +4,7 @@ import org.example.server.dto.document.DocumentMapper;
 import org.example.server.dto.document.DocumentResponseDTO;
 import org.example.server.dto.document.DocumentReviewRequestDTO;
 import org.example.server.dto.document.DocumentUploadRequestDTO;
+import org.example.server.service.factory.DocumentFactory;
 import org.example.server.enums.UserRole;
 import org.example.server.exception.DocumentUploadException;
 import org.example.server.exception.auth.AccessDeniedException;
@@ -29,16 +30,18 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final DealerRepository dealerRepository;
     private final EmailService emailService;
+    private final DocumentFactory documentFactory;
     private final DocumentMapper mapper;
 
     private static final long MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final String[] ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"};
 
-    public DocumentService(S3Service s3Service, DocumentRepository documentRepository, DealerRepository dealerRepository, EmailService emailService, DocumentMapper mapper) {
+    public DocumentService(S3Service s3Service, DocumentRepository documentRepository, DealerRepository dealerRepository, EmailService emailService, DocumentFactory documentFactory, DocumentMapper mapper) {
         this.s3Service = s3Service;
         this.documentRepository = documentRepository;
         this.dealerRepository = dealerRepository;
         this.emailService = emailService;
+        this.documentFactory = documentFactory;
         this.mapper = mapper;
     }
 
@@ -75,8 +78,7 @@ public class DocumentService {
             throw new DocumentUploadException("Falha ao enviar documento para o servidor", e);
         }
 
-        Document document = mapper.toEntity(dto, user, s3Key);
-        document.setCreatedAt(LocalDateTime.now());
+        Document document = documentFactory.create(dto, user, s3Key);
 
         return mapper.toDTO(documentRepository.save(document));
     }

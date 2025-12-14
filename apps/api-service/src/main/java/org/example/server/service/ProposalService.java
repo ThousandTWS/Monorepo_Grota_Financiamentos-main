@@ -16,6 +16,7 @@ import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ProposalEventRepository;
 import org.example.server.repository.ProposalRepository;
 import org.example.server.repository.SellerRepository;
+import org.example.server.service.factory.ProposalEventFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +34,7 @@ public class ProposalService {
     private final ProposalEventRepository proposalEventRepository;
     private final RealtimeBridgeClient realtimeBridgeClient;
     private final ObjectMapper objectMapper;
+    private final ProposalEventFactory proposalEventFactory;
 
     private static final String REALTIME_CHANNEL = "proposals-bridge";
     private static final String REALTIME_SENDER = "api-service";
@@ -43,7 +45,8 @@ public class ProposalService {
             SellerRepository sellerRepository,
             ProposalEventRepository proposalEventRepository,
             RealtimeBridgeClient realtimeBridgeClient,
-            ObjectMapper objectMapper
+            ObjectMapper objectMapper,
+            ProposalEventFactory proposalEventFactory
     ) {
         this.proposalRepository = proposalRepository;
         this.dealerRepository = dealerRepository;
@@ -51,6 +54,7 @@ public class ProposalService {
         this.proposalEventRepository = proposalEventRepository;
         this.realtimeBridgeClient = realtimeBridgeClient;
         this.objectMapper = objectMapper;
+        this.proposalEventFactory = proposalEventFactory;
     }
 
     @Transactional
@@ -212,17 +216,7 @@ public class ProposalService {
     }
 
     private ProposalEventResponseDTO toEventResponse(ProposalEvent event) {
-        return new ProposalEventResponseDTO(
-                event.getId(),
-                event.getProposal() != null ? event.getProposal().getId() : null,
-                event.getType(),
-                event.getStatusFrom(),
-                event.getStatusTo(),
-                event.getNote(),
-                event.getActor(),
-                event.getPayload(),
-                event.getCreatedAt()
-        );
+        return proposalEventFactory.toResponse(event);
     }
 
     private void appendEvent(
@@ -234,14 +228,15 @@ public class ProposalService {
             String note,
             String payload
     ) {
-        ProposalEvent event = new ProposalEvent();
-        event.setProposal(proposal);
-        event.setType(type);
-        event.setStatusFrom(statusFrom);
-        event.setStatusTo(statusTo);
-        event.setActor(actor != null ? actor : "system");
-        event.setNote(note);
-        event.setPayload(payload);
+        ProposalEvent event = proposalEventFactory.create(
+                proposal,
+                type,
+                statusFrom,
+                statusTo,
+                normalizeActor(actor),
+                note,
+                payload
+        );
         proposalEventRepository.save(event);
     }
 
