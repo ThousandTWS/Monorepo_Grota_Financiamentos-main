@@ -11,11 +11,14 @@ import org.example.server.exception.generic.RecordNotFoundException;
 import org.example.server.model.Dealer;
 import org.example.server.model.Operator;
 import org.example.server.model.User;
+import org.example.server.service.EmailService;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.OperatorRepository;
+import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.factory.OperatorUserFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
@@ -28,6 +31,7 @@ public class OperatorService {
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
     private final OperatorUserFactory operatorUserFactory;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     public OperatorService(
             OperatorRepository operatorRepository,
@@ -36,7 +40,8 @@ public class OperatorService {
             AddressMapper addressMapper,
             EmailService emailService,
             DealerRepository dealerRepository,
-            OperatorUserFactory operatorUserFactory
+            OperatorUserFactory operatorUserFactory,
+            RefreshTokenRepository refreshTokenRepository
     ) {
         this.operatorRepository = operatorRepository;
         this.userRepository = userRepository;
@@ -45,6 +50,7 @@ public class OperatorService {
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
         this.operatorUserFactory = operatorUserFactory;
+        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     public OperatorResponseDTO create(User user, OperatorRequestDTO operatorRequestDTO) {
@@ -156,12 +162,17 @@ public class OperatorService {
         return operatorMapper.toDTO(operator);
     }
 
+    @Transactional
     public void delete(User requester, Long operatorId) {
         if (!requester.getRole().equals(UserRole.ADMIN)) {
             throw new AccessDeniedException("Apenas ADMIN pode remover operador.");
         }
         Operator operator = operatorRepository.findById(operatorId)
                 .orElseThrow(() -> new RecordNotFoundException(operatorId));
+        User operatorUser = operator.getUser();
+        if (operatorUser != null) {
+            refreshTokenRepository.deleteByUser(operatorUser);
+        }
         operatorRepository.delete(operator);
     }
 }

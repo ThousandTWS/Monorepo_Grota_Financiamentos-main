@@ -12,10 +12,14 @@ import org.example.server.model.Dealer;
 import org.example.server.model.Seller;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
+import org.example.server.repository.ProposalRepository;
+import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.SellerRepository;
 import org.example.server.repository.UserRepository;
+import org.example.server.service.EmailService;
 import org.example.server.service.factory.SellerUserFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
@@ -27,6 +31,8 @@ public class SellerService {
     private final AddressMapper addressMapper;
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
+    private final ProposalRepository proposalRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final SellerUserFactory sellerUserFactory;
 
     public SellerService(
@@ -36,6 +42,8 @@ public class SellerService {
             AddressMapper addressMapper,
             EmailService emailService,
             DealerRepository dealerRepository,
+            ProposalRepository proposalRepository,
+            RefreshTokenRepository refreshTokenRepository,
             SellerUserFactory sellerUserFactory
     ) {
         this.sellerRepository = sellerRepository;
@@ -44,6 +52,8 @@ public class SellerService {
         this.addressMapper = addressMapper;
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
+        this.proposalRepository = proposalRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.sellerUserFactory = sellerUserFactory;
     }
 
@@ -157,12 +167,18 @@ public class SellerService {
         return sellerMapper.toDTO(seller);
     }
 
+    @Transactional
     public void delete(User requester, Long sellerId) {
         if (!requester.getRole().equals(UserRole.ADMIN)) {
             throw new AccessDeniedException("Apenas ADMIN pode remover vendedor.");
         }
         Seller seller = sellerRepository.findById(sellerId)
                 .orElseThrow(() -> new RecordNotFoundException(sellerId));
+        User sellerUser = seller.getUser();
+        if (sellerUser != null) {
+            refreshTokenRepository.deleteByUser(sellerUser);
+        }
+        proposalRepository.detachSellerFromProposals(sellerId);
         sellerRepository.delete(seller);
     }
 }

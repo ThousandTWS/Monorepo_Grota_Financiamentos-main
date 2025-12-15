@@ -5,9 +5,6 @@ import org.example.server.enums.UserStatus;
 import org.example.server.model.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-/**
- * Base factory that encapsulates password hashing and baseline user configuration.
- */
 public abstract class AbstractUserFactory {
 
     private final PasswordEncoder passwordEncoder;

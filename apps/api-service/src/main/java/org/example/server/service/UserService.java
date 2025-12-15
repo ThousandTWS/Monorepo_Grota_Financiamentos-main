@@ -35,6 +35,9 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final DealerRepository dealerRepository;
+    /**
+     *
+     */
     @SuppressWarnings("unused")
     private final UserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;

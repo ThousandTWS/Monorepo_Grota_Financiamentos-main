@@ -13,6 +13,7 @@ import org.example.server.model.Manager;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
 import org.example.server.repository.ManagerRepository;
+import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.factory.ManagerUserFactory;
 import org.springframework.stereotype.Service;
@@ -29,6 +30,7 @@ public class ManagerService {
     private final AddressMapper addressMapper;
     private final EmailService emailService;
     private final DealerRepository dealerRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final ManagerUserFactory managerUserFactory;
 
     public ManagerService(
@@ -38,6 +40,7 @@ public class ManagerService {
             AddressMapper addressMapper,
             EmailService emailService,
             DealerRepository dealerRepository,
+            RefreshTokenRepository refreshTokenRepository,
             ManagerUserFactory managerUserFactory
     ) {
         this.managerRepository = managerRepository;
@@ -46,6 +49,7 @@ public class ManagerService {
         this.addressMapper = addressMapper;
         this.emailService = emailService;
         this.dealerRepository = dealerRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
         this.managerUserFactory = managerUserFactory;
     }
 
@@ -164,6 +168,10 @@ public class ManagerService {
         }
         Manager manager = managerRepository.findById(managerId)
                 .orElseThrow(() -> new RecordNotFoundException(managerId));
+        User managerUser = manager.getUser();
+        if (managerUser != null) {
+            refreshTokenRepository.deleteByUser(managerUser);
+        }
         managerRepository.delete(manager);
     }
 }
