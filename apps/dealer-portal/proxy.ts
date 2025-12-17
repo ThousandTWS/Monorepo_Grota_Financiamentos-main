@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { decryptSession } from "../../packages/auth";
+import { decryptSession } from "../../packages/auth/src";
 import {
   LOGISTA_SESSION_COOKIE,
   LOGISTA_SESSION_SCOPE,

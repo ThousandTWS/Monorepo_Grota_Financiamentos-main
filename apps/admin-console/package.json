@@ -11,6 +11,9 @@
   "dependencies": {
     "@ably/chat": "^1.1.1",
     "@ably/chat-react-ui-kit": "^0.3.0",
+    "@arcjet/inspect": "1.0.0-beta.15",
+    "@arcjet/next": "1.0.0-beta.15",
+    "@arcjet/protocol": "1.0.0-beta.15",
     "@emotion/react": "^11.14.0",
     "@faker-js/faker": "^10.0.0",
     "@fullcalendar/core": "^6.1.15",
