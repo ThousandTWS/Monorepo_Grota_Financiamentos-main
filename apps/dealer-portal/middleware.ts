@@ -1,3 +1,5 @@
+import arcjet, { detectBot, fixedWindow, shield } from "@arcjet/next";
+import { isSpoofedBot } from "@arcjet/inspect";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decryptSession } from "../../packages/auth/src";
@@ -9,6 +11,26 @@ import {
 } from "./src/application/server/auth/config";
 
 const SESSION_SECRET = getLogistaSessionSecret();
+const ARCJET_KEY = process.env.ARCJET_KEY;
+const aj = ARCJET_KEY
+  ? arcjet({
+      key: ARCJET_KEY,
+      rules: [
+        detectBot({
+          mode: "LIVE",
+          allow: ["CATEGORY:SEARCH_ENGINE"],
+        }),
+        fixedWindow({
+          mode: "LIVE",
+          window: "60s",
+          max: 60,
+        }),
+        shield({
+          mode: "LIVE",
+        }),
+      ],
+    })
+  : null;
 
 function buildRedirectResponse(url: string, request: NextRequest) {
   try {
@@ -22,6 +44,31 @@ function buildRedirectResponse(url: string, request: NextRequest) {
 }
 
 export async function middleware(request: NextRequest) {
+  if (aj) {
+    const decision = await aj.protect(request);
+
+    if (decision.isDenied()) {
+      if (decision.reason.isBot()) {
+        return NextResponse.json(
+          { error: "No bots allowed", reason: decision.reason },
+          { status: 403 },
+        );
+      }
+
+      return NextResponse.json(
+        { error: "Forbidden", reason: decision.reason },
+        { status: 403 },
+      );
+    }
+
+    if (decision.results.some(isSpoofedBot)) {
+      return NextResponse.json(
+        { error: "Forbidden", reason: decision.reason },
+        { status: 403 },
+      );
+    }
+  }
+
   const sessionValue = request.cookies.get(LOGISTA_SESSION_COOKIE)?.value;
   const session = await decryptSession(sessionValue, SESSION_SECRET);
   const isAuthenticated =
