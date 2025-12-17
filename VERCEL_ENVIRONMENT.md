@@ -7,7 +7,7 @@ Configure the environment variables listed below in Vercel's **Project Settings 
 - `LOGISTA_SESSION_SECRET` – `VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw==` (used to encrypt the dealer session cookie).
 - `ADMIN_SESSION_SECRET` – `VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw==` (used to encrypt the admin session cookie).
 
-## public-site (`monorepo-grota-financiamentos-clien.vercel.app`)
+ (`monorepo-grota-financiamentos-clien.vercel.app`)
 
 | Variable | Value | Why |
 | --- | --- | --- |
