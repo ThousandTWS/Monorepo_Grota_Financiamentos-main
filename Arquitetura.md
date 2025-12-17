@@ -198,8 +198,112 @@ Esses contratos permitem alimentar o WebSocket de notificações e sincronizar a
 - **Upload de Documentos** (apps `dealer-portal`): o formulário de envio na rota `/documentos` publica eventos `DOCUMENT_UPLOADED/DOCUMENTS_REFRESH_REQUEST`, exibindo o status de análise sem recarregar a página e notificando o backoffice sobre novos arquivos.
 - **Gestão de Documentos** (apps `admin-console`): a página `/gestao-documentos` agora consome o backend real, revisa arquivos via `PUT /documents/{id}/review` e replica as ações para o painel do lojista com eventos `DOCUMENT_REVIEW_UPDATED/DOCUMENTS_REFRESH_REQUEST`.
 
-> Sempre que futuros endpoints do backend estiverem disponíveis, basta converter os handlers atuais para disparar os mesmos eventos (ou o `DEALER/PROPOSALS_REFRESH_REQUEST`) após persistir a operação – a UI já está preparada para escutar as notificações.
+> Sempre que futuros endpoints do backend estiverem disponíveis, basta converter os handlers atuais para disparar os mesmos eventos (ou o `DEALER/PROPOSALS_REFRESH_REQUEST`) após persistir a operação — a UI já está preparada para escutar as notificações.
 
+## APIs REST
+
+### Autenticação (Auth)
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/auth/register` | Cadastro de lojistas via painel externo | Retorna DTO com dados do dealer criado. |
+| `POST` | `/api/v1/grota-financiamentos/auth/login` | Emite access + refresh token e cookies (`access_token`, `refresh_token`) | Valida credenciais e resolve o identificador de login. |
+| `POST` | `/api/v1/grota-financiamentos/auth/refresh` | Gera novo access token com refresh token em cookie | Retorna novo cookie seguro sem expirar o `refresh_token`. |
+| `POST` | `/api/v1/grota-financiamentos/auth/logout` | Remove cookies de sessão e revoga refresh token | Envia `Set-Cookie` com valor vazio para expirar. |
+| `GET` | `/api/v1/grota-financiamentos/auth/me` | Retorna dados do usuário autenticado e permissões | Calcula permissões derivadas de seller/operator/manager. |
+| `PUT` | `/api/v1/grota-financiamentos/auth/verify-code` | Valida código enviado por e-mail para concluir login | Necessário para ativar conta. |
+| `POST` | `/api/v1/grota-financiamentos/auth/resend-code` | Reenvia código de verificação | Aceita DTO com e-mail. |
+| `PUT` | `/api/v1/grota-financiamentos/auth/change-password` | Atualiza senha atual com nova senha | Requer autenticação, valida dados. |
+| `POST` | `/api/v1/grota-financiamentos/auth/forgot-password` | Dispara código para redefinição de senha | Gera código temporário via e-mail. |
+| `POST` | `/api/v1/grota-financiamentos/auth/reset-password` | Confirma nova senha usando código enviado | Finaliza fluxo de reset no backend. |
+
+### Dealers e perfil
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/dealers/admin-register` | Cadastro de lojista feito pelo admin | Envia dados completos de endereço e sócios. |
+| `GET` | `/api/v1/grota-financiamentos/dealers` | Lista de lojistas com paginação automática | Ordena por nome (10 por página). |
+| `GET` | `/api/v1/grota-financiamentos/dealers/{id}` | Detalhes de um lojista específico | Retorna DTO do registro. |
+| `GET` | `/api/v1/grota-financiamentos/dealers/{id}/details` | Perfil completo do lojista (visão pública) | Alternativa ao `/me/details`. |
+| `GET` | `/api/v1/grota-financiamentos/dealers/me/details` | Perfil completo do lojista autenticado | Usa o `AuthenticationPrincipal` para buscar o dealer. |
+| `GET` | `/api/v1/grota-financiamentos/dealers/{id}/documents` | Documentos associados ao lojista | Inclui metadados para painel | 
+| `GET` | `/api/v1/grota-financiamentos/dealers/{id}/vehicles` | Veículos registrados pelo lojista | Retorna DTOs do pacote `vehicle`. |
+| `PUT` | `/api/v1/grota-financiamentos/dealers/me` | Atualiza dados do lojista autenticado | Reusa DTO de cadastro. |
+| `PUT` | `/api/v1/grota-financiamentos/dealers/profile/complete` | Completa perfil pós-cadastro | Permite informações adicionais. |
+| `PATCH` | `/api/v1/grota-financiamentos/dealers/profile/update` | Atualiza dados de perfil empresarial | Pode alterar empresa, CNPJ e endereço. |
+| `POST` | `/api/v1/grota-financiamentos/dealers/logo` | Upload da logomarca do lojista | Envia `multipart/form-data` com validação Cloudinary. |
+| `DELETE` | `/api/v1/grota-financiamentos/dealers/{id}` | Remove lojista e dados relacionados | Retorna `204 No Content`. |
+
+### Gestão de documentos
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/documents/upload` | Upload de documento por lojista | Recebe `documentType` e arquivo com possível `dealerId`. |
+| `PUT` | `/api/v1/grota-financiamentos/documents/{id}/review` | Atualiza status de revisão de um documento | Requer perfil admin (`DocumentReviewRequestDTO`). |
+| `GET` | `/api/v1/grota-financiamentos/documents` | Lista todos documentos do usuário autenticado | Usado no painel lojista para mostrar pendências. |
+| `GET` | `/api/v1/grota-financiamentos/documents/{id}/url` | Gera URL pré-assinada | Entrega a `String` com acesso temporário ao arquivo. |
+
+### Propostas
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/proposals` | Cria ficha de proposta nova | Cabeçalho `X-Actor` opcional e registra IP. |
+| `GET` | `/api/v1/grota-financiamentos/proposals` | Lista propostas filtradas por `dealerId` e `status` | Utiliza enums `ProposalStatus`. |
+| `PATCH` | `/api/v1/grota-financiamentos/proposals/{id}/status` | Atualiza status (SUBMITTED, PENDING, APPROVED, REJECTED) | Registra IP de atualização. |
+| `GET` | `/api/v1/grota-financiamentos/proposals/{id}/events` | Timeline de eventos da proposta | Serve dashboards/admin para histórico. |
+
+### Notificações
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/notifications` | Cria notificação com `targetType`, `actor`, `href`, etc. | Alimenta WebSocket e BFFs. |
+| `GET` | `/api/v1/grota-financiamentos/notifications` | Lista notificações filtradas por `targetType` e `targetId` | Requer query string. |
+| `PATCH` | `/api/v1/grota-financiamentos/notifications/{id}/read` | Marca notificação como lida | Retorna `204`. |
+| `GET` | `/api/v1/grota-financiamentos/notifications/stream` | SSE para eventos em tempo real | `text/event-stream`, o mesmo canal usado pelo dashboard admin. |
+
+### Usuários (User)
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/users` | Cria usuário interno/admin/papel | Valida role via enums `UserRole`. |
+| `GET` | `/api/v1/grota-financiamentos/users` | Lista usuários, opcionalmente por `role` | Retorna array de DTOs. |
+| `GET` | `/api/v1/grota-financiamentos/users/{id}` | Busca usuário por ID | |
+| `PATCH` | `/api/v1/grota-financiamentos/users/{id}/dealer` | Atualiza vínculo entre usuário e lojista | Aceita `dealerId` opcional. |
+| `GET` | `/api/v1/grota-financiamentos/users/me` | Dados do usuário autenticado | Utiliza `AuthenticationPrincipal`. |
+| `PUT` | `/api/v1/grota-financiamentos/users/me` | Atualiza perfil do usuário autenticado | Usa `UserProfileUpdateDTO`. |
+
+### Vendedores, operadores e gestores
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/sellers` | Cadastro de vendedor | Associado ao dealer via autenticação. |
+| `GET` | `/api/v1/grota-financiamentos/sellers` | Lista vendedores (filtrável por `dealerId`) | Ordena por nome. |
+| `GET` | `/api/v1/grota-financiamentos/sellers/{id}` | Busca vendedor por ID | |
+| `PUT` | `/api/v1/grota-financiamentos/sellers/{id}` | Atualiza dados do vendedor | |
+| `PATCH` | `/api/v1/grota-financiamentos/sellers/{id}/dealer` | Reatribui lojista do vendedor | `dealerId` opcional na query. |
+| `DELETE` | `/api/v1/grota-financiamentos/sellers/{id}` | Remove vendedor com usuário associado | Retorna `204 No Content`. |
+| `POST` | `/api/v1/grota-financiamentos/operators` | Cadastro de operador | Regras semelhantes às do seller. |
+| `GET` | `/api/v1/grota-financiamentos/operators` | Lista operadores (por `dealerId`) | |
+| `GET` | `/api/v1/grota-financiamentos/operators/{id}` | Busca operador por ID | |
+| `PUT` | `/api/v1/grota-financiamentos/operators/{id}` | Atualiza dados do operador | |
+| `PATCH` | `/api/v1/grota-financiamentos/operators/{id}/dealer` | Reatribui lojista do operador | |
+| `DELETE` | `/api/v1/grota-financiamentos/operators/{id}` | Remove operador e usuário | |
+| `POST` | `/api/v1/grota-financiamentos/managers` | Cadastro de gestor | |
+| `GET` | `/api/v1/grota-financiamentos/managers` | Lista gestores (por `dealerId`) | |
+| `GET` | `/api/v1/grota-financiamentos/managers/{id}` | Busca gestor por ID | |
+| `PUT` | `/api/v1/grota-financiamentos/managers/{id}` | Atualiza dados do gestor | |
+| `PATCH` | `/api/v1/grota-financiamentos/managers/{id}/dealer` | Reatribui lojista do gestor | |
+| `DELETE` | `/api/v1/grota-financiamentos/managers/{id}` | Remove gestor e usuário | |
+
+### Veículos
+
+| Método | Rota | Descrição | Observações |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/grota-financiamentos/vehicles` | Cadastro de novo veículo | Requer usuário autenticado. |
+| `GET` | `/api/v1/grota-financiamentos/vehicles` | Lista todos os veículos | |
+| `GET` | `/api/v1/grota-financiamentos/vehicles/{id}` | Busca veículo por ID | |
+| `PUT` | `/api/v1/grota-financiamentos/vehicles/{vehicleId}` | Atualiza dados do veículo | Fornece DTO completo. |
+| `PATCH` | `/api/v1/grota-financiamentos/vehicles/{id}/status` | Atualiza status (DISPONÍVEL, VENDIDO, etc.) | Usa `VehicleStatusUpdateDTO`. |
 
 Gerar chave openssl rand -base64 48
 Z1z3Uay+jLoTyGj0GFua1T6PcmjnZFjETZnHVv/OhjtC8RzuULEKttX+ZHqn01ti
