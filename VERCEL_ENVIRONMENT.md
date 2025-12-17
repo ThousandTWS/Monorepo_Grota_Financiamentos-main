@@ -1,4 +1,4 @@
-# Vercel environment variables
+
 
 Configure the environment variables listed below in Vercel's **Project Settings > Environment Variables** for each app (`Production` and `Preview` as needed). Each Next.js app reads values directly from `process.env`, so keep the names exact. The recommended production endpoints come from the existing `.env` files for the apps (e.g., `apps/public-site/.env`, `apps/dealer-portal/.env`, `apps/admin-console/.env`).
 
