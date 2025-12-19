@@ -16,14 +16,12 @@ import {
 "lucide-react";
 
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
 import Footer from "@/src/presentation/layout/Footer/Footer";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
 interface Post {
   id: number;
@@ -54,7 +52,6 @@ export default function ArtigoPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
@@ -77,20 +74,7 @@ export default function ArtigoPage() {
     });
   }, [slug]);
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
-    setIsMobileMenuOpen((prev) => !prev);
-  }, []);
-
-  const handleLike = () => {
-    setLiked(!liked);
-  };
-
-  const handleShare = () => {
+    const handleShare = () => {
     if (navigator.share) {
       navigator.share({
         title: post?.title,
@@ -104,7 +88,6 @@ export default function ArtigoPage() {
       <div className="min-h-screen w-full relative bg-white" data-oid="pu_il0_">
         <DesktopHeader
           isScrolled={isScrolled}
-          onLoginClick={modalManager.openLoginModal}
           data-oid="5fvkyx3" />
 
         <MobileHeader
@@ -114,7 +97,6 @@ export default function ArtigoPage() {
 
         <MobileMenu
           isOpen={isMobileMenuOpen}
-          onLoginClick={handleMobileLoginClick}
           data-oid="kisfn9n" />
 
 
@@ -139,9 +121,7 @@ export default function ArtigoPage() {
           </div>
         </main>
 
-        <Footer data-oid="hzlclfp" />
-        <ModalContainer {...modalManager} data-oid="ig6medn" />
-      </div>);
+        <Footer data-oid="hzlclfp" />      </div>);
 
   }
 
@@ -149,7 +129,6 @@ export default function ArtigoPage() {
     <div className="min-h-screen w-full relative bg-white" data-oid="9cxy3:4">
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
         data-oid="xp73jl8" />
 
       <MobileHeader
@@ -159,7 +138,6 @@ export default function ArtigoPage() {
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
         data-oid="3n:xi8v" />
 
 
@@ -453,8 +431,6 @@ export default function ArtigoPage() {
         </article>
       </main>
 
-      <Footer data-oid="hnx8phl" />
-      <ModalContainer {...modalManager} data-oid="fh0p57f" />
-    </div>);
+      <Footer data-oid="hnx8phl" />    </div>);
 
 }

@@ -3,9 +3,12 @@
 import Image from "next/image";
 import Link from "next/link";
 
+const LOGISTA_PANEL_URL = (
+  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3001"
+).replace(/\/$/, "");
+
 interface DesktopHeaderProps {
   isScrolled: boolean;
-  onLoginClick: () => void;
 }
 
 interface NavItem {
@@ -21,15 +24,12 @@ const navItems: NavItem[] = [
     href: "/nossa-historia",
     children: [],
   },
-  { name: "Soluções", href: "/solucoes" },
+  { name: "Solucoes", href: "/solucoes" },
   { name: "Financiamento", href: "/financiamento" },
   { name: "Contato", href: "/contato" },
 ];
 
-export const DesktopHeader = ({
-  isScrolled,
-  onLoginClick,
-}: DesktopHeaderProps) => {
+export const DesktopHeader = ({ isScrolled }: DesktopHeaderProps) => {
   const renderNavItems = (items: NavItem[]) => {
     return items.map((item) => (
       <div key={item.name} className="relative group">
@@ -49,7 +49,6 @@ export const DesktopHeader = ({
           ></span>
         </Link>
 
-        {/* Submenu */}
         {item.children && (
           <div className="absolute top-full left-0 mt-1 hidden group-hover:block bg-white shadow-lg rounded-md min-w-[150px] z-50">
             {item.children.map((child) => (
@@ -73,7 +72,6 @@ export const DesktopHeader = ({
         isScrolled ? "bg-white text-[#1B4B7C]" : "bg-[#1B4B7C] text-white"
       }`}
     >
-      {/* Logo */}
       <Link
         href="/"
         className="flex items-center justify-center gap-2 transition-all duration-500"
@@ -87,18 +85,13 @@ export const DesktopHeader = ({
         />
       </Link>
 
-      {/* Navigation */}
       <nav className="flex flex-1 justify-center space-x-6 font-medium text-lg min-w-0">
         {renderNavItems(navItems)}
       </nav>
 
-      {/* CTA Button */}
       <div className="flex items-center gap-4">
-        
-
-        <button
-          onClick={onLoginClick}
-          type="button"
+        <a
+          href={`${LOGISTA_PANEL_URL}/login`}
           className={`relative flex items-center justify-center gap-2 px-5 py-1.5 font-semibold rounded-xl shadow-md overflow-hidden group transition-all duration-300 ${
             isScrolled
               ? "bg-[#1B4B7C] border-none hover:bg-[#153a5b]"
@@ -112,10 +105,10 @@ export const DesktopHeader = ({
                 : "text-[#1B4B7C] hover:text-white cursor-pointer"
             }`}
           >
-            Área do cliente
+            Area do Logista
           </span>
           <span className="absolute inset-0 rounded-full transition-transform duration-700 group-hover:scale-150"></span>
-        </button>
+        </a>
       </div>
     </header>
   );

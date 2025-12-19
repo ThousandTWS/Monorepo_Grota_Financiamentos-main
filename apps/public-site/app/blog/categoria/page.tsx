@@ -7,14 +7,12 @@ import Link from "next/link";
 import { Calendar, Clock, User, ArrowRight, ArrowLeft } from "lucide-react";
 
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
 import Footer from "@/src/presentation/layout/Footer/Footer";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
 interface Post {
   id: number;
@@ -48,7 +46,6 @@ export default function CategoriaPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
@@ -66,12 +63,7 @@ export default function CategoriaPage() {
     });
   }, [categoria]);
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
+    const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
@@ -79,7 +71,6 @@ export default function CategoriaPage() {
     <div className="min-h-screen w-full relative bg-white" data-oid="q4kln:s">
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
         data-oid="dxe8iks" />
 
       <MobileHeader
@@ -89,7 +80,6 @@ export default function CategoriaPage() {
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
         data-oid="1fvzv:e" />
 
 
@@ -280,8 +270,6 @@ export default function CategoriaPage() {
         </div>
       </main>
 
-      <Footer data-oid="rp4bbsi" />
-      <ModalContainer {...modalManager} data-oid="txmd3a7" />
-    </div>);
+      <Footer data-oid="rp4bbsi" />    </div>);
 
 }

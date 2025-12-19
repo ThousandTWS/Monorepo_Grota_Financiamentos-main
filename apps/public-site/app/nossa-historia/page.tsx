@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from "react";
 
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 import Footer from "@/src/presentation/layout/Footer/Footer";
 import { HeroSection } from "@/components/hero-section-2";
 import LogoCloudDemoPage from "@/src/presentation/components/banners/LogoSection/primary";
@@ -21,16 +19,10 @@ export default function Sobre() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
+    const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
@@ -38,7 +30,6 @@ export default function Sobre() {
     <div className="min-h-screen w-full relative bg-white">
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
       />
 
       <MobileHeader
@@ -46,7 +37,7 @@ export default function Sobre() {
         onMenuToggle={toggleMobileMenu}
       />
 
-      <MobileMenu isOpen={isMobileMenuOpen} onLoginClick={handleMobileLoginClick} />
+      <MobileMenu isOpen={isMobileMenuOpen} />
 
       <main>
         {/* Hero Section */}
@@ -87,8 +78,6 @@ export default function Sobre() {
         <TestimonialSlider />
         <CTA />
       </main>
-      <Footer />
-      <ModalContainer {...modalManager} />
-    </div>
+      <Footer />    </div>
   );
 }

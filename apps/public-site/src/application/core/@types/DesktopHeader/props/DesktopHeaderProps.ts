@@ -1,6 +1,5 @@
 interface DesktopHeaderProps {
   isScrolled: boolean;
-  onLoginClick: () => void;
 }
 
 interface NavItem {

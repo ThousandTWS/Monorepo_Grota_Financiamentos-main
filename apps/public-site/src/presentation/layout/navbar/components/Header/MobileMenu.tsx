@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 
+const LOGISTA_PANEL_URL = (
+  process.env.NEXT_PUBLIC_LOGISTA_PANEL_URL ?? "http://localhost:3001"
+).replace(/\/$/, "");
+
 interface MobileMenuProps {
   isOpen: boolean;
-  onLoginClick: () => void;
 }
 
 interface NavItem {
@@ -13,7 +16,6 @@ interface NavItem {
   children?: NavItem[];
 }
 
-// Estrutura de dados do menu
 const navItems: NavItem[] = [
   { name: "Inicio", href: "/" },
   {
@@ -21,13 +23,13 @@ const navItems: NavItem[] = [
     href: "/nossa-historia",
     children: [],
   },
-  { name: "Soluções", href: "/solucoes" },
+  { name: "Solucoes", href: "/solucoes" },
   { name: "Financiamento", href: "#" },
   { name: "Blog", href: "#" },
   { name: "Contato", href: "/contato" },
 ];
 
-export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
+export const MobileMenu = ({ isOpen }: MobileMenuProps) => {
   if (!isOpen) return null;
 
   const renderNavItems = (items: NavItem[], level = 0) => {
@@ -56,14 +58,12 @@ export const MobileMenu = ({ isOpen, onLoginClick }: MobileMenuProps) => {
         <nav className="flex flex-col space-y-4">
           {renderNavItems(navItems)}
           <div className="border-t border-border/50 pt-4 mt-4 flex flex-col space-y-3">
-            <Link
-            href="https://fichaveiculo.com.br/financ/stan/fichaVeiculo"
-              
-              type="button"
+            <a
+              href={`${LOGISTA_PANEL_URL}/login`}
               className="relative flex items-center justify-center cursor-pointer w-full px-4 py-3 text-base font-semibold text-white bg-[#1B4B7C] rounded-xl shadow-md transition-colors duration-300 hover:bg-[#1b4b7ce1] hover:text-white border-2 border-white"
             >
-              <span className="relative z-10">Área do Parceiro</span>
-            </Link>
+              <span className="relative z-10">Area do Logista</span>
+            </a>
           </div>
         </nav>
       </div>

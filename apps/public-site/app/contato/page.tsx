@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
 import Footer from "@/src/presentation/layout/Footer/Footer";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
 import BoxHero from "@/src/presentation/components/contato/Hero/BoxHero";
 import BoxMapa from "@/src/presentation/components/contato/Mapa/BoxMapa";
@@ -20,16 +18,10 @@ function Contato() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
+    const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
@@ -38,7 +30,6 @@ function Contato() {
       {/* Navbar */}
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
         data-oid="fqf2r4_" />
 
 
@@ -50,7 +41,6 @@ function Contato() {
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
         data-oid="3zncv7r" />
 
 
@@ -86,9 +76,7 @@ function Contato() {
       </main>
 
       {/* Footer + Modais */}
-      <Footer data-oid="sndd:_g" />
-      <ModalContainer {...modalManager} data-oid=":12jtf5" />
-    </div>);
+      <Footer data-oid="sndd:_g" />    </div>);
 
 }
 

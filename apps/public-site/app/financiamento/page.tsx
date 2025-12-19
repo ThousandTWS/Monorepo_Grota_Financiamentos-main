@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
 import Footer from "@/src/presentation/layout/Footer/Footer";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 
 import BoxBenefits from "@/src/presentation/components/financiamento/Benefits/BoxBenefits";
 import BoxHero from "@/src/presentation/components/financiamento/Hero/Boxhero";
@@ -23,16 +21,10 @@ function Financiamento() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
+    const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
@@ -40,7 +32,6 @@ function Financiamento() {
     <div className="min-h-screen w-full relative bg-white" data-oid="mb7:_id">
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
         data-oid="movb6wm" />
 
 
@@ -52,7 +43,6 @@ function Financiamento() {
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
         data-oid="g9j6-md" />
 
 
@@ -115,9 +105,7 @@ function Financiamento() {
         </section>
       </main>
 
-      <Footer data-oid="3z1mtuq" />
-      <ModalContainer {...modalManager} data-oid="k:v_wui" />
-    </div>);
+      <Footer data-oid="3z1mtuq" />    </div>);
 
 }
 

@@ -6,7 +6,6 @@ import { decryptSession } from "../../packages/auth/src";
 import {
   LOGISTA_SESSION_COOKIE,
   LOGISTA_SESSION_SCOPE,
-  getLogistaClientOrigin,
   getLogistaSessionSecret,
 } from "./src/application/server/auth/config";
 
@@ -74,10 +73,14 @@ export async function middleware(request: NextRequest) {
   const isAuthenticated =
     !!session && session.scope === LOGISTA_SESSION_SCOPE && !!session.userId;
   const pathname = request.nextUrl.pathname;
+  const isLoginRoute = pathname === "/login";
 
-  if (!isAuthenticated) {
-    const loginFallback = getLogistaClientOrigin();
-    return buildRedirectResponse(loginFallback, request);
+  if (!isAuthenticated && !isLoginRoute) {
+    return buildRedirectResponse("/login", request);
+  }
+
+  if (isAuthenticated && isLoginRoute) {
+    return buildRedirectResponse("/simulacao/novo", request);
   }
 
   if (isAuthenticated && pathname === "/") {

@@ -2,14 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useTheme } from "@/src/presentation/layout/navbar/hooks/useTheme";
-import { useModalManager } from "@/src/presentation/layout/navbar/hooks/useModalManager";
 import { useScrollDetection } from "@/src/presentation/layout/navbar/hooks/useScrollDetection";
 
 import { DesktopHeader } from "@/src/presentation/layout/navbar/components/Header/DesktopHeader";
 import { MobileHeader } from "@/src/presentation/layout/navbar/components/Header/MobileHeader";
 import { MobileMenu } from "@/src/presentation/layout/navbar/components/Header/MobileMenu";
 import Footer from "@/src/presentation/layout/Footer/Footer";
-import { ModalContainer } from "@/src/presentation/layout/modais/ModalContainer";
 import BoxHero from "@/src/presentation/components/blog/hero/BoxHero";
 import BoxCategories from "@/src/presentation/components/blog/Categories/BoxCategories";
 import BoxFeaturedPost from "@/src/presentation/components/blog/FeaturedPost/BoxFeaturedPost";
@@ -20,16 +18,10 @@ function Blog() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isScrolled = useScrollDetection(100);
-  const modalManager = useModalManager();
 
   useTheme("dark");
 
-  const handleMobileLoginClick = useCallback(() => {
-    setIsMobileMenuOpen(false);
-    modalManager.openLoginModal();
-  }, [modalManager]);
-
-  const toggleMobileMenu = useCallback(() => {
+    const toggleMobileMenu = useCallback(() => {
     setIsMobileMenuOpen((prev) => !prev);
   }, []);
 
@@ -37,7 +29,6 @@ function Blog() {
     <div className="min-h-screen w-full relative bg-white" data-oid="a95aqw8">
       <DesktopHeader
         isScrolled={isScrolled}
-        onLoginClick={modalManager.openLoginModal}
         data-oid="tyedfmv" />
 
 
@@ -49,7 +40,6 @@ function Blog() {
 
       <MobileMenu
         isOpen={isMobileMenuOpen}
-        onLoginClick={handleMobileLoginClick}
         data-oid="lzl5cbi" />
 
 
@@ -114,9 +104,7 @@ function Blog() {
         </section>
       </main>
 
-      <Footer data-oid="o9-wczv" />
-      <ModalContainer {...modalManager} data-oid=".4w3ohg" />
-    </div>);
+      <Footer data-oid="o9-wczv" />    </div>);
 
 }
 
