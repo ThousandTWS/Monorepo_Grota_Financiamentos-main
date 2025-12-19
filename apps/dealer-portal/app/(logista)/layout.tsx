@@ -35,9 +35,7 @@ export default function AdminLayout({
         <AppHeader />
 
         {/* Page Content */}
-        <div className="p-4 mx-auto max-w-[var(--breakpoint-2xl)] md:p-6">
-       {children}
-        </div>
+        <div className="w-full">{children}</div>
       </div>
     </div>
   );

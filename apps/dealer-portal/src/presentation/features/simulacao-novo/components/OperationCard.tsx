@@ -1,5 +1,3 @@
-import { CreateProposalPayload } from "@/application/core/@types/Proposals/Proposal";
-import { Button } from "@/presentation/ui/button";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/ui/select";
 import { Separator } from "@/presentation/ui/separator";
@@ -12,8 +10,9 @@ type OperationCardProps = {
   onPersonTypeChange: (value: "PF" | "PJ") => void;
   onOperationTypeChange: (value: "financiamento" | "autofin") => void;
   onVehicleCategoryChange: (value: "leves" | "motos" | "pesados") => void;
-  isLoading: boolean;
-  waitingPayload: CreateProposalPayload | null;
+  installmentValue?: string;
+  totalPaymentValue?: string;
+  interestRateLabel?: string;
 };
 
 export function OperationCard({
@@ -23,8 +22,9 @@ export function OperationCard({
   onPersonTypeChange,
   onOperationTypeChange,
   onVehicleCategoryChange,
-  isLoading,
-  waitingPayload
+  installmentValue,
+  totalPaymentValue,
+  interestRateLabel,
 }: OperationCardProps) {
   const { watch, setValue } = useFormContext();
 
@@ -154,6 +154,24 @@ export function OperationCard({
                       <span className="font-medium text-white">{termMonths} meses</span>
                     </div>
                   )}
+                  {installmentValue && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Parcela estimada</span>
+                      <span className="font-medium text-white">{installmentValue}</span>
+                    </div>
+                  )}
+                  {totalPaymentValue && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Total a pagar</span>
+                      <span className="font-medium text-white">{totalPaymentValue}</span>
+                    </div>
+                  )}
+                  {interestRateLabel && (
+                    <div className="flex justify-between items-center text-sm">
+                      <span className="text-white/80 text-xs">Taxa estimada</span>
+                      <span className="font-medium text-white">{interestRateLabel}</span>
+                    </div>
+                  )}
                   {((vehicleModel || vehiclePlate || priceFIPE || amountFinanced || termMonths) && (address)) && <Separator className="bg-slate-50/50" />}
                   {address && (
                     <div className="flex justify-between items-center text-sm">
@@ -161,9 +179,6 @@ export function OperationCard({
                       <span className="font-medium text-right text-white">{address}</span>
                     </div>
                   )}   
-                  <Button type="submit" disabled={isLoading} className="text-[#134B73] bg-white hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
-                    {waitingPayload ? "Revisar envio" : "Revisar envio"}
-                  </Button>           
                 </div>
             </div>
         </div>

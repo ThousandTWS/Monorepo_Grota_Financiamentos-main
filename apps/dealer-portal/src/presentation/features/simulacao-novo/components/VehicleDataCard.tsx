@@ -13,7 +13,6 @@ type VehicleDataCardProps = {
   years: Ano[];
   selectedBrand: string | null;
   selectedModel: string | null;
-  selectedYear: string | null;
   onBrandChange: (value: string) => void;
   onModelChange: (value: string) => void;
   onYearChange: (value: string) => void;
@@ -234,11 +233,10 @@ export function VehicleDataCard({
                       render={({ field }) => (
                         <div id="termMonths" className="space-y-2">
                           <Label className="text-white text-base font-semibold">Prazo (meses)</Label>
-                          <Select
+                      <Select
                             value={field.value}
                             onValueChange={(value) => {
                               field.onChange(value);
-                              onYearChange(value);
                             }}
                           >
                             <SelectTrigger className="w-full font-bold text-3xl md:text-4xl text-[#134B73] bg-white/95 backdrop-blur-sm min-h-16 md:min-h-20 border-2 border-white shadow-xl hover:shadow-2xl transition-all duration-300 focus-visible:scale-[1.02] focus-visible:border-white">

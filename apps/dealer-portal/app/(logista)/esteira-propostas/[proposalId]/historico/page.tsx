@@ -23,6 +23,13 @@ type Params = Promise<{
   proposalId: string;
 }>;
 
+type DealerDetails = {
+  fullNameEnterprise?: string;
+  enterprise?: string;
+  fullName?: string;
+  name?: string;
+};
+
 const statusLabel: Record<ProposalStatus, string> = {
   SUBMITTED: "Enviada",
   PENDING: "Pendente",
@@ -92,6 +99,7 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
+  const [dealerName, setDealerName] = useState("");
   const [chatInput, setChatInput] = useState("");
   const [chatError, setChatError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -105,9 +113,10 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const dealerLabel = useMemo(() => {
-    if (!proposal?.dealerId) return "Lojista não informado";
-    return proposal.dealerId ? `Lojista #${proposal.dealerId}` : "Lojista não informado";
-  }, [proposal]);
+    if (dealerName) return dealerName;
+    if (!proposal?.dealerId) return "Lojista nao informado";
+    return `Lojista #${proposal.dealerId}`;
+  }, [dealerName, proposal]);
 
   const chatIdentity = useMemo(
     () => (isValidId ? `logista-ficha-${proposalId}` : "logista-ficha"),
@@ -423,14 +432,26 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
   useEffect(() => {
     if (!isValidId) return;
     let mounted = true;
+    const fetchDealerDetails = async (): Promise<DealerDetails | null> => {
+      const response = await fetch("/api/dealers/details", { cache: "no-store" });
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        const message =
+          (payload as { error?: string })?.error ??
+          "Nao foi possivel carregar os dados do lojista.";
+        throw new Error(message);
+      }
+      return (payload ?? null) as DealerDetails | null;
+    };
     const load = async () => {
       try {
         setIsLoading(true);
         setError(null);
-        const [events, proposals, sellers] = await Promise.all([
+        const [events, proposals, sellers, dealerDetails] = await Promise.all([
           fetchProposalTimeline(proposalId),
           fetchProposals(),
           fetchAllSellers(),
+          fetchDealerDetails().catch(() => null),
         ]);
         if (!mounted) return;
         setTimeline(events);
@@ -439,11 +460,21 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
         setSellerIndex(
           sellers.reduce<Record<number, string>>((acc, seller) => {
             if (typeof seller.id === "number") {
-              acc[seller.id] = seller.name ?? `Responsável #${seller.id}`;
+              acc[seller.id] =
+                seller.fullName ?? seller.name ?? `Responsavel #${seller.id}`;
             }
             return acc;
           }, {}),
         );
+        if (dealerDetails) {
+          const displayName =
+            dealerDetails.fullNameEnterprise ??
+            dealerDetails.enterprise ??
+            dealerDetails.fullName ??
+            dealerDetails.name ??
+            "";
+          setDealerName(displayName);
+        }
       } catch (err) {
         if (!mounted) return;
         setError(

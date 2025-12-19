@@ -8,7 +8,7 @@ import { Input } from "@/presentation/ui/input";
 import { CalendarDays } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
 import { useEffect } from "react";
-import { maskBRL, maskCPF, maskPhone } from "@/lib/masks";
+import { maskCPF, maskPhone } from "@/lib/masks";
 import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
 import { formatName } from "@/lib/formatters";
 
@@ -21,7 +21,14 @@ type PersonalDataCardProps = {
   personType: "PF" | "PJ" | null;
 };
 
-export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituation, searchingLoading, searchingCPFLoading, personType }: PersonalDataCardProps) {
+export function PersonalDataCard({
+  onZipChange,
+  handleDocumentChange,
+  cpfSituation,
+  searchingLoading,
+  searchingCPFLoading,
+  personType,
+}: PersonalDataCardProps) {
   const { register, setValue, watch } = useFormContext();
 
   const hasCnh = watch("hasCNH");
@@ -32,14 +39,13 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
     }
   }, [hasCnh, setValue]);
 
-
   return (
     <Card className="w-full h-full">
       <CardContent className="space-y-5 px-0">
         <CardHeader className="px-0">
           <h2 className="text-lg font-semibold text-[#134B73]">Dados Pessoais</h2>
         </CardHeader>
-    
+
         <div className="grid gap-4 md:grid-cols-12">
           <LabeledInput
             containerClassName="md:col-span-3"
@@ -74,8 +80,8 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
           <LabeledInput
             id="motherName"
             containerClassName="md:col-span-4"
-            label="Nome da Mãe"
-            placeholder="Digite nome da mãe"
+            label="Nome da MÇœe"
+            placeholder="Digite nome da mÇœe"
             {...register("motherName")}
             disabled={searchingLoading || !personType}
           />
@@ -110,7 +116,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 <SelectItem value="Casado">Casado</SelectItem>
                 <SelectItem value="Separado">Separado</SelectItem>
                 <SelectItem value="Divorciado">Divorciado</SelectItem>
-                <SelectItem value="Viúvo">Viúvo</SelectItem>
+                <SelectItem value="ViÇ§vo">ViÇ§vo</SelectItem>
               </LabeledSelect>
             )}
           />
@@ -127,7 +133,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                     className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
                     disabled={!personType}
                   />
-                  <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "Não"}</span>
+                  <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "NÇœo"}</span>
                 </div>
               </div>
             )}
@@ -147,8 +153,8 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                 <SelectItem value="B">B</SelectItem>
                 <SelectItem value="AB">AB</SelectItem>
                 <SelectItem value="C">C</SelectItem>
-                    <SelectItem value="D">D</SelectItem>
-                    <SelectItem value="E">E</SelectItem>
+                <SelectItem value="D">D</SelectItem>
+                <SelectItem value="E">E</SelectItem>
               </LabeledSelect>
             )}
           />
@@ -187,8 +193,8 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
           <LabeledInput
             id="shareholderName"
             containerClassName="md:col-span-5"
-            label="Nome do Sócio"
-            placeholder="Informe o nome do sócio"
+            label="Nome do SÇücio"
+            placeholder="Informe o nome do sÇücio"
             {...register("shareholderName")}
             disabled={searchingLoading || !personType}
           />
@@ -210,7 +216,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
           <LabeledInput
             id="address"
             containerClassName="md:col-span-6"
-            label="Endereço (Rua/Av.)"
+            label="EndereÇõo (Rua/Av.)"
             placeholder="Rua Exemplo, 123 - Apto 45"
             autoComplete="address-line1"
             {...register("address")}
@@ -219,7 +225,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
           <LabeledInput
             id="addressNumber"
             containerClassName="md:col-span-1"
-            label="Número"
+            label="NÇ§mero"
             placeholder="123"
             autoComplete="address-line2"
             {...register("addressNumber")}
@@ -229,7 +235,7 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             id="addressComplement"
             containerClassName="md:col-span-3"
             label="Complemento"
-            placeholder="Apto, bloco, referência"
+            placeholder="Apto, bloco, referÇ¦ncia"
             {...register("addressComplement")}
             disabled={!personType}
           />
@@ -282,63 +288,6 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
             {...register("nationality")}
             disabled={!personType}
           />
-          <LabeledInput
-            id="enterprise"
-            containerClassName="md:col-span-4"
-            label="Empresa"
-            placeholder="Onde trabalha"
-            {...register("enterprise")}
-            disabled={!personType}
-          />
-          <LabeledInput
-            id="enterpriseFunction"
-            containerClassName="md:col-span-2"
-            label="Função"
-            placeholder="Cargo ou função"
-            {...register("enterpriseFunction")}
-            disabled={!personType}
-          />
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="admissionDate" className="text-[#134B73]">
-              Data de admissão
-            </Label>
-            <div className="relative">
-              <Input
-                id="admissionDate"
-                type="date"
-                className="w-full pr-10 cursor-pointer"
-                {...register("admissionDate")}
-                disabled={!personType}
-              />
-              <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
-            </div>
-          </div>
-          <LabeledInput
-            id="income"
-            containerClassName="md:col-span-2"
-            label="Renda"
-            placeholder="R$ 0,00"
-            inputClassName="text-right"
-            {...register("income", {
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                e.target.value = maskBRL(e.target.value);
-              }
-            })}
-            disabled={!personType}
-          />
-          <LabeledInput
-            id="otherIncomes"
-            containerClassName="md:col-span-2"
-            label="Outras rendas"
-            placeholder="R$ 0,00"
-            inputClassName="text-right"
-            {...register("otherIncomes", {
-              onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
-                e.target.value = maskBRL(e.target.value);
-              }
-            })}
-            disabled={!personType}
-          />
           <div className="md:col-span-12 rounded-md border border-slate-200 bg-slate-50 p-5">
             <Controller
               name="acceptLGPD"
@@ -355,8 +304,8 @@ export function PersonalDataCard({ onZipChange, handleDocumentChange, cpfSituati
                       Consentimento LGPD
                     </Label>
                     <p className="text-sm text-slate-700">
-                      Autorizo o uso dos meus dados para análise de crédito, contato e formalização,
-                      conforme a política de privacidade da Grota Financiamentos.
+                      Autorizo o uso dos meus dados para anÇ­lise de crÇ¸dito, contato e formalizaÇõÇœo,
+                      conforme a polÇðtica de privacidade da Grota Financiamentos.
                     </p>
                   </div>
                 </div>
