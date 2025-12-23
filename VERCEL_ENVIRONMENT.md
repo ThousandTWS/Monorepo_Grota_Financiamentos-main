@@ -1,6 +1,4 @@
-commended production endpoints come from the existing `.env` files for the apps (e.g., `apps/public-site/.env`, `apps/dealer-portal/.env`, `apps/admin-console/.env`).
-
-- `NEXT_PUBLIC_URL_API`, `LOGISTA_API_BASE_URL`, `ADMIN_API_BASE_URL`, `DEFAULT_API_BASE_URL`, `NEXT_PUBLIC_ADMIN_API_BASE_URL` – `https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos` (single backend for proposals, auth, documents, etc.).
+ISTA_API_BASE_URL`, `ADMIN_API_BASE_URL`, `DEFAULT_API_BASE_URL`, `NEXT_PUBLIC_ADMIN_API_BASE_URL` – `https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos` (single backend for proposals, auth, documents, etc.).
 - `NEXT_PUBLIC_REALTIME_WS_URL` – `https://websocket-production-6330.up.railway.app` (shared WebSocket server used by the admin and dealer UIs).
 - `LOGISTA_SESSION_SECRET` – `VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw==` (used to encrypt the dealer session cookie).
 - `ADMIN_SESSION_SECRET` – `VGhpcy1pcy1hLXNlY3VyZS1rZXktMzItYnl0ZXMtbG9uZw==` (used to encrypt the admin session cookie).
