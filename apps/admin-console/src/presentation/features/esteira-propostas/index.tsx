@@ -447,15 +447,6 @@ export default function EsteiraDePropostasFeature() {
         <QueueStats summary={summary} isLoading={isLoading && proposals.length === 0} />
         <StatusLegend summary={summary} />
       </div>
-
-      <Alert className="rounded-2xl border-slate-200 bg-slate-50">
-        <AlertTitle>Websocket ativo</AlertTitle>
-        <AlertDescription>
-          O painel recebe notificações em tempo real sempre que uma nova ficha chega ou muda de status. O indicador
-          de “Pipeline Admin” reflete esse fluxo, então você já pode agir no mesmo instante.
-        </AlertDescription>
-      </Alert>
-
       <QueueFilters
         filters={filters}
         operators={availableOperators}
