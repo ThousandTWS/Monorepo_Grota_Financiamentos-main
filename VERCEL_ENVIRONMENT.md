@@ -1,6 +1,4 @@
-
-
-Configure the environment variables listed below in Vercel's **Project Settings > Environment Variables** for each app (`Production` and `Preview` as needed). Each Next.js app reads values directly from `process.env`, so keep the names exact. The recommended production endpoints come from the existing `.env` files for the apps (e.g., `apps/public-site/.env`, `apps/dealer-portal/.env`, `apps/admin-console/.env`).
+commended production endpoints come from the existing `.env` files for the apps (e.g., `apps/public-site/.env`, `apps/dealer-portal/.env`, `apps/admin-console/.env`).
 
 - `NEXT_PUBLIC_URL_API`, `LOGISTA_API_BASE_URL`, `ADMIN_API_BASE_URL`, `DEFAULT_API_BASE_URL`, `NEXT_PUBLIC_ADMIN_API_BASE_URL` – `https://servidor-grotafinanciamentos.up.railway.app/api/v1/grota-financiamentos` (single backend for proposals, auth, documents, etc.).
 - `NEXT_PUBLIC_REALTIME_WS_URL` – `https://websocket-production-6330.up.railway.app` (shared WebSocket server used by the admin and dealer UIs).
