@@ -34,6 +34,8 @@ type Step4ReviewProps = {
   clearData: () => void;
   goToStep: (step: number) => void;
   dealerId?: number | null;
+  sellerId?: number | null;
+  sellerName?: string;
 };
 
 const addMonths = (date: Date, months: number) => {
@@ -80,7 +82,15 @@ const calculateFinancing = async (payload: {
   } satisfies Calculation;
 };
 
-const buildPdf = (formData: SimulatorFormData, calculation: Calculation | null) => {
+const buildPdf = (
+  formData: SimulatorFormData,
+  calculation: Calculation | null,
+  options?: {
+    dealerId?: number | null;
+    sellerId?: number | null;
+    sellerName?: string;
+  },
+) => {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "pt",
@@ -177,10 +187,20 @@ const buildPdf = (formData: SimulatorFormData, calculation: Calculation | null) 
     ["Total a pagar", calculation ? formatNumberToBRL(calculation.total_amount) : "-"],
   ]);
 
+  const dealerLabel = options?.dealerId ? `Loja #${options.dealerId}` : "-";
+  const sellerLabel =
+    options?.sellerName && options.sellerName.trim().length > 0
+      ? options.sellerName
+      : options?.sellerId
+        ? `Vendedor #${options.sellerId}`
+        : "-";
+
   addSection("Operacao", [
     ["Tipo", formData.operationType.toUpperCase()],
     ["Categoria", formData.vehicleCategory],
     ["Pessoa", formData.personType],
+    ["Loja", dealerLabel],
+    ["Vendedor", sellerLabel],
     [
       "Endereco",
       `${formData.address.address}, ${formData.address.number} - ${formData.address.neighborhood} / ${formData.address.city} - ${formData.address.uf}`,
@@ -208,6 +228,8 @@ export default function Step4Review({
   clearData,
   goToStep,
   dealerId,
+  sellerId,
+  sellerName,
 }: Step4ReviewProps) {
   const [calculating, setCalculating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -219,6 +241,12 @@ export default function Step4Review({
   const totalVehicle = useMemo(() => {
     return `${formData.vehicle.brand} ${formData.vehicle.model}`.trim();
   }, [formData.vehicle.brand, formData.vehicle.model]);
+  const sellerLabel =
+    sellerName && sellerName.trim().length > 0
+      ? sellerName
+      : sellerId != null
+        ? `Vendedor #${sellerId}`
+        : "-";
 
   useEffect(() => {
     handleCalculate();
@@ -257,6 +285,11 @@ export default function Step4Review({
       return;
     }
 
+    if (sellerId == null) {
+      toast.error("Selecione o vendedor responsavel pela ficha.");
+      return;
+    }
+
     if (!calculation) {
       toast.error("Calculo nao disponivel. Recalcule a simulacao.");
       return;
@@ -272,6 +305,7 @@ export default function Step4Review({
 
       const payload = {
         dealerId,
+        sellerId,
         customerName: formData.personal.name,
         customerCpf: formData.personal.cpfCnpj,
         customerBirthDate: formData.personal.birthday || undefined,
@@ -329,7 +363,7 @@ export default function Step4Review({
   const handleDownloadPDF = async () => {
     try {
       setDownloadingPDF(true);
-      buildPdf(formData, calculation);
+      buildPdf(formData, calculation, { dealerId, sellerId, sellerName });
       toast.success("PDF baixado com sucesso!");
     } catch (error) {
       toast.error("Erro ao baixar PDF");
@@ -388,6 +422,16 @@ export default function Step4Review({
             <div>
               <p className="text-sm text-gray-600">Tipo de Pessoa</p>
               <p className="font-semibold">{formData.personType}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Loja</p>
+              <p className="font-semibold">
+                {dealerId != null ? `Loja #${dealerId}` : "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600">Vendedor</p>
+              <p className="font-semibold">{sellerLabel}</p>
             </div>
           </div>
         </CardContent>

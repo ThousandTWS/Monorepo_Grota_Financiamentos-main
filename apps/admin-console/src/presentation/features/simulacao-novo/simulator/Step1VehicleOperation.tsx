@@ -40,6 +40,8 @@ type Step1VehicleOperationProps = {
   dealersLoading: boolean;
   selectedDealerId: number | null;
   onDealerChange: (dealerId: number | null) => void;
+  selectedSellerId: number | null;
+  onSellerChange: (sellerId: number | null, sellerName?: string) => void;
 };
 
 const getVehicleTypeId = (category: SimulatorFormData["vehicleCategory"]) => {
@@ -57,6 +59,8 @@ export default function Step1VehicleOperation({
   dealersLoading,
   selectedDealerId,
   onDealerChange,
+  selectedSellerId,
+  onSellerChange,
 }: Step1VehicleOperationProps) {
   const [financedInput, setFinancedInput] = useState("");
   const [downPaymentInput, setDownPaymentInput] = useState("");
@@ -107,6 +111,7 @@ export default function Step1VehicleOperation({
     if (!selectedDealerId) {
       setSellers([]);
       setLoadingSellers(false);
+      onSellerChange(null);
       return () => {
         mounted = false;
       };
@@ -137,7 +142,15 @@ export default function Step1VehicleOperation({
     return () => {
       mounted = false;
     };
-  }, [selectedDealerId]);
+  }, [selectedDealerId, onSellerChange]);
+
+  useEffect(() => {
+    if (!selectedSellerId) return;
+    const stillAvailable = sellers.some((seller) => seller.id === selectedSellerId);
+    if (!stillAvailable) {
+      onSellerChange(null);
+    }
+  }, [selectedSellerId, sellers, onSellerChange]);
 
   useEffect(() => {
     if (financedFocusedRef.current) return;
@@ -266,6 +279,20 @@ export default function Step1VehicleOperation({
 
     if (!selectedDealerId) {
       toast.error("Selecione a loja para vincular a simulacao");
+      return false;
+    }
+
+    if (loadingSellers) {
+      toast.error("Aguarde o carregamento dos vendedores.");
+      return false;
+    }
+
+    if (!selectedSellerId) {
+      toast.error(
+        sellers.length > 0
+          ? "Selecione o vendedor responsavel pela ficha."
+          : "Nenhum vendedor vinculado a esta loja.",
+      );
       return false;
     }
 
@@ -446,25 +473,52 @@ export default function Step1VehicleOperation({
                 Carregando vendedores...
               </p>
             ) : sellers.length ? (
-              <div className="space-y-2">
-                {sellers.map((seller) => (
-                  <div
-                    key={seller.id}
-                    className="flex flex-col gap-2 rounded-lg border border-slate-200/70 p-3 sm:flex-row sm:items-center sm:justify-between"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">
-                        {seller.fullName || `Vendedor #${seller.id}`}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {seller.email || "--"}
-                      </p>
-                    </div>
-                    <p className="text-sm text-slate-600">
-                      {seller.phone || "--"}
-                    </p>
-                  </div>
-                ))}
+              <div className="space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  Selecione o vendedor responsavel pela ficha.
+                </p>
+                <div className="space-y-2">
+                  {sellers.map((seller) => {
+                    const isSelected = selectedSellerId === seller.id;
+                    const sellerLabel =
+                      seller.fullName ||
+                      seller.email ||
+                      `Vendedor #${seller.id}`;
+
+                    return (
+                      <button
+                        key={seller.id}
+                        type="button"
+                        onClick={() => onSellerChange(seller.id, sellerLabel)}
+                        aria-pressed={isSelected}
+                        className={`w-full rounded-lg border p-3 text-left transition ${
+                          isSelected
+                            ? "border-[#134B73] bg-[#134B73]/10"
+                            : "border-slate-200/70 bg-white hover:border-[#134B73]/40"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {sellerLabel}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {seller.email || "--"}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3 text-sm text-slate-600">
+                            <span>{seller.phone || "--"}</span>
+                            {isSelected ? (
+                              <span className="rounded-full bg-[#134B73]/10 px-2 py-1 text-[11px] font-semibold text-[#134B73]">
+                                Selecionado
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <p className="text-sm text-muted-foreground">

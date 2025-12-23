@@ -28,6 +28,13 @@ export default function SimuladorAdminPage() {
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [dealersLoading, setDealersLoading] = useState(true);
   const [selectedDealerId, setSelectedDealerId] = useState<number | null>(null);
+  const [selectedSellerId, setSelectedSellerId] = useState<number | null>(null);
+  const [selectedSellerName, setSelectedSellerName] = useState("");
+
+  const handleSellerChange = (sellerId: number | null, sellerName?: string) => {
+    setSelectedSellerId(sellerId);
+    setSelectedSellerName(sellerId ? sellerName ?? "" : "");
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -64,7 +71,13 @@ export default function SimuladorAdminPage() {
             dealers={dealers}
             dealersLoading={dealersLoading}
             selectedDealerId={selectedDealerId}
-            onDealerChange={setSelectedDealerId}
+            onDealerChange={(dealerId) => {
+              setSelectedDealerId(dealerId);
+              setSelectedSellerId(null);
+              setSelectedSellerName("");
+            }}
+            selectedSellerId={selectedSellerId}
+            onSellerChange={handleSellerChange}
           />
         );
       case 2:
@@ -94,6 +107,8 @@ export default function SimuladorAdminPage() {
             clearData={clearData}
             goToStep={goToStep}
             dealerId={selectedDealerId}
+            sellerId={selectedSellerId}
+            sellerName={selectedSellerName}
           />
         );
       default:
