@@ -157,27 +157,7 @@ O backend Spring agora expõe os contratos necessários para integrar o fluxo co
 - `POST /api/v1/grota-financiamentos/proposals` cria uma nova ficha. Payload mínimo:
 
 ```json
-{
-  "dealerId": 1,
-  "sellerId": 2,
-  "customerName": "Fulano de Tal",
-  "customerCpf": "12345678900",
-  "customerBirthDate": "1990-05-10",
-  "customerEmail": "cliente@email.com",
-  "customerPhone": "11999999999",
-  "cnhCategory": "AB",
-  "hasCnh": true,
-  "vehiclePlate": "ABC1D23",
-  "fipeCode": "001234",
-  "fipeValue": 95000,
-  "vehicleBrand": "Toyota",
-  "vehicleModel": "Corolla Cross",
-  "vehicleYear": 2023,
-  "downPaymentValue": 20000,
-  "financedValue": 75000,
-  "notes": "Observações opcionais"
-}
-```
+
 
 - `GET /api/v1/grota-financiamentos/proposals?dealerId=&status=` lista as propostas com filtros opcionais.
 - `PATCH /api/v1/grota-financiamentos/proposals/{id}/status` atualiza o status (SUBMITTED, PENDING, APPROVED, REJECTED) e as notas.
