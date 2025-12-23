@@ -96,6 +96,8 @@ export default function EsteiraDePropostasFeature() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
+  const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
   const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
   const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
 
@@ -158,6 +160,23 @@ export default function EsteiraDePropostasFeature() {
   useEffect(() => {
     loadProposals();
   }, [loadProposals]);
+
+  useEffect(() => {
+    setNoteDrafts((prev) => {
+      const next = { ...prev };
+      proposals.forEach((proposal) => {
+        if (next[proposal.id] === undefined) {
+          next[proposal.id] = proposal.notes ?? "";
+        }
+      });
+      Object.keys(next).forEach((id) => {
+        if (!proposals.some((proposal) => proposal.id === Number(id))) {
+          delete next[id];
+        }
+      });
+      return next;
+    });
+  }, [proposals]);
 
   useEffect(() => {
     const loadNames = async () => {
@@ -384,12 +403,17 @@ export default function EsteiraDePropostasFeature() {
   ) => {
     setUpdatingId(proposal.id);
     try {
+      const note = noteDrafts[proposal.id] ?? proposal.notes ?? undefined;
       const updated = await updateProposalStatus(proposal.id, {
         status: nextStatus,
-        notes: proposal.notes ?? undefined,
+        notes: note,
         actor: "admin-console",
       });
       applyRealtimeSnapshot(updated);
+      setNoteDrafts((prev) => ({
+        ...prev,
+        [updated.id]: updated.notes ?? "",
+      }));
       toast({
         title: "Status atualizado",
         description: `${proposal.customerName} agora está ${statusOptions.find((item) => item.value === nextStatus)?.label}.`,
@@ -403,6 +427,45 @@ export default function EsteiraDePropostasFeature() {
       });
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  const handleNoteChange = (proposalId: number, value: string) => {
+    setNoteDrafts((prev) => ({
+      ...prev,
+      [proposalId]: value,
+    }));
+  };
+
+  const handleNoteSave = async (proposal: Proposal) => {
+    setSavingNoteId(proposal.id);
+    try {
+      const note = noteDrafts[proposal.id] ?? proposal.notes ?? "";
+      const updated = await updateProposalStatus(proposal.id, {
+        status: proposal.status,
+        notes: note || undefined,
+        actor: "admin-console",
+      });
+      applyRealtimeSnapshot(updated);
+      setNoteDrafts((prev) => ({
+        ...prev,
+        [updated.id]: updated.notes ?? "",
+      }));
+      toast({
+        title: "Mensagem salva",
+        description: `Atualizamos as observações da proposta de ${proposal.customerName}.`,
+      });
+    } catch (error) {
+      console.error("[Admin Esteira] Falha ao salvar observação", error);
+      const message =
+        error instanceof Error ? error.message : "Não foi possível salvar a mensagem.";
+      toast({
+        title: "Erro ao salvar mensagem",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setSavingNoteId(null);
     }
   };
 
@@ -472,6 +535,10 @@ export default function EsteiraDePropostasFeature() {
         isLoading={isLoading}
         onStatusChange={handleStatusUpdate}
         onDelete={handleDeleteProposal}
+        noteDrafts={noteDrafts}
+        onNoteChange={handleNoteChange}
+        onNoteSave={handleNoteSave}
+        savingNoteId={savingNoteId}
         updatingId={updatingId}
         deletingId={deletingId}
         dealersById={dealerIndex}

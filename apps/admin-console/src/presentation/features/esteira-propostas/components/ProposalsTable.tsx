@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from "@/presentation/layout/components/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/layout/components/ui/select";
 import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
+import { Textarea } from "@/presentation/layout/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,8 +25,12 @@ type ProposalsTableProps = {
   isLoading?: boolean;
   updatingId: number | null;
   deletingId?: number | null;
+  noteDrafts: Record<number, string>;
+  savingNoteId?: number | null;
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
   onDelete: (proposal: Proposal) => Promise<void> | void;
+  onNoteChange: (proposalId: number, value: string) => void;
+  onNoteSave: (proposal: Proposal) => Promise<void> | void;
   dealersById?: Record<number, { name: string; enterprise?: string }>;
   sellersById?: Record<number, string>;
 };
@@ -65,8 +70,12 @@ export function ProposalsTable({
   isLoading,
   updatingId,
   deletingId = null,
+  noteDrafts,
+  savingNoteId = null,
   onStatusChange,
   onDelete,
+  onNoteChange,
+  onNoteSave,
   dealersById = {},
   sellersById = {},
 }: ProposalsTableProps) {
@@ -201,6 +210,30 @@ export function ProposalsTable({
                   ))}
                 </SelectContent>
               </Select>
+              {proposal.status === "PENDING" ? (
+                <div className="space-y-2 rounded-lg border border-slate-200 bg-white/70 p-3">
+                  <p className="text-xs font-semibold uppercase text-slate-500">
+                    Mensagem para a loja
+                  </p>
+                  <Textarea
+                    value={noteDrafts[proposal.id] ?? proposal.notes ?? ""}
+                    onChange={(event) =>
+                      onNoteChange(proposal.id, event.target.value)
+                    }
+                    placeholder="Ex.: Santander recusou, BV recusou, Banco do Brasil em análise."
+                    className="min-h-20 text-sm"
+                    disabled={savingNoteId === proposal.id}
+                  />
+                  <Button
+                    size="sm"
+                    className="w-full"
+                    onClick={() => onNoteSave(proposal)}
+                    disabled={savingNoteId === proposal.id}
+                  >
+                    {savingNoteId === proposal.id ? "Salvando..." : "Salvar mensagem"}
+                  </Button>
+                </div>
+              ) : null}
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"

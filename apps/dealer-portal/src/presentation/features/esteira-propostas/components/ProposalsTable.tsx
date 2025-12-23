@@ -156,6 +156,18 @@ export function ProposalsTable({
                             Equipe Grota
                           </p>
                           <ProposalTimelineSheet proposalId={proposal.id} />
+                          {proposal.status === "PENDING" ? (
+                            <div className="rounded-md border border-slate-200 bg-slate-50 p-2 text-xs text-slate-600">
+                              <p className="mb-1 text-[10px] font-semibold uppercase text-slate-500">
+                                Mensagem da analise
+                              </p>
+                              <p>
+                                {proposal.notes?.trim()
+                                  ? proposal.notes
+                                  : "Nenhuma mensagem registrada ainda."}
+                              </p>
+                            </div>
+                          ) : null}
                         </div>
                       </TableCell>
                       <TableCell className="pt-5">
