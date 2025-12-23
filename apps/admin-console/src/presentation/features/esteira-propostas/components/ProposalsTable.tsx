@@ -6,6 +6,14 @@ import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
 import { Textarea } from "@/presentation/layout/components/ui/textarea";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/presentation/layout/components/ui/dialog";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -16,7 +24,7 @@ import {
   AlertDialogTitle,
 } from "@/presentation/layout/components/ui/alert-dialog";
 import { StatusBadge } from "../../logista/components/status-badge";
-import { Clock3, Eye, RefreshCw, Trash2 } from "lucide-react";
+import { Clock3, Eye, RefreshCw, StickyNote, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -30,7 +38,7 @@ type ProposalsTableProps = {
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
   onDelete: (proposal: Proposal) => Promise<void> | void;
   onNoteChange: (proposalId: number, value: string) => void;
-  onNoteSave: (proposal: Proposal) => Promise<void> | void;
+  onNoteSave: (proposal: Proposal) => Promise<boolean> | boolean;
   dealersById?: Record<number, { name: string; enterprise?: string }>;
   sellersById?: Record<number, string>;
 };
@@ -82,6 +90,8 @@ export function ProposalsTable({
   const router = useRouter();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null);
+  const [messageOpen, setMessageOpen] = useState(false);
+  const [messageTarget, setMessageTarget] = useState<Proposal | null>(null);
 
   const handleOpenDelete = (proposal: Proposal) => {
     setDeleteTarget(proposal);
@@ -93,6 +103,27 @@ export function ProposalsTable({
     await Promise.resolve(onDelete(deleteTarget));
     setDeleteOpen(false);
     setDeleteTarget(null);
+  };
+
+  const handleOpenMessage = (proposal: Proposal) => {
+    setMessageTarget(proposal);
+    setMessageOpen(true);
+  };
+
+  const handleMessageOpenChange = (open: boolean) => {
+    setMessageOpen(open);
+    if (!open) {
+      setMessageTarget(null);
+    }
+  };
+
+  const handleSaveMessage = async () => {
+    if (!messageTarget) return;
+    const result = await Promise.resolve(onNoteSave(messageTarget));
+    if (result) {
+      setMessageOpen(false);
+      setMessageTarget(null);
+    }
   };
 
   const cards = useMemo(() => {
@@ -211,28 +242,14 @@ export function ProposalsTable({
                 </SelectContent>
               </Select>
               {proposal.status === "PENDING" ? (
-                <div className="space-y-2 rounded-lg border border-slate-200 bg-white/70 p-3">
-                  <p className="text-xs font-semibold uppercase text-slate-500">
-                    Mensagem para a loja
-                  </p>
-                  <Textarea
-                    value={noteDrafts[proposal.id] ?? proposal.notes ?? ""}
-                    onChange={(event) =>
-                      onNoteChange(proposal.id, event.target.value)
-                    }
-                    placeholder="Ex.: Santander recusou, BV recusou, Banco do Brasil em análise."
-                    className="min-h-20 text-sm"
-                    disabled={savingNoteId === proposal.id}
-                  />
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    onClick={() => onNoteSave(proposal)}
-                    disabled={savingNoteId === proposal.id}
-                  >
-                    {savingNoteId === proposal.id ? "Salvando..." : "Salvar mensagem"}
-                  </Button>
-                </div>
+                <Button
+                  variant="secondary"
+                  className="gap-2"
+                  onClick={() => handleOpenMessage(proposal)}
+                >
+                  <StickyNote className="size-4" />
+                  Mensagem da analise
+                </Button>
               ) : null}
               <div className="flex flex-col gap-2">
                 <Button
@@ -269,6 +286,52 @@ export function ProposalsTable({
           </CardContent>
         </Card>
       ))}
+      <Dialog open={messageOpen} onOpenChange={handleMessageOpenChange}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Mensagem para a loja</DialogTitle>
+            <DialogDescription>
+              Informe o andamento da analise (aprovacoes, recusas e pendencias).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Textarea
+              value={
+                messageTarget
+                  ? noteDrafts[messageTarget.id] ?? messageTarget.notes ?? ""
+                  : ""
+              }
+              onChange={(event) => {
+                if (!messageTarget) return;
+                onNoteChange(messageTarget.id, event.target.value);
+              }}
+              placeholder="Ex.: Santander recusou, BV recusou, Banco do Brasil em analise."
+              className="min-h-28 text-sm"
+              disabled={savingNoteId === messageTarget?.id}
+            />
+            <p className="text-xs text-muted-foreground">
+              A loja vera essa mensagem quando o status estiver pendente.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => handleMessageOpenChange(false)}
+              disabled={savingNoteId === messageTarget?.id}
+            >
+              Fechar
+            </Button>
+            <Button
+              onClick={() => {
+                void handleSaveMessage();
+              }}
+              disabled={!messageTarget || savingNoteId === messageTarget.id}
+            >
+              {savingNoteId === messageTarget?.id ? "Salvando..." : "Salvar mensagem"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <AlertDialog
         open={deleteOpen}
         onOpenChange={(open) => {

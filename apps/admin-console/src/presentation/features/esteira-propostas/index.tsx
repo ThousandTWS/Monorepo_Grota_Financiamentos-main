@@ -412,8 +412,13 @@ export default function EsteiraDePropostasFeature() {
       applyRealtimeSnapshot(updated);
       setNoteDrafts((prev) => ({
         ...prev,
-        [updated.id]: updated.notes ?? "",
+        [updated.id]: "",
       }));
+      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
+        source: ADMIN_PROPOSALS_IDENTITY,
+        reason: "admin-note-update",
+        proposalId: updated.id,
+      });
       toast({
         title: "Status atualizado",
         description: `${proposal.customerName} agora está ${statusOptions.find((item) => item.value === nextStatus)?.label}.`,
@@ -437,7 +442,7 @@ export default function EsteiraDePropostasFeature() {
     }));
   };
 
-  const handleNoteSave = async (proposal: Proposal) => {
+  const handleNoteSave = async (proposal: Proposal): Promise<boolean> => {
     setSavingNoteId(proposal.id);
     try {
       const note = noteDrafts[proposal.id] ?? proposal.notes ?? "";
@@ -449,12 +454,13 @@ export default function EsteiraDePropostasFeature() {
       applyRealtimeSnapshot(updated);
       setNoteDrafts((prev) => ({
         ...prev,
-        [updated.id]: updated.notes ?? "",
+        [updated.id]: "",
       }));
       toast({
         title: "Mensagem salva",
         description: `Atualizamos as observações da proposta de ${proposal.customerName}.`,
       });
+      return true;
     } catch (error) {
       console.error("[Admin Esteira] Falha ao salvar observação", error);
       const message =
@@ -464,6 +470,7 @@ export default function EsteiraDePropostasFeature() {
         description: message,
         variant: "destructive",
       });
+      return false;
     } finally {
       setSavingNoteId(null);
     }

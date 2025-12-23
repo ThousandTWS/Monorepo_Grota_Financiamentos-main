@@ -14,6 +14,8 @@ import { Skeleton } from "@/presentation/ui/skeleton";
 import { Input } from "@/presentation/ui/input";
 import {
   REALTIME_CHANNELS,
+  REALTIME_EVENT_TYPES,
+  parseBridgeEvent,
   useRealtimeChannel,
 } from "@grota/realtime-client";
 import { getRealtimeUrl } from "@/application/config/realtime";
@@ -111,6 +113,7 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
   const recordingTimerRef = useRef<number | null>(null);
   const playingAudioRef = useRef<HTMLAudioElement | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
+  const processedTimelineIds = useRef<Set<string>>(new Set());
 
   const dealerLabel = useMemo(() => {
     if (dealerName) return dealerName;
@@ -120,6 +123,10 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
 
   const chatIdentity = useMemo(
     () => (isValidId ? `logista-ficha-${proposalId}` : "logista-ficha"),
+    [isValidId, proposalId],
+  );
+  const timelineIdentity = useMemo(
+    () => (isValidId ? `logista-timeline-${proposalId}` : "logista-timeline"),
     [isValidId, proposalId],
   );
 
@@ -134,6 +141,11 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
     url: getRealtimeUrl(),
     metadata: { proposalId },
     historyLimit: 100,
+  });
+  const { messages: timelineMessages } = useRealtimeChannel({
+    channel: REALTIME_CHANNELS.PROPOSALS,
+    identity: timelineIdentity,
+    url: getRealtimeUrl(),
   });
 
   const filteredMessages = useMemo(
@@ -423,11 +435,42 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
     [],
   );
 
+  const refreshTimeline = useCallback(async () => {
+    if (!isValidId) return;
+    try {
+      setError(null);
+      const events = await fetchProposalTimeline(proposalId);
+      setTimeline(events);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Nao foi possivel carregar o historico.",
+      );
+    }
+  }, [isValidId, proposalId]);
+
   useEffect(() => {
     if (chatError && chatStatus === "connected") {
       setChatError(null);
     }
   }, [chatError, chatStatus]);
+
+  useEffect(() => {
+    if (!isValidId || timelineMessages.length === 0) return;
+    const latest = timelineMessages[timelineMessages.length - 1];
+    if (processedTimelineIds.current.has(latest.id)) return;
+    processedTimelineIds.current.add(latest.id);
+    const parsed = parseBridgeEvent(latest);
+    if (
+      parsed?.event !== REALTIME_EVENT_TYPES.PROPOSAL_EVENT_APPENDED &&
+      parsed?.event !== REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST
+    ) {
+      return;
+    }
+    const payload = parsed.payload as { proposalId?: number | string } | null;
+    if (Number(payload?.proposalId) === proposalId) {
+      void refreshTimeline();
+    }
+  }, [isValidId, proposalId, refreshTimeline, timelineMessages]);
 
   useEffect(() => {
     if (!isValidId) return;
