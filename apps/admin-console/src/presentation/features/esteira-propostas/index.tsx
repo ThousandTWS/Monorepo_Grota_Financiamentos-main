@@ -170,8 +170,9 @@ export default function EsteiraDePropostasFeature() {
         }
       });
       Object.keys(next).forEach((id) => {
-        if (!proposals.some((proposal) => proposal.id === Number(id))) {
-          delete next[id];
+        const numericId = Number(id);
+        if (!proposals.some((proposal) => proposal.id === numericId)) {
+          delete next[numericId];
         }
       });
       return next;
