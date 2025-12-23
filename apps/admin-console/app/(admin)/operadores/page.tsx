@@ -30,6 +30,10 @@ import {
   SelectValue,
 } from "@/presentation/layout/components/ui/select";
 import { fetchAddressByCep } from "@/application/services/cep/cepService";
+import { StatusBadge } from "@/presentation/features/logista/components/status-badge";
+import { formatName } from "@/lib/formatters";
+import { convertBRtoISO } from "@/application/core/utils/formatters";
+import { Loader2 } from "lucide-react";
 
 const operatorSchema = z.object({
   dealerId: z.string().optional(),
@@ -79,6 +83,10 @@ function OperadoresContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [isCepLoading, setIsCepLoading] = useState(false);
+  const [isCpfLoading, setIsCpfLoading] = useState(false);
+  const [cpfVerified, setCpfVerified] = useState(false);
+  const [cpfError, setCpfError] = useState<string | null>(null);
+  const [lastCpfLookup, setLastCpfLookup] = useState("");
   const searchParams = useSearchParams();
 
   const {
@@ -130,6 +138,16 @@ function OperadoresContent() {
   }, [searchParams, setValue]);
 
   const onSubmit = async (values: OperatorFormValues) => {
+    const cpfDigits = digitsOnly(values.cpf);
+    if (isCpfLoading) {
+      toast.error("Aguarde a verificacao do CPF.");
+      return;
+    }
+    if (cpfDigits.length === 11 && !cpfVerified) {
+      toast.error("CPF nao verificado na Receita.");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const birthDateIso = new Date(values.birthData).toISOString().split("T")[0];
@@ -171,6 +189,9 @@ function OperadoresContent() {
         console.warn("Falha ao notificar criação de operador:", err);
       });
       reset();
+      setCpfVerified(false);
+      setCpfError(null);
+      setLastCpfLookup("");
     } catch (error) {
       const message =
         error instanceof Error
@@ -179,6 +200,64 @@ function OperadoresContent() {
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleCpfLookup = async (value: string) => {
+    const digits = digitsOnly(value);
+    if (digits.length < 11) {
+      setCpfVerified(false);
+      setCpfError(null);
+      setLastCpfLookup("");
+      return;
+    }
+
+    if (digits.length !== 11 || digits === lastCpfLookup) return;
+
+    setIsCpfLoading(true);
+    setCpfVerified(false);
+    setCpfError(null);
+    setLastCpfLookup(digits);
+    try {
+      const res = await fetch("/api/searchCPF", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cpf: digits }),
+      });
+      const response = await res.json().catch(() => null);
+      if (!res.ok || !response?.success) {
+        const message =
+          response?.error ||
+          response?.message ||
+          response?.data?.error ||
+          response?.data?.message ||
+          "Nao foi possivel verificar o CPF.";
+        setCpfError(message);
+        throw new Error(message);
+      }
+
+      const data = response?.data?.response?.content;
+      const name = data?.nome?.conteudo?.nome || "";
+      const birthDate = data?.nome?.conteudo?.data_nascimento || "";
+
+      if (name) {
+        setValue("fullName", formatName(name), { shouldValidate: true });
+      }
+      if (birthDate) {
+        setValue("birthData", convertBRtoISO(birthDate), { shouldValidate: true });
+      }
+      setCpfVerified(true);
+      setCpfError(null);
+      toast.success("CPF verificado na Receita!");
+    } catch (error) {
+      console.error("[operadores] CPF lookup", error);
+      setCpfVerified(false);
+      const message =
+        error instanceof Error ? error.message : "Nao foi possivel verificar o CPF.";
+      setCpfError(message);
+      toast.error(message);
+    } finally {
+      setIsCpfLoading(false);
     }
   };
 
@@ -274,11 +353,50 @@ function OperadoresContent() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
-              <Input id="cpf" {...register("cpf")} placeholder="000.000.000-00" />
+              <div className="relative">
+                <Input
+                  id="cpf"
+                  {...register("cpf", {
+                    onChange: (event) => handleCpfLookup(event.target.value),
+                  })}
+                  placeholder="000.000.000-00"
+                />
+                {isCpfLoading && (
+                  <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
+                )}
+              </div>
               {errors.cpf && (
                 <p className="text-sm text-red-500">{errors.cpf.message}</p>
               )}
+              {cpfError && (
+                <div className="space-y-2">
+                  <p className="text-sm text-red-500">{cpfError}</p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleCpfLookup(watch("cpf") ?? "")}
+                    disabled={isCpfLoading}
+                  >
+                    {isCpfLoading ? "Consultando..." : "Tentar novamente"}
+                  </Button>
+                </div>
+              )}
             </div>
+
+            {digitsOnly(watch("cpf") ?? "").length === 11 && (
+              <div className="space-y-2 md:col-span-2">
+                <Label>Verificacao na Receita</Label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge
+                    status={cpfVerified ? "aprovada" : "pendente"}
+                    className="shadow-none"
+                  >
+                    {cpfVerified ? "Verificado" : "Nao verificado"}
+                  </StatusBadge>
+                </div>
+              </div>
+            )}
             <div className="space-y-2">
               <Label htmlFor="birthData">Data de nascimento</Label>
               <Input id="birthData" type="date" {...register("birthData")} />
@@ -429,7 +547,7 @@ function OperadoresContent() {
             </div>
 
             <div className="md:col-span-2 flex justify-end">
-              <Button type="submit" disabled={isSubmitting}>
+              <Button type="submit" disabled={isSubmitting || !cpfVerified}>
                 {isSubmitting ? "Salvando..." : "Cadastrar operador"}
               </Button>
             </div>

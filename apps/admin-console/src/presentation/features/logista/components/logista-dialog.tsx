@@ -28,10 +28,62 @@ import {
   CreateDealerPayload,
   PartnerPayload
 } from "@/application/services/Logista/logisticService";
-import { Operator, getAllOperators } from "@/application/services/Operator/operatorService";
 import { StatusBadge } from "./status-badge";
 
 const digitsOnly = (value?: string) => (value ?? "").replace(/\D/g, "");
+
+const CNPJ_STATUS_LABELS: Record<string, string> = {
+  "01": "Nula",
+  "02": "Ativa",
+  "03": "Suspensa",
+  "04": "Inapta",
+  "08": "Baixada",
+};
+
+const normalizeCnpjStatusTone = (status?: string | null) => {
+  const raw = (status ?? "").toString().trim().toLowerCase();
+  if (!raw) return "pendente";
+
+  const digits = raw.replace(/\D/g, "");
+  if (digits) {
+    if (digits === "02") return "aprovada";
+    if (["01", "03", "04", "08"].includes(digits)) return "recusada";
+  }
+
+  const normalized = raw.replace(/[^a-z]+/g, " ");
+
+  const isActive = ["ativa", "ativo", "active", "regular", "regularizada"].some(
+    (value) => normalized.includes(value),
+  );
+  if (isActive) return "aprovada";
+
+  const isInactive = [
+    "baixada",
+    "suspensa",
+    "suspenso",
+    "inapta",
+    "inativa",
+    "inativada",
+    "cancelada",
+    "nula",
+    "irregular",
+  ].some((value) => normalized.includes(value));
+  if (isInactive) return "recusada";
+
+  return "pendente";
+};
+
+const formatCnpjStatusLabel = (status?: string | null) => {
+  const raw = (status ?? "").toString().trim();
+  if (!raw) return "Status nao informado";
+
+  const digits = raw.replace(/\D/g, "");
+  if (digits) {
+    return CNPJ_STATUS_LABELS[digits] ?? "Status nao informado";
+  }
+
+  return raw;
+};
 
 interface LogistaDialogProps {
   logista: Logista | null;
@@ -74,18 +126,10 @@ export function LogistaDialog({
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [isCepLoading, setIsCepLoading] = useState(false);
-  const [operator, setOperator] = useState("");
-  const [operators, setOperators] = useState<Operator[]>([]);
-  const [isLoadingOperators, setIsLoadingOperators] = useState(false);
-
-  useEffect(() => {
-    if (!open || mode !== "create") return;
-    setIsLoadingOperators(true);
-    getAllOperators()
-      .then((ops) => setOperators(ops))
-      .catch(() => setOperators([]))
-      .finally(() => setIsLoadingOperators(false));
-  }, [open, mode]);
+  const [isCnpjLoading, setIsCnpjLoading] = useState(false);
+  const [cnpjStatus, setCnpjStatus] = useState<string | null>(null);
+  const [cnpjVerified, setCnpjVerified] = useState(false);
+  const [lastCnpjLookup, setLastCnpjLookup] = useState("");
 
   useEffect(() => {
     if (logista) {
@@ -108,7 +152,6 @@ export function LogistaDialog({
         partners: [],
         observation: "",
       });
-      setOperator("");
     } else {
       setFormData({
         fullName: "",
@@ -129,10 +172,95 @@ export function LogistaDialog({
         partners: [],
         observation: "",
       });
-      setOperator("");
     }
     setFormError(null);
+    setIsCnpjLoading(false);
+    setCnpjStatus(null);
+    setCnpjVerified(false);
+    setLastCnpjLookup("");
   }, [logista, open]);
+
+  const handleCnpjLookup = async (cnpjDigits: string) => {
+    if (isReadOnly) return;
+    setIsCnpjLoading(true);
+    setCnpjVerified(false);
+    setFormError(null);
+    try {
+      const res = await fetch("/api/searchCNPJ", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cnpj: cnpjDigits }),
+      });
+      const response = await res.json().catch(() => null);
+      if (!res.ok || !response?.success) {
+        throw new Error(response?.error || "Nao foi possivel verificar o CNPJ.");
+      }
+
+      const cnpjData =
+        response?.data?.data?.cnpj ??
+        response?.data?.cnpj ??
+        response?.data?.response?.content?.cnpj ??
+        response?.data?.response?.content ??
+        null;
+
+      const razaoSocial =
+        cnpjData?.empresa?.razao_social ??
+        cnpjData?.razao_social ??
+        cnpjData?.empresa?.nome_empresarial ??
+        cnpjData?.nome_empresarial ??
+        "";
+
+      const ufRaw =
+        cnpjData?.endereco?.uf ??
+        cnpjData?.estabelecimento?.uf ??
+        cnpjData?.estabelecimento?.estado ??
+        cnpjData?.empresa?.estado ??
+        "";
+      const uf = typeof ufRaw === "string" ? ufRaw.toUpperCase() : "";
+
+      const statusValue =
+        cnpjData?.empresa?.situacao_cadastral ??
+        cnpjData?.situacao_cadastral ??
+        cnpjData?.situacao ??
+        cnpjData?.status ??
+        cnpjData?.estabelecimento?.situacao_cadastral ??
+        null;
+
+      const statusText =
+        typeof statusValue === "string"
+          ? statusValue
+          : typeof statusValue === "number"
+            ? String(statusValue)
+            : statusValue && typeof statusValue === "object"
+              ? String(
+                  (statusValue as Record<string, unknown>).descricao ??
+                    (statusValue as Record<string, unknown>).description ??
+                    (statusValue as Record<string, unknown>).nome ??
+                    (statusValue as Record<string, unknown>).codigo ??
+                    "",
+                )
+              : "";
+
+      setFormData((prev) => ({
+        ...prev,
+        razaoSocial: razaoSocial || prev.razaoSocial,
+        address: {
+          ...(prev.address ?? {}),
+          state: uf || prev.address?.state || "",
+        },
+      }));
+      setCnpjStatus(statusText || null);
+      setCnpjVerified(true);
+    } catch (error) {
+      console.error("[logista-dialog] Falha ao buscar CNPJ", error);
+      setFormError(
+        error instanceof Error ? error.message : "Erro ao consultar CNPJ.",
+      );
+      setCnpjVerified(false);
+    } finally {
+      setIsCnpjLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -315,6 +443,11 @@ export function LogistaDialog({
   };
 
   const isReadOnly = mode === "view";
+  const cnpjStatusLabel = formatCnpjStatusLabel(cnpjStatus);
+  const cnpjStatusTone = normalizeCnpjStatusTone(cnpjStatus);
+  const cnpjVerificationLabel = cnpjVerified ? "Verificado" : "Nao verificado";
+  const cnpjVerificationTone = cnpjVerified ? "aprovada" : "pendente";
+  const shouldShowCnpjStatus = cnpjStatusLabel !== "Status nao informado";
 
   const getTitle = () => {
     switch (mode) {
@@ -391,26 +524,6 @@ export function LogistaDialog({
           </div>
         </div>
 
-        <div className="space-y-2">
-          <Label>Operador</Label>
-          <Select
-            value={operator}
-            onValueChange={setOperator}
-            disabled={isReadOnly}
-          >
-            <SelectTrigger className={inputWidth}>
-              <SelectValue placeholder={isLoadingOperators ? "Carregando..." : "Selecione"} />
-            </SelectTrigger>
-            <SelectContent>
-              {operators.map((op) => (
-                <SelectItem key={op.id} value={String(op.id)}>
-                  {op.fullName ?? `Operador ${op.id}`}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-2">
             <Label htmlFor="cnpj">CNPJ</Label>
@@ -418,9 +531,20 @@ export function LogistaDialog({
               id="cnpj"
               className={inputWidth}
               value={formData.cnpj ?? ""}
-              onChange={(e) =>
-                setFormData({ ...formData, cnpj: e.target.value })
-              }
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData({ ...formData, cnpj: value });
+                if (isReadOnly) return;
+                const digits = digitsOnly(value);
+                if (digits.length === 14 && digits !== lastCnpjLookup) {
+                  setLastCnpjLookup(digits);
+                  void handleCnpjLookup(digits);
+                } else if (digits.length < 14) {
+                  setLastCnpjLookup("");
+                  setCnpjVerified(false);
+                  setCnpjStatus(null);
+                }
+              }}
               placeholder="00.000.000/0000-00"
               disabled={isReadOnly}
               data-oid="cnpj"
@@ -440,6 +564,25 @@ export function LogistaDialog({
               data-oid="razao-social"
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Status do CNPJ (Receita)</Label>
+          <div className="flex flex-wrap items-center gap-2" data-oid="cnpj-status">
+            {shouldShowCnpjStatus ? (
+              <StatusBadge status={cnpjStatusTone} className="shadow-none">
+                {cnpjStatusLabel}
+              </StatusBadge>
+            ) : null}
+            <StatusBadge status={cnpjVerificationTone} className="shadow-none">
+              {cnpjVerificationLabel}
+            </StatusBadge>
+          </div>
+          {!isReadOnly && isCnpjLoading && (
+            <p className="text-xs text-muted-foreground">
+              Consultando CNPJ na Receita...
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
 import { Label } from "@/presentation/layout/components/ui/label";
 import { Input } from "@/presentation/layout/components/ui/input";
@@ -17,6 +17,7 @@ import { maskCPF, maskPhone } from "@/lib/masks";
 import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
+import { StatusBadge } from "@/presentation/features/logista/components/status-badge";
 import { SimulatorFormData, UpdateSimulatorFormData } from "../hooks/useSimulator";
 
 type Step2PersonalDataProps = {
@@ -31,6 +32,59 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "");
 const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 const validatePhone = (value: string) => digitsOnly(value).length >= 10;
 
+const CNPJ_STATUS_LABELS: Record<string, string> = {
+  "01": "Nula",
+  "02": "Ativa",
+  "03": "Suspensa",
+  "04": "Inapta",
+  "08": "Baixada",
+};
+
+const normalizeCnpjStatusTone = (status?: string | null) => {
+  const raw = (status ?? "").toString().trim().toLowerCase();
+  if (!raw) return "pendente";
+
+  const digits = raw.replace(/\D/g, "");
+  if (digits) {
+    if (digits === "02") return "aprovada";
+    if (["01", "03", "04", "08"].includes(digits)) return "recusada";
+  }
+
+  const normalized = raw.replace(/[^a-z]+/g, " ");
+
+  const isActive = ["ativa", "ativo", "active", "regular", "regularizada"].some(
+    (value) => normalized.includes(value),
+  );
+  if (isActive) return "aprovada";
+
+  const isInactive = [
+    "baixada",
+    "suspensa",
+    "suspenso",
+    "inapta",
+    "inativa",
+    "inativada",
+    "cancelada",
+    "nula",
+    "irregular",
+  ].some((value) => normalized.includes(value));
+  if (isInactive) return "recusada";
+
+  return "pendente";
+};
+
+const formatCnpjStatusLabel = (status?: string | null) => {
+  const raw = (status ?? "").toString().trim();
+  if (!raw) return "Status nao informado";
+
+  const digits = raw.replace(/\D/g, "");
+  if (digits) {
+    return CNPJ_STATUS_LABELS[digits] ?? "Status nao informado";
+  }
+
+  return raw;
+};
+
 export default function Step2PersonalData({
   formData,
   updateFormData,
@@ -39,6 +93,20 @@ export default function Step2PersonalData({
 }: Step2PersonalDataProps) {
   const [searchingDoc, setSearchingDoc] = useState(false);
   const [searchingCep, setSearchingCep] = useState(false);
+  const [cnpjStatus, setCnpjStatus] = useState<string | null>(null);
+  const [cnpjVerified, setCnpjVerified] = useState(false);
+
+  const cnpjStatusLabel = formatCnpjStatusLabel(cnpjStatus);
+  const cnpjStatusTone = normalizeCnpjStatusTone(cnpjStatus);
+  const cnpjVerificationLabel = cnpjVerified ? "Verificado" : "Nao verificado";
+  const cnpjVerificationTone = cnpjVerified ? "aprovada" : "pendente";
+
+  useEffect(() => {
+    if (formData.personType !== "PJ") {
+      setCnpjStatus(null);
+      setCnpjVerified(false);
+    }
+  }, [formData.personType]);
 
   const handleDocumentChange = async (value: string) => {
     const masked = formData.personType === "PJ" ? maskCNPJ(value) : maskCPF(value);
@@ -47,11 +115,19 @@ export default function Step2PersonalData({
     const digits = digitsOnly(masked);
     const isComplete = formData.personType === "PJ" ? digits.length === 14 : digits.length === 11;
 
-    if (!isComplete) return;
+    if (!isComplete) {
+      if (formData.personType === "PJ") {
+        setCnpjStatus(null);
+        setCnpjVerified(false);
+      }
+      return;
+    }
 
     try {
       setSearchingDoc(true);
       if (formData.personType === "PF") {
+        setCnpjStatus(null);
+        setCnpjVerified(false);
         const res = await fetch("/api/searchCPF", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -74,18 +150,93 @@ export default function Step2PersonalData({
           body: JSON.stringify({ cnpj: digits }),
         });
         const response = await res.json();
-        if (response?.success && response?.data?.data?.cnpj) {
-          const cnpjData = response.data.data.cnpj;
+        if (response?.success && (response?.data?.data?.cnpj || response?.data?.cnpj)) {
+          const cnpjData =
+            response?.data?.data?.cnpj ??
+            response?.data?.cnpj ??
+            response?.data?.response?.content?.cnpj ??
+            response?.data?.response?.content ??
+            null;
+
+          const razaoSocial =
+            cnpjData?.empresa?.razao_social ??
+            cnpjData?.razao_social ??
+            cnpjData?.empresa?.nome_empresarial ??
+            cnpjData?.nome_empresarial ??
+            "";
+
+          const emailValue =
+            cnpjData?.estabelecimento?.email ??
+            cnpjData?.email ??
+            cnpjData?.empresa?.email ??
+            cnpjData?.empresa?.email_contato ??
+            "";
+
+          const buildPhone = (ddd?: string | number | null, phone?: string | number | null) => {
+            const dddDigits = digitsOnly(String(ddd ?? ""));
+            const phoneDigits = digitsOnly(String(phone ?? ""));
+            if (!dddDigits && !phoneDigits) return "";
+            if (phoneDigits.startsWith(dddDigits)) {
+              return phoneDigits;
+            }
+            return `${dddDigits}${phoneDigits}`;
+          };
+
+          const phoneCandidates = [
+            buildPhone(cnpjData?.estabelecimento?.ddd1, cnpjData?.estabelecimento?.telefone1),
+            buildPhone(cnpjData?.estabelecimento?.ddd2, cnpjData?.estabelecimento?.telefone2),
+            buildPhone(cnpjData?.estabelecimento?.ddd3, cnpjData?.estabelecimento?.telefone3),
+            digitsOnly(cnpjData?.telefone ?? ""),
+            digitsOnly(cnpjData?.telefone1 ?? ""),
+            digitsOnly(cnpjData?.telefone2 ?? ""),
+          ];
+
+          const phoneDigits = phoneCandidates.find((candidate) => candidate.length >= 10) ?? "";
+          const maskedPhone = phoneDigits ? maskPhone(phoneDigits) : "";
+
+          const statusValue =
+            cnpjData?.empresa?.situacao_cadastral ??
+            cnpjData?.situacao_cadastral ??
+            cnpjData?.situacao ??
+            cnpjData?.status ??
+            cnpjData?.estabelecimento?.situacao_cadastral ??
+            null;
+
+          const statusText =
+            typeof statusValue === "string"
+              ? statusValue
+              : typeof statusValue === "number"
+                ? String(statusValue)
+                : statusValue && typeof statusValue === "object"
+                  ? String(
+                      (statusValue as Record<string, unknown>).descricao ??
+                        (statusValue as Record<string, unknown>).description ??
+                        (statusValue as Record<string, unknown>).nome ??
+                        (statusValue as Record<string, unknown>).codigo ??
+                        "",
+                    )
+                  : "";
+
+          setCnpjStatus(statusText || null);
+          setCnpjVerified(true);
+
           updateFormData("personal", {
-            name: formatName(cnpjData.empresa?.razao_social || ""),
-            companyName: formatName(cnpjData.empresa?.razao_social || ""),
-            shareholderName: formatName(cnpjData.socios?.[0]?.nome_socio || ""),
+            name: formatName(razaoSocial || ""),
+            companyName: formatName(razaoSocial || ""),
+            shareholderName: formatName(cnpjData?.socios?.[0]?.nome_socio || ""),
+            email: emailValue || formData.personal.email,
+            phone: maskedPhone || formData.personal.phone,
           });
           toast.success("Dados da empresa carregados!");
+        } else {
+          setCnpjStatus(null);
+          setCnpjVerified(false);
         }
       }
     } catch (error) {
       console.error("Erro ao buscar documento:", error);
+      setCnpjStatus(null);
+      setCnpjVerified(false);
     } finally {
       setSearchingDoc(false);
     }
@@ -199,6 +350,20 @@ export default function Step2PersonalData({
                 placeholder="Nome completo"
               />
             </div>
+
+            {formData.personType === "PJ" && (
+              <div className="space-y-2 md:col-span-3">
+                <Label>Status do CNPJ (Receita)</Label>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={cnpjStatusTone} className="shadow-none">
+                    {cnpjStatusLabel}
+                  </StatusBadge>
+                  <StatusBadge status={cnpjVerificationTone} className="shadow-none">
+                    {cnpjVerificationLabel}
+                  </StatusBadge>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-2 md:col-span-2">
               <Label>E-mail</Label>
