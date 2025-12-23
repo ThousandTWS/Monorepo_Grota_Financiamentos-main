@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
-import { Label } from "@/presentation/ui/label";
-import { Button } from "@/presentation/ui/button";
-import { Switch } from "@/presentation/ui/switch";
-import { Separator } from "@/presentation/ui/separator";
+import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
+import { Label } from "@/presentation/layout/components/ui/label";
+import { Button } from "@/presentation/layout/components/ui/button";
+import { Switch } from "@/presentation/layout/components/ui/switch";
+import { Separator } from "@/presentation/layout/components/ui/separator";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -33,6 +33,7 @@ type Step4ReviewProps = {
   prevStep: () => void;
   clearData: () => void;
   goToStep: (step: number) => void;
+  dealerId?: number | null;
 };
 
 const addMonths = (date: Date, months: number) => {
@@ -206,6 +207,7 @@ export default function Step4Review({
   prevStep,
   clearData,
   goToStep,
+  dealerId,
 }: Step4ReviewProps) {
   const [calculating, setCalculating] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -250,6 +252,11 @@ export default function Step4Review({
       return;
     }
 
+    if (dealerId == null) {
+      toast.error("Selecione a loja para vincular a simulacao.");
+      return;
+    }
+
     if (!calculation) {
       toast.error("Calculo nao disponivel. Recalcule a simulacao.");
       return;
@@ -264,6 +271,7 @@ export default function Step4Review({
       );
 
       const payload = {
+        dealerId,
         customerName: formData.personal.name,
         customerCpf: formData.personal.cpfCnpj,
         customerBirthDate: formData.personal.birthday || undefined,
@@ -588,7 +596,9 @@ export default function Step4Review({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={submitting || !formData.acceptLgpd || !calculation}
+          disabled={
+            submitting || !formData.acceptLgpd || !calculation || dealerId == null
+          }
           size="lg"
           className="bg-green-600 hover:bg-green-700"
         >

@@ -71,6 +71,7 @@
     "flatpickr": "^4.6.13",
     "framer-motion": "^12.23.18",
     "input-otp": "^1.4.2",
+    "jspdf": "^2.5.2",
     "keyv": "^5.5.5",
     "lucide-react": "^0.544.0",
     "minifaker": "^1.34.1",

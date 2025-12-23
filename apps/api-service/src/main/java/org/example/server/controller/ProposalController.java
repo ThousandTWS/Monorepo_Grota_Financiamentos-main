@@ -57,4 +57,10 @@ public class ProposalController {
     ) {
         return ResponseEntity.ok(proposalService.listEvents(id));
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        proposalService.deleteProposal(id);
+        return ResponseEntity.noContent().build();
+    }
 }

@@ -1,17 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
-import { Label } from "@/presentation/ui/label";
-import { Input } from "@/presentation/ui/input";
-import { Button } from "@/presentation/ui/button";
+import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
+import { Label } from "@/presentation/layout/components/ui/label";
+import { Input } from "@/presentation/layout/components/ui/input";
+import { Button } from "@/presentation/layout/components/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/presentation/ui/select";
-import { Switch } from "@/presentation/ui/switch";
-import { ArrowRight, Car, Loader2 } from "lucide-react";
+} from "@/presentation/layout/components/ui/select";
+import { Switch } from "@/presentation/layout/components/ui/switch";
+import { ArrowRight, Car, Loader2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   type Ano,
@@ -22,6 +22,8 @@ import {
   getModelos,
   getValorVeiculo,
 } from "@/application/services/fipe";
+import { getAllSellers, type Seller } from "@/application/services/Seller/sellerService";
+import type { Dealer } from "@/application/services/Logista/logisticService";
 import { formatNumberToBRL, parseBRL } from "@/lib/formatters";
 import {
   SimulatorFormData,
@@ -34,6 +36,10 @@ type Step1VehicleOperationProps = {
   updateFormData: UpdateSimulatorFormData;
   updateField: UpdateSimulatorField;
   nextStep: () => void;
+  dealers: Dealer[];
+  dealersLoading: boolean;
+  selectedDealerId: number | null;
+  onDealerChange: (dealerId: number | null) => void;
 };
 
 const getVehicleTypeId = (category: SimulatorFormData["vehicleCategory"]) => {
@@ -47,6 +53,10 @@ export default function Step1VehicleOperation({
   updateFormData,
   updateField,
   nextStep,
+  dealers,
+  dealersLoading,
+  selectedDealerId,
+  onDealerChange,
 }: Step1VehicleOperationProps) {
   const [financedInput, setFinancedInput] = useState("");
   const [downPaymentInput, setDownPaymentInput] = useState("");
@@ -55,6 +65,8 @@ export default function Step1VehicleOperation({
   const [brands, setBrands] = useState<Marca[]>([]);
   const [models, setModels] = useState<Modelo[]>([]);
   const [years, setYears] = useState<Ano[]>([]);
+  const [sellers, setSellers] = useState<Seller[]>([]);
+  const [loadingSellers, setLoadingSellers] = useState(false);
   const [loadingBrands, setLoadingBrands] = useState(false);
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingYears, setLoadingYears] = useState(false);
@@ -88,6 +100,44 @@ export default function Step1VehicleOperation({
 
     loadBrands();
   }, [formData.vehicleCategory, vehicleTypeId]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!selectedDealerId) {
+      setSellers([]);
+      setLoadingSellers(false);
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const loadSellers = async () => {
+      try {
+        setLoadingSellers(true);
+        const data = await getAllSellers(selectedDealerId);
+        if (mounted) {
+          setSellers(data);
+        }
+      } catch (error) {
+        console.error("[admin][simulador] loadSellers", error);
+        toast.error("Erro ao carregar vendedores vinculados.");
+        if (mounted) {
+          setSellers([]);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingSellers(false);
+        }
+      }
+    };
+
+    void loadSellers();
+
+    return () => {
+      mounted = false;
+    };
+  }, [selectedDealerId]);
 
   useEffect(() => {
     if (financedFocusedRef.current) return;
@@ -214,6 +264,11 @@ export default function Step1VehicleOperation({
   const validateStep = () => {
     const { vehicle, financial } = formData;
 
+    if (!selectedDealerId) {
+      toast.error("Selecione a loja para vincular a simulacao");
+      return false;
+    }
+
     if (!vehicle.brand || !vehicle.model || !vehicle.year) {
       toast.error("Por favor, selecione marca, modelo e ano do veiculo");
       return false;
@@ -248,6 +303,44 @@ export default function Step1VehicleOperation({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="dealerId">Loja</Label>
+            <Select
+              value={selectedDealerId ? String(selectedDealerId) : ""}
+              onValueChange={(value) =>
+                onDealerChange(value ? Number(value) : null)
+              }
+              disabled={dealersLoading || dealers.length === 0}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    dealersLoading
+                      ? "Carregando lojas..."
+                      : dealers.length
+                        ? "Selecione a loja"
+                        : "Nenhuma loja encontrada"
+                  }
+                />
+              </SelectTrigger>
+              <SelectContent>
+                {dealers.map((dealer) => {
+                  const labelBase =
+                    dealer.enterprise || dealer.fullName || `Lojista #${dealer.id}`;
+                  const label = dealer.referenceCode
+                    ? `${labelBase} - ${dealer.referenceCode}`
+                    : labelBase;
+
+                  return (
+                    <SelectItem key={dealer.id} value={String(dealer.id)}>
+                      {label}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="personType">Tipo de Pessoa</Label>
@@ -336,6 +429,51 @@ export default function Step1VehicleOperation({
           </div>
         </CardContent>
       </Card>
+
+      {selectedDealerId && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#134B73]" />
+              <h2 className="text-lg font-semibold text-[#134B73]">
+                Vendedores vinculados
+              </h2>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {loadingSellers ? (
+              <p className="text-sm text-muted-foreground">
+                Carregando vendedores...
+              </p>
+            ) : sellers.length ? (
+              <div className="space-y-2">
+                {sellers.map((seller) => (
+                  <div
+                    key={seller.id}
+                    className="flex flex-col gap-2 rounded-lg border border-slate-200/70 p-3 sm:flex-row sm:items-center sm:justify-between"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">
+                        {seller.fullName || `Vendedor #${seller.id}`}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {seller.email || "--"}
+                      </p>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      {seller.phone || "--"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nenhum vendedor vinculado a esta loja.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

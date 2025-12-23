@@ -104,3 +104,45 @@ export async function POST(request: NextRequest) {
     body: JSON.stringify(body),
   });
 }
+
+export async function DELETE(request: NextRequest) {
+  const session = await resolveSession();
+  if (!session) {
+    return unauthorized();
+  }
+
+  const id = request.nextUrl.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json(
+      { error: "id e obrigatorio." },
+      { status: 400 },
+    );
+  }
+
+  const upstreamResponse = await fetch(`${API_BASE_URL}/proposals/${id}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  if (upstreamResponse.status === 204) {
+    return NextResponse.json({}, { status: 204 });
+  }
+
+  const payload = await upstreamResponse.json().catch(() => null);
+  if (!upstreamResponse.ok) {
+    const message =
+      (payload as { message?: string; error?: string })?.message ??
+      (payload as { error?: string })?.error ??
+      "Nao foi possivel remover a proposta.";
+    return NextResponse.json({ error: message }, {
+      status: upstreamResponse.status,
+    });
+  }
+
+  return NextResponse.json(payload ?? {}, {
+    status: upstreamResponse.status,
+  });
+}

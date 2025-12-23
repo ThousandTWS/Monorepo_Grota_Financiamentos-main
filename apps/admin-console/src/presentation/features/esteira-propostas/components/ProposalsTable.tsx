@@ -4,16 +4,28 @@ import { Card, CardContent, CardHeader } from "@/presentation/layout/components/
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/layout/components/ui/select";
 import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/presentation/layout/components/ui/alert-dialog";
 import { StatusBadge } from "../../logista/components/status-badge";
-import { Clock3, Eye, RefreshCw } from "lucide-react";
-import { useMemo } from "react";
+import { Clock3, Eye, RefreshCw, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type ProposalsTableProps = {
   proposals: Proposal[];
   isLoading?: boolean;
   updatingId: number | null;
+  deletingId?: number | null;
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
+  onDelete: (proposal: Proposal) => Promise<void> | void;
   dealersById?: Record<number, { name: string; enterprise?: string }>;
   sellersById?: Record<number, string>;
 };
@@ -52,11 +64,27 @@ export function ProposalsTable({
   proposals,
   isLoading,
   updatingId,
+  deletingId = null,
   onStatusChange,
+  onDelete,
   dealersById = {},
   sellersById = {},
 }: ProposalsTableProps) {
   const router = useRouter();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Proposal | null>(null);
+
+  const handleOpenDelete = (proposal: Proposal) => {
+    setDeleteTarget(proposal);
+    setDeleteOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    await Promise.resolve(onDelete(deleteTarget));
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+  };
 
   const cards = useMemo(() => {
     return proposals.map((proposal) => {
@@ -194,11 +222,54 @@ export function ProposalsTable({
                   <RefreshCw className="size-4" />
                   Sincronizar
                 </Button>
+                <Button
+                  variant="destructive"
+                  className="gap-2"
+                  onClick={() => handleOpenDelete(proposal)}
+                  disabled={deletingId === proposal.id}
+                >
+                  <Trash2 className="size-4" />
+                  Excluir proposta
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
       ))}
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          setDeleteOpen(open);
+          if (!open) {
+            setDeleteTarget(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusao</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir a proposta de{" "}
+              <span className="font-semibold text-foreground">
+                {deleteTarget?.customerName ?? "--"}
+              </span>
+              ? Esta acao nao pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingId === deleteTarget?.id}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-white hover:bg-destructive/90"
+              disabled={deletingId === deleteTarget?.id}
+            >
+              {deletingId === deleteTarget?.id ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

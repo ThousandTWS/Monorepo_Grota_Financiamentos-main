@@ -82,6 +82,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/dealers/logo").hasRole("LOJISTA")
                         // Propostas - criação permitida para ADMIN, OPERADOR e VENDEDOR
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/proposals").hasAnyRole("ADMIN", "OPERADOR", "VENDEDOR", "LOJISTA")
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/grota-financiamentos/proposals/*").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

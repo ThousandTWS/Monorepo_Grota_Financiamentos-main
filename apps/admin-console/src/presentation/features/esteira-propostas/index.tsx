@@ -16,6 +16,7 @@ import {
 } from "@/application/core/@types/Proposals/Proposal";
 import {
   fetchProposals,
+  deleteProposal,
   updateProposalStatus,
 } from "@/application/services/Proposals/proposalService";
 import { useToast } from "@/application/core/hooks/use-toast";
@@ -94,6 +95,7 @@ export default function EsteiraDePropostasFeature() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
   const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
 
@@ -404,6 +406,34 @@ export default function EsteiraDePropostasFeature() {
     }
   };
 
+  const handleDeleteProposal = async (proposal: Proposal) => {
+    setDeletingId(proposal.id);
+    try {
+      await deleteProposal(proposal.id);
+      setProposals((current) => current.filter((item) => item.id !== proposal.id));
+      toast({
+        title: "Proposta excluida",
+        description: `A proposta de ${proposal.customerName} foi removida.`,
+        variant: "destructive",
+      });
+      dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
+        source: ADMIN_PROPOSALS_IDENTITY,
+        reason: "admin-delete",
+      });
+    } catch (error) {
+      console.error("[Admin Esteira] Falha ao excluir proposta", error);
+      const message =
+        error instanceof Error ? error.message : "Nao foi possivel excluir a proposta.";
+      toast({
+        title: "Erro ao excluir",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
   const handleCreate = () => {
     toast({
       title: "Fluxo de cadastro em desenvolvimento",
@@ -450,7 +480,9 @@ export default function EsteiraDePropostasFeature() {
         proposals={filteredProposals}
         isLoading={isLoading}
         onStatusChange={handleStatusUpdate}
+        onDelete={handleDeleteProposal}
         updatingId={updatingId}
+        deletingId={deletingId}
         dealersById={dealerIndex}
         sellersById={sellerIndex}
       />

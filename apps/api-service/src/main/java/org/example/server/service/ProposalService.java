@@ -119,6 +119,15 @@ public class ProposalService {
         return toResponse(saved);
     }
 
+    @Transactional
+    public void deleteProposal(Long id) {
+        @SuppressWarnings("null")
+        Proposal proposal = proposalRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Proposta nao encontrada"));
+        proposalEventRepository.deleteAllByProposal(proposal);
+        proposalRepository.delete(proposal);
+    }
+
     @Transactional(readOnly = true)
     public List<ProposalEventResponseDTO> listEvents(Long proposalId) {
         @SuppressWarnings("null")

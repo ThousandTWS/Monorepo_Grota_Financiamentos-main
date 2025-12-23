@@ -1,5 +1,14 @@
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { LayoutDashboard, ClipboardList, Users2, Building2, BadgeCheck, ShieldCheck, UserCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Users2,
+  Building2,
+  BadgeCheck,
+  ShieldCheck,
+  UserCog,
+  FileText,
+} from "lucide-react";
 
 export const navItems: NavItem[] = [
   {
@@ -23,6 +32,12 @@ export const navItems: NavItem[] = [
         path: "/esteira-de-propostas", 
         pro: false,
         icon: <ClipboardList size={16} />
+      },
+      { 
+        name: "Simulador", 
+        path: "/simulacao/novo", 
+        pro: false,
+        icon: <FileText size={16} />
       },
     ],
   },

@@ -165,6 +165,28 @@ export const updateProposalStatus = async (
   return ProposalSchema.parse(payloadResponse);
 };
 
+export const deleteProposal = async (proposalId: number): Promise<void> => {
+  const response = await fetch(`${PROPOSALS_ENDPOINT}?id=${proposalId}`, {
+    method: "DELETE",
+    credentials: "include",
+    cache: "no-store",
+  });
+
+  if (response.status === 204) {
+    return;
+  }
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    const message =
+      (payload as { error?: string; message?: string })?.error ??
+      (payload as { message?: string })?.message ??
+      "Nao foi possivel remover a proposta.";
+    throw new Error(message);
+  }
+};
+
 export const fetchProposalTimeline = async (
   proposalId: number,
 ): Promise<z.infer<typeof ProposalEventSchema>[]> => {
