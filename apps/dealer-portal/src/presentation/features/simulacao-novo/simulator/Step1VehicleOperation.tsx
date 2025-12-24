@@ -42,6 +42,9 @@ const getVehicleTypeId = (category: SimulatorFormData["vehicleCategory"]) => {
   return 1;
 };
 
+const requiredSelectTriggerClass =
+  "w-full bg-[#134B73] text-white border-[#134B73] data-[placeholder]:text-white/80 [&_svg:not([class*='text-'])]:text-white focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
+
 export default function Step1VehicleOperation({
   formData,
   updateFormData,
@@ -268,7 +271,7 @@ export default function Step1VehicleOperation({
                   });
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={requiredSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -286,7 +289,7 @@ export default function Step1VehicleOperation({
                   updateField("operationType", value as SimulatorFormData["operationType"])
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className={requiredSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -323,7 +326,7 @@ export default function Step1VehicleOperation({
                   setYears([]);
                 }}
               >
-                <SelectTrigger>
+                <SelectTrigger className={requiredSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -362,7 +365,7 @@ export default function Step1VehicleOperation({
                 onValueChange={handleBrandChange}
                 disabled={loadingBrands || !brands.length}
               >
-              <SelectTrigger className="w-full bg-white text-slate-900">
+              <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingBrands ? "Carregando..." : "Selecione a marca"} />
               </SelectTrigger>
                 <SelectContent>
@@ -386,7 +389,7 @@ export default function Step1VehicleOperation({
                 onValueChange={handleModelChange}
                 disabled={!formData.vehicle.brandCode || loadingModels}
               >
-              <SelectTrigger className="w-full bg-white text-slate-900">
+              <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingModels ? "Carregando..." : "Selecione o modelo"} />
               </SelectTrigger>
                 <SelectContent>
@@ -410,7 +413,7 @@ export default function Step1VehicleOperation({
                 onValueChange={handleYearChange}
                 disabled={!formData.vehicle.modelCode || loadingYears}
               >
-              <SelectTrigger className="w-full bg-white text-slate-900">
+              <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingYears ? "Carregando..." : "Selecione o ano"} />
               </SelectTrigger>
                 <SelectContent>

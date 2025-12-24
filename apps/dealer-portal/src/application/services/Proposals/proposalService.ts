@@ -69,6 +69,14 @@ const ProposalEventSchema = z.object({
 
 const ProposalEventListSchema = z.array(ProposalEventSchema);
 
+const refreshSession = async () => {
+  const response = await fetch("/api/auth/me", {
+    credentials: "include",
+    cache: "no-store",
+  });
+  return response.ok;
+};
+
 const buildQuery = (filters: ProposalFilters) => {
   const params = new URLSearchParams();
   if (filters.status && statusSchema.safeParse(filters.status).success) {
@@ -108,15 +116,24 @@ export const fetchProposals = async (
 export const createProposal = async (
   payload: CreateProposalPayload,
 ): Promise<Proposal> => {
-  const response = await fetch(PROPOSALS_ENDPOINT, {
-    method: "POST",
-    credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-    cache: "no-store",
-  });
+  const request = () =>
+    fetch(PROPOSALS_ENDPOINT, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+      cache: "no-store",
+    });
+
+  let response = await request();
+  if (response.status === 401) {
+    const refreshed = await refreshSession();
+    if (refreshed) {
+      response = await request();
+    }
+  }
 
   const payloadResponse = await response.json().catch(() => null);
 

@@ -15,6 +15,45 @@ type Step3ProfessionalDataProps = {
   prevStep: () => void;
 };
 
+const BRAZIL_STATES = [
+  { uf: "AC", state: "Acre", capital: "Rio Branco" },
+  { uf: "AL", state: "Alagoas", capital: "Maceio" },
+  { uf: "AP", state: "Amapa", capital: "Macapa" },
+  { uf: "AM", state: "Amazonas", capital: "Manaus" },
+  { uf: "BA", state: "Bahia", capital: "Salvador" },
+  { uf: "CE", state: "Ceara", capital: "Fortaleza" },
+  { uf: "DF", state: "Distrito Federal", capital: "Brasilia" },
+  { uf: "ES", state: "Espirito Santo", capital: "Vitoria" },
+  { uf: "GO", state: "Goias", capital: "Goiania" },
+  { uf: "MA", state: "Maranhao", capital: "Sao Luis" },
+  { uf: "MT", state: "Mato Grosso", capital: "Cuiaba" },
+  { uf: "MS", state: "Mato Grosso do Sul", capital: "Campo Grande" },
+  { uf: "MG", state: "Minas Gerais", capital: "Belo Horizonte" },
+  { uf: "PA", state: "Para", capital: "Belem" },
+  { uf: "PB", state: "Paraiba", capital: "Joao Pessoa" },
+  { uf: "PR", state: "Parana", capital: "Curitiba" },
+  { uf: "PE", state: "Pernambuco", capital: "Recife" },
+  { uf: "PI", state: "Piaui", capital: "Teresina" },
+  { uf: "RJ", state: "Rio de Janeiro", capital: "Rio de Janeiro" },
+  { uf: "RN", state: "Rio Grande do Norte", capital: "Natal" },
+  { uf: "RS", state: "Rio Grande do Sul", capital: "Porto Alegre" },
+  { uf: "RO", state: "Rondonia", capital: "Porto Velho" },
+  { uf: "RR", state: "Roraima", capital: "Boa Vista" },
+  { uf: "SC", state: "Santa Catarina", capital: "Florianopolis" },
+  { uf: "SP", state: "Sao Paulo", capital: "Sao Paulo" },
+  { uf: "SE", state: "Sergipe", capital: "Aracaju" },
+  { uf: "TO", state: "Tocantins", capital: "Palmas" },
+];
+
+const NATURALITY_OPTIONS = Array.from(
+  new Set(
+    BRAZIL_STATES.flatMap(({ state, capital, uf }) => [
+      `${capital} - ${uf}`,
+      `${state} - ${uf}`,
+    ]),
+  ),
+);
+
 export default function Step3ProfessionalData({
   formData,
   updateFormData,
@@ -127,7 +166,13 @@ export default function Step3ProfessionalData({
                   value={formData.personal.nationality}
                   onChange={(e) => updateFormData("personal", { nationality: e.target.value })}
                   placeholder="Cidade/Estado de nascimento"
+                  list="naturalidade-options"
                 />
+                <datalist id="naturalidade-options">
+                  {NATURALITY_OPTIONS.map((option) => (
+                    <option key={option} value={option} />
+                  ))}
+                </datalist>
               </div>
             )}
           </div>

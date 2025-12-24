@@ -47,7 +47,7 @@ export interface ProposalFilters {
 export interface CreateProposalPayload {
   dealerId?: number;
   sellerId?: number;
-  customerName: string;
+  customerName?: string;
   customerCpf: string;
   customerBirthDate?: string | null;
   customerEmail: string;
