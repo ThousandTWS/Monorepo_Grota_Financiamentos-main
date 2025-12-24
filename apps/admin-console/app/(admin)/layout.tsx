@@ -1,5 +1,6 @@
 "use client";
 import { useSidebar } from "@/application/core/context/SidebarContext";
+import { UserProvider } from "@/application/core/context/UserContext";
 import AppHeader from "@/presentation/layout/header/AppHeader";
 import AppSidebar from "@/presentation/layout/sidebar/AppSidebar";
 import Backdrop from "@/presentation/layout/sidebar/Backdrop";
@@ -20,18 +21,20 @@ export default function AdminLayout({
       : "lg:ml-[90px]";
 
   return (
-    <div className="min-h-screen xl:flex">
-      <AppSidebar />
-      <Backdrop />
-      <div
-        className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}
-      >
-        <AppHeader />
+    <UserProvider>
+      <div className="min-h-screen xl:flex">
+        <AppSidebar />
+        <Backdrop />
+        <div
+          className={`flex-1 transition-all duration-300 ease-in-out ${mainContentMargin}`}
+        >
+          <AppHeader />
 
-        <div>
-          {children}
+          <div>
+            {children}
+          </div>
         </div>
       </div>
-    </div>
+    </UserProvider>
   );
 }

@@ -1,20 +1,19 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import { Send, Hourglass, BadgeCheck, Ban } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/presentation/layout/components/ui/card";
 import { fetchProposals } from "@/application/services/Proposals/proposalService";
 import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import { cn } from "@/lib/utils";
 import { getAllSellers, Seller } from "@/application/services/Seller/sellerService";
 import { getAllLogistics } from "@/application/services/Logista/logisticService";
+import { useUser } from "@/application/core/context/UserContext";
 import { StatusBadge } from "../../logista/components/status-badge";
 
 type StatusPanel = {
-  key: ProposalStatus | "REVIEW";
+  key: ProposalStatus;
   title: string;
-  accent: string;
-  icon: React.ReactNode;
   statuses: ProposalStatus[];
 };
 
@@ -22,29 +21,21 @@ const PANELS: StatusPanel[] = [
   {
     key: "SUBMITTED",
     title: "Propostas Enviadas",
-    accent: "bg-[#134B73] text-white",
-    icon: <Send className="h-5 w-5" />,
     statuses: ["SUBMITTED"],
   },
   {
     key: "PENDING",
-    title: "Em Análise",
-    accent: "bg-[#134B73] text-white",
-    icon: <Hourglass className="h-5 w-5" />,
+    title: "Em Analise",
     statuses: ["PENDING"],
   },
   {
     key: "APPROVED",
     title: "Aprovadas",
-    accent: "bg-[#134B73] text-white",
-    icon: <BadgeCheck className="h-5 w-5" />,
     statuses: ["APPROVED"],
   },
   {
     key: "REJECTED",
     title: "Reprovadas",
-    accent: "bg-[#134B73] text-white",
-    icon: <Ban className="h-5 w-5" />,
     statuses: ["REJECTED"],
   },
 ];
@@ -56,12 +47,53 @@ const currency = (value: number) =>
     maximumFractionDigits: 2,
   }).format(value);
 
+type TrendDirection = "up" | "down" | "flat";
+
+const formatPercent = (value: number) => {
+  const formatter = new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 1 });
+  const sign = value > 0 ? "+" : value < 0 ? "-" : "";
+  return `${sign}${formatter.format(Math.abs(value))}%`;
+};
+
+const getTrend = (current: number, previous: number) => {
+  if (previous === 0) {
+    if (current === 0) {
+      return { direction: "flat" as const, percent: 0 };
+    }
+    return { direction: "up" as const, percent: 100 };
+  }
+
+  const percent = ((current - previous) / previous) * 100;
+  if (percent > 0) {
+    return { direction: "up" as const, percent };
+  }
+  if (percent < 0) {
+    return { direction: "down" as const, percent };
+  }
+  return { direction: "flat" as const, percent: 0 };
+};
+
+const trendStyles: Record<TrendDirection, string> = {
+  up: "border-emerald-400/40 bg-emerald-500/15 text-emerald-200",
+  down: "border-rose-400/40 bg-rose-500/15 text-rose-200",
+  flat: "border-slate-400/40 bg-slate-500/15 text-slate-200",
+};
+
+const trendCopy: Record<TrendDirection, string> = {
+  up: "Alta nas ultimas 4 semanas",
+  down: "Queda nas ultimas 4 semanas",
+  flat: "Estavel nas ultimas 4 semanas",
+};
+
+const trendWindowLabel = "vs 30 dias anteriores";
+
 export function QuickStats() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [dealers, setDealers] = useState<{ id: number; fullName?: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const { user } = useUser();
 
   useEffect(() => {
     const load = async () => {
@@ -86,26 +118,51 @@ export function QuickStats() {
     load();
   }, []);
 
+  const firstName = useMemo(() => {
+    const fullName = user?.fullName?.trim();
+    if (!fullName) return "";
+    return fullName.split(/\s+/)[0] ?? "";
+  }, [user?.fullName]);
+
   const summary = useMemo(() => {
     const base = PANELS.map((panel) => ({
       key: panel.key,
       title: panel.title,
-      accent: panel.accent,
-      icon: panel.icon,
       count: 0,
       total: 0,
+      current: 0,
+      previous: 0,
     }));
 
     const map = Object.fromEntries(base.map((item) => [item.key, item]));
 
+    const now = Date.now();
+    const currentStart = now - 30 * 24 * 60 * 60 * 1000;
+    const previousStart = now - 60 * 24 * 60 * 60 * 1000;
+
     proposals.forEach((proposal) => {
       const target = PANELS.find((panel) => panel.statuses.includes(proposal.status));
       if (!target) return;
-      map[target.key].count += 1;
-      map[target.key].total += proposal.financedValue ?? 0;
+
+      const entry = map[target.key];
+      entry.count += 1;
+      entry.total += proposal.financedValue ?? 0;
+
+      const createdAt = proposal.createdAt
+        ? new Date(proposal.createdAt).getTime()
+        : Number.NaN;
+      if (Number.isNaN(createdAt)) return;
+      if (createdAt >= currentStart) {
+        entry.current += 1;
+      } else if (createdAt >= previousStart && createdAt < currentStart) {
+        entry.previous += 1;
+      }
     });
 
-    return Object.values(map);
+    return Object.values(map).map((item) => ({
+      ...item,
+      trend: getTrend(item.current, item.previous),
+    }));
   }, [proposals]);
 
   const topSellers = useMemo(() => {
@@ -201,10 +258,10 @@ export function QuickStats() {
   }, [proposals]);
 
   const statusBadgeConfig: Record<ProposalStatus, string> = {
-    SUBMITTED: "bg-sky-500/10 text-sky-700 border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-200 dark:border-sky-500/40",
-    PENDING: "bg-amber-500/10 text-amber-700 border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/40",
-    APPROVED: "bg-emerald-500/10 text-emerald-700 border-emerald-500/30 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/40",
-    REJECTED: "bg-rose-500/10 text-rose-700 border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/40",
+    SUBMITTED: "bg-sky-500/20 text-sky-100 border-sky-400/30",
+    PENDING: "bg-amber-500/20 text-amber-100 border-amber-400/30",
+    APPROVED: "bg-emerald-500/20 text-emerald-100 border-emerald-400/30",
+    REJECTED: "bg-rose-500/20 text-rose-100 border-rose-400/30",
   };
 
   const statusLabel: Record<ProposalStatus, string> = {
@@ -225,66 +282,93 @@ export function QuickStats() {
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-6">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="text-2xl font-semibold text-slate-900">
+          Olá seja bem vindo {firstName ? `, ${firstName}` : ""}
+        </h2>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
+          Visao Geral
+        </p>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {summary.map((item) => (
-          <Card
-            key={item.key}
-            className="overflow-hidden border border-border/60 shadow-sm"
-          >
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2 text-[#134B73]">
-              <span
-                className={cn(
-                  "inline-flex items-center justify-center rounded-full px-2.5 py-1 text-xs font-semibold",
-                  item.accent,
+        {summary.map((item) => {
+          const trend = item.trend;
+          const TrendIcon =
+            trend.direction === "up"
+              ? TrendingUp
+              : trend.direction === "down"
+                ? TrendingDown
+                : Minus;
+
+          return (
+            <Card
+              key={item.key}
+         
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg  p-6 md:p-8"
+            >
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-white/5 via-transparent to-white/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <div className="relative space-y-4">
+                <div className="flex items-start justify-between gap-3">
+                  <p className="text-sm text-slate-300">{item.title}</p>
+                  {isLoading ? (
+                    <div className="h-6 w-16 rounded-full bg-white/10 animate-pulse" />
+                  ) : (
+                    <span
+                     
+                    >
+                    </span>
+                  )}
+                </div>
+
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <div className="h-8 w-24 rounded-md bg-white/10 animate-pulse" />
+                    <div className="h-4 w-36 rounded-md bg-white/10 animate-pulse" />
+                    <div className="h-3 w-40 rounded-md bg-white/10 animate-pulse" />
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="text-3xl font-semibold tracking-tight">
+                      {item.count}
+                    </div>
+                    <p className="text-sm text-slate-300">
+                      {item.count === 1 ? "proposta" : "propostas"} - {currency(item.total)}
+                    </p>
+                   
+                  </div>
                 )}
-                >
-                  {item.icon}
-                </span>
-                {item.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {isLoading ? (
-                <div className="h-20 rounded-md bg-muted animate-pulse" />
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-[#134B73]">{item.count}</div>
-                  <p className="text-sm text-[#0f3c5a]">
-                    {item.count === 1 ? "proposta" : "propostas"} · {currency(item.total)}
-                  </p>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        ))}
+              </div>
+            </Card>
+          );
+        })}
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <Card className="overflow-hidden border border-white/10 bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Top 3 Vendedores</CardTitle>
+            <CardTitle className="text-sm font-semibold text-white/90">Top 3 Vendedores</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {isLoading ? (
-              <div className="h-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-24 rounded-md bg-white/10 animate-pulse" />
             ) : (
               <ol className="space-y-2 text-sm">
                 {topSellers.map((seller, index) => (
                   <li
                     key={`${seller.sellerId}-${index}`}
-                    className="flex items-center justify-between rounded-md border border-border/50 bg-muted/40 px-3 py-2"
+                    className="flex items-center justify-between rounded-md border border-white/15 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15"
                   >
                     <div>
                       <p className="font-semibold">
                         {index + 1}º {seller.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-300">
                         {seller.count} {seller.count === 1 ? "proposta" : "propostas"}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-white">
                       {currency(seller.total)}
                     </span>
                   </li>
@@ -294,29 +378,29 @@ export function QuickStats() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <Card className="overflow-hidden border border-white/10 bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Top 3 Lojas</CardTitle>
+            <CardTitle className="text-sm font-semibold text-white/90">Top 3 Lojas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {isLoading ? (
-              <div className="h-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-24 rounded-md bg-white/10 animate-pulse" />
             ) : (
               <ol className="space-y-2 text-sm">
                 {topDealers.map((dealer, index) => (
                   <li
                     key={`${dealer.dealerId}-${index}`}
-                    className="flex items-center justify-between rounded-md border border-border/50 bg-muted/40 px-3 py-2"
+                    className="flex items-center justify-between rounded-md border border-white/15 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15"
                   >
                     <div>
                       <p className="font-semibold">
                         {index + 1}º {dealer.name}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-300">
                         {dealer.count} {dealer.count === 1 ? "proposta" : "propostas"}
                       </p>
                     </div>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm font-semibold text-white">
                       {currency(dealer.total)}
                     </span>
                   </li>
@@ -326,15 +410,15 @@ export function QuickStats() {
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border border-border/60 shadow-sm">
+        <Card className="overflow-hidden border border-white/10 bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">Últimas 5 Propostas</CardTitle>
+            <CardTitle className="text-sm font-semibold text-white/90">Últimas 5 Propostas</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {isLoading ? (
-              <div className="h-24 rounded-md bg-muted animate-pulse" />
+              <div className="h-24 rounded-md bg-white/10 animate-pulse" />
             ) : lastProposals.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-300">
                 Nenhuma proposta encontrada.
               </p>
             ) : (
@@ -342,13 +426,13 @@ export function QuickStats() {
                 {lastProposals.map((proposal) => (
                   <div
                     key={proposal.id}
-                    className="flex items-center justify-between rounded-md border border-border/50 bg-muted/40 px-3 py-2"
+                    className="flex items-center justify-between rounded-md border border-white/15 bg-white/10 px-3 py-2 text-white transition-colors hover:bg-white/15"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold truncate">
                         #{proposal.id} · {proposal.customerName}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-xs text-slate-300">
                         {new Date(proposal.createdAt).toLocaleDateString("pt-BR")}
                       </p>
                     </div>

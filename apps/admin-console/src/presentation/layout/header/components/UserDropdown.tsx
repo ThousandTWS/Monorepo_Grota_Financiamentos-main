@@ -1,44 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "lucide-react";
+import { useUser } from "@/application/core/context/UserContext";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
-import userServices, {
-  type AuthenticatedUser,
-} from "@/application/services/UserServices/UserServices";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<AuthenticatedUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, isLoading } = useUser();
   const router = useRouter();
-
-  useEffect(() => {
-    let mounted = true;
-
-    const loadUser = async () => {
-      try {
-        const data = await userServices.me();
-        if (mounted) {
-          setUser(data);
-        }
-      } catch (error) {
-        console.warn("[admin] não foi possível carregar o usuário", error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    loadUser();
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const toggleDropdown = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
@@ -77,7 +49,7 @@ export default function UserDropdown() {
           {initials ? <span className="font-semibold">{initials}</span> : <User size={22} />}
         </span>
         <span className="block mr-1 font-medium text-theme-sm text-white">
-          {loading ? "Carregando..." : user?.fullName ?? "Administrador"}
+          {isLoading ? "Carregando..." : user?.fullName ?? "Administrador"}
         </span>
         <svg
           className={`stroke-white transition-transform duration-200 ${

@@ -105,10 +105,10 @@ export function FinancingChart() {
         type: "area",
         height: 350,
         toolbar: {
-          show: false,
+          show: true,
         },
         zoom: {
-          enabled: false,
+          enabled: true,
         },
         fontFamily: "Inter, sans-serif",
       },
@@ -128,20 +128,20 @@ export function FinancingChart() {
           stops: [0, 90, 100],
         },
       },
-      colors: ["#10B981", "#F59E0B"],
+      colors: ["#1B5FA0", "#9FCDED"],
       xaxis: {
         categories: months,
         labels: {
           style: {
             colors: "#64748B",
-            fontSize: "12px",
+            fontSize: "15px",
           },
         },
         axisBorder: {
-          show: false,
+          show: true,
         },
         axisTicks: {
-          show: false,
+          show: true,
         },
       },
       yaxis: {

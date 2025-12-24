@@ -189,7 +189,7 @@ export default function ConfiguracoesAdminPage() {
 
   return (
     <div className="space-y-8">
-      <div className=" bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg border border-white/10 p-6 md:p-8">
+      <div className="bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white shadow-theme-lg border border-white/10 p-6 md:p-8">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 md:h-20 md:w-20 rounded-2xl bg-white/15 border border-white/30 flex items-center justify-center overflow-hidden shadow-theme-lg">

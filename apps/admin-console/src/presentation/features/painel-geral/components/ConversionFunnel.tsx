@@ -34,6 +34,8 @@ const DEFAULT_STAGES: FunnelStage[] = [
   { label: "Finalizadas", value: 0 },
 ];
 
+const FUNNEL_COLORS = ["#0F4C81", "#1560A1", "#1C76BF", "#4B95D3", "#7BB4E5"];
+
 const enforceDescending = (stages: FunnelStage[]): FunnelStage[] => {
   let previous = stages.length > 0 ? stages[0].value : 0;
   return stages.map((stage, index) => {
@@ -114,32 +116,54 @@ export function ConversionFunnel() {
         type: "bar",
         height: 350,
         toolbar: {
-          show: false,
+          show: true,
         },
-        fontFamily: "Inter, sans-serif",
+        fontFamily: "Outfit, sans-serif",
+        foreColor: "#64748B",
       },
       plotOptions: {
         bar: {
-          borderRadius: 8,
+          borderRadius: 12,
           horizontal: true,
           distributed: true,
-          barHeight: "75%",
+          barHeight: "70%",
           isFunnel: true,
         },
       },
-      colors: ["#3B82F6", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"],
+      colors: FUNNEL_COLORS,
+      fill: {
+        type: "gradient",
+        gradient: {
+          shade: "light",
+          type: "horizontal",
+          shadeIntensity: 0.35,
+          gradientToColors: ["#1B5FA0", "#2A78BB", "#3E92D6", "#67ACE6", "#9FCDED"],
+          stops: [0, 100],
+        },
+      },
+      stroke: {
+        show: true,
+        width: 2,
+        colors: ["#F8FAFC"],
+      },
       dataLabels: {
         enabled: true,
-        formatter: function (_val, opt) {
-          return opt.w.globals.labels[opt.dataPointIndex];
-        },
+        formatter: (value) => `${Number(value).toLocaleString("pt-BR")}`,
         dropShadow: {
-          enabled: false,
+          enabled: true,
         },
         style: {
-          fontSize: "13px",
-          fontWeight: 600,
-          colors: ["#fff"],
+          fontSize: "12px",
+          fontWeight: 700,
+          colors: ["#0F172A"],
+        },
+        background: {
+          enabled: true,
+          foreColor: "#ffff",
+          padding: 6,
+          borderRadius: 8,
+          borderWidth: 0,
+          opacity: 0.92,
         },
       },
       xaxis: {
@@ -147,18 +171,33 @@ export function ConversionFunnel() {
         labels: {
           formatter: (value) => `${Number(value).toLocaleString("pt-BR")}`,
           style: {
-            colors: "#64748B",
-            fontSize: "12px",
+            colors: "#94A3B8",
+            fontSize: "11px",
           },
+        },
+        axisBorder: {
+          show: true,
+        },
+        axisTicks: {
+          show: true,
         },
       },
       yaxis: {
         labels: {
-          show: false,
+          show: true,
+          style: {
+            colors: "#334155",
+            fontSize: "12px",
+            fontWeight: 600,
+          },
         },
       },
       tooltip: {
         theme: "light",
+        fillSeriesColor: false,
+        marker: {
+          show: false,
+        },
         y: {
           formatter: (value) => `${value.toLocaleString("pt-BR")} propostas`,
           title: {
@@ -167,10 +206,14 @@ export function ConversionFunnel() {
         },
       },
       legend: {
-        show: false,
+        show: true,
       },
       grid: {
-        show: false,
+        show: true,
+        padding: {
+          left: 0,
+          right: 8,
+        },
       },
       states: {
         active: { filter: { type: "lighten", value: 0.05 } },
@@ -185,39 +228,60 @@ export function ConversionFunnel() {
   const finalized = useMemo(() => stages[4]?.value ?? 0, [stages]);
   const approvalRate = total ? Math.round((approved / total) * 100) : 0;
   const finalizationRate = total ? Math.round((finalized / total) * 100) : 0;
+  const statusDotClass = isLoading
+    ? "bg-amber-400"
+    : hasError
+      ? "bg-rose-400"
+      : "bg-emerald-400";
 
   return (
-    <Card className="w-full overflow-hidden border border-border/70 shadow-sm">
-      <CardHeader className="flex flex-col gap-4 bg-muted/40">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="text-lg font-semibold">Funil de Conversão</CardTitle>
-            <p className="text-sm text-muted-foreground">
+    <Card className="w-full overflow-visible border border-border/70 shadow-sm">
+      <CardHeader className="flex flex-col gap-4 border-b border-border/60 bg-gradient-to-br from-muted/60 via-muted/30 to-background/60">
+        <div className="flex min-w-0 flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1.5">
+            <CardTitle className="text-lg font-semibold text-foreground">Funil de Conversão</CardTitle>
+            <p className="text-sm text-muted-foreground max-w-md">
               Acompanhamento das propostas por etapa do funil.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-            <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2 shadow-sm min-w-[120px] text-right">
-              <p className="text-[11px] uppercase tracking-wide">Aprovação</p>
-              <p className="text-sm font-semibold text-foreground">{approvalRate}%</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2 shadow-sm min-w-[120px] text-right">
-              <p className="text-[11px] uppercase tracking-wide">Finalização</p>
-              <p className="text-sm font-semibold text-foreground">{finalizationRate}%</p>
-            </div>
-            <div className="rounded-lg border border-border/60 bg-background/60 px-3 py-2 shadow-sm min-w-[120px] text-right">
-              <p className="text-[11px] uppercase tracking-wide">Total</p>
-              <p className="text-sm font-semibold text-foreground">{total}</p>
+          <div className="w-full min-w-0 rounded-2xl border border-border/60 bg-background/70 shadow-sm backdrop-blur lg:max-w-[370px]">
+            <div className="grid grid-cols-3 divide-x divide-border/60">
+              <div className="px-1 py-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Aprovação
+                </p>
+                <p className="mt-1 text-lg font-semibold text-foreground tracking-tight">
+                  {approvalRate}
+                  <span className="text-xs text-muted-foreground">%</span>
+                </p>
+              </div>
+              <div className="px-1 py-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Finalizado
+                </p>
+                <p className="mt-1 text-lg font-semibold text-foreground tracking-tight">
+                  {finalizationRate}
+                  <span className="text-xs text-muted-foreground">%</span>
+                </p>
+              </div>
+              <div className="px-3 py-3.5 text-center">
+                <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Total
+                </p>
+                <p className="mt-1 text-xl font-semibold text-foreground tracking-tight">
+                  {total}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
             <StatusBadge
               status={
                 isLoading ? "pendente" : hasError ? "inativo" : "ativo"
               }
-              className="shadow-none px-3 py-1 text-[11px] uppercase tracking-wide"
+              className="shadow-none px-3 py-1 text-[11px] uppercase tracking-[0.2em]"
             >
               {isLoading
                 ? "Sincronizando"
@@ -225,7 +289,8 @@ export function ConversionFunnel() {
                   ? "Dados indisponíveis"
                   : "Dados em tempo real"}
             </StatusBadge>
-            <span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+              <span className={`h-1.5 w-1.5 rounded-full ${statusDotClass}`} />
               {lastUpdated
                 ? `Atualizado às ${lastUpdated.toLocaleTimeString("pt-BR", {
                     hour: "2-digit",
@@ -237,7 +302,7 @@ export function ConversionFunnel() {
           <Button
             variant="secondary"
             size="sm"
-            className="h-9"
+            className="h-9 rounded-full border border-border/60 bg-background/70 px-4 text-[11px] font-semibold uppercase tracking-[0.2em]"
             onClick={syncWithApi}
             disabled={isLoading}
           >

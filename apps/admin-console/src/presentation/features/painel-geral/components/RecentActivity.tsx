@@ -67,9 +67,8 @@ type ActivityStatus = keyof typeof typeConfig;
 const SALES_CHANNEL = REALTIME_CHANNELS.NOTIFICATIONS;
 const SALES_IDENTITY = "admin-sellers-activity";
 
-const formatTimeDistance = (value: string) => {
+const formatTimeDistance = (value: string, now = Date.now()) => {
   const timestamp = new Date(value).getTime();
-  const now = Date.now();
   const diff = Math.max(0, now - timestamp);
   const minute = 60 * 1000;
   const hour = 60 * minute;
@@ -104,6 +103,7 @@ export function RecentActivity() {
   const [activities, setActivities] = useState<SellerActivity[]>([]);
   const [sellersIndex, setSellersIndex] = useState<Record<number, Seller>>({});
   const [statusFilter, setStatusFilter] = useState<keyof typeof typeConfig | "all">("all");
+  const [now, setNow] = useState(() => Date.now());
 
   const { messages } = useRealtimeChannel({
     channel: SALES_CHANNEL,
@@ -112,6 +112,14 @@ export function RecentActivity() {
   });
 
   const lastMessage = messages[messages.length - 1];
+
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     const syncSellers = async () => {
@@ -178,38 +186,40 @@ export function RecentActivity() {
   }, [activities, sellersIndex, statusFilter]);
 
   const filterOptions = useMemo(() => ["all"] as const, []);
+  const uniqueSellerCount = useMemo(
+    () => new Set(activities.map((activity) => activity.sellerId)).size,
+    [activities],
+  );
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2">
+      <CardHeader className="flex flex-col gap-4 border-b border-border/60 bg-gradient-to-br from-muted/60 via-muted/30 to-background/60">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1.5">
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-foreground">
               <Filter className="h-4 w-4 text-muted-foreground" />
               Atividades recentes
             </CardTitle>
             <p className="text-sm text-muted-foreground">
               Eventos disparados pelos vendedores em tempo real.
             </p>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
                 <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                 Em tempo real
               </span>
-              <span>·</span>
+              <span className="text-muted-foreground/60">•</span>
               <span>{activities.length} eventos</span>
-              <span>·</span>
-              <span>
-                {new Set(activities.map((a) => a.sellerId)).size} vendedores
-              </span>
+              <span className="text-muted-foreground/60">•</span>
+              <span>{uniqueSellerCount} vendedores</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock3 className="h-4 w-4" />
+          <div className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-background/70 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            <Clock3 className="h-3.5 w-3.5" />
             <span>
               Atualizado{" "}
               {activities[0]
-                ? formatTimeDistance(activities[0].timestamp)
+                ? formatTimeDistance(activities[0].timestamp, now)
                 : "agora"}
             </span>
           </div>
@@ -230,7 +240,7 @@ export function RecentActivity() {
                 key={key}
                 variant={isActive ? "secondary" : "ghost"}
                 size="sm"
-                className="h-9 px-3 text-xs"
+                className="h-9 rounded-full border border-border/60 bg-background/70 px-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground"
                 onClick={() =>
                   setStatusFilter(key === "all" ? "all" : (key as ActivityStatus))
                 }
@@ -265,7 +275,7 @@ export function RecentActivity() {
                 return (
                   <div
                     key={activity.id}
-                    className="flex items-start gap-3 rounded-lg border border-border/60 bg-card/70 px-3 py-3 shadow-sm transition-colors hover:border-border hover:bg-card"
+                    className="flex items-start gap-3 rounded-xl border border-border/60 bg-card/70 px-3 py-3 shadow-sm transition-all hover:-translate-y-0.5 hover:border-border hover:bg-card hover:shadow-md"
                   >
                     <div className="relative">
                       <Avatar className="h-10 w-10 ring-2 ring-border/60">
@@ -289,7 +299,7 @@ export function RecentActivity() {
                           <span className="text-muted-foreground">{activity.action}</span>
                         </p>
                         <span className="text-[11px] text-muted-foreground whitespace-nowrap">
-                          {formatTimeDistance(activity.timestamp)}
+                          {formatTimeDistance(activity.timestamp, now)}
                         </span>
                       </div>
                       <div className="flex items-center gap-2">

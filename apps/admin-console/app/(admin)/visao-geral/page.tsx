@@ -1,8 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ConversionFunnel, DealersList, FinancingChart, ManagersList, OperatorsList, QuickStats, RecentActivity, SellersList } from "@/presentation/features/painel-geral";
 import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
+
+const surfaceClasses =
+  "rounded-2xl border border-slate-200/70 bg-white/80 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md";
 
 export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,45 +21,38 @@ export default function Dashboard() {
 
   return (
     <div
-      className="space-y-6 animate-in fade-in duration-500 px-4 pb-6 pt-4 sm:px-6 lg:px-8 max-w-7xl mx-auto"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100"
       data-oid="1bk:ed."
     >
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 sm:px-6 lg:px-8 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500">
+        <QuickStats />
 
-      <div className="space-y-2" data-oid="dlyu3j-">
-        <h1
-          className="text-3xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 bg-clip-text text-transparent"
-          data-oid="vrh59t9"
-        >
-          Visão Geral
-        </h1>
-        <p className="text-muted-foreground" data-oid="e14_6q2">
-          Acompanhe os principais indicadores e métricas de performance em tempo
-          real
-        </p>
-      </div>
-
-      <QuickStats data-oid="od:e37m" />
-
-      <div className="grid grid-cols-1 gap-6" data-oid="j5wmoo7">
-        <div className="w-full" data-oid="-xo.n7c">
-          <FinancingChart data-oid="p_3v5hj" />
+        <div className="grid grid-cols-1 gap-6" data-oid="j5wmoo7">
+          <div className={`${surfaceClasses} p-4 sm:p-5`} data-oid="-xo.n7c">
+            <FinancingChart data-oid="p_3v5hj" />
+          </div>
         </div>
-      </div>
 
-     
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" data-oid="c0nd6ji">
-        <ConversionFunnel data-oid="mt6yc_-" />
-        <RecentActivity data-oid="m.cymte" />
-      </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2" data-oid="c0nd6ji">
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <ConversionFunnel data-oid="mt6yc_-" />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <RecentActivity data-oid="m.cymte" />
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <DealersList />
-        <ManagersList />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <OperatorsList />
-        <SellersList />
+        <div className="grid grid-cols-1 gap-6">
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <ManagersList />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <OperatorsList />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <SellersList />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -64,35 +60,53 @@ export default function Dashboard() {
 
 function DashboardSkeleton() {
   return (
-    <div className="space-y-6 px-4 pb-6 pt-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="space-y-2">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-80" />
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <Skeleton className="h-8 w-60" />
+          <Skeleton className="h-3 w-24" />
+        </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={index} className="h-32 rounded-2xl" />
-        ))}
-      </div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={index} className="h-36 rounded-2xl" />
+          ))}
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <Skeleton className="h-80 rounded-2xl lg:col-span-2" />
-        <Skeleton className="h-80 rounded-2xl" />
-      </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          <div className={`${surfaceClasses} p-4 sm:p-5 lg:col-span-2`}>
+            <Skeleton className="h-72 rounded-2xl" />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <Skeleton className="h-72 rounded-2xl" />
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Skeleton className="h-80 rounded-2xl" />
-        <Skeleton className="h-80 rounded-2xl" />
-      </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <Skeleton className="h-72 rounded-2xl" />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <Skeleton className="h-72 rounded-2xl" />
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <Skeleton className="h-64 rounded-2xl" />
-        <Skeleton className="h-64 rounded-2xl" />
-      </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+          <div className={`${surfaceClasses} p-4 sm:p-5`}>
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+        </div>
 
-      <Skeleton className="h-72 rounded-2xl" />
-      <Skeleton className="h-72 rounded-2xl" />
+        <div className={`${surfaceClasses} p-4 sm:p-5`}>
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
+        <div className={`${surfaceClasses} p-4 sm:p-5`}>
+          <Skeleton className="h-72 rounded-2xl" />
+        </div>
+      </div>
     </div>
   );
 }
