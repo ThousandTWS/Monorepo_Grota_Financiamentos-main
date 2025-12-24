@@ -1,14 +1,9 @@
 
 import { NavItem } from "@/application/core/@types/Sidebar/NavItem";
-import { LayoutDashboard, BadgeDollarSign, ClipboardList, Gauge, Calculator, ClipboardCheck } from "lucide-react";
+import { BadgeDollarSign, ClipboardList, Calculator, ClipboardCheck } from "lucide-react";
 
 export const navItems: NavItem[] = [
-  {
-    icon: <LayoutDashboard />,
-    name: "Painel Executivo",
-    subItems: [{ name: "Visão do Logista", path: "/visao-geral", pro: false, icon: <Gauge size={16} /> }],
-  },
- 
+
   {
     name: "Financiamentos",
     icon: <BadgeDollarSign />,
