@@ -78,4 +78,56 @@ export const navItems: NavItem[] = [
       }, 
     ],
   },
+  /*
+    {
+  name: "Gestão de Cobranças",
+  icon: <Receipt />,
+  subItems: [
+    {
+      name: "Criar Cobrança",
+      path: "/cobrancas/criar",
+      pro: false,
+      icon: <PlusCircle size={16} />
+    },
+    {
+      name: "Lista de Cobranças",
+      path: "/cobrancas",
+      pro: false,
+      icon: <List size={16} />
+    },
+    {
+      name: "Cobranças Pendentes",
+      path: "/cobrancas/pendentes",
+      pro: false,
+      icon: <Clock size={16} />
+    },
+    {
+      name: "Cobranças Pagas",
+      path: "/cobrancas/pagas",
+      pro: false,
+      icon: <CheckCircle size={16} />
+    },
+    {
+      name: "Cobranças em Atraso",
+      path: "/cobrancas/atrasadas",
+      pro: false,
+      icon: <AlertCircle size={16} />
+    },
+    {
+      name: "Inadimplência",
+      path: "/cobrancas/inadimplencia",
+      pro: false,
+      icon: <TrendingDown size={16} />
+    },
+    {
+      name: "Relatórios",
+      path: "/cobrancas/relatorios",
+      pro: false,
+      icon: <BarChart3 size={16} />
+    }
+  ],
+}
+  */
+
+
 ];

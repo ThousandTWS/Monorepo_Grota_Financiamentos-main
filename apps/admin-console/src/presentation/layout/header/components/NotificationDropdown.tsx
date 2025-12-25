@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import {
   getNotifications,
@@ -11,6 +11,7 @@ import {
 import { Loader2, Bell } from "lucide-react";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 const normalizeNotification = (item: NotificationItem): NotificationItem => ({
   ...item,
@@ -22,6 +23,7 @@ export default function NotificationDropdown() {
   const [items, setItems] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const notifiedIdsRef = useRef(new Set<number>());
 
   const unreadCount = useMemo(
     () => items.filter((item) => !item.read).length,
@@ -34,6 +36,7 @@ export default function NotificationDropdown() {
       const data = await getNotifications();
       const normalized = Array.isArray(data) ? data.map(normalizeNotification) : [];
       setItems(normalized);
+      normalized.forEach((item) => notifiedIdsRef.current.add(item.id));
       setError(null);
     } catch (err) {
       const message =
@@ -70,6 +73,13 @@ export default function NotificationDropdown() {
               return bDate - aDate;
             });
           });
+
+          if (!notifiedIdsRef.current.has(normalized.id)) {
+            notifiedIdsRef.current.add(normalized.id);
+            toast(normalized.title ?? "Nova notificacao", {
+              description: normalized.description,
+            });
+          }
         } catch (e) {
           console.error("Falha ao processar evento SSE de notificação", e);
         }
