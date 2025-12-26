@@ -28,6 +28,7 @@ export default function SimuladorAdminPage() {
   const [dealers, setDealers] = useState<Dealer[]>([]);
   const [dealersLoading, setDealersLoading] = useState(true);
   const [selectedDealerId, setSelectedDealerId] = useState<number | null>(null);
+  const [selectedDealerName, setSelectedDealerName] = useState("");
   const [selectedSellerId, setSelectedSellerId] = useState<number | null>(null);
   const [selectedSellerName, setSelectedSellerName] = useState("");
 
@@ -72,7 +73,14 @@ export default function SimuladorAdminPage() {
             dealersLoading={dealersLoading}
             selectedDealerId={selectedDealerId}
             onDealerChange={(dealerId) => {
+              const dealer = dealers.find((item) => item.id === dealerId);
+              const labelBase =
+                dealer?.enterprise || dealer?.fullName || (dealerId ? `Lojista #${dealerId}` : "");
+              const label = dealer?.referenceCode
+                ? `${labelBase} - ${dealer.referenceCode}`
+                : labelBase;
               setSelectedDealerId(dealerId);
+              setSelectedDealerName(label);
               setSelectedSellerId(null);
               setSelectedSellerName("");
             }}
@@ -107,6 +115,7 @@ export default function SimuladorAdminPage() {
             clearData={clearData}
             goToStep={goToStep}
             dealerId={selectedDealerId}
+            dealerName={selectedDealerName}
             sellerId={selectedSellerId}
             sellerName={selectedSellerName}
           />

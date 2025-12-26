@@ -30,7 +30,223 @@ type Step2PersonalDataProps = {
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
-const validatePhone = (value: string) => digitsOnly(value).length >= 10;
+
+const VALID_DDDS = new Set([
+  "11","12","13","14","15","16","17","18","19",
+  "21","22","24",
+  "27","28",
+  "31","32","33","34","35","37","38",
+  "41","42","43","44","45","46",
+  "47","48","49",
+  "51","53","54","55",
+  "61",
+  "62","64",
+  "63",
+  "65","66",
+  "67",
+  "68",
+  "69",
+  "71","73","74","75","77",
+  "79",
+  "81","87",
+  "82",
+  "83",
+  "84",
+  "85","88",
+  "86","89",
+  "91","93","94",
+  "92","97",
+  "95",
+  "96",
+  "98","99",
+]);
+
+const isValidBrazilPhone = (digits: string) => {
+  if (digits.length < 10 || digits.length > 11) return false;
+  if (/^(\d)\1+$/.test(digits)) return false;
+  const ddd = digits.slice(0, 2);
+  if (!VALID_DDDS.has(ddd)) return false;
+  const subscriber = digits.slice(2);
+  if (digits.length === 11) {
+    if (subscriber[0] !== "9") return false;
+  } else {
+    if (!/[2-8]/.test(subscriber[0] ?? "")) return false;
+  }
+  return true;
+};
+
+const normalizeText = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim();
+
+const normalizeVerificationFlag = (value: unknown): boolean | null => {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value > 0;
+  if (typeof value === "string") {
+    const normalized = normalizeText(value);
+    if (!normalized) return null;
+    if (
+      [
+        "true",
+        "verificado",
+        "verificada",
+        "validado",
+        "validada",
+        "confirmado",
+        "confirmada",
+        "ativo",
+        "ativa",
+        "yes",
+        "sim",
+        "s",
+      ].some((token) => normalized.includes(token))
+    ) {
+      return true;
+    }
+    if (
+      [
+        "false",
+        "nao",
+        "nao verificado",
+        "nao validado",
+        "negado",
+        "invalido",
+        "pendente",
+        "inativo",
+        "inativa",
+        "cancelado",
+      ].some((token) => normalized.includes(token))
+    ) {
+      return false;
+    }
+  }
+  return null;
+};
+
+const extractVerificationFlag = (value: unknown): boolean | null => {
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const candidates = [
+      record.verificado,
+      record.validado,
+      record.verificacao,
+      record.status_verificacao,
+      record.statusVerificacao,
+      record.status,
+      record.situacao,
+      record.confirmado,
+      record.verified,
+      record.verification,
+    ];
+    for (const candidate of candidates) {
+      const flag = normalizeVerificationFlag(candidate);
+      if (flag !== null) return flag;
+    }
+  }
+  return normalizeVerificationFlag(value);
+};
+
+const readStringValue = (value: unknown): string => {
+  if (typeof value === "string" || typeof value === "number") {
+    return String(value).trim();
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const candidates = [
+      record.conteudo,
+      record.value,
+      record.valor,
+      record.email,
+      record.ds_email,
+      record.dsEmail,
+      record.endereco,
+      record.address,
+      record.telefone,
+      record.nr_telefone,
+      record.nr_nr_telefone,
+      record.nrTelefone,
+      record.cellphone,
+      record.celular,
+      record.numero,
+      record.phone,
+      record.descricao,
+      record.description,
+      record.status,
+      record.situacao,
+      record.nome,
+      record.codigo,
+      record.code,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" || typeof candidate === "number") {
+        return String(candidate).trim();
+      }
+      if (candidate && typeof candidate === "object") {
+        const inner = candidate as Record<string, unknown>;
+        const innerCandidate =
+          inner.email ??
+          inner.ds_email ??
+          inner.dsEmail ??
+          inner.endereco ??
+          inner.address ??
+          inner.value ??
+          inner.valor ??
+          inner.telefone ??
+          inner.nr_telefone ??
+          inner.nr_nr_telefone ??
+          inner.nrTelefone ??
+          inner.cellphone ??
+          inner.celular ??
+          inner.numero ??
+          inner.phone ??
+          inner.descricao ??
+          inner.description ??
+          inner.status ??
+          inner.situacao ??
+          inner.nome ??
+          inner.codigo ??
+          inner.code;
+        if (typeof innerCandidate === "string" || typeof innerCandidate === "number") {
+          return String(innerCandidate).trim();
+        }
+      }
+    }
+  }
+  return "";
+};
+
+const pickFirstText = (...values: unknown[]) => {
+  for (const value of values) {
+    const text = readStringValue(value);
+    if (text) return text;
+  }
+  return "";
+};
+
+const normalizeCpfStatusTone = (status?: string | null) => {
+  const normalized = normalizeText((status ?? "").toString());
+  if (!normalized) return "pendente";
+  if (normalized.includes("regular")) return "aprovada";
+  if (normalized.includes("pendente")) return "pendente";
+  if (
+    ["suspens", "cancel", "nula", "inapta", "inativa", "irregular", "obito"].some(
+      (token) => normalized.includes(token),
+    )
+  ) {
+    return "recusada";
+  }
+  return "pendente";
+};
+
+const formatCpfStatusLabel = (status?: string | null) => {
+  const raw = (status ?? "").toString().trim();
+  if (!raw) return "Status nao informado";
+  return raw;
+};
 
 const CNPJ_STATUS_LABELS: Record<string, string> = {
   "01": "Nula",
@@ -50,10 +266,9 @@ const normalizeCnpjStatusTone = (status?: string | null) => {
     if (["01", "03", "04", "08"].includes(digits)) return "recusada";
   }
 
-  const normalized = raw.replace(/[^a-z]+/g, " ");
-
-  const isActive = ["ativa", "ativo", "active", "regular", "regularizada"].some(
-    (value) => normalized.includes(value),
+  const normalized = normalizeText(raw);
+  const isActive = ["ativa", "ativo", "regular", "regularizada"].some((value) =>
+    normalized.includes(value),
   );
   if (isActive) return "aprovada";
 
@@ -76,13 +291,232 @@ const normalizeCnpjStatusTone = (status?: string | null) => {
 const formatCnpjStatusLabel = (status?: string | null) => {
   const raw = (status ?? "").toString().trim();
   if (!raw) return "Status nao informado";
-
   const digits = raw.replace(/\D/g, "");
   if (digits) {
-    return CNPJ_STATUS_LABELS[digits] ?? "Status nao informado";
+    return CNPJ_STATUS_LABELS[digits] ?? raw;
   }
-
   return raw;
+};
+
+const normalizeBirthDate = (value: string) => {
+  const raw = value.trim();
+  if (!raw) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) return raw;
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) return convertBRtoISO(raw);
+  if (/^\d{2}-\d{2}-\d{4}$/.test(raw)) {
+    const [day, month, year] = raw.split("-");
+    return `${year}-${month}-${day}`;
+  }
+  return raw;
+};
+
+const toDigits = (value: unknown) => digitsOnly(String(value ?? ""));
+
+const combinePhoneDigits = (ddd: unknown, ddi: unknown, phone: unknown) => {
+  const phoneDigits = toDigits(phone);
+  if (!phoneDigits) return "";
+  const dddDigits = toDigits(ddd);
+  if (dddDigits) {
+    return phoneDigits.startsWith(dddDigits) ? phoneDigits : `${dddDigits}${phoneDigits}`;
+  }
+  const ddiDigits = toDigits(ddi);
+  if (ddiDigits) {
+    return phoneDigits.startsWith(ddiDigits) ? phoneDigits : `${ddiDigits}${phoneDigits}`;
+  }
+  return phoneDigits;
+};
+
+const extractEmailInfo = (content: Record<string, unknown>) => {
+  let email = "";
+  let verified: boolean | null = null;
+
+  const registerVerification = (value: unknown) => {
+    if (verified !== null) return;
+    const flag = extractVerificationFlag(value);
+    if (flag !== null) verified = flag;
+  };
+
+  const walk = (value: unknown) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (typeof value === "string" || typeof value === "number") {
+      if (!email) email = String(value).trim();
+      return;
+    }
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      const hasEmailField =
+        record.email !== undefined ||
+        record.ds_email !== undefined ||
+        record.dsEmail !== undefined ||
+        record.endereco !== undefined ||
+        record.address !== undefined ||
+        record.value !== undefined ||
+        record.valor !== undefined;
+      if (hasEmailField) {
+        registerVerification(record);
+      }
+      const direct = [
+        record.email,
+        record.ds_email,
+        record.dsEmail,
+        record.endereco,
+        record.address,
+        record.value,
+        record.valor,
+        record.conteudo,
+      ];
+      for (const candidate of direct) {
+        if (!candidate) continue;
+        if (Array.isArray(candidate)) {
+          candidate.forEach(walk);
+          continue;
+        }
+        if (!email) {
+          const text = readStringValue(candidate);
+          if (text) email = text;
+        }
+      }
+      if (record.conteudo) {
+        registerVerification(record.conteudo);
+        walk(record.conteudo);
+      }
+    }
+  };
+
+  [
+    content?.email,
+    content?.emails,
+    content?.ds_email,
+    content?.dsEmail,
+    content?.contato,
+    content?.contatos,
+    content?.dados_contato,
+    content?.dadosContato,
+    content?.user,
+  ].forEach(walk);
+
+  return { email, verified };
+};
+
+const extractPhoneInfo = (content: Record<string, unknown>) => {
+  let verified: boolean | null = null;
+  const candidates: string[] = [];
+
+  const registerVerification = (value: unknown) => {
+    if (verified !== null) return;
+    const flag = extractVerificationFlag(value);
+    if (flag !== null) verified = flag;
+  };
+
+  const pushCandidate = (value: string) => {
+    const digits = digitsOnly(value);
+    if (digits) candidates.push(digits);
+  };
+
+  const buildPhone = (ddd: unknown, phone: unknown) => {
+    const dddDigits = digitsOnly(String(ddd ?? ""));
+    const phoneDigits = digitsOnly(String(phone ?? ""));
+    if (!dddDigits && !phoneDigits) return "";
+    if (phoneDigits.startsWith(dddDigits)) return phoneDigits;
+    return `${dddDigits}${phoneDigits}`;
+  };
+
+  const walk = (value: unknown) => {
+    if (!value) return;
+    if (Array.isArray(value)) {
+      value.forEach(walk);
+      return;
+    }
+    if (typeof value === "string" || typeof value === "number") {
+      pushCandidate(String(value));
+      return;
+    }
+    if (typeof value === "object") {
+      const record = value as Record<string, unknown>;
+      const hasPhoneField =
+        record.telefone !== undefined ||
+        record.nr_telefone !== undefined ||
+        record.nr_nr_telefone !== undefined ||
+        record.numero !== undefined ||
+        record.phone !== undefined ||
+        record.cellphone !== undefined ||
+        record.celular !== undefined ||
+        record.fone !== undefined ||
+        record.numero_telefone !== undefined ||
+        record.ddd !== undefined ||
+        record.nr_ddd !== undefined ||
+        record.ddi !== undefined ||
+        record.nr_ddi !== undefined ||
+        record.codigo_ddd !== undefined;
+      if (hasPhoneField) {
+        registerVerification(record);
+      }
+      const nestedValues = [
+        record.nr_telefone,
+        record.telefones,
+        record.telefone,
+        record.phone,
+        record.phones,
+      ];
+      for (const nested of nestedValues) {
+        if (Array.isArray(nested)) {
+          nested.forEach(walk);
+        } else if (nested && typeof nested === "object") {
+          walk(nested);
+        }
+      }
+      const combined = buildPhone(
+        record.ddd ?? record.nr_ddd ?? record.ddi ?? record.nr_ddi ?? record.codigo_ddd,
+        record.numero ??
+          record.nr_nr_telefone ??
+          record.nr_telefone ??
+          record.telefone ??
+          record.phone ??
+          record.numero_telefone ??
+          record.fone,
+      );
+      if (combined) pushCandidate(combined);
+      const direct = readStringValue(
+        record.telefone ??
+          record.numero ??
+          record.phone ??
+          record.numero_telefone ??
+          record.fone ??
+          record.cellphone ??
+          record.celular ??
+          record.nr_telefone ??
+          record.nr_nr_telefone,
+      );
+      if (direct) pushCandidate(direct);
+      if (record.conteudo) {
+        registerVerification(record.conteudo);
+        walk(record.conteudo);
+      }
+    }
+  };
+
+  [
+    content?.telefone,
+    content?.telefones,
+    content?.nr_telefone,
+    content?.nrTelefone,
+    content?.cellphone,
+    content?.celular,
+    content?.contato,
+    content?.contatos,
+    content?.dados_contato,
+    content?.dadosContato,
+    content?.phone,
+    content?.phones,
+    content?.user,
+  ].forEach(walk);
+
+  const phoneDigits = candidates.find((candidate) => candidate.length >= 10) ?? "";
+  return { phoneDigits, verified };
 };
 
 export default function Step2PersonalData({
@@ -93,19 +527,59 @@ export default function Step2PersonalData({
 }: Step2PersonalDataProps) {
   const [searchingDoc, setSearchingDoc] = useState(false);
   const [searchingCep, setSearchingCep] = useState(false);
+  const [cpfStatus, setCpfStatus] = useState<string | null>(null);
+  const [cpfLookupCompleted, setCpfLookupCompleted] = useState(false);
   const [cnpjStatus, setCnpjStatus] = useState<string | null>(null);
-  const [cnpjVerified, setCnpjVerified] = useState(false);
+  const [cnpjLookupCompleted, setCnpjLookupCompleted] = useState(false);
+  const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
+  const [phoneVerified, setPhoneVerified] = useState<boolean | null>(null);
 
-  const cnpjStatusLabel = formatCnpjStatusLabel(cnpjStatus);
-  const cnpjStatusTone = normalizeCnpjStatusTone(cnpjStatus);
-  const cnpjVerificationLabel = cnpjVerified ? "Verificado" : "Nao verificado";
-  const cnpjVerificationTone = cnpjVerified ? "aprovada" : "pendente";
+  const isPf = formData.personType === "PF";
+  const docStatus = isPf ? cpfStatus : cnpjStatus;
+  const hasDocStatus = Boolean(docStatus);
+  const docStatusLabel = hasDocStatus
+    ? isPf
+      ? formatCpfStatusLabel(docStatus)
+      : formatCnpjStatusLabel(docStatus)
+    : isPf
+      ? "CPF verificado"
+      : "CNPJ verificado";
+  const docStatusTone = hasDocStatus
+    ? isPf
+      ? normalizeCpfStatusTone(docStatus)
+      : normalizeCnpjStatusTone(docStatus)
+    : "aprovada";
+  const docLookupCompleted = isPf ? cpfLookupCompleted : cnpjLookupCompleted;
+  const emailVerificationLabel =
+    emailVerified === null
+      ? "Email nao informado"
+      : emailVerified
+        ? "Email verificado"
+        : "Email nao verificado";
+  const emailVerificationTone = emailVerified ? "aprovada" : "pendente";
+  const phoneDigits = digitsOnly(formData.personal.phone);
+  const phoneFraudAlert = phoneDigits.length >= 10 && !isValidBrazilPhone(phoneDigits);
+  const phoneVerificationLabel =
+    phoneFraudAlert
+      ? "Telefone invalido"
+      : phoneVerified === null
+      ? "Telefone nao informado"
+      : phoneVerified
+        ? "Telefone verificado"
+        : "Telefone nao verificado";
+  const phoneVerificationTone = phoneFraudAlert
+    ? "recusada"
+    : phoneVerified
+      ? "aprovada"
+      : "pendente";
 
   useEffect(() => {
-    if (formData.personType !== "PJ") {
-      setCnpjStatus(null);
-      setCnpjVerified(false);
-    }
+    setCpfStatus(null);
+    setCpfLookupCompleted(false);
+    setCnpjStatus(null);
+    setCnpjLookupCompleted(false);
+    setEmailVerified(null);
+    setPhoneVerified(null);
   }, [formData.personType]);
 
   const handleDocumentChange = async (value: string) => {
@@ -116,18 +590,19 @@ export default function Step2PersonalData({
     const isComplete = formData.personType === "PJ" ? digits.length === 14 : digits.length === 11;
 
     if (!isComplete) {
-      if (formData.personType === "PJ") {
-        setCnpjStatus(null);
-        setCnpjVerified(false);
-      }
+      setCpfStatus(null);
+      setCpfLookupCompleted(false);
+      setCnpjStatus(null);
+      setCnpjLookupCompleted(false);
+      setEmailVerified(null);
+      setPhoneVerified(null);
       return;
     }
 
     try {
       setSearchingDoc(true);
       if (formData.personType === "PF") {
-        setCnpjStatus(null);
-        setCnpjVerified(false);
+        setCpfLookupCompleted(false);
         const res = await fetch("/api/searchCPF", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -135,108 +610,300 @@ export default function Step2PersonalData({
         });
         const response = await res.json();
         if (response?.success) {
-          const data = response?.data?.response?.content;
+          const payload = (response?.data ?? {}) as Record<string, any>;
+          const resultFromList =
+            payload?.data?.resultados?.[0] ?? payload?.resultados?.[0] ?? null;
+          const contentFromResponse =
+            payload?.response?.content ?? payload?.data?.response?.content ?? null;
+          const dataRoot = (resultFromList ?? contentFromResponse ?? payload) as Record<
+            string,
+            any
+          >;
+          const cadastral =
+            dataRoot?.cadastral ?? dataRoot?.cpf ?? dataRoot?.documento ?? dataRoot;
+          const contactSource = {
+            ...dataRoot,
+            user: payload?.user,
+            contato:
+              dataRoot?.contato ??
+              dataRoot?.contact ??
+              dataRoot?.contatos ??
+              dataRoot?.dados_contato ??
+              dataRoot?.dadosContato,
+          };
+
+          const cpfStatusText = pickFirstText(
+            cadastral?.ds_status_rfb,
+            cadastral?.status_rfb,
+            cadastral?.situacao_cadastral,
+            cadastral?.situacao,
+            cadastral?.status,
+            dataRoot?.status,
+            dataRoot?.situacao,
+            dataRoot?.cpf?.situacao_cadastral,
+            dataRoot?.cpf?.situacao,
+            dataRoot?.cpf?.status,
+            dataRoot?.documento?.situacao,
+            dataRoot?.documento?.status,
+            dataRoot?.status_cadastral,
+            dataRoot?.status_receita,
+            dataRoot?.cpf_status,
+            dataRoot?.situacao_cpf,
+          );
+
+          const contactEmail = extractEmailInfo(contactSource);
+          const contactPhone = extractPhoneInfo(contactSource);
+          const contatoPhones =
+            dataRoot?.contato?.nr_telefone ??
+            dataRoot?.contato?.nrTelefone ??
+            dataRoot?.contato?.telefones ??
+            dataRoot?.contato?.telefone ??
+            null;
+          const contatoPhoneList = Array.isArray(contatoPhones)
+            ? contatoPhones
+            : contatoPhones
+              ? [contatoPhones]
+              : [];
+          const fallbackPhoneDigits =
+            contatoPhoneList.reduce<string>((acc, item) => {
+              if (acc) return acc;
+              if (typeof item === "string" || typeof item === "number") {
+                const digits = toDigits(item);
+                return digits.length >= 10 ? digits : "";
+              }
+              if (item && typeof item === "object") {
+                const record = item as Record<string, unknown>;
+                const digits = combinePhoneDigits(
+                  record.nr_ddd ?? record.ddd,
+                  record.nr_ddi ?? record.ddi,
+                  record.nr_nr_telefone ??
+                    record.nr_telefone ??
+                    record.numero ??
+                    record.telefone ??
+                    record.phone ??
+                    record.cellphone ??
+                    record.celular,
+                );
+                return digits.length >= 10 ? digits : "";
+              }
+              return "";
+            }, "") ||
+            combinePhoneDigits(
+              null,
+              null,
+              payload?.user?.cellphone ??
+                payload?.user?.phone ??
+                payload?.user?.telefone ??
+                payload?.user?.celular,
+            );
+
+          const formattedName = pickFirstText(
+            cadastral?.nm_completo,
+            cadastral?.nome,
+            dataRoot?.nome?.conteudo?.nome,
+            dataRoot?.nome?.nome,
+            dataRoot?.nome,
+          );
+          const motherName = pickFirstText(
+            cadastral?.nm_mae,
+            dataRoot?.nome?.conteudo?.mae,
+            dataRoot?.nome?.mae,
+            dataRoot?.mae,
+          );
+          const birthDateRaw = pickFirstText(
+            cadastral?.dt_nasc,
+            dataRoot?.nome?.conteudo?.data_nascimento,
+            dataRoot?.nome?.data_nascimento,
+            dataRoot?.data_nascimento,
+          );
+
+          const nextPersonal: Partial<SimulatorFormData["personal"]> = {
+            name: formatName(formattedName || ""),
+            motherName: formatName(motherName || ""),
+            birthday: normalizeBirthDate(birthDateRaw || ""),
+          };
+
+          if (contactEmail.email) {
+            nextPersonal.email = contactEmail.email;
+          }
+          const resolvedPhoneDigits = contactPhone.phoneDigits || fallbackPhoneDigits;
+          if (resolvedPhoneDigits) {
+            nextPersonal.phone = maskPhone(resolvedPhoneDigits);
+          }
+
           updateFormData("personal", {
-            name: formatName(data?.nome?.conteudo?.nome || ""),
-            motherName: formatName(data?.nome?.conteudo?.mae || ""),
-            birthday: convertBRtoISO(data?.nome?.conteudo?.data_nascimento || ""),
+            ...nextPersonal,
           });
+
+          setCpfStatus(cpfStatusText || null);
+          setCpfLookupCompleted(true);
+
+          const emailFlag = contactEmail.verified ?? (contactEmail.email ? true : null);
+          const phoneFlag =
+            contactPhone.verified ?? (resolvedPhoneDigits ? true : null);
+
+          setEmailVerified(emailFlag);
+          setPhoneVerified(phoneFlag);
           toast.success("Dados carregados com sucesso!");
+        } else {
+          setCpfStatus(null);
+          setCpfLookupCompleted(false);
+          setEmailVerified(null);
+          setPhoneVerified(null);
         }
       } else {
+        setCnpjLookupCompleted(false);
         const res = await fetch("/api/searchCNPJ", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ cnpj: digits }),
         });
         const response = await res.json();
-        if (response?.success && (response?.data?.data?.cnpj || response?.data?.cnpj)) {
+        if (response?.success) {
+          const payload = (response?.data ?? {}) as Record<string, any>;
           const cnpjData =
-            response?.data?.data?.cnpj ??
-            response?.data?.cnpj ??
-            response?.data?.response?.content?.cnpj ??
-            response?.data?.response?.content ??
-            null;
-
-          const razaoSocial =
-            cnpjData?.empresa?.razao_social ??
-            cnpjData?.razao_social ??
-            cnpjData?.empresa?.nome_empresarial ??
-            cnpjData?.nome_empresarial ??
-            "";
-
-          const emailValue =
-            cnpjData?.estabelecimento?.email ??
-            cnpjData?.email ??
-            cnpjData?.empresa?.email ??
-            cnpjData?.empresa?.email_contato ??
-            "";
-
-          const buildPhone = (ddd?: string | number | null, phone?: string | number | null) => {
-            const dddDigits = digitsOnly(String(ddd ?? ""));
-            const phoneDigits = digitsOnly(String(phone ?? ""));
-            if (!dddDigits && !phoneDigits) return "";
-            if (phoneDigits.startsWith(dddDigits)) {
-              return phoneDigits;
-            }
-            return `${dddDigits}${phoneDigits}`;
+            payload?.data?.cnpj ??
+            payload?.cnpj ??
+            payload?.response?.content?.cnpj ??
+            payload?.response?.content ??
+            payload?.data?.response?.content?.cnpj ??
+            payload?.data?.response?.content ??
+            payload;
+          const empresa = cnpjData?.empresa ?? null;
+          const estabelecimento = cnpjData?.estabelecimento ?? null;
+          const contactSource = {
+            ...cnpjData,
+            empresa,
+            estabelecimento,
+            user: payload?.user,
+            contato:
+              cnpjData?.contato ??
+              payload?.contato ??
+              payload?.contact ??
+              payload?.contatos ??
+              payload?.dados_contato ??
+              payload?.dadosContato,
           };
+          const statusValue = pickFirstText(
+            empresa?.situacao_cadastral,
+            estabelecimento?.situacao_cadastral,
+            cnpjData?.situacao_cadastral,
+            cnpjData?.situacao,
+            cnpjData?.status,
+          );
+          const razaoSocial = pickFirstText(
+            empresa?.razao_social,
+            cnpjData?.razao_social,
+            empresa?.nome_empresarial,
+            cnpjData?.nome_empresarial,
+            empresa?.nome_fantasia,
+            cnpjData?.nome_fantasia,
+          );
+
+          const emailValue = pickFirstText(
+            estabelecimento?.email,
+            cnpjData?.email,
+            empresa?.email,
+            empresa?.email_contato,
+            empresa?.emailContato,
+          );
 
           const phoneCandidates = [
-            buildPhone(cnpjData?.estabelecimento?.ddd1, cnpjData?.estabelecimento?.telefone1),
-            buildPhone(cnpjData?.estabelecimento?.ddd2, cnpjData?.estabelecimento?.telefone2),
-            buildPhone(cnpjData?.estabelecimento?.ddd3, cnpjData?.estabelecimento?.telefone3),
-            digitsOnly(cnpjData?.telefone ?? ""),
-            digitsOnly(cnpjData?.telefone1 ?? ""),
-            digitsOnly(cnpjData?.telefone2 ?? ""),
+            combinePhoneDigits(estabelecimento?.ddd1, estabelecimento?.ddi1, estabelecimento?.telefone1),
+            combinePhoneDigits(estabelecimento?.ddd2, estabelecimento?.ddi2, estabelecimento?.telefone2),
+            combinePhoneDigits(estabelecimento?.ddd3, estabelecimento?.ddi3, estabelecimento?.telefone3),
+            combinePhoneDigits(estabelecimento?.ddd, estabelecimento?.ddi, estabelecimento?.telefone),
+            combinePhoneDigits(cnpjData?.ddd, cnpjData?.ddi, cnpjData?.telefone),
+            toDigits(cnpjData?.telefone1),
+            toDigits(cnpjData?.telefone2),
           ];
+          const phoneDigits =
+            phoneCandidates.find((candidate) => candidate.length >= 10) ?? "";
 
-          const phoneDigits = phoneCandidates.find((candidate) => candidate.length >= 10) ?? "";
-          const maskedPhone = phoneDigits ? maskPhone(phoneDigits) : "";
-
-          const statusValue =
-            cnpjData?.empresa?.situacao_cadastral ??
-            cnpjData?.situacao_cadastral ??
-            cnpjData?.situacao ??
-            cnpjData?.status ??
-            cnpjData?.estabelecimento?.situacao_cadastral ??
+          const contactEmail = extractEmailInfo({
+            ...contactSource,
+            email: emailValue,
+          });
+          const contactPhone = extractPhoneInfo({
+            ...contactSource,
+            telefone: phoneDigits,
+          });
+          const contatoPhones =
+            contactSource?.contato?.nr_telefone ??
+            contactSource?.contato?.nrTelefone ??
+            contactSource?.contato?.telefones ??
+            contactSource?.contato?.telefone ??
             null;
+          const contatoPhoneList = Array.isArray(contatoPhones)
+            ? contatoPhones
+            : contatoPhones
+              ? [contatoPhones]
+              : [];
+          const fallbackPhoneDigits =
+            contatoPhoneList.reduce<string>((acc, item) => {
+              if (acc) return acc;
+              if (typeof item === "string" || typeof item === "number") {
+                const digits = toDigits(item);
+                return digits.length >= 10 ? digits : "";
+              }
+              if (item && typeof item === "object") {
+                const record = item as Record<string, unknown>;
+                const digits = combinePhoneDigits(
+                  record.nr_ddd ?? record.ddd,
+                  record.nr_ddi ?? record.ddi,
+                  record.nr_nr_telefone ??
+                    record.nr_telefone ??
+                    record.numero ??
+                    record.telefone ??
+                    record.phone ??
+                    record.cellphone ??
+                    record.celular,
+                );
+                return digits.length >= 10 ? digits : "";
+              }
+              return "";
+            }, "") ||
+            combinePhoneDigits(
+              null,
+              null,
+              payload?.user?.cellphone ??
+                payload?.user?.phone ??
+                payload?.user?.telefone ??
+                payload?.user?.celular,
+            );
 
-          const statusText =
-            typeof statusValue === "string"
-              ? statusValue
-              : typeof statusValue === "number"
-                ? String(statusValue)
-                : statusValue && typeof statusValue === "object"
-                  ? String(
-                      (statusValue as Record<string, unknown>).descricao ??
-                        (statusValue as Record<string, unknown>).description ??
-                        (statusValue as Record<string, unknown>).nome ??
-                        (statusValue as Record<string, unknown>).codigo ??
-                        "",
-                    )
-                  : "";
-
-          setCnpjStatus(statusText || null);
-          setCnpjVerified(true);
+          const resolvedEmail =
+            contactEmail.email || emailValue || payload?.user?.email || "";
+          const resolvedPhoneDigits =
+            contactPhone.phoneDigits || phoneDigits || fallbackPhoneDigits;
 
           updateFormData("personal", {
             name: formatName(razaoSocial || ""),
             companyName: formatName(razaoSocial || ""),
             shareholderName: formatName(cnpjData?.socios?.[0]?.nome_socio || ""),
-            email: emailValue || formData.personal.email,
-            phone: maskedPhone || formData.personal.phone,
+            email: resolvedEmail || formData.personal.email,
+            phone: resolvedPhoneDigits ? maskPhone(resolvedPhoneDigits) : formData.personal.phone,
           });
+          setCnpjStatus(statusValue || null);
+          setCnpjLookupCompleted(true);
+          setEmailVerified(contactEmail.verified ?? (resolvedEmail ? true : null));
+          setPhoneVerified(contactPhone.verified ?? (resolvedPhoneDigits ? true : null));
           toast.success("Dados da empresa carregados!");
         } else {
           setCnpjStatus(null);
-          setCnpjVerified(false);
+          setCnpjLookupCompleted(false);
+          setEmailVerified(null);
+          setPhoneVerified(null);
         }
       }
     } catch (error) {
       console.error("Erro ao buscar documento:", error);
+      setCpfStatus(null);
+      setCpfLookupCompleted(false);
       setCnpjStatus(null);
-      setCnpjVerified(false);
+      setCnpjLookupCompleted(false);
+      setEmailVerified(null);
+      setPhoneVerified(null);
     } finally {
       setSearchingDoc(false);
     }
@@ -287,19 +954,27 @@ export default function Step2PersonalData({
       return false;
     }
 
-    if (!personal.name) {
+    if (formData.personType === "PF" && !personal.name) {
       toast.error("Nome e obrigatorio");
       return false;
     }
 
-    if (!personal.email || !validateEmail(personal.email)) {
-      toast.error("Email invalido");
-      return false;
-    }
+    if (formData.personType === "PF") {
+      if (!personal.email || !validateEmail(personal.email)) {
+        toast.error("Email invalido");
+        return false;
+      }
 
-    if (!personal.phone || !validatePhone(personal.phone)) {
-      toast.error("Telefone invalido");
-      return false;
+      const digits = digitsOnly(personal.phone);
+      if (!personal.phone || digits.length < 10) {
+        toast.error("Telefone invalido");
+        return false;
+      }
+
+      if (!isValidBrazilPhone(digits)) {
+        toast.error("Fraude ou informacao ilegal.");
+        return false;
+      }
     }
 
     if (!address.cep || !address.address || !address.city) {
@@ -326,7 +1001,9 @@ export default function Step2PersonalData({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div
+            className={`grid grid-cols-1 ${isPf ? "md:grid-cols-3" : "md:grid-cols-1"} gap-4`}
+          >
             <div className="space-y-2">
               <Label>{formData.personType === "PF" ? "CPF" : "CNPJ"}</Label>
               <div className="relative">
@@ -342,50 +1019,79 @@ export default function Step2PersonalData({
               </div>
             </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>Nome Completo / Razao Social</Label>
-              <Input
-                value={formData.personal.name}
-                onChange={(e) => updateFormData("personal", { name: e.target.value })}
-                placeholder="Nome completo"
-              />
-            </div>
+            {formData.personType === "PF" && (
+              <div className="space-y-2 md:col-span-2">
+                <Label>Nome Completo</Label>
+                <Input
+                  value={formData.personal.name}
+                  onChange={(e) => updateFormData("personal", { name: e.target.value })}
+                  placeholder="Nome completo"
+                />
+              </div>
+            )}
 
-            {formData.personType === "PJ" && (
-              <div className="space-y-2 md:col-span-3">
-                <Label>Status do CNPJ (Receita)</Label>
+            {docLookupCompleted && (
+              <div className={`space-y-2 ${isPf ? "md:col-span-3" : ""}`}>
+                <Label>Status na Receita</Label>
                 <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={cnpjStatusTone} className="shadow-none">
-                    {cnpjStatusLabel}
+                  <StatusBadge status={docStatusTone} className="shadow-none">
+                    {docStatusLabel}
                   </StatusBadge>
-                  <StatusBadge status={cnpjVerificationTone} className="shadow-none">
-                    {cnpjVerificationLabel}
-                  </StatusBadge>
+                  {isPf && (
+                    <>
+                      <StatusBadge status={emailVerificationTone} className="shadow-none">
+                        {emailVerificationLabel}
+                      </StatusBadge>
+                      <StatusBadge status={phoneVerificationTone} className="shadow-none">
+                        {phoneVerificationLabel}
+                      </StatusBadge>
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
-            <div className="space-y-2 md:col-span-2">
-              <Label>E-mail</Label>
-              <Input
-                type="email"
-                value={formData.personal.email}
-                onChange={(e) => updateFormData("personal", { email: e.target.value })}
-                placeholder="email@exemplo.com"
-              />
-            </div>
+            {formData.personType === "PF" && (
+              <>
+                <div className="space-y-2 md:col-span-2">
+                  <Label>E-mail</Label>
+                  <Input
+                    type="email"
+                    value={formData.personal.email}
+                    onChange={(e) => updateFormData("personal", { email: e.target.value })}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
 
-            <div className="space-y-2">
-              <Label>Telefone</Label>
-              <Input
-                value={formData.personal.phone}
-                onChange={(e) =>
-                  updateFormData("personal", { phone: maskPhone(e.target.value) })
-                }
-                placeholder="(00) 00000-0000"
-                maxLength={15}
-              />
-            </div>
+                <div className="space-y-2">
+                  <Label>Telefone</Label>
+                  <Input
+                    value={formData.personal.phone}
+                    onChange={(e) => {
+                      const masked = maskPhone(e.target.value);
+                      updateFormData("personal", { phone: masked });
+                      const digits = digitsOnly(masked);
+                      if (!digits.length) {
+                        setPhoneVerified(null);
+                        return;
+                      }
+                      if (digits.length < 10) {
+                        setPhoneVerified(false);
+                        return;
+                      }
+                      setPhoneVerified(isValidBrazilPhone(digits));
+                    }}
+                    placeholder="(00) 00000-0000"
+                    maxLength={15}
+                  />
+                  {phoneFraudAlert && (
+                    <p className="text-sm font-medium text-red-600">
+                      Fraude ou informacao ilegal.
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {formData.personType === "PF" && (

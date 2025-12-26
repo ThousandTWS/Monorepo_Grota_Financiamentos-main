@@ -34,8 +34,26 @@ type Step4ReviewProps = {
   clearData: () => void;
   goToStep: (step: number) => void;
   dealerId?: number | null;
+  dealerName?: string;
   sellerId?: number | null;
   sellerName?: string;
+};
+
+const loadImageDataUrl = async (src: string) => {
+  try {
+    const response = await fetch(src);
+    if (!response.ok) return null;
+    const blob = await response.blob();
+    return await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(String(reader.result));
+      reader.onerror = () => reject(new Error("Falha ao carregar logo."));
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.warn("[pdf] falha ao carregar logo", error);
+    return null;
+  }
 };
 
 const addMonths = (date: Date, months: number) => {
@@ -87,8 +105,10 @@ const buildPdf = (
   calculation: Calculation | null,
   options?: {
     dealerId?: number | null;
+    dealerName?: string;
     sellerId?: number | null;
     sellerName?: string;
+    logoDataUrl?: string | null;
   },
 ) => {
   const doc = new jsPDF({
@@ -98,72 +118,123 @@ const buildPdf = (
   });
 
   const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
   const marginX = 40;
   const labelColor: [number, number, number] = [71, 85, 105];
   const textColor: [number, number, number] = [15, 23, 42];
-  let cursorY = 48;
-
-  const addTitle = (title: string, subtitle?: string) => {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(19, 75, 115);
-    doc.text(title, marginX, cursorY);
-    cursorY += 16;
-    if (subtitle) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
-      doc.text(subtitle, marginX, cursorY);
-      cursorY += 12;
-    }
-    cursorY += 8;
-  };
+  const primary: [number, number, number] = [19, 75, 115];
+  let cursorY = 40;
 
   const ensureSpace = (height: number) => {
-    if (cursorY + height > doc.internal.pageSize.getHeight() - 40) {
+    if (cursorY + height > pageHeight - 40) {
       doc.addPage();
-      cursorY = 48;
+      cursorY = 40;
     }
+  };
+
+  const addHeader = (title: string, subtitle?: string, logoDataUrl?: string | null) => {
+    doc.setFillColor(245, 248, 252);
+    doc.rect(0, 0, pageWidth, 96, "F");
+    if (logoDataUrl) {
+      doc.addImage(logoDataUrl, "PNG", marginX, 22, 160, 36);
+    } else {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.setTextColor(primary[0], primary[1], primary[2]);
+      doc.text("Grota Financiamentos", marginX, 36);
+    }
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
+    const headerTextX = logoDataUrl ? marginX + 176 : marginX;
+    doc.text(title, headerTextX, 56);
+    if (subtitle) {
+      doc.text(subtitle, headerTextX, 72);
+    }
+
+    cursorY = 110;
   };
 
   const addSection = (title: string, rows: Array<[string, string]>) => {
-    ensureSpace(80);
+    const headerHeight = 18;
+    const rowLineHeight = 12;
+    const rowGap = 8;
+    const sectionPadding = 12;
+    const sectionSpacing = 14;
+    const labelColumnWidth = 160;
+    const columnGap = 24;
+    const valueColumnX = marginX + labelColumnWidth + columnGap;
+    const valueColumnWidth = pageWidth - marginX - valueColumnX;
+
+    const rowHeights = rows.map(([, value]) => {
+      const valueLines = doc.splitTextToSize(value || "-", valueColumnWidth);
+      return rowLineHeight * valueLines.length + rowGap;
+    });
+
+    const sectionHeight =
+      sectionPadding +
+      headerHeight +
+      rowHeights.reduce((sum, height) => sum + height, 0) +
+      sectionPadding;
+
+    ensureSpace(sectionHeight);
     doc.setDrawColor(226, 232, 240);
     doc.setLineWidth(1);
     doc.roundedRect(
       marginX - 8,
-      cursorY - 8,
+      cursorY,
       pageWidth - marginX * 2 + 16,
-      16 + rows.length * 18 + 20,
+      sectionHeight,
       8,
       8,
     );
 
+    let sectionCursorY = cursorY + sectionPadding;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(19, 75, 115);
-    doc.text(title.toUpperCase(), marginX, cursorY + 6);
-    cursorY += 22;
+    doc.setFontSize(10.5);
+    doc.setTextColor(primary[0], primary[1], primary[2]);
+    doc.text(title.toUpperCase(), marginX, sectionCursorY + 10);
+    sectionCursorY += headerHeight;
 
     rows.forEach(([label, value]) => {
-      ensureSpace(20);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
-      doc.text(label, marginX, cursorY + 10);
+      doc.text(label, marginX, sectionCursorY + rowLineHeight);
 
       doc.setFont("helvetica", "bold");
       doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-      const valueLines = doc.splitTextToSize(value || "-", pageWidth - marginX * 2 - 140);
-      doc.text(valueLines, pageWidth - marginX, cursorY + 10, { align: "right" });
-      cursorY += 18 + (valueLines.length - 1) * 12;
+      const valueLines = doc.splitTextToSize(value || "-", valueColumnWidth);
+      doc.text(valueLines, valueColumnX + valueColumnWidth, sectionCursorY + rowLineHeight, {
+        align: "right",
+      });
+      sectionCursorY += rowLineHeight * valueLines.length + rowGap;
     });
 
-    cursorY += 12;
+    cursorY += sectionHeight + sectionSpacing;
+  };
+
+  const addSummary = (label: string, value: string) => {
+    ensureSpace(60);
+    doc.setFillColor(234, 242, 249);
+    doc.roundedRect(marginX - 8, cursorY, pageWidth - marginX * 2 + 16, 48, 8, 8, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(primary[0], primary[1], primary[2]);
+    doc.text(label, marginX, cursorY + 20);
+    doc.setFontSize(16);
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.text(value, pageWidth - marginX, cursorY + 22, { align: "right" });
+    cursorY += 62;
   };
 
   const issuedAt = new Date().toLocaleString("pt-BR");
-  addTitle("Simulacao de Financiamento", `Emitido em ${issuedAt}`);
+  addHeader(
+    "Simulacao de Financiamento",
+    `Emitido em ${issuedAt}`,
+    options?.logoDataUrl ?? null,
+  );
 
   addSection("Cliente", [
     ["Nome", formData.personal.name],
@@ -183,11 +254,15 @@ const buildPdf = (
   ]);
 
   addSection("Resultado da simulacao", [
-    ["Parcela estimada", calculation ? formatNumberToBRL(calculation.monthly_payment) : "-"],
     ["Total a pagar", calculation ? formatNumberToBRL(calculation.total_amount) : "-"],
   ]);
 
-  const dealerLabel = options?.dealerId ? `Loja #${options.dealerId}` : "-";
+  const dealerLabel =
+    options?.dealerName && options.dealerName.trim().length > 0
+      ? options.dealerName
+      : options?.dealerId
+        ? `Loja #${options.dealerId}`
+        : "-";
   const sellerLabel =
     options?.sellerName && options.sellerName.trim().length > 0
       ? options.sellerName
@@ -207,7 +282,7 @@ const buildPdf = (
     ],
   ]);
 
-  ensureSpace(40);
+  ensureSpace(36);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(labelColor[0], labelColor[1], labelColor[2]);
@@ -228,6 +303,7 @@ export default function Step4Review({
   clearData,
   goToStep,
   dealerId,
+  dealerName,
   sellerId,
   sellerName,
 }: Step4ReviewProps) {
@@ -246,6 +322,12 @@ export default function Step4Review({
       ? sellerName
       : sellerId != null
         ? `Vendedor #${sellerId}`
+        : "-";
+  const dealerLabel =
+    dealerName && dealerName.trim().length > 0
+      ? dealerName
+      : dealerId != null
+        ? `Loja #${dealerId}`
         : "-";
 
   useEffect(() => {
@@ -363,7 +445,16 @@ export default function Step4Review({
   const handleDownloadPDF = async () => {
     try {
       setDownloadingPDF(true);
-      buildPdf(formData, calculation, { dealerId, sellerId, sellerName });
+      const logoDataUrl = await loadImageDataUrl(
+        "/images/logo/Grota_logo horizontal positivo.png",
+      );
+      buildPdf(formData, calculation, {
+        dealerId,
+        dealerName,
+        sellerId,
+        sellerName,
+        logoDataUrl,
+      });
       toast.success("PDF baixado com sucesso!");
     } catch (error) {
       toast.error("Erro ao baixar PDF");
@@ -425,9 +516,7 @@ export default function Step4Review({
             </div>
             <div>
               <p className="text-sm text-gray-600">Loja</p>
-              <p className="font-semibold">
-                {dealerId != null ? `Loja #${dealerId}` : "-"}
-              </p>
+              <p className="font-semibold">{dealerLabel}</p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Vendedor</p>
