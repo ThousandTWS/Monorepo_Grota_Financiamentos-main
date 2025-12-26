@@ -241,16 +241,14 @@ export function ProposalsTable({
                   ))}
                 </SelectContent>
               </Select>
-              {proposal.status === "PENDING" ? (
-                <Button
-                  variant="secondary"
-                  className="gap-2"
-                  onClick={() => handleOpenMessage(proposal)}
-                >
-                  <StickyNote className="size-4" />
-                  Mensagem da analise
-                </Button>
-              ) : null}
+              <Button
+                variant="secondary"
+                className="gap-2"
+                onClick={() => handleOpenMessage(proposal)}
+              >
+                <StickyNote className="size-4" />
+                Mensagem da analise
+              </Button>
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
@@ -310,7 +308,7 @@ export function ProposalsTable({
               disabled={savingNoteId === messageTarget?.id}
             />
             <p className="text-xs text-muted-foreground">
-              A loja vera essa mensagem quando o status estiver pendente.
+              A loja vera essa mensagem em qualquer status.
             </p>
           </div>
           <DialogFooter>
