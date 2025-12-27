@@ -63,6 +63,7 @@ export type SimulatorFormData = {
   address: SimulatorAddress;
   professional: SimulatorProfessional;
   financial: SimulatorFinancial;
+  additionalInfo: string;
   acceptLgpd: boolean;
 };
 
@@ -80,8 +81,6 @@ export type UpdateSimulatorField = <K extends keyof SimulatorFormData>(
   field: K,
   value: SimulatorFormData[K],
 ) => void;
-
-const STORAGE_KEY = "admin-console-simulator";
 
 const defaultFormData: SimulatorFormData = {
   personType: "PF",
@@ -136,40 +135,13 @@ const defaultFormData: SimulatorFormData = {
     termMonths: 48,
     interestRate: 0,
   },
+  additionalInfo: "",
   acceptLgpd: false,
 };
 
 export function useSimulator() {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState<SimulatorFormData>(defaultFormData);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (!stored) return;
-    try {
-      const payload = JSON.parse(stored) as {
-        formData?: SimulatorFormData;
-        currentStep?: number;
-      };
-      if (payload.formData) {
-        setFormData(payload.formData);
-      }
-      if (payload.currentStep) {
-        setCurrentStep(payload.currentStep);
-      }
-    } catch (error) {
-      console.warn("[simulador] failed to restore state", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify({ formData, currentStep }),
-    );
-  }, [formData, currentStep]);
 
   const updateFormData: UpdateSimulatorFormData = (section, data) => {
     setFormData((prev) => ({

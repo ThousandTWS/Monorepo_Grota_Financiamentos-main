@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/presentation/ui/card";
 import { Switch } from "@/presentation/ui/switch";
 import { Label } from "@/presentation/ui/label";
@@ -36,6 +37,13 @@ export function VehicleDataCard({
 }: VehicleDataCardProps) {
   const { register, getValues } = useFormContext();
   const loanTerms = ["12", "24", "36", "48", "60"];
+  const [brandQuery, setBrandQuery] = useState("");
+
+  const filteredBrands = useMemo(() => {
+    const query = brandQuery.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter((brand) => brand.name.toLowerCase().includes(query));
+  }, [brands, brandQuery]);
 
   return (
     <Card>
@@ -87,7 +95,19 @@ export function VehicleDataCard({
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {brands.map((brand) => (
+                    <div className="p-2">
+                      <Input
+                        value={brandQuery}
+                        onChange={(e) => setBrandQuery(e.target.value)}
+                        placeholder="Buscar marca..."
+                        className="h-9"
+                        onKeyDown={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                    {filteredBrands.length === 0 && (
+                      <div className="px-3 py-2 text-sm text-gray-500">Nenhuma marca encontrada</div>
+                    )}
+                    {filteredBrands.map((brand) => (
                       <SelectItem key={brand.code} value={`${brand.code}+${brand.name}`}>
                         {brand.name}
                       </SelectItem>

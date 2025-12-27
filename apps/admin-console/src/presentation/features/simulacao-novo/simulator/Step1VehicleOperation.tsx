@@ -75,11 +75,32 @@ export default function Step1VehicleOperation({
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingYears, setLoadingYears] = useState(false);
   const [loadingValue, setLoadingValue] = useState(false);
+  const [brandQuery, setBrandQuery] = useState("");
+  const [brandOpen, setBrandOpen] = useState(false);
+  const [modelQuery, setModelQuery] = useState("");
+  const [modelOpen, setModelOpen] = useState(false);
+  const [yearQuery, setYearQuery] = useState("");
+  const [yearOpen, setYearOpen] = useState(false);
 
   const vehicleTypeId = useMemo(
     () => getVehicleTypeId(formData.vehicleCategory),
     [formData.vehicleCategory],
   );
+  const filteredBrands = useMemo(() => {
+    const query = brandQuery.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter((brand) => brand.name.toLowerCase().includes(query));
+  }, [brands, brandQuery]);
+  const filteredModels = useMemo(() => {
+    const query = modelQuery.trim().toLowerCase();
+    if (!query) return models;
+    return models.filter((model) => model.name.toLowerCase().includes(query));
+  }, [models, modelQuery]);
+  const filteredYears = useMemo(() => {
+    const query = yearQuery.trim().toLowerCase();
+    if (!query) return years;
+    return years.filter((year) => year.name.toLowerCase().includes(query));
+  }, [years, yearQuery]);
 
   useEffect(() => {
     setModels([]);
@@ -186,6 +207,10 @@ export default function Step1VehicleOperation({
 
     setModels([]);
     setYears([]);
+    setModelQuery("");
+    setYearQuery("");
+    setModelOpen(false);
+    setYearOpen(false);
 
     try {
       setLoadingModels(true);
@@ -212,6 +237,8 @@ export default function Step1VehicleOperation({
     });
 
     setYears([]);
+    setYearQuery("");
+    setYearOpen(false);
 
     try {
       setLoadingYears(true);
@@ -350,7 +377,7 @@ export default function Step1VehicleOperation({
                   }
                 />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent side="bottom">
                 {dealers.map((dealer) => {
                   const labelBase =
                     dealer.enterprise || dealer.fullName || `Lojista #${dealer.id}`;
@@ -391,7 +418,7 @@ export default function Step1VehicleOperation({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
                   <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
                 </SelectContent>
@@ -409,7 +436,7 @@ export default function Step1VehicleOperation({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   <SelectItem value="financiamento">Financiamento</SelectItem>
                   <SelectItem value="autofin">AutoFin</SelectItem>
                 </SelectContent>
@@ -446,7 +473,7 @@ export default function Step1VehicleOperation({
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   <SelectItem value="leves">Veiculos Leves</SelectItem>
                   <SelectItem value="motos">Motos</SelectItem>
                   <SelectItem value="pesados">Veiculos Pesados</SelectItem>
@@ -553,12 +580,29 @@ export default function Step1VehicleOperation({
                 }
                 onValueChange={handleBrandChange}
                 disabled={loadingBrands || !brands.length}
+                open={brandOpen}
+                onOpenChange={setBrandOpen}
               >
               <SelectTrigger className="w-full bg-white text-slate-900">
                 <SelectValue placeholder={loadingBrands ? "Carregando..." : "Selecione a marca"} />
               </SelectTrigger>
-                <SelectContent>
-                  {brands.map((brand) => (
+                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
+                  <div className="p-2">
+                    <Input
+                      data-brand-search
+                      value={brandQuery}
+                      onChange={(e) => setBrandQuery(e.target.value)}
+                      onFocus={() => setBrandOpen(true)}
+                      placeholder="Buscar marca..."
+                      className="h-9"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {filteredBrands.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhuma marca encontrada</div>
+                  )}
+                  {filteredBrands.map((brand) => (
                     <SelectItem key={brand.code} value={`${brand.code}|${brand.name}`}>
                       {brand.name}
                     </SelectItem>
@@ -577,12 +621,29 @@ export default function Step1VehicleOperation({
                 }
                 onValueChange={handleModelChange}
                 disabled={!formData.vehicle.brandCode || loadingModels}
+                open={modelOpen}
+                onOpenChange={setModelOpen}
               >
               <SelectTrigger className="w-full bg-white text-slate-900">
                 <SelectValue placeholder={loadingModels ? "Carregando..." : "Selecione o modelo"} />
               </SelectTrigger>
-                <SelectContent>
-                  {models.map((model) => (
+                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
+                  <div className="p-2">
+                    <Input
+                      data-model-search
+                      value={modelQuery}
+                      onChange={(e) => setModelQuery(e.target.value)}
+                      onFocus={() => setModelOpen(true)}
+                      placeholder="Buscar modelo..."
+                      className="h-9"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {filteredModels.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum modelo encontrado</div>
+                  )}
+                  {filteredModels.map((model) => (
                     <SelectItem key={model.code} value={`${model.code}|${model.name}`}>
                       {model.name}
                     </SelectItem>
@@ -601,12 +662,29 @@ export default function Step1VehicleOperation({
                 }
                 onValueChange={handleYearChange}
                 disabled={!formData.vehicle.modelCode || loadingYears}
+                open={yearOpen}
+                onOpenChange={setYearOpen}
               >
               <SelectTrigger className="w-full bg-white text-slate-900">
                 <SelectValue placeholder={loadingYears ? "Carregando..." : "Selecione o ano"} />
               </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
+                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
+                  <div className="p-2">
+                    <Input
+                      data-year-search
+                      value={yearQuery}
+                      onChange={(e) => setYearQuery(e.target.value)}
+                      onFocus={() => setYearOpen(true)}
+                      placeholder="Buscar ano..."
+                      className="h-9"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {filteredYears.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum ano encontrado</div>
+                  )}
+                  {filteredYears.map((year) => (
                     <SelectItem key={year.code} value={`${year.code}|${year.name}`}>
                       {year.name}
                     </SelectItem>
@@ -683,7 +761,7 @@ export default function Step1VehicleOperation({
               <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   {["12", "24", "36", "48", "60", "72"].map((term) => (
                     <SelectItem key={term} value={term}>
                       {term} meses

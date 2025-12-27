@@ -30,6 +30,7 @@ type Step2PersonalDataProps = {
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
+const blueInputClass = "border-[#134B73] focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
 
 const VALID_DDDS = new Set([
   "11","12","13","14","15","16","17","18","19",
@@ -1012,6 +1013,7 @@ export default function Step2PersonalData({
                   onChange={(e) => handleDocumentChange(e.target.value)}
                   placeholder={formData.personType === "PF" ? "000.000.000-00" : "00.000.000/0000-00"}
                   maxLength={formData.personType === "PF" ? 14 : 18}
+                  className={blueInputClass}
                 />
                 {searchingDoc && (
                   <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
@@ -1060,6 +1062,7 @@ export default function Step2PersonalData({
                     value={formData.personal.email}
                     onChange={(e) => updateFormData("personal", { email: e.target.value })}
                     placeholder="email@exemplo.com"
+                    className={blueInputClass}
                   />
                 </div>
 
@@ -1083,6 +1086,7 @@ export default function Step2PersonalData({
                     }}
                     placeholder="(00) 00000-0000"
                     maxLength={15}
+                    className={blueInputClass}
                   />
                   {phoneFraudAlert && (
                     <p className="text-sm font-medium text-red-600">
@@ -1134,7 +1138,7 @@ export default function Step2PersonalData({
                 </Select>
               </div>
 
-              <div className="flex items-center space-x-3 p-4 border rounded-lg">
+              <div className="flex items-center space-x-3 p-4 border border-[#134B73] rounded-lg">
                 <Switch
                   checked={formData.personal.hasCnh}
                   onCheckedChange={(checked) => updateFormData("personal", { hasCnh: checked })}
@@ -1209,6 +1213,7 @@ export default function Step2PersonalData({
                   onChange={(e) => handleCepChange(e.target.value)}
                   placeholder="00000-000"
                   maxLength={9}
+                  className={blueInputClass}
                 />
                 {searchingCep && (
                   <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
@@ -1231,6 +1236,7 @@ export default function Step2PersonalData({
                 value={formData.address.number}
                 onChange={(e) => updateFormData("address", { number: e.target.value })}
                 placeholder="Numero"
+                className={blueInputClass}
               />
             </div>
 
@@ -1240,6 +1246,7 @@ export default function Step2PersonalData({
                 value={formData.address.complement}
                 onChange={(e) => updateFormData("address", { complement: e.target.value })}
                 placeholder="Apto, sala, etc"
+                className={blueInputClass}
               />
             </div>
 

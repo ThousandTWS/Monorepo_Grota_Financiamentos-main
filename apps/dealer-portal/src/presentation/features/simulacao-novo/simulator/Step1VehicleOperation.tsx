@@ -62,11 +62,18 @@ export default function Step1VehicleOperation({
   const [loadingModels, setLoadingModels] = useState(false);
   const [loadingYears, setLoadingYears] = useState(false);
   const [loadingValue, setLoadingValue] = useState(false);
+  const [brandQuery, setBrandQuery] = useState("");
+  const [brandOpen, setBrandOpen] = useState(false);
 
   const vehicleTypeId = useMemo(
     () => getVehicleTypeId(formData.vehicleCategory),
     [formData.vehicleCategory],
   );
+  const filteredBrands = useMemo(() => {
+    const query = brandQuery.trim().toLowerCase();
+    if (!query) return brands;
+    return brands.filter((brand) => brand.name.toLowerCase().includes(query));
+  }, [brands, brandQuery]);
 
   useEffect(() => {
     setModels([]);
@@ -292,7 +299,7 @@ export default function Step1VehicleOperation({
                 <SelectTrigger className={requiredSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   <SelectItem value="financiamento">Financiamento</SelectItem>
                   <SelectItem value="autofin">AutoFin</SelectItem>
                 </SelectContent>
@@ -329,7 +336,7 @@ export default function Step1VehicleOperation({
                 <SelectTrigger className={requiredSelectTriggerClass}>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   <SelectItem value="leves">Veiculos Leves</SelectItem>
                   <SelectItem value="motos">Motos</SelectItem>
                   <SelectItem value="pesados">Veiculos Pesados</SelectItem>
@@ -364,12 +371,29 @@ export default function Step1VehicleOperation({
                 }
                 onValueChange={handleBrandChange}
                 disabled={loadingBrands || !brands.length}
+                open={brandOpen}
+                onOpenChange={setBrandOpen}
               >
               <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingBrands ? "Carregando..." : "Selecione a marca"} />
               </SelectTrigger>
-                <SelectContent>
-                  {brands.map((brand) => (
+                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
+                  <div className="p-2">
+                    <Input
+                      data-brand-search
+                      value={brandQuery}
+                      onChange={(e) => setBrandQuery(e.target.value)}
+                      onFocus={() => setBrandOpen(true)}
+                      placeholder="Buscar marca..."
+                      className="h-9"
+                      onKeyDown={(e) => e.stopPropagation()}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                  {filteredBrands.length === 0 && (
+                    <div className="px-3 py-2 text-sm text-gray-500">Nenhuma marca encontrada</div>
+                  )}
+                  {filteredBrands.map((brand) => (
                     <SelectItem key={brand.code} value={`${brand.code}|${brand.name}`}>
                       {brand.name}
                     </SelectItem>
@@ -392,7 +416,7 @@ export default function Step1VehicleOperation({
               <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingModels ? "Carregando..." : "Selecione o modelo"} />
               </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   {models.map((model) => (
                     <SelectItem key={model.code} value={`${model.code}|${model.name}`}>
                       {model.name}
@@ -416,7 +440,7 @@ export default function Step1VehicleOperation({
               <SelectTrigger className={requiredSelectTriggerClass}>
                 <SelectValue placeholder={loadingYears ? "Carregando..." : "Selecione o ano"} />
               </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   {years.map((year) => (
                     <SelectItem key={year.code} value={`${year.code}|${year.name}`}>
                       {year.name}
@@ -494,7 +518,7 @@ export default function Step1VehicleOperation({
               <SelectTrigger className="w-full bg-white">
                 <SelectValue />
               </SelectTrigger>
-                <SelectContent>
+                <SelectContent side="bottom">
                   {["12", "24", "36", "48", "60", "72"].map((term) => (
                     <SelectItem key={term} value={term}>
                       {term} meses

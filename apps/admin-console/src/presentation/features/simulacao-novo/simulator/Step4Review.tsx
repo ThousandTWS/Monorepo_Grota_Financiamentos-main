@@ -4,6 +4,7 @@ import { Label } from "@/presentation/layout/components/ui/label";
 import { Button } from "@/presentation/layout/components/ui/button";
 import { Switch } from "@/presentation/layout/components/ui/switch";
 import { Separator } from "@/presentation/layout/components/ui/separator";
+import { Textarea } from "@/presentation/layout/components/ui/textarea";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -282,6 +283,11 @@ const buildPdf = (
     ],
   ]);
 
+  const additionalInfo = formData.additionalInfo.trim();
+  if (additionalInfo) {
+    addSection("Observacoes", [["Informacoes adicionais", additionalInfo]]);
+  }
+
   ensureSpace(36);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -419,6 +425,7 @@ export default function Step4Review({
           personType: formData.personType,
           operationType: formData.operationType,
           vehicleCategory: formData.vehicleCategory,
+          additionalInfo: formData.additionalInfo,
           vehicleCodes: {
             brandCode: formData.vehicle.brandCode,
             modelCode: formData.vehicle.modelCode,
@@ -719,6 +726,21 @@ export default function Step4Review({
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <h2 className="text-lg font-semibold text-[#134B73]">Informacoes adicionais</h2>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <Label htmlFor="additionalInfo">Detalhes extras (opcional)</Label>
+          <Textarea
+            id="additionalInfo"
+            value={formData.additionalInfo}
+            onChange={(e) => updateField("additionalInfo", e.target.value)}
+            placeholder="Digite alguma observacao relevante para a proposta"
+          />
         </CardContent>
       </Card>
 

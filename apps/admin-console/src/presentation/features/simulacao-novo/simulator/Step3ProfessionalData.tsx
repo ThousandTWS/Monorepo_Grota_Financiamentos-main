@@ -21,6 +21,7 @@ export default function Step3ProfessionalData({
   nextStep,
   prevStep,
 }: Step3ProfessionalDataProps) {
+  const blueInputClass = "border-[#134B73] focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
   const [incomeInput, setIncomeInput] = useState("");
   const [otherIncomeInput, setOtherIncomeInput] = useState("");
   const incomeFocusedRef = useRef(false);
@@ -95,6 +96,7 @@ export default function Step3ProfessionalData({
                 value={formData.professional.enterprise}
                 onChange={(e) => updateFormData("professional", { enterprise: e.target.value })}
                 placeholder="Nome da empresa"
+                className={blueInputClass}
               />
             </div>
 
@@ -106,6 +108,7 @@ export default function Step3ProfessionalData({
                   updateFormData("professional", { enterpriseFunction: e.target.value })
                 }
                 placeholder="Seu cargo na empresa"
+                className={blueInputClass}
               />
             </div>
 
@@ -117,6 +120,7 @@ export default function Step3ProfessionalData({
                 onChange={(e) =>
                   updateFormData("professional", { admissionDate: e.target.value })
                 }
+                className={blueInputClass}
               />
             </div>
 
@@ -150,7 +154,7 @@ export default function Step3ProfessionalData({
                   );
                 }}
                 placeholder="R$ 0,00"
-                className="text-lg font-semibold"
+                className={`${blueInputClass} text-lg font-semibold`}
               />
             </div>
 
@@ -171,7 +175,7 @@ export default function Step3ProfessionalData({
                   );
                 }}
                 placeholder="R$ 0,00"
-                className="text-lg font-semibold"
+                className={`${blueInputClass} text-lg font-semibold`}
               />
             </div>
           </div>
