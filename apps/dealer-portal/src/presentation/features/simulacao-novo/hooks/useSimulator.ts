@@ -63,6 +63,7 @@ export type SimulatorFormData = {
   address: SimulatorAddress;
   professional: SimulatorProfessional;
   financial: SimulatorFinancial;
+  additionalInfo: string;
   acceptLgpd: boolean;
 };
 
@@ -136,6 +137,7 @@ const defaultFormData: SimulatorFormData = {
     termMonths: 48,
     interestRate: 0,
   },
+  additionalInfo: "",
   acceptLgpd: false,
 };
 
