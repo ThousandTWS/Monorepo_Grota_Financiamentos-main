@@ -319,6 +319,7 @@ export default function Step4Review({
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [proposalId, setProposalId] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   const totalVehicle = useMemo(() => {
     return `${formData.vehicle.brand} ${formData.vehicle.model}`.trim();
@@ -340,6 +341,16 @@ export default function Step4Review({
     handleCalculate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (!submitted) return;
+    const timer = window.setTimeout(() => {
+      setResetting(true);
+      clearData();
+      goToStep(1);
+    }, 1500);
+    return () => window.clearTimeout(timer);
+  }, [submitted, clearData, goToStep]);
 
   const handleCalculate = async () => {
     try {
@@ -497,10 +508,10 @@ export default function Step4Review({
             )}
             Baixar PDF
           </Button>
-          <Button onClick={handleNewSimulation} size="lg" className="bg-[#134B73] hover:bg-[#0f3a5a]">
-            Nova Simulacao
-          </Button>
         </div>
+        {resetting && (
+          <p className="text-center text-sm text-gray-600">Iniciando nova simulacao...</p>
+        )}
       </div>
     );
   }
