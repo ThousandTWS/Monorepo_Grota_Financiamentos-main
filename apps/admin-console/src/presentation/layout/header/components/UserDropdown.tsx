@@ -6,6 +6,7 @@ import { User } from "lucide-react";
 import { useUser } from "@/application/core/context/UserContext";
 import { Dropdown } from "../../components/ui/dropdown/Dropdown";
 import { DropdownItem } from "../../components/ui/dropdown/DropdownItem";
+import NotificationInbox from "./NotificationInbox";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -83,6 +84,10 @@ export default function UserDropdown() {
           <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
             {user?.email ?? "--"}
           </span>
+        </div>
+
+        <div className="py-3">
+          <NotificationInbox />
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">

@@ -1,5 +1,5 @@
 "use client";
-import NotificationDropdown from "@/presentation/layout/header/components/NotificationDropdown";
+import NotificationInbox from "@/presentation/layout/header/components/NotificationInbox";
 import UserDropdown from "@/presentation/layout/header/components/UserDropdown";
 
 import { GlobalSearch } from "@/application/core/context/GlobalSearch";
@@ -146,7 +146,7 @@ const AppHeader = () => {
             className="flex items-center gap-2 2xsm:gap-3"
             data-oid="4hv.v.8">
 
-            <NotificationDropdown data-oid="36dhrs0" />
+            <NotificationInbox data-oid="36dhrs0" />
             {/* <!-- Notification Menu Area --> */}
           </div>
           {/* <!-- User Area --> */}
