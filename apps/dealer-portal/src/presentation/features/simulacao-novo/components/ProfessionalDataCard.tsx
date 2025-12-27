@@ -8,6 +8,7 @@ import { maskBRL } from "@/lib/masks";
 
 export function ProfessionalDataCard() {
   const { register } = useFormContext();
+  const blueInputClass = "border-[#134B73] focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
 
   return (
     <Card>
@@ -21,6 +22,7 @@ export function ProfessionalDataCard() {
             containerClassName="md:col-span-4"
             label="Empresa"
             placeholder="Onde trabalha"
+            inputClassName={blueInputClass}
             {...register("enterprise")}
           />
           <LabeledInput
@@ -28,6 +30,7 @@ export function ProfessionalDataCard() {
             containerClassName="md:col-span-3"
             label="FunÇõÇœo"
             placeholder="Cargo ou funÇõÇœo"
+            inputClassName={blueInputClass}
             {...register("enterpriseFunction")}
           />
           <div className="space-y-2 md:col-span-3">
@@ -38,7 +41,7 @@ export function ProfessionalDataCard() {
               <Input
                 id="admissionDate"
                 type="date"
-                className="w-full pr-10 cursor-pointer"
+                className={`w-full pr-10 cursor-pointer ${blueInputClass}`}
                 {...register("admissionDate")}
               />
               <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
@@ -49,7 +52,7 @@ export function ProfessionalDataCard() {
             containerClassName="md:col-span-2"
             label="Renda"
             placeholder="R$ 0,00"
-            inputClassName="text-right"
+            inputClassName={`${blueInputClass} text-right`}
             {...register("income", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskBRL(e.target.value);
@@ -61,7 +64,7 @@ export function ProfessionalDataCard() {
             containerClassName="md:col-span-2"
             label="Outras rendas"
             placeholder="R$ 0,00"
-            inputClassName="text-right"
+            inputClassName={`${blueInputClass} text-right`}
             {...register("otherIncomes", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskBRL(e.target.value);

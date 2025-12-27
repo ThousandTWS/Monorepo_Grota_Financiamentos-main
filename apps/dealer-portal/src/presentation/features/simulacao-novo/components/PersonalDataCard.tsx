@@ -30,6 +30,7 @@ export function PersonalDataCard({
   personType,
 }: PersonalDataCardProps) {
   const { register, setValue, watch } = useFormContext();
+  const blueInputClass = "border-[#134B73] focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
 
   const hasCnh = watch("hasCNH");
 
@@ -52,6 +53,7 @@ export function PersonalDataCard({
             label="CPF/CNPJ"
             placeholder="Digite seu CPF ou CNPJ"
             autoComplete="off"
+            inputClassName={blueInputClass}
             {...register("cpf_cnpj", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = personType === "PJ"
@@ -125,7 +127,7 @@ export function PersonalDataCard({
             render={({ field }) => (
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="hasCNH" className="text-[#134B73]">Possui CNH?</Label>
-                <div className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2">
+                <div className="flex items-center gap-3 rounded-md border border-[#134B73] px-3 py-2">
                   <Switch
                     id="hasCNH"
                     checked={field.value}
@@ -165,6 +167,7 @@ export function PersonalDataCard({
             placeholder="Informe seu e-mail"
             type="email"
             autoComplete="email"
+            inputClassName={blueInputClass}
             {...register("email")}
             disabled={searchingLoading || !personType}
           />
@@ -175,6 +178,7 @@ export function PersonalDataCard({
             placeholder="(11) 99999-9999"
             maxLength={15}
             autoComplete="tel"
+            inputClassName={blueInputClass}
             {...register("phone", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskPhone(e.target.value);
@@ -187,6 +191,7 @@ export function PersonalDataCard({
             containerClassName="md:col-span-5"
             label="Nome da Empresa"
             placeholder="Informe a empresa"
+            inputClassName={blueInputClass}
             {...register("companyName")}
             disabled={searchingLoading || !personType}
           />
@@ -204,6 +209,7 @@ export function PersonalDataCard({
             placeholder="00000-000"
             maxLength={9}
             autoComplete="postal-code"
+            inputClassName={blueInputClass}
             {...register("CEP", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskCEP(e.target.value);
@@ -228,6 +234,7 @@ export function PersonalDataCard({
             label="NÇ§mero"
             placeholder="123"
             autoComplete="address-line2"
+            inputClassName={blueInputClass}
             {...register("addressNumber")}
             disabled={!personType}
           />
@@ -236,6 +243,7 @@ export function PersonalDataCard({
             containerClassName="md:col-span-3"
             label="Complemento"
             placeholder="Apto, bloco, referÇ¦ncia"
+            inputClassName={blueInputClass}
             {...register("addressComplement")}
             disabled={!personType}
           />
