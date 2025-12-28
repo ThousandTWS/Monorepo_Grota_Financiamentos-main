@@ -530,6 +530,7 @@ export default function Step2PersonalData({
   const [searchingCep, setSearchingCep] = useState(false);
   const [cpfStatus, setCpfStatus] = useState<string | null>(null);
   const [cpfLookupCompleted, setCpfLookupCompleted] = useState(false);
+  const [cpfPhoneDigits, setCpfPhoneDigits] = useState("");
   const [cnpjStatus, setCnpjStatus] = useState<string | null>(null);
   const [cnpjLookupCompleted, setCnpjLookupCompleted] = useState(false);
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
@@ -577,6 +578,7 @@ export default function Step2PersonalData({
   useEffect(() => {
     setCpfStatus(null);
     setCpfLookupCompleted(false);
+    setCpfPhoneDigits("");
     setCnpjStatus(null);
     setCnpjLookupCompleted(false);
     setEmailVerified(null);
@@ -593,6 +595,7 @@ export default function Step2PersonalData({
     if (!isComplete) {
       setCpfStatus(null);
       setCpfLookupCompleted(false);
+      setCpfPhoneDigits("");
       setCnpjStatus(null);
       setCnpjLookupCompleted(false);
       setEmailVerified(null);
@@ -738,6 +741,7 @@ export default function Step2PersonalData({
 
           setCpfStatus(cpfStatusText || null);
           setCpfLookupCompleted(true);
+          setCpfPhoneDigits(resolvedPhoneDigits);
 
           const emailFlag = contactEmail.verified ?? (contactEmail.email ? true : null);
           const phoneFlag =
@@ -749,6 +753,7 @@ export default function Step2PersonalData({
         } else {
           setCpfStatus(null);
           setCpfLookupCompleted(false);
+          setCpfPhoneDigits("");
           setEmailVerified(null);
           setPhoneVerified(null);
         }
@@ -901,6 +906,7 @@ export default function Step2PersonalData({
       console.error("Erro ao buscar documento:", error);
       setCpfStatus(null);
       setCpfLookupCompleted(false);
+      setCpfPhoneDigits("");
       setCnpjStatus(null);
       setCnpjLookupCompleted(false);
       setEmailVerified(null);
@@ -974,6 +980,16 @@ export default function Step2PersonalData({
 
       if (!isValidBrazilPhone(digits)) {
         toast.error("Fraude ou informacao ilegal.");
+        return false;
+      }
+
+      if (!cpfPhoneDigits) {
+        toast.error("Telefone nao encontrado para este CPF.");
+        return false;
+      }
+
+      if (digitsOnly(personal.phone) !== cpfPhoneDigits) {
+        toast.error("Telefone nao corresponde ao CPF informado.");
         return false;
       }
     }
@@ -1082,7 +1098,11 @@ export default function Step2PersonalData({
                         setPhoneVerified(false);
                         return;
                       }
-                      setPhoneVerified(isValidBrazilPhone(digits));
+                      if (!isValidBrazilPhone(digits)) {
+                        setPhoneVerified(false);
+                        return;
+                      }
+                      setPhoneVerified(Boolean(cpfPhoneDigits && digits === cpfPhoneDigits));
                     }}
                     placeholder="(00) 00000-0000"
                     maxLength={15}
