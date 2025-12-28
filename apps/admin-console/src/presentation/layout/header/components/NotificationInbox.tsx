@@ -26,12 +26,8 @@ export default function NotificationInbox() {
           fontSize: "14px",
         },
         elements: {
-          bell: {
-            backgroundColor: "#0f3c5a",
-          },
-          bellButton: {
-            backgroundColor: "#0f3c5a",
-          },
+        
+         
           bellIcon: {
             color: "#ffffff",
           },
