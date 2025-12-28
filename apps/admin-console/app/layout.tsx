@@ -1,11 +1,8 @@
 import { Outfit } from "next/font/google";
 import "./globals.css";
-
-import { NotificationProvider } from "@grota/realtime-client";
 import { SidebarProvider } from "@/application/core/context/SidebarContext";
 import { ThemeProvider } from "@/application/core/context/ThemeContext";
 import { Metadata } from "next";
-import { Toaster } from "sonner";
 import { ToasterProvider } from "@/presentation/layout/components/toasterProvider";
 
 const outfit = Outfit({
@@ -27,14 +24,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className}`}>
         {/* Loader Global */}
-        <NotificationProvider identity="admin">
+          
           <ThemeProvider>
             <SidebarProvider>
               {children}
               <ToasterProvider />
             </SidebarProvider>
           </ThemeProvider>
-        </NotificationProvider>
+      
+          
       </body>
     </html>
   );

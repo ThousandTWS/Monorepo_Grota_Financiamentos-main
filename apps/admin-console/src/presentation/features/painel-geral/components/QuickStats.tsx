@@ -7,7 +7,7 @@ import { fetchProposals } from "@/application/services/Proposals/proposalService
 import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import { cn } from "@/lib/utils";
 import { getAllSellers, Seller } from "@/application/services/Seller/sellerService";
-import { getAllLogistics } from "@/application/services/Logista/logisticService";
+import { Dealer, getAllLogistics } from "@/application/services/Logista/logisticService";
 import { useUser } from "@/application/core/context/UserContext";
 import { StatusBadge } from "../../logista/components/status-badge";
 
@@ -90,7 +90,7 @@ const trendWindowLabel = "vs 30 dias anteriores";
 export function QuickStats() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [sellers, setSellers] = useState<Seller[]>([]);
-  const [dealers, setDealers] = useState<{ id: number; fullName?: string }[]>([]);
+  const [dealers, setDealers] = useState<Dealer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const { user } = useUser();
@@ -224,7 +224,7 @@ export function QuickStats() {
         const dealer = dealers.find((d) => d.id === Number(dealerId));
         return {
           dealerId: Number(dealerId),
-          name: dealer?.fullName ?? `Loja #${dealerId}`,
+          name: dealer?.enterprise ?? dealer?.razaoSocial ?? dealer?.fullName ?? `Loja #${dealerId}`,
           count: data.count,
           total: data.total,
         };

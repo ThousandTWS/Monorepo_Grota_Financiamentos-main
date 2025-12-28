@@ -1,28 +1,15 @@
 "use client";
 
 import { Inbox } from "@novu/nextjs";
-import { useUser } from "@/application/core/context/UserContext";
 
-type NotificationInboxProps = {
-  subscriberId?: string;
-};
-
-export default function NotificationInbox({ subscriberId }: NotificationInboxProps) {
-  const { user } = useUser();
-  const applicationIdentifier =
-    process.env.NEXT_PUBLIC_NOVU_APPLICATION_IDENTIFIER ?? "uivB3-hEHd0o";
-  const resolvedSubscriberId =
-    user?.email?.trim() ||
-    String(user?.id ?? "").trim() ||
-    subscriberId ||
-    "694fd2baf9d367c59640a05c";
-  const backendUrl = process.env.NEXT_PUBLIC_NOVU_BACKEND_URL;
-  const socketUrl = process.env.NEXT_PUBLIC_NOVU_SOCKET_URL;
-
+export default function NotificationInbox() {
   return (
     <Inbox
-      applicationIdentifier={applicationIdentifier}
-      subscriberId={resolvedSubscriberId}
+      key="e4e2b396ea937a5f01b34c8b0ad4f11e"
+      subscriberId="694fd2baf9d367c59640a05c"
+      applicationIdentifier="zVX1y_TANqne"
+      backendUrl="https://api.novu.co"
+      socketUrl="wss://ws.novu.co"
       appearance={{
         variables: {
           colorPrimary: "#344054",
@@ -39,13 +26,17 @@ export default function NotificationInbox({ subscriberId }: NotificationInboxPro
           fontSize: "14px",
         },
         elements: {
+          bell: {
+            backgroundColor: "#0f3c5a",
+          },
+          bellButton: {
+            backgroundColor: "#0f3c5a",
+          },
           bellIcon: {
             color: "#ffffff",
           },
         },
       }}
-      {...(backendUrl ? { backendUrl } : {})}
-      {...(socketUrl ? { socketUrl } : {})}
     />
   );
 }

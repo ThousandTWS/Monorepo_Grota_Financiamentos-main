@@ -143,7 +143,7 @@ const AppHeader = () => {
           data-oid="-t._qe0">
 
           <div
-            className="flex items-center gap-2 2xsm:gap-3"
+            className="flex items-center gap-2 2xsm:gap-3 bg-transparent"
             data-oid="4hv.v.8">
 
             <NotificationInbox data-oid="36dhrs0" />
