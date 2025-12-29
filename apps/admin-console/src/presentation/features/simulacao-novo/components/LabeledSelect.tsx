@@ -1,7 +1,5 @@
-import { Select, SelectContent, SelectTrigger, SelectValue } from "@/presentation/layout/components/ui/select";
-import { Label } from "@/presentation/layout/components/ui/label";
+import { Select, Typography } from "antd";
 import { cn } from "@/lib/utils";
-import type { ReactNode } from "react";
 
 export type LabeledSelectProps = {
   id?: string;
@@ -11,7 +9,7 @@ export type LabeledSelectProps = {
   placeholder?: string;
   containerClassName?: string;
   disabled?: boolean;
-  children: ReactNode;
+  options: { value: string; label: string }[];
 };
 
 export function LabeledSelect({
@@ -22,19 +20,19 @@ export function LabeledSelect({
   placeholder,
   containerClassName,
   disabled,
-  children,
+  options,
 }: LabeledSelectProps) {
   return (
     <div className={cn("space-y-2", containerClassName)}>
-      <Label htmlFor={id} className="text-[#134B73]">
-        {label}
-      </Label>
-      <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger className="w-full" id={id}>
-          <SelectValue placeholder={placeholder} />
-        </SelectTrigger>
-        <SelectContent>{children}</SelectContent>
-      </Select>
+      <Typography.Text className="text-[#134B73]">{label}</Typography.Text>
+      <Select
+        value={value || undefined}
+        onChange={onChange}
+        disabled={disabled}
+        placeholder={placeholder}
+        options={options}
+        className="w-full"
+      />
     </div>
   );
 }

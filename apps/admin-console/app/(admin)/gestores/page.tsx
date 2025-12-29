@@ -6,57 +6,47 @@ import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Divider,
+  Input,
+  Select,
+  Spin,
+  Typography,
+} from "antd";
 import { createManager } from "@/application/services/Manager/managerService";
 import { getAllLogistics, Dealer } from "@/application/services/Logista/logisticService";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/presentation/layout/components/ui/card";
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Separator } from "@/presentation/layout/components/ui/separator";
 import { ManagersList } from "@/presentation/features/painel-geral/components/ManagersList";
 import { createNotification } from "@/application/services/Notifications/notificationService";
-import { Checkbox } from "@/presentation/layout/components/ui/checkbox";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/presentation/layout/components/ui/select";
 import { fetchAddressByCep } from "@/application/services/cep/cepService";
 import { StatusBadge } from "@/presentation/features/logista/components/status-badge";
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
-import { Loader2 } from "lucide-react";
 
 const managerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
-  email: z.string().email("E-mail inválido"),
+  email: z.string().email("E-mail invÇ­lido"),
   phone: z.string().min(8, "Informe o telefone"),
   password: z
     .string()
-    .min(6, "A senha precisa ter no mínimo 6 caracteres")
-    .max(8, "A senha deve ter no máximo 8 caracteres"),
+    .min(6, "A senha precisa ter no mÇðnimo 6 caracteres")
+    .max(8, "A senha deve ter no mÇ­ximo 8 caracteres"),
   cpf: z.string().min(11, "Informe o CPF"),
   birthData: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato AAAA-MM-DD"),
   street: z.string().min(3, "Informe a rua"),
-  number: z.string().min(1, "Informe o número"),
+  number: z.string().min(1, "Informe o nÇ§mero"),
   complement: z.string().optional(),
   neighborhood: z.string().min(3, "Informe o bairro"),
   city: z.string().min(2, "Informe a cidade"),
   state: z
     .string()
-    .min(2, "UF inválida")
-    .max(2, "UF inválida"),
+    .min(2, "UF invÇ­lida")
+    .max(2, "UF invÇ­lida"),
   zipCode: z.string().min(8, "Informe o CEP"),
   canView: z.boolean().default(true),
   canCreate: z.boolean().default(true),
@@ -186,7 +176,7 @@ function GestoresContent() {
         targetId: 0,
         href: "/gestores",
       }).catch((err) => {
-        console.warn("Falha ao notificar criação de gestor:", err);
+        console.warn("Falha ao notificar criacao de gestor:", err);
       });
       reset();
       setCpfVerified(false);
@@ -196,7 +186,7 @@ function GestoresContent() {
       const message =
         error instanceof Error
           ? error.message
-          : "Não foi possível cadastrar o gestor.";
+          : "NÇœo foi possÇðvel cadastrar o gestor.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -264,14 +254,14 @@ function GestoresContent() {
   const handleCepLookup = async () => {
     const cep = digitsOnly(watch("zipCode") ?? "");
     if (cep.length !== 8) {
-      toast.error("Informe um CEP com 8 dígitos.");
+      toast.error("Informe um CEP com 8 dÇðgitos.");
       return;
     }
     setIsCepLoading(true);
     try {
       const address = await fetchAddressByCep(cep);
       if (!address) {
-        toast.error("CEP não encontrado.");
+        toast.error("CEP nÇœo encontrado.");
         return;
       }
       setValue("street", address.street ?? "");
@@ -280,7 +270,7 @@ function GestoresContent() {
       setValue("state", (address.state ?? "").toUpperCase());
     } catch (error) {
       console.error("[gestores] CEP lookup", error);
-      toast.error("Não foi possível buscar o CEP.");
+      toast.error("NÇœo foi possÇðvel buscar o CEP.");
     } finally {
       setIsCepLoading(false);
     }
@@ -288,273 +278,244 @@ function GestoresContent() {
 
   return (
     <div className="space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Novo gestor</CardTitle>
-          <CardDescription>
-            Crie gestores que poderão administrar o painel com o e-mail e senha cadastrados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          
-          <form
-           //@ts-ignore
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-6 md:grid-cols-2"
-          >
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="dealerId">Loja (opcional)</Label>
-              <Select
-                value={selectedDealerId ?? ""}
-                onValueChange={(value) => setValue("dealerId", value)}
-              >
-                <SelectTrigger id="dealerId">
-                  <SelectValue placeholder="Selecione a loja (opcional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {dealers.map((dealer) => (
-                    <SelectItem key={dealer.id} value={String(dealer.id)}>
-                      {dealer.fullName} — {dealer.enterprise}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.dealerId && (
-                <p className="text-sm text-red-500">{errors.dealerId.message}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Nome completo</Label>
-              <Input id="fullName" {...register("fullName")} />
-              {errors.fullName && (
-                <p className="text-sm text-red-500">{errors.fullName.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" type="email" {...register("email")} />
-              {errors.email && (
-                <p className="text-sm text-red-500">{errors.email.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" {...register("phone")} placeholder="(11) 99999-0000" />
-              {errors.phone && (
-                <p className="text-sm text-red-500">{errors.phone.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha (6 a 8 caracteres)</Label>
-              <Input id="password" type="password" {...register("password")} />
-              {errors.password && (
-                <p className="text-sm text-red-500">{errors.password.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="cpf">CPF</Label>
-              <div className="relative">
-                <Input
-                  id="cpf"
-                  {...register("cpf", {
-                    onChange: (event) => handleCpfLookup(event.target.value),
-                  })}
-                  placeholder="000.000.000-00"
+      <Card title="Novo gestor">
+        <Typography.Paragraph className="text-sm text-muted-foreground">
+          Crie gestores que poderao administrar o painel com o e-mail e senha cadastrados.
+        </Typography.Paragraph>
+        <form
+          //@ts-ignore
+          onSubmit={handleSubmit(onSubmit)}
+          className="grid gap-6 md:grid-cols-2"
+        >
+          <div className="space-y-2 md:col-span-2">
+            <Typography.Text>Loja (opcional)</Typography.Text>
+            <Controller
+              control={control}
+              name="dealerId"
+              render={({ field }) => (
+                <Select
+                  value={field.value || undefined}
+                  onChange={field.onChange}
+                  placeholder="Selecione a loja (opcional)"
+                  options={dealers.map((dealer) => ({
+                    value: String(dealer.id),
+                    label: `${dealer.fullName} - ${dealer.enterprise}`,
+                  }))}
+                  className="w-full"
+                  popupMatchSelectWidth={false}
+                  dropdownStyle={{ minWidth: 420 }}
                 />
-                {isCpfLoading && (
-                  <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
-                )}
-              </div>
-              {errors.cpf && (
-                <p className="text-sm text-red-500">{errors.cpf.message}</p>
               )}
-              {cpfError && (
-                <div className="space-y-2">
-                  <p className="text-sm text-red-500">{cpfError}</p>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleCpfLookup(watch("cpf") ?? "")}
-                    disabled={isCpfLoading}
-                  >
-                    {isCpfLoading ? "Consultando..." : "Tentar novamente"}
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {digitsOnly(watch("cpf") ?? "").length === 11 && (
-              <div className="space-y-2 md:col-span-2">
-                <Label>Verificacao na Receita</Label>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge
-                    status={cpfVerified ? "aprovada" : "pendente"}
-                    className="shadow-none"
-                  >
-                    {cpfVerified ? "Verificado" : "Nao verificado"}
-                  </StatusBadge>
-                </div>
-              </div>
+            />
+            {errors.dealerId && (
+              <p className="text-sm text-red-500">{errors.dealerId.message}</p>
             )}
-            <div className="space-y-2">
-              <Label htmlFor="birthData">Data de nascimento</Label>
-              <Input id="birthData" type="date" {...register("birthData")} />
-              {errors.birthData && (
-                <p className="text-sm text-red-500">{errors.birthData.message}</p>
-              )}
-            </div>
+          </div>
 
-                    <div className="space-y-2">
-              <Label htmlFor="zipCode">CEP</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="zipCode"
-                  {...register("zipCode")}
-                  placeholder="00000-000"
-                  className="flex-1"
-                />
+          <div className="space-y-2">
+            <Typography.Text>Nome completo</Typography.Text>
+            <Input id="fullName" {...register("fullName")} />
+            {errors.fullName && (
+              <p className="text-sm text-red-500">{errors.fullName.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>E-mail</Typography.Text>
+            <Input id="email" type="email" {...register("email")} />
+            {errors.email && (
+              <p className="text-sm text-red-500">{errors.email.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Telefone</Typography.Text>
+            <Input id="phone" {...register("phone")} placeholder="(11) 99999-0000" />
+            {errors.phone && (
+              <p className="text-sm text-red-500">{errors.phone.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Senha (6 a 8 caracteres)</Typography.Text>
+            <Input.Password id="password" {...register("password")} />
+            {errors.password && (
+              <p className="text-sm text-red-500">{errors.password.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>CPF</Typography.Text>
+            <Input
+              id="cpf"
+              {...register("cpf", {
+                onChange: (event) => handleCpfLookup(event.target.value),
+              })}
+              placeholder="000.000.000-00"
+              suffix={isCpfLoading ? <Spin size="small" /> : null}
+            />
+            {errors.cpf && <p className="text-sm text-red-500">{errors.cpf.message}</p>}
+            {cpfError && (
+              <div className="space-y-2">
+                <p className="text-sm text-red-500">{cpfError}</p>
                 <Button
-                  type="button"
-                  variant="outline"
-                  onClick={handleCepLookup}
-                  disabled={isCepLoading}
+                  type="default"
+                  onClick={() => handleCpfLookup(watch("cpf") ?? "")}
+                  disabled={isCpfLoading}
                 >
-                  {isCepLoading ? "Buscando..." : "Buscar CEP"}
+                  {isCpfLoading ? "Consultando..." : "Tentar novamente"}
                 </Button>
               </div>
-              {errors.zipCode && (
-                <p className="text-sm text-red-500">{errors.zipCode.message}</p>
-              )}
-            </div>
+            )}
+          </div>
 
-            <Separator className="md:col-span-2" />
-
-            <div className="space-y-2">
-              <Label htmlFor="street">Rua</Label>
-              <Input id="street" {...register("street")} />
-              {errors.street && (
-                <p className="text-sm text-red-500">{errors.street.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="number">Número</Label>
-              <Input id="number" {...register("number")} />
-              {errors.number && (
-                <p className="text-sm text-red-500">{errors.number.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="complement">Complemento</Label>
-              <Input id="complement" {...register("complement")} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="neighborhood">Bairro</Label>
-              <Input id="neighborhood" {...register("neighborhood")} />
-              {errors.neighborhood && (
-                <p className="text-sm text-red-500">
-                  {errors.neighborhood.message}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="city">Cidade</Label>
-              <Input id="city" {...register("city")} />
-              {errors.city && (
-                <p className="text-sm text-red-500">{errors.city.message}</p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="state">UF</Label>
-              <Select
-                value={watch("state")}
-                onValueChange={(value) => setValue("state", value, { shouldValidate: true })}
-              >
-                <SelectTrigger id="state">
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {brazilStates.map((uf) => (
-                    <SelectItem key={uf} value={uf}>
-                      {uf}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.state && (
-                <p className="text-sm text-red-500">{errors.state.message}</p>
-              )}
-            </div>
-
-
-            <Separator className="md:col-span-2" />
-
-            <div className="md:col-span-2">
-              <h3 className="text-sm font-semibold mb-2">Permissões</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <label className="flex items-center gap-2 text-sm">
-                  <Controller
-                    control={control}
-                    name="canView"
-                    render={({ field }) => (
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(!!checked)}
-                      />
-                    )}
-                  />
-                  Ver
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <Controller
-                    control={control}
-                    name="canCreate"
-                    render={({ field }) => (
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(!!checked)}
-                      />
-                    )}
-                  />
-                  Criar
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <Controller
-                    control={control}
-                    name="canUpdate"
-                    render={({ field }) => (
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(!!checked)}
-                      />
-                    )}
-                  />
-                  Atualizar
-                </label>
-                <label className="flex items-center gap-2 text-sm">
-                  <Controller
-                    control={control}
-                    name="canDelete"
-                    render={({ field }) => (
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={(checked) => field.onChange(!!checked)}
-                      />
-                    )}
-                  />
-                  Excluir
-                </label>
+          {digitsOnly(watch("cpf") ?? "").length === 11 && (
+            <div className="space-y-2 md:col-span-2">
+              <Typography.Text>Verificacao na Receita</Typography.Text>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusBadge status={cpfVerified ? "aprovada" : "pendente"} className="shadow-none">
+                  {cpfVerified ? "Verificado" : "Nao verificado"}
+                </StatusBadge>
               </div>
             </div>
+          )}
+          <div className="space-y-2">
+            <Typography.Text>Data de nascimento</Typography.Text>
+            <Input id="birthData" type="date" {...register("birthData")} className="w-full" />
+            {errors.birthData && (
+              <p className="text-sm text-red-500">{errors.birthData.message}</p>
+            )}
+          </div>
 
-            <div className="md:col-span-2 flex justify-end">
-              <Button type="submit" disabled={isSubmitting || !cpfVerified}>
-                {isSubmitting ? "Salvando..." : "Cadastrar gestor"}
+          <div className="space-y-2">
+            <Typography.Text>CEP</Typography.Text>
+            <div className="flex gap-2">
+              <Input id="zipCode" {...register("zipCode")} placeholder="00000-000" />
+              <Button type="default" onClick={handleCepLookup} disabled={isCepLoading}>
+                {isCepLoading ? "Buscando..." : "Buscar CEP"}
               </Button>
             </div>
-          </form>
-        </CardContent>
+            {errors.zipCode && (
+              <p className="text-sm text-red-500">{errors.zipCode.message}</p>
+            )}
+          </div>
+
+          <Divider className="md:col-span-2" />
+
+          <div className="space-y-2">
+            <Typography.Text>Rua</Typography.Text>
+            <Input id="street" {...register("street")} />
+            {errors.street && (
+              <p className="text-sm text-red-500">{errors.street.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Numero</Typography.Text>
+            <Input id="number" {...register("number")} />
+            {errors.number && (
+              <p className="text-sm text-red-500">{errors.number.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Complemento</Typography.Text>
+            <Input id="complement" {...register("complement")} />
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Bairro</Typography.Text>
+            <Input id="neighborhood" {...register("neighborhood")} />
+            {errors.neighborhood && (
+              <p className="text-sm text-red-500">{errors.neighborhood.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>Cidade</Typography.Text>
+            <Input id="city" {...register("city")} />
+            {errors.city && (
+              <p className="text-sm text-red-500">{errors.city.message}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Typography.Text>UF</Typography.Text>
+            <Controller
+              control={control}
+              name="state"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onChange={(value) => field.onChange(value)}
+                  options={brazilStates.map((uf) => ({ value: uf, label: uf }))}
+                  placeholder="UF"
+                  className="w-full"
+                />
+              )}
+            />
+            {errors.state && (
+              <p className="text-sm text-red-500">{errors.state.message}</p>
+            )}
+          </div>
+
+          <Divider className="md:col-span-2" />
+
+          <div className="md:col-span-2">
+            <Typography.Text className="text-sm font-semibold">Permissoes</Typography.Text>
+            <div className="grid grid-cols-2 gap-3 mt-2">
+              <label className="flex items-center gap-2 text-sm">
+                <Controller
+                  control={control}
+                  name="canView"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+                Ver
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Controller
+                  control={control}
+                  name="canCreate"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+                Criar
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Controller
+                  control={control}
+                  name="canUpdate"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+                Atualizar
+              </label>
+              <label className="flex items-center gap-2 text-sm">
+                <Controller
+                  control={control}
+                  name="canDelete"
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+                Excluir
+              </label>
+            </div>
+          </div>
+
+          <div className="md:col-span-2 flex justify-end">
+            <Button type="primary" htmlType="submit" disabled={isSubmitting || !cpfVerified}>
+              {isSubmitting ? "Salvando..." : "Cadastrar gestor"}
+            </Button>
+          </div>
+        </form>
       </Card>
 
       <ManagersList dealerId={selectedDealerId ? Number(selectedDealerId) : undefined} />

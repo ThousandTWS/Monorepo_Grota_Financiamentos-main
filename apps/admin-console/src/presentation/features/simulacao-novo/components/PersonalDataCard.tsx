@@ -1,16 +1,14 @@
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Switch } from "@/presentation/layout/components/ui/switch";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { SelectItem } from "@/presentation/layout/components/ui/select";
-import { LabeledInput } from "./LabeledInput";
-import { LabeledSelect } from "./LabeledSelect";
-import { Input } from "@/presentation/layout/components/ui/input";
+"use client";
+
+import { useEffect } from "react";
+import { Card, Input, Switch, Typography } from "antd";
 import { CalendarDays } from "lucide-react";
 import { Controller, useFormContext } from "react-hook-form";
-import { useEffect } from "react";
 import { maskCPF, maskPhone } from "@/lib/masks";
 import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
 import { formatName } from "@/lib/formatters";
+import { LabeledInput } from "./LabeledInput";
+import { LabeledSelect } from "./LabeledSelect";
 
 type PersonalDataCardProps = {
   onZipChange: (value: string) => void;
@@ -40,12 +38,11 @@ export function PersonalDataCard({
   }, [hasCnh, setValue]);
 
   return (
-    <Card className="w-full h-full">
-      <CardContent className="space-y-5 px-0">
-        <CardHeader className="px-0">
-          <h2 className="text-lg font-semibold text-[#134B73]">Dados Pessoais</h2>
-        </CardHeader>
-
+    <Card
+      className="w-full h-full"
+      title={<span className="text-lg font-semibold text-[#134B73]">Dados Pessoais</span>}
+    >
+      <div className="space-y-5">
         <div className="grid gap-4 md:grid-cols-12">
           <LabeledInput
             containerClassName="md:col-span-3"
@@ -57,9 +54,8 @@ export function PersonalDataCard({
                 e.target.value = personType === "PJ"
                   ? maskCNPJ(e.target.value)
                   : maskCPF(e.target.value);
-                const value = e.target.value;
-                handleDocumentChange(value);
-              }
+                handleDocumentChange(e.target.value);
+              },
             })}
             warning={cpfSituation}
             loading={searchingLoading}
@@ -73,32 +69,30 @@ export function PersonalDataCard({
             {...register("name", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = formatName(e.target.value);
-              }
+              },
             })}
             disabled={searchingLoading || !personType}
           />
           <LabeledInput
             id="motherName"
             containerClassName="md:col-span-4"
-            label="Nome da MÇœe"
-            placeholder="Digite nome da mÇœe"
+            label="Nome da Mae"
+            placeholder="Digite nome da mae"
             {...register("motherName")}
             disabled={searchingLoading || !personType}
           />
           <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="birthday" className="text-[#134B73]">
+            <Typography.Text className="text-[#134B73]">
               Data de nascimento
-            </Label>
-            <div className="relative">
-              <Input
-                id="birthday"
-                type="date"
-                className="w-full pr-10 cursor-pointer"
-                {...register("birthday")}
-                disabled={searchingLoading || !personType}
-              />
-              <CalendarDays className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#134B73]" />
-            </div>
+            </Typography.Text>
+            <Input
+              id="birthday"
+              type="date"
+              className="w-full pr-10 cursor-pointer"
+              suffix={<CalendarDays className="h-4 w-4 text-[#134B73]" />}
+              {...register("birthday")}
+              disabled={searchingLoading || !personType}
+            />
           </div>
           <Controller
             name="maritalStatus"
@@ -111,29 +105,28 @@ export function PersonalDataCard({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={!personType}
-              >
-                <SelectItem value="Solteiro">Solteiro</SelectItem>
-                <SelectItem value="Casado">Casado</SelectItem>
-                <SelectItem value="Separado">Separado</SelectItem>
-                <SelectItem value="Divorciado">Divorciado</SelectItem>
-                <SelectItem value="ViÇ§vo">ViÇ§vo</SelectItem>
-              </LabeledSelect>
+                options={[
+                  { value: "Solteiro", label: "Solteiro" },
+                  { value: "Casado", label: "Casado" },
+                  { value: "Separado", label: "Separado" },
+                  { value: "Divorciado", label: "Divorciado" },
+                  { value: "Viuvo", label: "Viuvo" },
+                ]}
+              />
             )}
           />
           <Controller
             name="hasCNH"
             render={({ field }) => (
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="hasCNH" className="text-[#134B73]">Possui CNH?</Label>
+                <Typography.Text className="text-[#134B73]">Possui CNH?</Typography.Text>
                 <div className="flex items-center gap-3 rounded-md border border-slate-200 px-3 py-2">
                   <Switch
-                    id="hasCNH"
                     checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
+                    onChange={field.onChange}
                     disabled={!personType}
                   />
-                  <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "NÇœo"}</span>
+                  <span className="text-sm text-muted-foreground">{field.value ? "Sim" : "Nao"}</span>
                 </div>
               </div>
             )}
@@ -148,14 +141,15 @@ export function PersonalDataCard({
                 disabled={!hasCnh || !personType}
                 value={field.value}
                 onChange={field.onChange}
-              >
-                <SelectItem value="A">A</SelectItem>
-                <SelectItem value="B">B</SelectItem>
-                <SelectItem value="AB">AB</SelectItem>
-                <SelectItem value="C">C</SelectItem>
-                <SelectItem value="D">D</SelectItem>
-                <SelectItem value="E">E</SelectItem>
-              </LabeledSelect>
+                options={[
+                  { value: "A", label: "A" },
+                  { value: "B", label: "B" },
+                  { value: "AB", label: "AB" },
+                  { value: "C", label: "C" },
+                  { value: "D", label: "D" },
+                  { value: "E", label: "E" },
+                ]}
+              />
             )}
           />
           <LabeledInput
@@ -178,7 +172,7 @@ export function PersonalDataCard({
             {...register("phone", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskPhone(e.target.value);
-              }
+              },
             })}
             disabled={searchingLoading || !personType}
           />
@@ -193,8 +187,8 @@ export function PersonalDataCard({
           <LabeledInput
             id="shareholderName"
             containerClassName="md:col-span-5"
-            label="Nome do SÇücio"
-            placeholder="Informe o nome do sÇücio"
+            label="Nome do Socio"
+            placeholder="Informe o nome do socio"
             {...register("shareholderName")}
             disabled={searchingLoading || !personType}
           />
@@ -207,16 +201,15 @@ export function PersonalDataCard({
             {...register("CEP", {
               onChange: (e: React.ChangeEvent<HTMLInputElement>) => {
                 e.target.value = maskCEP(e.target.value);
-                const value = e.target.value;
-                onZipChange(value);
-              }
+                onZipChange(e.target.value);
+              },
             })}
             disabled={searchingCPFLoading || !personType}
           />
           <LabeledInput
             id="address"
             containerClassName="md:col-span-6"
-            label="EndereÇõo (Rua/Av.)"
+            label="Endereco (Rua/Av.)"
             placeholder="Rua Exemplo, 123 - Apto 45"
             autoComplete="address-line1"
             {...register("address")}
@@ -225,7 +218,7 @@ export function PersonalDataCard({
           <LabeledInput
             id="addressNumber"
             containerClassName="md:col-span-1"
-            label="NÇ§mero"
+            label="Numero"
             placeholder="123"
             autoComplete="address-line2"
             {...register("addressNumber")}
@@ -235,7 +228,7 @@ export function PersonalDataCard({
             id="addressComplement"
             containerClassName="md:col-span-3"
             label="Complemento"
-            placeholder="Apto, bloco, referÇ¦ncia"
+            placeholder="Apto, bloco, referencia"
             {...register("addressComplement")}
             disabled={!personType}
           />
@@ -267,17 +260,12 @@ export function PersonalDataCard({
                 value={field.value}
                 onChange={field.onChange}
                 disabled={searchingCPFLoading || !personType}
-              >
-                {[
+                options={[
                   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
                   "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
                   "SP","SE","TO",
-                ].map((uf) => (
-                  <SelectItem key={uf} value={uf}>
-                    {uf}
-                  </SelectItem>
-                ))}
-              </LabeledSelect>
+                ].map((uf) => ({ value: uf, label: uf }))}
+              />
             )}
           />
           <LabeledInput
@@ -296,16 +284,15 @@ export function PersonalDataCard({
                   <Switch
                     id="acceptLGPD"
                     checked={field.value}
-                    onCheckedChange={field.onChange}
-                    className="data-[state=checked]:bg-sky-800 data-[state=unchecked]:bg-gray-300"
+                    onChange={field.onChange}
                   />
                   <div className="space-y-1">
-                    <Label htmlFor="acceptLGPD" className="text-[#134B73] font-semibold">
+                    <Typography.Text className="text-[#134B73] font-semibold">
                       Consentimento LGPD
-                    </Label>
+                    </Typography.Text>
                     <p className="text-sm text-slate-700">
-                      Autorizo o uso dos meus dados para anÇ­lise de crÇ¸dito, contato e formalizaÇõÇœo,
-                      conforme a polÇðtica de privacidade da Grota Financiamentos.
+                      Autorizo o uso dos meus dados para analise de credito, contato e formalizacao,
+                      conforme a politica de privacidade da Grota Financiamentos.
                     </p>
                   </div>
                 </div>
@@ -313,7 +300,7 @@ export function PersonalDataCard({
             />
           </div>
         </div>
-      </CardContent>
+      </div>
     </Card>
   );
 }

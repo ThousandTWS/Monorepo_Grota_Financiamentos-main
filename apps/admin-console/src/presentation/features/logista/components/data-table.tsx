@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow } from
-"@/presentation/layout/components/ui/table";
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Button } from "@/presentation/layout/components/ui/button";
+import { Button, Card, Descriptions, Divider, Input, Modal, Select, Table, Tag, Typography } from "antd";
 import {
   Search,
   Filter,
@@ -23,19 +14,10 @@ import {
   UserPlus,
   UserCog,
   UserPlus2,
-  Shield,
-  ShieldClose,
   Trash2,
   Unlink,
 } from "lucide-react";
 import { Logista, getLogistaColumns } from "./columns";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue } from
-"@/presentation/layout/components/ui/select";
 import { LogistaDialog } from "./logista-dialog";
 import { useToast } from "@/application/core/hooks/use-toast";
 import {
@@ -62,17 +44,6 @@ import {
   deleteOperator,
 } from "@/application/services/Operator/operatorService";
 import userServices, { AdminUser } from "@/application/services/UserServices/UserServices";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/presentation/layout/components/ui/dialog";
-import { Badge } from "@/presentation/layout/components/ui/badge";
-import { Separator } from "@/presentation/layout/components/ui/separator";
-import { Card, CardContent } from "@/presentation/layout/components/ui/card";
 
 interface DataTableProps {
   data: Logista[];
@@ -375,6 +346,19 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
     },
   });
 
+  const linkCandidates =
+    linkingType === "admin"
+      ? admins
+      : linkingType === "seller"
+        ? sellers
+        : linkingType === "manager"
+          ? managers
+          : operators;
+  const linkOptions = (linkCandidates ?? []).map((item) => ({
+    value: String(item.id),
+    label: `${item.fullName} - ${item.email ?? item.phone ?? `ID ${item.id}`}`,
+  }));
+
   return (
     <>
       <div className="space-y-4" data-oid="53n7jzk">
@@ -403,33 +387,23 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
             <Select
               value={statusFilter}
-              onValueChange={handleStatusFilterChange}
-              data-oid="-qv_bn6">
-
-              <SelectTrigger className="w-[160px]" data-oid="qo2h8h:">
-                <Filter className="size-4 mr-2" data-oid="8q9uxkr" />
-                <SelectValue placeholder="Status" data-oid="ax4bl3v" />
-              </SelectTrigger>
-              <SelectContent data-oid="omcin5j">
-                <SelectItem value="todos" data-oid="9cl:36:">
-                  Todos
-                </SelectItem>
-                <SelectItem value="ativo" data-oid="7eheou-">
-                  Ativo
-                </SelectItem>
-                <SelectItem value="inativo" data-oid="5rko86y">
-                  Inativo
-                </SelectItem>
-                <SelectItem value="pendente" data-oid="o8389x8">
-                  Pendente
-                </SelectItem>
-              </SelectContent>
-            </Select>
+              onChange={handleStatusFilterChange}
+              options={[
+                { value: "todos", label: "Todos" },
+                { value: "ativo", label: "Ativo" },
+                { value: "inativo", label: "Inativo" },
+                { value: "pendente", label: "Pendente" },
+              ]}
+              className="w-[160px]"
+              suffixIcon={<Filter className="size-4" data-oid="8q9uxkr" />}
+              data-oid="-qv_bn6"
+            />
           </div>
 
           <div className="flex gap-2">
             <Button
-              variant="outline"
+              type="primary"
+              
               onClick={onRefresh}
               data-oid="refreshDealer"
               className="w-full sm:w-auto"
@@ -477,52 +451,14 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
           </div>
 
           <div className="hidden md:block overflow-hidden" data-oid="tableWrapper">
-            <Table className="w-full divide-y divide-slate-100 table-auto" data-oid="xc.amp3">
-              <TableHeader data-oid="8zjtqij">
-                <TableRow className="bg-slate-50" data-oid="nky:coh">
-                  {columns.map((column) => (
-                    <TableHead
-                      key={column.key}
-                      className="text-xs font-semibold uppercase tracking-wide text-slate-500"
-                      data-oid="shaikwn"
-                    >
-                      {column.header}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-              <TableBody data-oid="in:jlr8">
-                {paginatedData.length > 0 ? (
-                  paginatedData.map((logista) => (
-                    <TableRow
-                      key={logista.id}
-                      className="transition-colors hover:bg-slate-50"
-                      data-oid="u1s8tcn"
-                    >
-                      {columns.map((column) => (
-                        <TableCell
-                          key={column.key}
-                          className="px-3 py-2 text-sm text-slate-700 break-words whitespace-normal"
-                          data-oid="4jlxlw7"
-                        >
-                          {column.cell(logista)}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow data-oid=".qn5dod">
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center text-sm text-muted-foreground"
-                      data-oid="07-f9:p"
-                    >
-                      Nenhum logista encontrado.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <Table
+              columns={columns}
+              dataSource={paginatedData}
+              pagination={false}
+              rowKey="id"
+              className="w-full"
+              data-oid="xc.amp3"
+            />
           </div>
         </div>
 
@@ -551,37 +487,26 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
                 Itens por página:
               </span>
               <Select
-                value={itemsPerPage.toString()}
-                onValueChange={(value) => {
+                value={itemsPerPage}
+                onChange={(value) => {
                   setItemsPerPage(Number(value));
                   setCurrentPage(1);
                 }}
-                data-oid="io6asxb">
-
-                <SelectTrigger className="w-[70px]" data-oid="1sxg.fq">
-                  <SelectValue data-oid="v6cxqf7" />
-                </SelectTrigger>
-                <SelectContent data-oid="jttd4-3">
-                  <SelectItem value="5" data-oid="x0gc1f4">
-                    5
-                  </SelectItem>
-                  <SelectItem value="10" data-oid="ieh.bk9">
-                    10
-                  </SelectItem>
-                  <SelectItem value="20" data-oid="26udhti">
-                    20
-                  </SelectItem>
-                  <SelectItem value="50" data-oid="ioksbsz">
-                    50
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: 5, label: "5" },
+                  { value: 10, label: "10" },
+                  { value: 20, label: "20" },
+                  { value: 50, label: "50" },
+                ]}
+                className="w-[70px]"
+                data-oid="io6asxb"
+              />
             </div>
 
             <div className="flex items-center gap-1" data-oid="w:3accq">
               <Button
-                variant="outline"
-                size="icon"
+                type="primary"
+               size="large"
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
                 data-oid="bjx9:cs">
@@ -605,8 +530,8 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
               </div>
 
               <Button
-                variant="outline"
-                size="icon"
+                type="primary"
+                size="large"
                 onClick={() =>
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
                 }
@@ -622,370 +547,397 @@ export function DataTable({ data, onUpdate, onSync, onRefresh }: DataTableProps)
 
       {/* Modais */}
       {dialogMode === "view" && (
-        <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="sr-only">Visualizar lojista</DialogTitle>
-            </DialogHeader>
-            <Card className="border-none shadow-none">
-              <div className="rounded-2xl bg-gradient-to-r from-[#134B73] via-[#0f3c5a] to-[#0a2c45] text-white p-5 border border-white/10">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-[0.25em] text-white/70">
-                      Loja • {selectedLogista?.referenceCode || "--"}
-                    </p>
-                    <h2 className="text-2xl font-bold leading-tight">
-                      {selectedLogista?.enterprise || selectedLogista?.fullName || "Lojista"}
-                    </h2>
-                    <div className="flex flex-wrap gap-2 text-sm text-white/85">
-                      <Badge className="bg-white/15 text-white border border-white/30">
-                        Resp.: {selectedLogista?.fullName || "--"}
-                      </Badge>
-                      <Badge className="bg-white/15 text-white border border-white/30">
-                        CNPJ: {selectedLogista?.cnpj || "--"}
-                      </Badge>
-                      {selectedLogista?.status && (
-                        <Badge className="bg-[#0f3c5a] text-white border border-white/20">
-                          {selectedLogista.status}
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                  <div className="text-right text-sm text-white/80 space-y-1">
-                    <div>Código Ref.</div>
-                    <div className="text-lg font-semibold">
-                      {selectedLogista?.referenceCode || "--"}
-                    </div>
-                    <div className="text-xs">
-                      Criado em{" "}
-                      {selectedLogista?.createdAt
-                        ? new Date(selectedLogista.createdAt).toLocaleDateString("pt-BR")
-                        : "--"}
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <CardContent className="pt-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <InfoItem label="Telefone" value={selectedLogista?.phone} />
-                  <InfoItem label="Razão social" value={selectedLogista?.razaoSocial} />
-                  <InfoItem label="Empresa" value={selectedLogista?.enterprise} />
-                  <InfoItem label="Responsável" value={selectedLogista?.fullName} />
-                </div>
-                <Separator />
-                <div className="flex flex-col gap-2">
-                  <p className="text-sm font-semibold text-[#134B73]">Equipe associada</p>
-                  <p className="text-xs text-muted-foreground">
-                    Use o menu de ações para vincular operadores, gestores e vendedores.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <DialogFooter>
-              <Button variant="secondary" onClick={() => setViewModalOpen(false)}>
-                Fechar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      <Dialog open={linkModalOpen} onOpenChange={setLinkModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {linkAction === "unlink" ? "Desvincular usuário" : "Vincular usuário"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              {selectedLogista
-                ? linkAction === "unlink"
-                  ? `Selecione quem deseja remover da loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
-                  : `Selecione para associar à loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
-                : "Selecione uma loja."}
-            </p>
-            <Select
-              value={selectedLinkId}
-              onValueChange={setSelectedLinkId}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione" />
-              </SelectTrigger>
-              <SelectContent>
-                {(
-                  linkingType === "admin"
-                    ? admins
-                    : linkingType === "seller"
-                      ? sellers
-                      : linkingType === "manager"
-                        ? managers
-                        : operators
-                ).map((item) => (
-                  <SelectItem key={item.id} value={String(item.id)}>
-                    {item.fullName} — {item.email ?? item.phone ?? `ID ${item.id}`}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <DialogFooter className="justify-end gap-2">
-            <Button variant="outline" onClick={() => setLinkModalOpen(false)}>
-              Cancelar
-            </Button>
-            {linkAction === "unlink" && (
-              <Button
-                variant="destructive"
-                onClick={handleLink}
-                disabled={isLinking || !selectedLinkId}
-              >
-                {isLinking ? "Removendo..." : "Desvincular"}
-              </Button>
-            )}
-            {linkAction === "link" && (
-              <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
-                {isLinking ? "Salvando..." : "Vincular"}
-              </Button>
-            )}
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={teamModalOpen} onOpenChange={setTeamModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader>
-            <DialogTitle>Equipe vinculada</DialogTitle>
-            <DialogDescription>
-              Usuários associados à loja{" "}
-              <span className="font-semibold">{selectedLogista?.enterprise ?? selectedLogista?.fullName}</span>
-            </DialogDescription>
-          </DialogHeader>
-          {teamLoading ? (
-            <div className="py-6 text-sm text-muted-foreground">Carregando equipe...</div>
-          ) : (
-            <div className="space-y-4">
-              <TeamList title="Operadores" items={teamOperators} emptyLabel="Nenhum operador vinculado" />
-              <Separator />
-              <TeamList title="Gestores" items={teamManagers} emptyLabel="Nenhum gestor vinculado" />
-              <Separator />
-              <TeamList title="Vendedores" items={teamSellers} emptyLabel="Nenhum vendedor vinculado" />
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="secondary" onClick={() => setTeamModalOpen(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-        <Dialog open={actionsModalOpen} onOpenChange={setActionsModalOpen}>
-          <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Acoes do lojista</DialogTitle>
-            <DialogDescription>
-              Escolha uma acao rapida para {" "}
-              <span className="font-semibold">
-                {selectedLogista?.enterprise ?? selectedLogista?.fullName ?? "a loja"}
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Operacoes principais
-              </p>
-              <p className="text-sm text-muted-foreground">
-                As acoes mais utilizadas em um unico bloco.
-              </p>
-              <div className="mt-3 flex flex-col gap-2">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openTeamModal(selectedLogista);
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Equipe vinculada</span>
-                  <Users className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) handleView(selectedLogista);
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Visualizar</span>
-                  <Eye className="size-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="w-full justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) {
-                      setInfoModalOpen(true);
-                      toast({
-                        title: "Remova os vínculos primeiro",
-                        description:
-                          "Desvincule vendedores, gestores e operadores antes de excluir a loja.",
-                          //@ts-ignore
-                        variant: "warning",
-                      });
-                    }
-                  }}
-                >
-                  <span>Excluir lojista</span>
-                  <Trash2 className="size-4" />
-                </Button>
-              </div>
-            </section>
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Gerenciar vinculos
-                </p>
-                <span className="text-xs text-muted-foreground">Adicionar ou remover</span>
-              </div>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                <Button
-                  variant="secondary"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Adicionar vendedor</span>
-                  <UserPlus className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Desvincular vendedor</span>
-                  <Unlink className="size-4" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Adicionar gestor</span>
-                  <UserCog className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Desvincular gestor</span>
-                  <Unlink className="size-4" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Adicionar operador</span>
-                  <UserPlus2 className="size-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-between px-3"
-                  onClick={() => {
-                    if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
-                    setActionsModalOpen(false);
-                  }}
-                >
-                  <span>Desvincular operador</span>
-                  <Unlink className="size-4" />
-                </Button>
-              </div>
-            </section>
-          </div>
-        </DialogContent>
-        </Dialog>
-
-        <Dialog open={infoModalOpen} onOpenChange={setInfoModalOpen}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Desvincule antes de excluir</DialogTitle>
-              <DialogDescription>
-                Para remover esta loja, é necessário desvincular todos os vendedores, gestores e operadores
-                vinculados. Caso contrário, os vínculos impedirão a exclusão.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-3 text-sm text-muted-foreground">
-              <p>
-                Uma vez que todos os usuários forem desvinculados, você poderá confirmar a exclusão no diálogo
-                seguinte.
-              </p>
-              <p>Deseja abrir o modal de confirmação agora?</p>
-            </div>
-            <DialogFooter className="justify-end gap-2">
-              <Button variant="outline" onClick={() => setInfoModalOpen(false)}>
-                Voltar
-              </Button>
-              <Button
-                onClick={() => {
-                  setInfoModalOpen(false);
-                  setDeleteModalOpen(true);
-                }}
-              >
-                Abrir confirmação
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      <Dialog open={deleteModalOpen} onOpenChange={setDeleteModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Excluir lojista</DialogTitle>
-            <DialogDescription>
-              Esta ação removerá a loja{" "}
-              <span className="font-semibold">{selectedLogista?.enterprise ?? selectedLogista?.fullName}</span>{" "}
-              e os vínculos de equipe associados. Confirme para continuar.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="justify-end gap-2">
-            <Button variant="outline" onClick={() => setDeleteModalOpen(false)}>
-              Cancelar
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                if (selectedLogista) {
-                  handleDelete(selectedLogista);
-                }
-                setDeleteModalOpen(false);
-                setActionsModalOpen(false);
+        <Modal
+          open={viewModalOpen}
+          onCancel={() => setViewModalOpen(false)}
+          footer={null}
+          width={900}
+        >
+          <Card className="border-none shadow-none">
+            <Card
+              className="border border-white/10 text-white"
+              style={{
+                background: "linear-gradient(90deg, #134B73 0%, #0f3c5a 50%, #0a2c45 100%)",
+                color: "#ffffff",
               }}
             >
-              Confirmar exclusão
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="space-y-2">
+                  <Typography.Text style={{ color: "rgba(255,255,255,0.7)" }} className="text-xs uppercase tracking-[0.25em]">
+                    Loja - {selectedLogista?.referenceCode || "--"}
+                  </Typography.Text>
+                  <Typography.Title level={3} style={{ color: "#ffffff" }} className="!m-0 !leading-snug">
+                    {selectedLogista?.enterprise || selectedLogista?.fullName || "Lojista"}
+                  </Typography.Title>
+                  <div className="flex flex-wrap gap-2 text-sm text-white/85">
+                    <Tag
+                      style={{ color: "#ffffff", backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.25)" }}
+                      className="text-white border"
+                    >
+                      Resp.: {selectedLogista?.fullName || "--"}
+                    </Tag>
+                    <Tag
+                      style={{ color: "#ffffff", backgroundColor: "rgba(255,255,255,0.08)", borderColor: "rgba(255,255,255,0.25)" }}
+                      className="text-white border"
+                    >
+                      CNPJ: {selectedLogista?.cnpj || "--"}
+                    </Tag>
+                    {selectedLogista?.status && (
+                      <Tag
+                        style={{ color: "#ffffff", backgroundColor: "rgba(255,255,255,0.18)", borderColor: "rgba(255,255,255,0.35)" }}
+                        className="text-white border"
+                      >
+                        {selectedLogista.status}
+                      </Tag>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right text-sm text-white/80 space-y-1" style={{ color: "rgba(255,255,255,0.85)" }}>
+                  <div>Codigo Ref.</div>
+                  <div className="text-lg font-semibold">
+                    {selectedLogista?.referenceCode || "--"}
+                  </div>
+                  <div className="text-xs">
+                    Criado em{" "}
+                    {selectedLogista?.createdAt
+                      ? new Date(selectedLogista.createdAt).toLocaleDateString("pt-BR")
+                      : "--"}
+                  </div>
+                </div>
+              </div>
+            </Card>
+            <div className="pt-6 space-y-6">
+              <Descriptions column={2} size="small" layout="vertical" bordered>
+                <Descriptions.Item label="Telefone">
+                  {selectedLogista?.phone || "--"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Razao social">
+                  {selectedLogista?.razaoSocial || "--"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Empresa">
+                  {selectedLogista?.enterprise || "--"}
+                </Descriptions.Item>
+                <Descriptions.Item label="Responsavel">
+                  {selectedLogista?.fullName || "--"}
+                </Descriptions.Item>
+              </Descriptions>
+              <Divider />
+              <div className="flex flex-col gap-2">
+                <Typography.Text className="text-sm font-semibold text-[#134B73]">
+                  Equipe associada
+                </Typography.Text>
+                <Typography.Text className="text-xs text-muted-foreground">
+                  Use o menu de acoes para vincular operadores, gestores e vendedores.
+                </Typography.Text>
+              </div>
+            </div>
+          </Card>
+          <div className="flex justify-end pt-4">
+            <Button type="primary" onClick={() => setViewModalOpen(false)}>
+              Fechar
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </Modal>
+      )}
+
+      <Modal
+        open={linkModalOpen}
+        onCancel={() => setLinkModalOpen(false)}
+        footer={null}
+      >
+        <div className="space-y-3">
+          <h3 className="text-base font-semibold">
+            {linkAction === "unlink" ? "Desvincular usuario" : "Vincular usuario"}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {selectedLogista
+              ? linkAction === "unlink"
+                ? `Selecione quem deseja remover da loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+                : `Selecione para associar a loja ${selectedLogista.fullName} (${selectedLogista.enterprise}).`
+              : "Selecione uma loja."}
+          </p>
+          <Select
+            value={selectedLinkId || undefined}
+            onChange={(value) => setSelectedLinkId(String(value))}
+            options={linkOptions}
+            placeholder="Selecione"
+            className="w-full"
+            dropdownMatchSelectWidth={false}
+            dropdownStyle={{ minWidth: 420 }}
+          />
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="default" onClick={() => setLinkModalOpen(false)}>
+            Cancelar
+          </Button>
+          {linkAction === "unlink" && (
+            <Button
+              type="primary"
+              onClick={handleLink}
+              disabled={isLinking || !selectedLinkId}
+            >
+              {isLinking ? "Removendo..." : "Desvincular"}
+            </Button>
+          )}
+          {linkAction === "link" && (
+            <Button onClick={handleLink} disabled={isLinking || !selectedLinkId}>
+              {isLinking ? "Salvando..." : "Vincular"}
+            </Button>
+          )}
+        </div>
+      </Modal>
+
+      <Modal
+        open={teamModalOpen}
+        onCancel={() => setTeamModalOpen(false)}
+        footer={null}
+        width={900}
+      >
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold">Equipe vinculada</h3>
+          <p className="text-sm text-muted-foreground">
+            Usuarios associados a loja{" "}
+            <span className="font-semibold">
+              {selectedLogista?.enterprise ?? selectedLogista?.fullName}
+            </span>
+          </p>
+        </div>
+        {teamLoading ? (
+          <div className="py-6 text-sm text-muted-foreground">Carregando equipe...</div>
+        ) : (
+          <div className="space-y-4 pt-4">
+            <TeamList title="Operadores" items={teamOperators} emptyLabel="Nenhum operador vinculado" />
+            <Divider />
+            <TeamList title="Gestores" items={teamManagers} emptyLabel="Nenhum gestor vinculado" />
+            <Divider />
+            <TeamList title="Vendedores" items={teamSellers} emptyLabel="Nenhum vendedor vinculado" />
+          </div>
+        )}
+        <div className="flex justify-end pt-4">
+          <Button type="primary" onClick={() => setTeamModalOpen(false)}>
+            Fechar
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={actionsModalOpen}
+        onCancel={() => setActionsModalOpen(false)}
+        footer={null}
+        width={720}
+      >
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold">Acoes do lojista</h3>
+          <p className="text-sm text-muted-foreground">
+            Escolha uma acao rapida para{" "}
+            <span className="font-semibold">
+              {selectedLogista?.enterprise ?? selectedLogista?.fullName ?? "a loja"}
+            </span>
+          </p>
+        </div>
+
+        <div className="space-y-4 pt-4">
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Operacoes principais
+            </p>
+            <p className="text-sm text-muted-foreground">
+              As acoes mais utilizadas em um unico bloco.
+            </p>
+            <div className="mt-3 flex flex-col gap-2">
+              <Button
+                type="primary"
+                className="w-full justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openTeamModal(selectedLogista);
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Equipe vinculada</span>
+                <Users className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="w-full justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) handleView(selectedLogista);
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Visualizar</span>
+                <Eye className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="w-full justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) {
+                    setInfoModalOpen(true);
+                    toast({
+                      title: "Remova os vinculos primeiro",
+                      description:
+                        "Desvincule vendedores, gestores e operadores antes de excluir a loja.",
+                      //@ts-ignore
+                      variant: "warning",
+                    });
+                  }
+                }}
+              >
+                <span>Excluir lojista</span>
+                <Trash2 className="size-4" />
+              </Button>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Gerenciar vinculos
+              </p>
+              <span className="text-xs text-muted-foreground">Adicionar ou remover</span>
+            </div>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("seller", selectedLogista, "link");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Adicionar vendedor</span>
+                <UserPlus className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("seller", selectedLogista, "unlink");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Desvincular vendedor</span>
+                <Unlink className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("manager", selectedLogista, "link");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Adicionar gestor</span>
+                <UserCog className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("manager", selectedLogista, "unlink");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Desvincular gestor</span>
+                <Unlink className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("operator", selectedLogista, "link");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Adicionar operador</span>
+                <UserPlus2 className="size-4" />
+              </Button>
+              <Button
+                type="primary"
+                className="justify-between px-3"
+                onClick={() => {
+                  if (selectedLogista) openLinkModal("operator", selectedLogista, "unlink");
+                  setActionsModalOpen(false);
+                }}
+              >
+                <span>Desvincular operador</span>
+                <Unlink className="size-4" />
+              </Button>
+            </div>
+          </section>
+        </div>
+      </Modal>
+
+      <Modal
+        open={infoModalOpen}
+        onCancel={() => setInfoModalOpen(false)}
+        footer={null}
+        width={520}
+      >
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold">Desvincule antes de excluir</h3>
+          <p className="text-sm text-muted-foreground">
+            Para remover esta loja, e necessario desvincular todos os vendedores, gestores e operadores
+            vinculados. Caso contrario, os vinculos impedirao a exclusao.
+          </p>
+        </div>
+        <div className="space-y-3 text-sm text-muted-foreground pt-3">
+          <p>
+            Uma vez que todos os usuarios forem desvinculados, voce podera confirmar a exclusao no dialogo
+            seguinte.
+          </p>
+          <p>Deseja abrir o modal de confirmacao agora?</p>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="primary" onClick={() => setInfoModalOpen(false)}>
+            Voltar
+          </Button>
+          <Button
+            onClick={() => {
+              setInfoModalOpen(false);
+              setDeleteModalOpen(true);
+            }}
+          >
+            Abrir confirmacao
+          </Button>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deleteModalOpen}
+        onCancel={() => setDeleteModalOpen(false)}
+        footer={null}
+      >
+        <div className="space-y-2">
+          <h3 className="text-base font-semibold">Excluir lojista</h3>
+          <p className="text-sm text-muted-foreground">
+            Esta acao removera a loja{" "}
+            <span className="font-semibold">
+              {selectedLogista?.enterprise ?? selectedLogista?.fullName}
+            </span>{" "}
+            e os vinculos de equipe associados. Confirme para continuar.
+          </p>
+        </div>
+        <div className="flex justify-end gap-2 pt-4">
+          <Button type="primary" onClick={() => setDeleteModalOpen(false)}>
+            Cancelar
+          </Button>
+          <Button
+            danger
+            type="primary"
+            onClick={() => {
+              if (selectedLogista) {
+                handleDelete(selectedLogista);
+              }
+              setDeleteModalOpen(false);
+              setActionsModalOpen(false);
+            }}
+          >
+            Confirmar exclusao
+          </Button>
+        </div>
+      </Modal>
 
     </>);
 
@@ -1012,9 +964,9 @@ function TeamList({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-semibold text-[#134B73]">{title}</h4>
-        <Badge variant="secondary" className="bg-[#134B73]/10 text-[#134B73] border-[#134B73]/20">
+        <Tag color="blue" className="bg-[#134B73]/10 text-[#134B73] border-[#134B73]/20">
           {items.length} {items.length === 1 ? "item" : "itens"}
-        </Badge>
+        </Tag>
       </div>
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">{emptyLabel}</p>
@@ -1029,23 +981,14 @@ function TeamList({
               <div className="text-xs text-muted-foreground">{member.email || "sem e-mail"}</div>
               <div className="text-xs text-muted-foreground">{member.phone || "sem telefone"}</div>
               {member.status && (
-                <Badge className="mt-2 bg-[#0f3c5a] text-white border border-white/20 w-fit">
+                <Tag color="cyan" className="mt-2 bg-[#0f3c5a] text-white border border-white/20 w-fit">
                   {member.status}
-                </Badge>
+                </Tag>
               )}
             </div>
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-function InfoItem({ label, value }: { label: string; value?: string | null }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-      <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-[#134B73]">{value || "--"}</p>
     </div>
   );
 }
@@ -1065,9 +1008,9 @@ function LogistaCard({ logista }: { logista: Logista }) {
           )}
         </div>
         {logista.status && (
-          <Badge className="text-xs font-semibold uppercase tracking-wide">
+          <Tag color="blue" className="text-xs font-semibold uppercase tracking-wide">
             {logista.status}
-          </Badge>
+          </Tag>
         )}
       </div>
       <div className="grid grid-cols-2 gap-3 text-sm text-slate-600">

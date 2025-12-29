@@ -1,15 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Switch } from "@/presentation/layout/components/ui/switch";
-import { Separator } from "@/presentation/layout/components/ui/separator";
-import { Textarea } from "@/presentation/layout/components/ui/textarea";
+import { Button, Card, Divider, Input, Spin, Switch, Typography } from "antd";
 import {
   ArrowLeft,
   CheckCircle2,
   Download,
-  Loader2,
   FileText,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -491,18 +485,18 @@ export default function Step4Review({
     return (
       <div className="space-y-6">
         <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardContent className="py-12">
+          <div className="py-12">
             <div className="text-center space-y-4">
               <CheckCircle2 className="w-20 h-20 text-green-600 mx-auto" />
               <h2 className="text-2xl font-bold text-green-800">Proposta Enviada com Sucesso!</h2>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         <div className="flex gap-4 justify-center">
-          <Button onClick={handleDownloadPDF} disabled={downloadingPDF} size="lg" variant="outline">
+          <Button onClick={handleDownloadPDF} disabled={downloadingPDF} size="large">
             {downloadingPDF ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Spin size="small" className="mr-2" />
             ) : (
               <Download className="w-4 h-4 mr-2" />
             )}
@@ -518,11 +512,8 @@ export default function Step4Review({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Resumo da Operacao</h2>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Resumo da Operacao</span>}>
+        <div className="space-y-3">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Tipo de Operacao</p>
@@ -541,14 +532,11 @@ export default function Step4Review({
               <p className="font-semibold">{sellerLabel}</p>
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</h2>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</span>}>
+        <div className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Veiculo</p>
@@ -579,14 +567,11 @@ export default function Step4Review({
               </div>
             )}
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Dados do Cliente</h2>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados do Cliente</span>}>
+        <div className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Nome</p>
@@ -615,14 +600,11 @@ export default function Step4Review({
               </p>
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Dados Profissionais</h2>
-        </CardHeader>
-        <CardContent className="space-y-2">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados Profissionais</span>}>
+        <div className="space-y-2">
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-600">Empresa</p>
@@ -647,17 +629,18 @@ export default function Step4Review({
               </div>
             )}
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card className="bg-gradient-to-br from-[#134B73] to-[#0a2940]">
-        <CardHeader>
+      <Card
+        className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
+        title={
           <div className="flex justify-between items-center">
-            <h2 className="text-lg font-semibold text-white">Calculo do Financiamento</h2>
-            <Button onClick={handleCalculate} disabled={calculating} variant="secondary" size="sm">
+            <span className="text-lg font-semibold text-white">Calculo do Financiamento</span>
+            <Button onClick={handleCalculate} disabled={calculating} size="small">
               {calculating ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Spin size="small" className="mr-2" />
                   Calculando...
                 </>
               ) : (
@@ -665,8 +648,9 @@ export default function Step4Review({
               )}
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        }
+      >
+        <div className="space-y-4">
           {calculation ? (
             <>
               <div className="grid grid-cols-2 gap-4">
@@ -690,7 +674,7 @@ export default function Step4Review({
                 </div>
               </div>
 
-              <Separator className="bg-white/20" />
+              <Divider className="bg-white/20" />
 
               <div className="bg-white p-6 rounded-lg space-y-4">
                                 <div className="flex justify-between items-center pt-4 border-t">
@@ -714,22 +698,22 @@ export default function Step4Review({
             </>
           ) : (
             <div className="text-center py-8">
-              <Loader2 className="w-8 h-8 animate-spin text-white mx-auto" />
+              <Spin className="text-white" />
               <p className="text-white mt-2">Calculando...</p>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
       <Card>
-        <CardContent className="py-6">
+        <div className="py-6">
           <div className="flex items-start gap-4">
             <Switch
               checked={formData.acceptLgpd}
-              onCheckedChange={(checked) => updateField("acceptLgpd", checked)}
+              onChange={(checked) => updateField("acceptLgpd", checked)}
             />
             <div className="space-y-2">
-              <Label className="text-base font-semibold">Consentimento LGPD</Label>
+              <Typography.Text className="text-base font-semibold">Consentimento LGPD</Typography.Text>
               <p className="text-sm text-gray-600">
                 Autorizo o uso dos meus dados pessoais para analise de credito, contato comercial
                 e formalizacao da proposta, conforme a Lei Geral de Protecao de Dados (LGPD).
@@ -737,26 +721,23 @@ export default function Step4Review({
               </p>
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Informacoes adicionais</h2>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <Label htmlFor="additionalInfo">Detalhes extras (opcional)</Label>
-          <Textarea
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Informacoes adicionais</span>}>
+        <div className="space-y-2">
+          <Typography.Text>Detalhes extras (opcional)</Typography.Text>
+          <Input.TextArea
             id="additionalInfo"
             value={formData.additionalInfo}
             onChange={(e) => updateField("additionalInfo", e.target.value)}
             placeholder="Digite alguma observacao relevante para a proposta"
           />
-        </CardContent>
+        </div>
       </Card>
 
       <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg" disabled={submitting}>
+        <Button onClick={prevStep} type="default" size="large" disabled={submitting}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
@@ -765,12 +746,12 @@ export default function Step4Review({
           disabled={
             submitting || !formData.acceptLgpd || !calculation || dealerId == null
           }
-          size="lg"
-          className="bg-green-600 hover:bg-green-700"
+          size="large"
+          type="primary"
         >
           {submitting ? (
             <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Spin size="small" className="mr-2" />
               Enviando...
             </>
           ) : (

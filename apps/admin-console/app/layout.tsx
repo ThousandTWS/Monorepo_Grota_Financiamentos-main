@@ -4,6 +4,7 @@ import { SidebarProvider } from "@/application/core/context/SidebarContext";
 import { ThemeProvider } from "@/application/core/context/ThemeContext";
 import { Metadata } from "next";
 import { ToasterProvider } from "@/presentation/layout/components/toasterProvider";
+import { AntdRegistry } from '@ant-design/nextjs-registry';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -24,15 +25,14 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${outfit.className}`}>
         {/* Loader Global */}
-          
           <ThemeProvider>
             <SidebarProvider>
-              {children}
+              <AntdRegistry>
+                {children}
+              </AntdRegistry>
               <ToasterProvider />
             </SidebarProvider>
           </ThemeProvider>
-      
-          
       </body>
     </html>
   );

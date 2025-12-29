@@ -1,5 +1,4 @@
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Label } from "@/presentation/layout/components/ui/label";
+import { Input, Typography } from "antd";
 import { cn } from "@/lib/utils";
 import { formatName } from "@/lib/formatters";
 
@@ -35,9 +34,7 @@ export function LabeledInput({
 }: LabeledInputProps) {
   return (
     <div className={cn("space-y-2", containerClassName)}>
-      <Label htmlFor={id} className="text-[#134B73]">
-        {label}
-      </Label>
+      <Typography.Text className="text-[#134B73]">{label}</Typography.Text>
       <Input
         id={id}
         className={cn("w-full", inputClassName)}

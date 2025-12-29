@@ -2,23 +2,21 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
+  Button,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/presentation/layout/components/ui/card";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Input } from "@/presentation/layout/components/ui/input";
-import {
+  Empty,
+  Input,
+  Popconfirm,
+  Spin,
+  Table,
   Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/presentation/layout/components/ui/tooltip";
+  Typography,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { deleteSeller, getAllSellers, Seller } from "@/application/services/Seller/sellerService";
-import { AlertTriangle, Inbox, Loader2, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Inbox, RefreshCcw, Search, Trash2 } from "lucide-react";
 import { StatusBadge } from "../../logista/components/status-badge";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/application/core/hooks/use-toast";
 
 const formatDate = (value?: string) => {
@@ -121,11 +119,6 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
   const handleDelete = async (sellerId: number, sellerName?: string) => {
     if (deletingId) return;
 
-    const confirmed = window.confirm(
-      `Deseja realmente excluir o vendedor ${sellerName ?? `#${sellerId}`}?`,
-    );
-    if (!confirmed) return;
-
     setDeletingId(sellerId);
     try {
       await deleteSeller(sellerId);
@@ -184,43 +177,106 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
   const canShowMore = visibleCount < filteredSellers.length;
   const showPagination = filteredSellers.length > pageSize;
 
+  const columns: ColumnsType<Seller> = [
+    {
+      key: "seller",
+      title: "Vendedor",
+      dataIndex: "fullName",
+      render: (value: string | undefined, seller: Seller) => (
+        <div>
+          <div className="font-medium text-gray-900">{value ?? "--"}</div>
+          {seller.id && (
+            <Typography.Text type="secondary" className="text-xs">
+              ID #{seller.id}
+            </Typography.Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      title: "Contato",
+      render: (_: unknown, seller: Seller) => (
+        <div>
+          <div className="text-sm text-gray-900">{seller.email ?? "--"}</div>
+          <Typography.Text type="secondary" className="text-xs">
+            {seller.phone ?? "--"}
+          </Typography.Text>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      dataIndex: "status",
+      render: (value: string | undefined) => <StatusBadge status={value} />,
+    },
+    {
+      key: "createdAt",
+      title: "Cadastro",
+      dataIndex: "createdAt",
+      render: (value: string | undefined) => (
+        <Typography.Text type="secondary">{formatDate(value)}</Typography.Text>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Acoes",
+      render: (_: unknown, seller: Seller) => (
+        <Tooltip title="Excluir">
+          <Popconfirm
+            title={`Deseja realmente excluir o vendedor ${seller.fullName ?? `#${seller.id}`}?`}
+            okText="Excluir"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(seller.id, seller.fullName)}
+          >
+            <Button
+              type="text"
+              danger
+              loading={deletingId === seller.id}
+              icon={<Trash2 className="size-4" />}
+              aria-label="Excluir vendedor"
+            />
+          </Popconfirm>
+        </Tooltip>
+      ),
+    },
+  ];
+
   return (
     <Card className="w-full overflow-hidden border border-border/70 shadow-sm">
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/40">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/40 px-6 py-4">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-semibold">Vendedores ativos</CardTitle>
-          <CardDescription>Lista de vendedores com acesso ao painel.</CardDescription>
-          <p className="text-xs text-muted-foreground">
+          <Typography.Title level={5} className="!m-0">
+            Vendedores ativos
+          </Typography.Title>
+          <Typography.Text type="secondary">
+            Lista de vendedores com acesso ao painel.
+          </Typography.Text>
+          <Typography.Text type="secondary" className="text-xs block">
             {lastUpdated
               ? `Atualizado ${lastUpdated.toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}`
               : "Sincronizando..."}
-          </p>
+          </Typography.Text>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Buscar vendedor..."
-              className="h-9 w-full min-w-0 pl-9 text-sm sm:min-w-[220px]"
-            />
-          </div>
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar vendedor..."
+            prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            className="h-9 w-full min-w-0 sm:min-w-[220px]"
+          />
           <Button
-            variant="outline"
-            size="sm"
+            type="default"
             className="h-9 gap-2 self-start"
             onClick={handleRefresh}
             disabled={loading || refreshing}
+            icon={loading || refreshing ? <Spin size="small" /> : <RefreshCcw className="size-4" />}
           >
-            {loading || refreshing ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="size-4" />
-            )}
             Atualizar
           </Button>
           <div className="flex items-center gap-2">
@@ -232,108 +288,38 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
             </StatusBadge>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
+      </div>
+      <div className="p-0">
         {loading ? (
           <div className="flex h-56 flex-col items-center justify-center gap-2 px-6 text-sm text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" />
+            <Spin />
             <span>Carregando vendedores...</span>
           </div>
         ) : error ? (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 px-6 text-sm text-red-600 dark:text-red-400">
-            <AlertTriangle className="size-5" />
-            <span>{error}</span>
-            <span className="text-xs text-red-500/80">Tente atualizar em instantes.</span>
+          <div className="px-6 py-6">
+            <Alert
+              type="error"
+              message={error}
+              description="Tente atualizar em instantes."
+              showIcon
+            />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3 text-left font-medium">Vendedor</th>
-                  <th className="px-6 py-3 text-left font-medium">Contato</th>
-                  <th className="px-6 py-3 text-left font-medium">Status</th>
-                  <th className="px-6 py-3 text-left font-medium">Cadastro</th>
-                  <th className="px-6 py-3 text-left font-medium">Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleSellers.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Inbox className="size-5" />
-                        <span>Nenhum vendedor encontrado.</span>
-                        <span className="text-xs text-muted-foreground/80">
-                          Ajuste sua busca ou aguarde novas atualizações.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  visibleSellers.map((seller) => {
-                    return (
-                      <tr
-                        key={seller.id}
-                        className={cn(
-                          "border-t border-border/60 text-sm transition-colors",
-                          "odd:bg-background even:bg-muted/20 hover:bg-muted/40",
-                        )}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900 dark:text-gray-50">
-                            {seller.fullName ?? "--"}
-                          </div>
-                          {seller.id && (
-                            <p className="text-xs text-muted-foreground">
-                              ID #{seller.id}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 dark:text-gray-100">
-                            {seller.email ?? "--"}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {seller.phone ?? "--"}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={seller.status} />
-                        </td>
-                        <td className="px-6 py-4 text-muted-foreground">
-                          {formatDate(seller.createdAt)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-600 hover:text-red-700 dark:text-red-400"
-                                onClick={() => handleDelete(seller.id, seller.fullName)}
-                                disabled={deletingId === seller.id}
-                                aria-label="Excluir vendedor"
-                              >
-                                {deletingId === seller.id ? (
-                                  <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="size-4" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Excluir</TooltipContent>
-                          </Tooltip>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+          <>
+            <Table
+              columns={columns}
+              dataSource={visibleSellers}
+              rowKey="id"
+              pagination={false}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={<Inbox className="size-5" />}
+                    description="Nenhum vendedor encontrado."
+                  />
+                ),
+              }}
+            />
             {showPagination && (
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 px-6 py-4 text-xs text-muted-foreground">
                 <span>
@@ -342,9 +328,8 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
                 <div className="flex items-center gap-2">
                   {visibleCount > pageSize && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8"
+                      type="default"
+                      size="small"
                       onClick={() => setVisibleCount(pageSize)}
                     >
                       Mostrar menos
@@ -352,9 +337,8 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
                   )}
                   {canShowMore && (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
+                      type="default"
+                      size="small"
                       onClick={() =>
                         setVisibleCount((prev) =>
                           Math.min(prev + pageSize, filteredSellers.length),
@@ -367,9 +351,9 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

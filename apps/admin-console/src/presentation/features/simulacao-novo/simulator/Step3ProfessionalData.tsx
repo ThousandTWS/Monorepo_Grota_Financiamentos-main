@@ -1,8 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Button } from "@/presentation/layout/components/ui/button";
+import { Button, Card, Input, Typography } from "antd";
 import { ArrowRight, ArrowLeft, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { formatNumberToBRL, parseBRL } from "@/lib/formatters";
@@ -81,17 +78,18 @@ export default function Step3ProfessionalData({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+      <Card
+        title={
           <div className="flex items-center gap-2">
             <Briefcase className="w-5 h-5 text-[#134B73]" />
-            <h2 className="text-lg font-semibold text-[#134B73]">Dados Profissionais</h2>
+            <span className="text-lg font-semibold text-[#134B73]">Dados Profissionais</span>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        }
+      >
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Empresa</Label>
+              <Typography.Text>Empresa</Typography.Text>
               <Input
                 value={formData.professional.enterprise}
                 onChange={(e) => updateFormData("professional", { enterprise: e.target.value })}
@@ -101,7 +99,7 @@ export default function Step3ProfessionalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Funcao/Cargo</Label>
+              <Typography.Text>Funcao/Cargo</Typography.Text>
               <Input
                 value={formData.professional.enterpriseFunction}
                 onChange={(e) =>
@@ -113,7 +111,7 @@ export default function Step3ProfessionalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Data de Admissao</Label>
+              <Typography.Text>Data de Admissao</Typography.Text>
               <Input
                 type="date"
                 value={formData.professional.admissionDate}
@@ -126,7 +124,7 @@ export default function Step3ProfessionalData({
 
             {formData.personType === "PF" && (
               <div className="space-y-2">
-                <Label>Naturalidade</Label>
+                <Typography.Text>Naturalidade</Typography.Text>
                 <Input
                   value={formData.personal.nationality}
                   onChange={(e) => updateFormData("personal", { nationality: e.target.value })}
@@ -138,7 +136,7 @@ export default function Step3ProfessionalData({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
             <div className="space-y-2">
-              <Label>Renda Mensal</Label>
+              <Typography.Text>Renda Mensal</Typography.Text>
               <Input
                 value={incomeInput}
                 onChange={(e) => handleIncomeChange(e.target.value)}
@@ -159,7 +157,7 @@ export default function Step3ProfessionalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Outras Rendas (opcional)</Label>
+              <Typography.Text>Outras Rendas (opcional)</Typography.Text>
               <Input
                 value={otherIncomeInput}
                 onChange={(e) => handleOtherIncomesChange(e.target.value)}
@@ -190,15 +188,15 @@ export default function Step3ProfessionalData({
               </span>
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
+        <Button onClick={prevStep} type="default" size="large">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
-        <Button onClick={handleNext} size="lg" className="bg-[#134B73] hover:bg-[#0f3a5a]">
+        <Button onClick={handleNext} type="primary" size="large">
           Proximo: Revisao
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>

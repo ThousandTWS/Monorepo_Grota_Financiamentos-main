@@ -2,23 +2,21 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
+  Button,
   Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/presentation/layout/components/ui/card";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Input } from "@/presentation/layout/components/ui/input";
-import {
+  Empty,
+  Input,
+  Popconfirm,
+  Spin,
+  Table,
   Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/presentation/layout/components/ui/tooltip";
+  Typography,
+} from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { deleteManager, getAllManagers, Manager } from "@/application/services/Manager/managerService";
-import { AlertTriangle, Inbox, Loader2, RefreshCcw, Search, Trash2 } from "lucide-react";
+import { Inbox, RefreshCcw, Search, Trash2 } from "lucide-react";
 import { StatusBadge } from "../../logista/components/status-badge";
-import { cn } from "@/lib/utils";
 import { useToast } from "@/application/core/hooks/use-toast";
 
 const formatDate = (value?: string) => {
@@ -121,11 +119,6 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
   const handleDelete = async (managerId: number, managerName?: string) => {
     if (deletingId) return;
 
-    const confirmed = window.confirm(
-      `Deseja realmente excluir o gestor ${managerName ?? `#${managerId}`}?`,
-    );
-    if (!confirmed) return;
-
     setDeletingId(managerId);
     try {
       await deleteManager(managerId);
@@ -184,43 +177,106 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
   const canShowMore = visibleCount < filteredManagers.length;
   const showPagination = filteredManagers.length > pageSize;
 
+  const columns: ColumnsType<Manager> = [
+    {
+      key: "manager",
+      title: "Gestor",
+      dataIndex: "fullName",
+      render: (value: string | undefined, manager: Manager) => (
+        <div>
+          <div className="font-medium text-gray-900">{value ?? "--"}</div>
+          {manager.id && (
+            <Typography.Text type="secondary" className="text-xs">
+              ID #{manager.id}
+            </Typography.Text>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      title: "Contato",
+      render: (_: unknown, manager: Manager) => (
+        <div>
+          <div className="text-sm text-gray-900">{manager.email ?? "--"}</div>
+          <Typography.Text type="secondary" className="text-xs">
+            {manager.phone ?? "--"}
+          </Typography.Text>
+        </div>
+      ),
+    },
+    {
+      key: "status",
+      title: "Status",
+      dataIndex: "status",
+      render: (value: string | undefined) => <StatusBadge status={value} />,
+    },
+    {
+      key: "createdAt",
+      title: "Cadastro",
+      dataIndex: "createdAt",
+      render: (value: string | undefined) => (
+        <Typography.Text type="secondary">{formatDate(value)}</Typography.Text>
+      ),
+    },
+    {
+      key: "actions",
+      title: "Acoes",
+      render: (_: unknown, manager: Manager) => (
+        <Tooltip title="Excluir">
+          <Popconfirm
+            title={`Deseja realmente excluir o gestor ${manager.fullName ?? `#${manager.id}`}?`}
+            okText="Excluir"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleDelete(manager.id, manager.fullName)}
+          >
+            <Button
+              type="text"
+              danger
+              loading={deletingId === manager.id}
+              icon={<Trash2 className="size-4" />}
+              aria-label="Excluir gestor"
+            />
+          </Popconfirm>
+        </Tooltip>
+      ),
+    },
+  ];
+
   return (
     <Card className="w-full overflow-hidden border border-border/70 shadow-sm">
-      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/40">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-muted/40 px-6 py-4">
         <div className="space-y-1">
-          <CardTitle className="text-lg font-semibold">Gestores ativos</CardTitle>
-          <CardDescription>Lista dos gestores com acesso ao painel.</CardDescription>
-          <p className="text-xs text-muted-foreground">
+          <Typography.Title level={5} className="!m-0">
+            Gestores ativos
+          </Typography.Title>
+          <Typography.Text type="secondary">
+            Lista dos gestores com acesso ao painel.
+          </Typography.Text>
+          <Typography.Text type="secondary" className="text-xs block">
             {lastUpdated
               ? `Atualizado ${lastUpdated.toLocaleTimeString("pt-BR", {
                   hour: "2-digit",
                   minute: "2-digit",
                 })}`
               : "Sincronizando..."}
-          </p>
+          </Typography.Text>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={searchTerm}
-              onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Buscar gestor..."
-              className="h-9 w-full min-w-0 pl-9 text-sm sm:min-w-[220px]"
-            />
-          </div>
+          <Input
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Buscar gestor..."
+            prefix={<Search className="h-4 w-4 text-muted-foreground" />}
+            className="h-9 w-full min-w-0 sm:min-w-[220px]"
+          />
           <Button
-            variant="outline"
-            size="sm"
+            type="default"
             className="h-9 gap-2 self-start"
             onClick={handleRefresh}
             disabled={loading || refreshing}
+            icon={loading || refreshing ? <Spin size="small" /> : <RefreshCcw className="size-4" />}
           >
-            {loading || refreshing ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <RefreshCcw className="size-4" />
-            )}
             Atualizar
           </Button>
           <div className="flex items-center gap-2">
@@ -232,108 +288,38 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
             </StatusBadge>
           </div>
         </div>
-      </CardHeader>
-      <CardContent className="p-0">
+      </div>
+      <div className="p-0">
         {loading ? (
           <div className="flex h-56 flex-col items-center justify-center gap-2 px-6 text-sm text-muted-foreground">
-            <Loader2 className="size-5 animate-spin" />
+            <Spin />
             <span>Carregando gestores...</span>
           </div>
         ) : error ? (
-          <div className="flex h-56 flex-col items-center justify-center gap-2 px-6 text-sm text-red-600 dark:text-red-400">
-            <AlertTriangle className="size-5" />
-            <span>{error}</span>
-            <span className="text-xs text-red-500/80">Tente atualizar em instantes.</span>
+          <div className="px-6 py-6">
+            <Alert
+              type="error"
+              message={error}
+              description="Tente atualizar em instantes."
+              showIcon
+            />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-3 text-left font-medium">Gestor</th>
-                  <th className="px-6 py-3 text-left font-medium">Contato</th>
-                  <th className="px-6 py-3 text-left font-medium">Status</th>
-                  <th className="px-6 py-3 text-left font-medium">Cadastro</th>
-                  <th className="px-6 py-3 text-left font-medium">Acoes</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visibleManagers.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={5}
-                      className="px-6 py-12 text-center text-muted-foreground"
-                    >
-                      <div className="flex flex-col items-center gap-2">
-                        <Inbox className="size-5" />
-                        <span>Nenhum gestor encontrado.</span>
-                        <span className="text-xs text-muted-foreground/80">
-                          Ajuste sua busca ou aguarde novas atualizações.
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  visibleManagers.map((manager) => {
-                    return (
-                      <tr
-                        key={manager.id}
-                        className={cn(
-                          "border-t border-border/60 text-sm transition-colors",
-                          "odd:bg-background even:bg-muted/20 hover:bg-muted/40",
-                        )}
-                      >
-                        <td className="px-6 py-4">
-                          <div className="font-medium text-gray-900 dark:text-gray-50">
-                            {manager.fullName ?? "--"}
-                          </div>
-                          {manager.id && (
-                            <p className="text-xs text-muted-foreground">
-                              ID #{manager.id}
-                            </p>
-                          )}
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-900 dark:text-gray-100">
-                            {manager.email ?? "--"}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            {manager.phone ?? "--"}
-                          </p>
-                        </td>
-                        <td className="px-6 py-4">
-                          <StatusBadge status={manager.status} />
-                        </td>
-                        <td className="px-6 py-4 text-muted-foreground">
-                          {formatDate(manager.createdAt)}
-                        </td>
-                        <td className="px-6 py-4">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-red-600 hover:text-red-700 dark:text-red-400"
-                                onClick={() => handleDelete(manager.id, manager.fullName)}
-                                disabled={deletingId === manager.id}
-                                aria-label="Excluir gestor"
-                              >
-                                {deletingId === manager.id ? (
-                                  <Loader2 className="size-4 animate-spin" />
-                                ) : (
-                                  <Trash2 className="size-4" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">Excluir</TooltipContent>
-                          </Tooltip>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+          <>
+            <Table
+              columns={columns}
+              dataSource={visibleManagers}
+              rowKey="id"
+              pagination={false}
+              locale={{
+                emptyText: (
+                  <Empty
+                    image={<Inbox className="size-5" />}
+                    description="Nenhum gestor encontrado."
+                  />
+                ),
+              }}
+            />
             {showPagination && (
               <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 px-6 py-4 text-xs text-muted-foreground">
                 <span>
@@ -342,9 +328,8 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
                 <div className="flex items-center gap-2">
                   {visibleCount > pageSize && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8"
+                      type="default"
+                      size="small"
                       onClick={() => setVisibleCount(pageSize)}
                     >
                       Mostrar menos
@@ -352,9 +337,8 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
                   )}
                   {canShowMore && (
                     <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8"
+                      type="default"
+                      size="small"
                       onClick={() =>
                         setVisibleCount((prev) =>
                           Math.min(prev + pageSize, filteredManagers.length),
@@ -367,9 +351,9 @@ export function ManagersList({ dealerId }: { dealerId?: number }) {
                 </div>
               </div>
             )}
-          </div>
+          </>
         )}
-      </CardContent>
+      </div>
     </Card>
   );
 }

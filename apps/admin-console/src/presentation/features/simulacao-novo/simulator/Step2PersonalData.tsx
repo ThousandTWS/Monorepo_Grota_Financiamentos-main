@@ -1,17 +1,6 @@
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Button } from "@/presentation/layout/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/presentation/layout/components/ui/select";
-import { Switch } from "@/presentation/layout/components/ui/switch";
-import { ArrowRight, ArrowLeft, User, Loader2 } from "lucide-react";
+import { Button, Card, Input, Select, Spin, Switch, Typography } from "antd";
+import { ArrowRight, ArrowLeft, User } from "lucide-react";
 import { toast } from "sonner";
 import { maskCPF, maskPhone } from "@/lib/masks";
 import { maskCEP, maskCNPJ } from "@/application/core/utils/masks";
@@ -28,6 +17,16 @@ type Step2PersonalDataProps = {
 };
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
+const normalizePhoneDigits = (value: string) => {
+  let digits = digitsOnly(value);
+  if (digits.startsWith("55") && digits.length > 11) {
+    digits = digits.slice(2);
+  }
+  if (digits.length > 11) {
+    digits = digits.slice(-11);
+  }
+  return digits;
+};
 
 const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 const blueInputClass = "border-[#134B73] focus-visible:border-[#134B73] focus-visible:ring-[#134B73]/30";
@@ -741,7 +740,7 @@ export default function Step2PersonalData({
 
           setCpfStatus(cpfStatusText || null);
           setCpfLookupCompleted(true);
-          setCpfPhoneDigits(resolvedPhoneDigits);
+          setCpfPhoneDigits(normalizePhoneDigits(resolvedPhoneDigits));
 
           const emailFlag = contactEmail.verified ?? (contactEmail.email ? true : null);
           const phoneFlag =
@@ -983,14 +982,13 @@ export default function Step2PersonalData({
         return false;
       }
 
-      if (!cpfPhoneDigits) {
-        toast.error("Telefone nao encontrado para este CPF.");
-        return false;
-      }
-
-      if (digitsOnly(personal.phone) !== cpfPhoneDigits) {
-        toast.error("Telefone nao corresponde ao CPF informado.");
-        return false;
+      if (cpfPhoneDigits) {
+        const normalizedInput = normalizePhoneDigits(personal.phone);
+        const normalizedCpfPhone = normalizePhoneDigits(cpfPhoneDigits);
+        if (normalizedInput !== normalizedCpfPhone) {
+          toast.error("Telefone nao corresponde ao CPF informado.");
+          return false;
+        }
       }
     }
 
@@ -1010,19 +1008,20 @@ export default function Step2PersonalData({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+      <Card
+        title={
           <div className="flex items-center gap-2">
             <User className="w-5 h-5 text-[#134B73]" />
-            <h2 className="text-lg font-semibold text-[#134B73]">Dados Pessoais</h2>
+            <span className="text-lg font-semibold text-[#134B73]">Dados Pessoais</span>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        }
+      >
+        <div className="space-y-4">
           <div
             className={`grid grid-cols-1 ${isPf ? "md:grid-cols-3" : "md:grid-cols-1"} gap-4`}
           >
             <div className="space-y-2">
-              <Label>{formData.personType === "PF" ? "CPF" : "CNPJ"}</Label>
+              <Typography.Text>{formData.personType === "PF" ? "CPF" : "CNPJ"}</Typography.Text>
               <div className="relative">
                 <Input
                   value={formData.personal.cpfCnpj}
@@ -1032,14 +1031,14 @@ export default function Step2PersonalData({
                   className={blueInputClass}
                 />
                 {searchingDoc && (
-                  <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
+                  <Spin size="small" className="absolute right-3 top-3 text-[#134B73]" />
                 )}
               </div>
             </div>
 
             {formData.personType === "PF" && (
               <div className="space-y-2 md:col-span-2">
-                <Label>Nome Completo</Label>
+                <Typography.Text>Nome Completo</Typography.Text>
                 <Input
                   value={formData.personal.name}
                   onChange={(e) => updateFormData("personal", { name: e.target.value })}
@@ -1050,7 +1049,7 @@ export default function Step2PersonalData({
 
             {docLookupCompleted && (
               <div className={`space-y-2 ${isPf ? "md:col-span-3" : ""}`}>
-                <Label>Status na Receita</Label>
+                <Typography.Text>Status na Receita</Typography.Text>
                 <div className="flex flex-wrap items-center gap-2">
                   <StatusBadge status={docStatusTone} className="shadow-none">
                     {docStatusLabel}
@@ -1072,7 +1071,7 @@ export default function Step2PersonalData({
             {formData.personType === "PF" && (
               <>
                 <div className="space-y-2 md:col-span-2">
-                  <Label>E-mail</Label>
+                  <Typography.Text>E-mail</Typography.Text>
                   <Input
                     type="email"
                     value={formData.personal.email}
@@ -1083,7 +1082,7 @@ export default function Step2PersonalData({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Telefone</Label>
+                  <Typography.Text>Telefone</Typography.Text>
                   <Input
                     value={formData.personal.phone}
                     onChange={(e) => {
@@ -1102,7 +1101,19 @@ export default function Step2PersonalData({
                         setPhoneVerified(false);
                         return;
                       }
-                      setPhoneVerified(Boolean(cpfPhoneDigits && digits === cpfPhoneDigits));
+                      if (!cpfPhoneDigits) {
+                        setPhoneVerified(true);
+                        return;
+                      }
+                      const normalizedInput = normalizePhoneDigits(digits);
+                      const normalizedCpfPhone = normalizePhoneDigits(cpfPhoneDigits);
+                      setPhoneVerified(
+                        Boolean(
+                          normalizedCpfPhone &&
+                            normalizedInput &&
+                            normalizedInput === normalizedCpfPhone,
+                        ),
+                      );
                     }}
                     placeholder="(00) 00000-0000"
                     maxLength={15}
@@ -1121,7 +1132,7 @@ export default function Step2PersonalData({
           {formData.personType === "PF" && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <div className="space-y-2">
-                <Label>Nome da Mae</Label>
+                <Typography.Text>Nome da Mae</Typography.Text>
                 <Input
                   value={formData.personal.motherName}
                   onChange={(e) => updateFormData("personal", { motherName: e.target.value })}
@@ -1130,7 +1141,7 @@ export default function Step2PersonalData({
               </div>
 
               <div className="space-y-2">
-                <Label>Data de Nascimento</Label>
+                <Typography.Text>Data de Nascimento</Typography.Text>
                 <Input
                   type="date"
                   value={formData.personal.birthday}
@@ -1139,54 +1150,46 @@ export default function Step2PersonalData({
               </div>
 
               <div className="space-y-2">
-                <Label>Estado Civil</Label>
+                <Typography.Text>Estado Civil</Typography.Text>
                 <Select
-                  value={formData.personal.maritalStatus}
-                  onValueChange={(value) =>
-                    updateFormData("personal", { maritalStatus: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Solteiro">Solteiro(a)</SelectItem>
-                    <SelectItem value="Casado">Casado(a)</SelectItem>
-                    <SelectItem value="Divorciado">Divorciado(a)</SelectItem>
-                    <SelectItem value="Viuvo">Viuvo(a)</SelectItem>
-                  </SelectContent>
-                </Select>
+                  value={formData.personal.maritalStatus || undefined}
+                  onChange={(value) => updateFormData("personal", { maritalStatus: value })}
+                  placeholder="Selecione"
+                  options={[
+                    { value: "Solteiro", label: "Solteiro(a)" },
+                    { value: "Casado", label: "Casado(a)" },
+                    { value: "Divorciado", label: "Divorciado(a)" },
+                    { value: "Viuvo", label: "Viuvo(a)" },
+                  ]}
+                  className="w-full"
+                />
               </div>
 
               <div className="flex items-center space-x-3 p-4 border border-[#134B73] rounded-lg">
                 <Switch
                   checked={formData.personal.hasCnh}
-                  onCheckedChange={(checked) => updateFormData("personal", { hasCnh: checked })}
+                  onChange={(checked) => updateFormData("personal", { hasCnh: checked })}
                 />
-                <Label>Possui CNH?</Label>
+                <Typography.Text>Possui CNH?</Typography.Text>
               </div>
 
               {formData.personal.hasCnh && (
                 <div className="space-y-2">
-                  <Label>Categoria CNH</Label>
-                  <Select
-                    value={formData.personal.cnhCategory}
-                    onValueChange={(value) =>
-                      updateFormData("personal", { cnhCategory: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Categoria" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="A">A</SelectItem>
-                      <SelectItem value="B">B</SelectItem>
-                      <SelectItem value="AB">AB</SelectItem>
-                      <SelectItem value="C">C</SelectItem>
-                      <SelectItem value="D">D</SelectItem>
-                      <SelectItem value="E">E</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Typography.Text>Categoria CNH</Typography.Text>
+                <Select
+                  value={formData.personal.cnhCategory || undefined}
+                  onChange={(value) => updateFormData("personal", { cnhCategory: value })}
+                  placeholder="Categoria"
+                  options={[
+                    { value: "A", label: "A" },
+                    { value: "B", label: "B" },
+                    { value: "AB", label: "AB" },
+                    { value: "C", label: "C" },
+                    { value: "D", label: "D" },
+                    { value: "E", label: "E" },
+                  ]}
+                  className="w-full"
+                />
                 </div>
               )}
             </div>
@@ -1195,7 +1198,7 @@ export default function Step2PersonalData({
           {formData.personType === "PJ" && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
               <div className="space-y-2">
-                <Label>Nome do Socio</Label>
+                <Typography.Text>Nome do Socio</Typography.Text>
                 <Input
                   value={formData.personal.shareholderName}
                   onChange={(e) =>
@@ -1205,7 +1208,7 @@ export default function Step2PersonalData({
                 />
               </div>
               <div className="space-y-2">
-                <Label>Nome Fantasia</Label>
+                <Typography.Text>Nome Fantasia</Typography.Text>
                 <Input
                   value={formData.personal.companyName}
                   onChange={(e) =>
@@ -1216,17 +1219,14 @@ export default function Step2PersonalData({
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Endereco</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Endereco</span>}>
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>CEP</Label>
+              <Typography.Text>CEP</Typography.Text>
               <div className="relative">
                 <Input
                   value={formData.address.cep}
@@ -1236,13 +1236,13 @@ export default function Step2PersonalData({
                   className={blueInputClass}
                 />
                 {searchingCep && (
-                  <Loader2 className="absolute right-3 top-3 w-4 h-4 animate-spin text-[#134B73]" />
+                  <Spin size="small" className="absolute right-3 top-3 text-[#134B73]" />
                 )}
               </div>
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Endereco</Label>
+              <Typography.Text>Endereco</Typography.Text>
               <Input
                 value={formData.address.address}
                 onChange={(e) => updateFormData("address", { address: e.target.value })}
@@ -1251,7 +1251,7 @@ export default function Step2PersonalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Numero</Label>
+              <Typography.Text>Numero</Typography.Text>
               <Input
                 value={formData.address.number}
                 onChange={(e) => updateFormData("address", { number: e.target.value })}
@@ -1261,7 +1261,7 @@ export default function Step2PersonalData({
             </div>
 
             <div className="space-y-2 md:col-span-2">
-              <Label>Complemento</Label>
+              <Typography.Text>Complemento</Typography.Text>
               <Input
                 value={formData.address.complement}
                 onChange={(e) => updateFormData("address", { complement: e.target.value })}
@@ -1271,7 +1271,7 @@ export default function Step2PersonalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Bairro</Label>
+              <Typography.Text>Bairro</Typography.Text>
               <Input
                 value={formData.address.neighborhood}
                 onChange={(e) => updateFormData("address", { neighborhood: e.target.value })}
@@ -1280,7 +1280,7 @@ export default function Step2PersonalData({
             </div>
 
             <div className="space-y-2">
-              <Label>Cidade</Label>
+              <Typography.Text>Cidade</Typography.Text>
               <Input
                 value={formData.address.city}
                 onChange={(e) => updateFormData("address", { city: e.target.value })}
@@ -1289,37 +1289,29 @@ export default function Step2PersonalData({
             </div>
 
             <div className="space-y-2">
-              <Label>UF</Label>
+              <Typography.Text>UF</Typography.Text>
               <Select
-                value={formData.address.uf}
-                onValueChange={(value) => updateFormData("address", { uf: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="UF" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[
-                    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
-                    "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
-                    "SP","SE","TO",
-                  ].map((uf) => (
-                    <SelectItem key={uf} value={uf}>
-                      {uf}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                value={formData.address.uf || undefined}
+                onChange={(value) => updateFormData("address", { uf: value })}
+                placeholder="UF"
+                options={[
+                  "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS",
+                  "MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC",
+                  "SP","SE","TO",
+                ].map((uf) => ({ value: uf, label: uf }))}
+                className="w-full"
+              />
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <div className="flex justify-between">
-        <Button onClick={prevStep} variant="outline" size="lg">
+        <Button onClick={prevStep} type="default" size="large">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
-        <Button onClick={handleNext} size="lg" className="bg-[#134B73] hover:bg-[#0f3a5a]">
+        <Button onClick={handleNext} type="primary" size="large">
           Proximo: Dados Profissionais
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>

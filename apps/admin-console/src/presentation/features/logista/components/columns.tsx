@@ -1,6 +1,7 @@
 "use client";
 
-import { Button } from "@/presentation/layout/components/ui/button";
+import { Button } from "antd";
+import type { ColumnsType } from "antd/es/table";
 import { StatusBadge } from "./status-badge";
 
 export type Logista = {
@@ -23,24 +24,24 @@ type LogistaActionsProps = {
 export function LogistaActions({ logista, onOpenActions }: LogistaActionsProps) {
   return (
     <Button
-      variant="outline"
-      size="sm"
+      size="small"
       onClick={() => onOpenActions(logista)}
       className="h-8"
-      title="Ações do lojista"
+      title="Acoes do lojista"
     >
-      Ações
+      Acoes
     </Button>
   );
 }
 
 export const getLogistaColumns = (actions: {
   onOpenActions: (logista: Logista) => void;
-}) => [
+}): ColumnsType<Logista> => [
   {
     key: "referenceCode",
-    header: "Código Ref.",
-    cell: (logista: Logista) => {
+    title: "Codigo Ref.",
+    dataIndex: "referenceCode",
+    render: (_value: string | null | undefined, logista: Logista) => {
       const numberOnly =
         logista.referenceCode?.match(/\d+/g)?.join("") || logista.referenceCode || "--";
       return (
@@ -52,70 +53,79 @@ export const getLogistaColumns = (actions: {
   },
   {
     key: "fullName",
-    header: "Nome",
-    cell: (logista: Logista) => (
+    title: "Nome",
+    dataIndex: "fullName",
+    render: (value: string) => (
       <div className="font-medium" data-oid="prv:wgx">
-        {logista.fullName}
+        {value}
       </div>
     ),
   },
   {
     key: "enterprise",
-    header: "Empresa",
-    cell: (logista: Logista) => (
+    title: "Empresa",
+    dataIndex: "enterprise",
+    render: (value: string) => (
       <div className="text-muted-foreground" data-oid="c6-jzwr">
-        {logista.enterprise}
+        {value}
       </div>
     ),
   },
   {
     key: "razaoSocial",
-    header: "Razão Social",
-    cell: (logista: Logista) => (
+    title: "Razao Social",
+    dataIndex: "razaoSocial",
+    render: (value: string | null | undefined) => (
       <div className="text-muted-foreground" data-oid="razao">
-        {logista.razaoSocial || "--"}
+        {value || "--"}
       </div>
     ),
   },
   {
     key: "cnpj",
-    header: "CNPJ",
-    cell: (logista: Logista) => (
+    title: "CNPJ",
+    dataIndex: "cnpj",
+    render: (value: string | null | undefined) => (
       <div className="text-muted-foreground" data-oid="cnpj">
-        {logista.cnpj || "--"}
+        {value || "--"}
       </div>
     ),
   },
   {
     key: "telefone",
-    header: "Telefone",
-    cell: (logista: Logista) => (
+    title: "Telefone",
+    dataIndex: "phone",
+    render: (value: string) => (
       <div className="text-muted-foreground" data-oid="ao67jhu">
-        {logista.phone}
+        {value}
       </div>
     ),
   },
   {
     key: "status",
-    header: "Status",
-    cell: (logista: Logista) => <StatusBadge status={logista.status} />,
+    title: "Status",
+    dataIndex: "status",
+    render: (value: string | null | undefined) => <StatusBadge status={value} />,
   },
   {
     key: "dataRegistro",
-    header: "Data de Registro",
-    cell: (logista: Logista) => (
+    title: "Data de Registro",
+    dataIndex: "createdAt",
+    render: (value: string | undefined) => (
       <div className="text-muted-foreground" data-oid=":_wr2bt">
-        {logista.createdAt
-          ? new Date(logista.createdAt).toLocaleDateString("pt-BR")
-          : "--"}
+        {value ? new Date(value).toLocaleDateString("pt-BR") : "--"}
       </div>
     ),
   },
   {
     key: "acoes",
-    header: "Ações",
-    cell: (logista: Logista) => (
-      <LogistaActions logista={logista} onOpenActions={actions.onOpenActions} data-oid="j-ksfjm" />
+    title: "Acoes",
+    render: (_: unknown, logista: Logista) => (
+      <LogistaActions
+        logista={logista}
+        onOpenActions={actions.onOpenActions}
+        data-oid="j-ksfjm"
+      />
     ),
   },
 ];

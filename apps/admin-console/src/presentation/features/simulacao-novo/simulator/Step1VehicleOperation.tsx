@@ -1,17 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Label } from "@/presentation/layout/components/ui/label";
-import { Input } from "@/presentation/layout/components/ui/input";
-import { Button } from "@/presentation/layout/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/presentation/layout/components/ui/select";
-import { Switch } from "@/presentation/layout/components/ui/switch";
-import { ArrowRight, Car, Loader2, Users } from "lucide-react";
+import { Button, Card, Input, Select, Spin, Switch, Typography } from "antd";
+import { ArrowRight, Car, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
   type Ano,
@@ -76,11 +65,8 @@ export default function Step1VehicleOperation({
   const [loadingYears, setLoadingYears] = useState(false);
   const [loadingValue, setLoadingValue] = useState(false);
   const [brandQuery, setBrandQuery] = useState("");
-  const [brandOpen, setBrandOpen] = useState(false);
   const [modelQuery, setModelQuery] = useState("");
-  const [modelOpen, setModelOpen] = useState(false);
   const [yearQuery, setYearQuery] = useState("");
-  const [yearOpen, setYearOpen] = useState(false);
 
   const vehicleTypeId = useMemo(
     () => getVehicleTypeId(formData.vehicleCategory),
@@ -209,8 +195,6 @@ export default function Step1VehicleOperation({
     setYears([]);
     setModelQuery("");
     setYearQuery("");
-    setModelOpen(false);
-    setYearOpen(false);
 
     try {
       setLoadingModels(true);
@@ -238,7 +222,6 @@ export default function Step1VehicleOperation({
 
     setYears([]);
     setYearQuery("");
-    setYearOpen(false);
 
     try {
       setLoadingYears(true);
@@ -349,58 +332,48 @@ export default function Step1VehicleOperation({
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
+      <Card
+        title={
           <div className="flex items-center gap-2">
             <Car className="w-5 h-5 text-[#134B73]" />
-            <h2 className="text-lg font-semibold text-[#134B73]">Tipo de Operacao</h2>
+            <span className="text-lg font-semibold text-[#134B73]">Tipo de Operacao</span>
           </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
+        }
+      >
+        <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="dealerId">Loja</Label>
+            <Typography.Text>Loja</Typography.Text>
             <Select
-              value={selectedDealerId ? String(selectedDealerId) : ""}
-              onValueChange={(value) =>
-                onDealerChange(value ? Number(value) : null)
-              }
+              value={selectedDealerId ? String(selectedDealerId) : undefined}
+              onChange={(value) => onDealerChange(value ? Number(value) : null)}
               disabled={dealersLoading || dealers.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    dealersLoading
-                      ? "Carregando lojas..."
-                      : dealers.length
-                        ? "Selecione a loja"
-                        : "Nenhuma loja encontrada"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent side="bottom">
-                {dealers.map((dealer) => {
-                  const labelBase =
-                    dealer.enterprise || dealer.fullName || `Lojista #${dealer.id}`;
-                  const label = dealer.referenceCode
-                    ? `${labelBase} - ${dealer.referenceCode}`
-                    : labelBase;
-
-                  return (
-                    <SelectItem key={dealer.id} value={String(dealer.id)}>
-                      {label}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+              placeholder={
+                dealersLoading
+                  ? "Carregando lojas..."
+                  : dealers.length
+                    ? "Selecione a loja"
+                    : "Nenhuma loja encontrada"
+              }
+              options={dealers.map((dealer) => {
+                const labelBase =
+                  dealer.enterprise || dealer.fullName || `Lojista #${dealer.id}`;
+                const label = dealer.referenceCode
+                  ? `${labelBase} - ${dealer.referenceCode}`
+                  : labelBase;
+                return { value: String(dealer.id), label };
+              })}
+              className="w-full"
+              showSearch
+              optionFilterProp="label"
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="personType">Tipo de Pessoa</Label>
+              <Typography.Text>Tipo de Pessoa</Typography.Text>
               <Select
-                value={formData.personType}
-                onValueChange={(value) => {
+                value={formData.personType ?? undefined}
+                onChange={(value) => {
                   updateField("personType", value as SimulatorFormData["personType"]);
                   updateFormData("personal", {
                     cpfCnpj: "",
@@ -414,40 +387,34 @@ export default function Step1VehicleOperation({
                     shareholderName: "",
                   });
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="bottom">
-                  <SelectItem value="PF">Pessoa Fisica (PF)</SelectItem>
-                  <SelectItem value="PJ">Pessoa Juridica (PJ)</SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: "PF", label: "Pessoa Fisica (PF)" },
+                  { value: "PJ", label: "Pessoa Juridica (PJ)" },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="operationType">Tipo de Operacao</Label>
+              <Typography.Text>Tipo de Operacao</Typography.Text>
               <Select
-                value={formData.operationType}
-                onValueChange={(value) =>
+                value={formData.operationType ?? undefined}
+                onChange={(value) =>
                   updateField("operationType", value as SimulatorFormData["operationType"])
                 }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="bottom">
-                  <SelectItem value="financiamento">Financiamento</SelectItem>
-                  <SelectItem value="autofin">AutoFin</SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: "financiamento", label: "Financiamento" },
+                  { value: "autofin", label: "AutoFin" },
+                ]}
+                className="w-full"
+              />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="vehicleCategory">Categoria do Veiculo</Label>
+              <Typography.Text>Categoria do Veiculo</Typography.Text>
               <Select
-                value={formData.vehicleCategory}
-                onValueChange={(value) => {
+                value={formData.vehicleCategory ?? undefined}
+                onChange={(value) => {
                   const nextCategory = value as SimulatorFormData["vehicleCategory"];
                   updateField("vehicleCategory", nextCategory);
                   updateFormData("vehicle", {
@@ -469,36 +436,35 @@ export default function Step1VehicleOperation({
                   setModels([]);
                   setYears([]);
                 }}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent side="bottom">
-                  <SelectItem value="leves">Veiculos Leves</SelectItem>
-                  <SelectItem value="motos">Motos</SelectItem>
-                  <SelectItem value="pesados">Veiculos Pesados</SelectItem>
-                </SelectContent>
-              </Select>
+                options={[
+                  { value: "leves", label: "Veiculos Leves" },
+                  { value: "motos", label: "Motos" },
+                  { value: "pesados", label: "Veiculos Pesados" },
+                ]}
+                className="w-full"
+              />
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       {selectedDealerId && (
-        <Card>
-          <CardHeader>
+        <Card
+          title={
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-[#134B73]" />
-              <h2 className="text-lg font-semibold text-[#134B73]">
+              <span className="text-lg font-semibold text-[#134B73]">
                 Vendedores vinculados
-              </h2>
+              </span>
             </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
+          }
+        >
+          <div className="space-y-3">
             {loadingSellers ? (
-              <p className="text-sm text-muted-foreground">
-                Carregando vendedores...
-              </p>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Spin size="small" />
+                <span>Carregando vendedores...</span>
+              </div>
             ) : sellers.length ? (
               <div className="space-y-3">
                 <p className="text-xs text-muted-foreground">
@@ -552,151 +518,94 @@ export default function Step1VehicleOperation({
                 Nenhum vendedor vinculado a esta loja.
               </p>
             )}
-          </CardContent>
+          </div>
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</span>}>
+        <div className="space-y-4">
           <div className="flex items-center space-x-3 p-4 border rounded-lg">
             <Switch
               checked={formData.vehicle.isZeroKm}
-              onCheckedChange={(checked) => updateFormData("vehicle", { isZeroKm: checked })}
+              onChange={(checked) => updateFormData("vehicle", { isZeroKm: checked })}
             />
-            <Label className="text-base font-medium">Veiculo 0 KM</Label>
+            <Typography.Text className="text-base font-medium">Veiculo 0 KM</Typography.Text>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label>Marca</Label>
+              <Typography.Text>Marca</Typography.Text>
               <Select
                 value={
                   formData.vehicle.brandCode
                     ? `${formData.vehicle.brandCode}|${formData.vehicle.brand}`
-                    : ""
+                    : undefined
                 }
-                onValueChange={handleBrandChange}
+                onChange={handleBrandChange}
                 disabled={loadingBrands || !brands.length}
-                open={brandOpen}
-                onOpenChange={setBrandOpen}
-              >
-              <SelectTrigger className="w-full bg-white text-slate-900">
-                <SelectValue placeholder={loadingBrands ? "Carregando..." : "Selecione a marca"} />
-              </SelectTrigger>
-                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
-                  <div className="p-2">
-                    <Input
-                      data-brand-search
-                      value={brandQuery}
-                      onChange={(e) => setBrandQuery(e.target.value)}
-                      onFocus={() => setBrandOpen(true)}
-                      placeholder="Buscar marca..."
-                      className="h-9"
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  {filteredBrands.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-gray-500">Nenhuma marca encontrada</div>
-                  )}
-                  {filteredBrands.map((brand) => (
-                    <SelectItem key={brand.code} value={`${brand.code}|${brand.name}`}>
-                      {brand.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={loadingBrands ? "Carregando..." : "Selecione a marca"}
+                showSearch
+                onSearch={setBrandQuery}
+                filterOption={false}
+                options={filteredBrands.map((brand) => ({
+                  value: `${brand.code}|${brand.name}`,
+                  label: brand.name,
+                }))}
+                className="w-full"
+              />
+              {loadingBrands && <Typography.Text type="secondary">Carregando marcas...</Typography.Text>}
             </div>
 
             <div className="space-y-2">
-              <Label>Modelo</Label>
+              <Typography.Text>Modelo</Typography.Text>
               <Select
                 value={
                   formData.vehicle.modelCode
                     ? `${formData.vehicle.modelCode}|${formData.vehicle.model}`
-                    : ""
+                    : undefined
                 }
-                onValueChange={handleModelChange}
+                onChange={handleModelChange}
                 disabled={!formData.vehicle.brandCode || loadingModels}
-                open={modelOpen}
-                onOpenChange={setModelOpen}
-              >
-              <SelectTrigger className="w-full bg-white text-slate-900">
-                <SelectValue placeholder={loadingModels ? "Carregando..." : "Selecione o modelo"} />
-              </SelectTrigger>
-                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
-                  <div className="p-2">
-                    <Input
-                      data-model-search
-                      value={modelQuery}
-                      onChange={(e) => setModelQuery(e.target.value)}
-                      onFocus={() => setModelOpen(true)}
-                      placeholder="Buscar modelo..."
-                      className="h-9"
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  {filteredModels.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum modelo encontrado</div>
-                  )}
-                  {filteredModels.map((model) => (
-                    <SelectItem key={model.code} value={`${model.code}|${model.name}`}>
-                      {model.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={loadingModels ? "Carregando..." : "Selecione o modelo"}
+                showSearch
+                onSearch={setModelQuery}
+                filterOption={false}
+                options={filteredModels.map((model) => ({
+                  value: `${model.code}|${model.name}`,
+                  label: model.name,
+                }))}
+                className="w-full"
+              />
+              {loadingModels && <Typography.Text type="secondary">Carregando modelos...</Typography.Text>}
             </div>
 
             <div className="space-y-2">
-              <Label>Ano/Modelo</Label>
+              <Typography.Text>Ano/Modelo</Typography.Text>
               <Select
                 value={
                   formData.vehicle.yearCode
                     ? `${formData.vehicle.yearCode}|${formData.vehicle.year}`
-                    : ""
+                    : undefined
                 }
-                onValueChange={handleYearChange}
+                onChange={handleYearChange}
                 disabled={!formData.vehicle.modelCode || loadingYears}
-                open={yearOpen}
-                onOpenChange={setYearOpen}
-              >
-              <SelectTrigger className="w-full bg-white text-slate-900">
-                <SelectValue placeholder={loadingYears ? "Carregando..." : "Selecione o ano"} />
-              </SelectTrigger>
-                <SelectContent side="bottom" onCloseAutoFocus={(event) => event.preventDefault()}>
-                  <div className="p-2">
-                    <Input
-                      data-year-search
-                      value={yearQuery}
-                      onChange={(e) => setYearQuery(e.target.value)}
-                      onFocus={() => setYearOpen(true)}
-                      placeholder="Buscar ano..."
-                      className="h-9"
-                      onKeyDown={(e) => e.stopPropagation()}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                  {filteredYears.length === 0 && (
-                    <div className="px-3 py-2 text-sm text-gray-500">Nenhum ano encontrado</div>
-                  )}
-                  {filteredYears.map((year) => (
-                    <SelectItem key={year.code} value={`${year.code}|${year.name}`}>
-                      {year.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder={loadingYears ? "Carregando..." : "Selecione o ano"}
+                showSearch
+                onSearch={setYearQuery}
+                filterOption={false}
+                options={filteredYears.map((year) => ({
+                  value: `${year.code}|${year.name}`,
+                  label: year.name,
+                }))}
+                className="w-full"
+              />
+              {loadingYears && <Typography.Text type="secondary">Carregando anos...</Typography.Text>}
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Valor FIPE</Label>
+              <Typography.Text>Valor FIPE</Typography.Text>
               <Input
                 value={
                   formData.vehicle.fipeValue > 0
@@ -710,7 +619,7 @@ export default function Step1VehicleOperation({
             </div>
 
             <div className="space-y-2">
-              <Label>Placa (opcional)</Label>
+              <Typography.Text>Placa (opcional)</Typography.Text>
               <Input
                 value={formData.vehicle.plate}
                 onChange={(e) =>
@@ -721,17 +630,17 @@ export default function Step1VehicleOperation({
               />
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
-      <Card className="bg-gradient-to-br from-[#134B73] to-[#0a2940]">
-        <CardHeader>
-          <h2 className="text-lg font-semibold text-white">Condicoes do Financiamento</h2>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Card
+        className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
+        title={<span className="text-lg font-semibold text-white">Condicoes do Financiamento</span>}
+      >
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-white">Valor a Financiar</Label>
+              <Typography.Text className="text-white">Valor a Financiar</Typography.Text>
               <Input
                 value={financedInput}
                 onChange={(e) => handleFinancedAmountChange(e.target.value)}
@@ -751,35 +660,25 @@ export default function Step1VehicleOperation({
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-white">Prazo (meses)</Label>
+              <Typography.Text className="text-white">Prazo (meses)</Typography.Text>
               <Select
-                value={formData.financial.termMonths.toString()}
-                onValueChange={(value) =>
+                value={formData.financial.termMonths ? String(formData.financial.termMonths) : undefined}
+                onChange={(value) =>
                   updateFormData("financial", { termMonths: Number(value) })
                 }
-              >
-              <SelectTrigger className="w-full bg-white">
-                <SelectValue />
-              </SelectTrigger>
-                <SelectContent side="bottom">
-                  {["12", "24", "36", "48", "60", "72"].map((term) => (
-                    <SelectItem key={term} value={term}>
-                      {term} meses
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={["12", "24", "36", "48", "60", "72"].map((term) => ({
+                  value: term,
+                  label: `${term} meses`,
+                }))}
+                className="w-full"
+              />
             </div>
           </div>
-        </CardContent>
+        </div>
       </Card>
 
       <div className="flex justify-end">
-        <Button
-          onClick={handleNext}
-          size="lg"
-          className="bg-[#134B73] hover:bg-[#0f3a5a]"
-        >
+        <Button onClick={handleNext} type="primary" size="large">
           Proximo: Dados Pessoais
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
