@@ -7,6 +7,7 @@ const statusColors: Record<ProposalStatus, string> = {
   PENDING: "bg-amber-400",
   APPROVED: "bg-emerald-500",
   REJECTED: "bg-red-500",
+  PAID: "bg-teal-500",
 };
 
 type StatusLegendProps = {
@@ -30,7 +31,7 @@ export function StatusLegend({ summary }: StatusLegendProps) {
       <div className="space-y-2">
         {items.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            Nenhum status disponível.
+            Nenhum status disponivel.
           </p>
         ) : (
           items.map((item) => (

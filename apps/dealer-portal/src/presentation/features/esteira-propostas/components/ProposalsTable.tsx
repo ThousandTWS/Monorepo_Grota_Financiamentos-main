@@ -25,6 +25,7 @@ const statusLabels: Record<ProposalStatus, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovada",
   REJECTED: "Recusada",
+  PAID: "Paga",
 };
 
 const formatCurrency = (value: number) =>
