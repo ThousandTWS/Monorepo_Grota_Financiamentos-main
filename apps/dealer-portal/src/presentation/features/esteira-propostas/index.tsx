@@ -51,6 +51,11 @@ const statusConfig: Record<
     bulletColor: "bg-red-500",
     barColor: "bg-red-500",
   },
+  PAID: {
+    label: "Pagas",
+    bulletColor: "bg-teal-500",
+    barColor: "bg-teal-500",
+  },
 };
 
 const statusOptions: { value: ProposalStatus | "ALL"; label: string }[] = [
