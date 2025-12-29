@@ -20,9 +20,10 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 
 const STATUS_LABELS: Record<ProposalStatus, string> = {
   SUBMITTED: "Recebidas",
-  PENDING: "Em análise",
+  PENDING: "Em analise",
   APPROVED: "Aprovadas",
   REJECTED: "Rejeitadas",
+  PAID: "Pagas",
 };
 
 const STATUS_COLORS: Record<ProposalStatus, string> = {
@@ -30,6 +31,7 @@ const STATUS_COLORS: Record<ProposalStatus, string> = {
   PENDING: "#F59E0B",
   APPROVED: "#10B981",
   REJECTED: "#EF4444",
+  PAID: "#14B8A6",
 };
 
 export function StatusDistribution() {
@@ -63,6 +65,7 @@ export function StatusDistribution() {
       PENDING: 0,
       APPROVED: 0,
       REJECTED: 0,
+      PAID: 0,
     };
     proposals.forEach((proposal) => {
       totals[proposal.status] = (totals[proposal.status] ?? 0) + 1;
@@ -241,3 +244,4 @@ export function StatusDistribution() {
     </Card>
   );
 }
+
