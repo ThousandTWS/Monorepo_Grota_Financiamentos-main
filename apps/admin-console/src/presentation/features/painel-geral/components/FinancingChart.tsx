@@ -1,24 +1,42 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/presentation/layout/components/ui/card";
-import { ApexOptions } from "apexcharts";
+import { StatusBadge } from "../../logista/components/status-badge";
+import * as echarts from "echarts/core";
+import {
+  GridComponent,
+  LegendComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from "echarts/components";
+import { BarChart, LineChart } from "echarts/charts";
+import { UniversalTransition } from "echarts/features";
+import { CanvasRenderer } from "echarts/renderers";
 import { fetchProposals } from "@/application/services/Proposals/proposalService";
 import { Proposal } from "@/application/core/@types/Proposals/Proposal";
 import { Loader2 } from "lucide-react";
-import { StatusBadge } from "../../logista/components/status-badge";
 
-const ReactApexChart = dynamic(() => import("react-apexcharts"), {
-  ssr: false,
-});
+echarts.use([
+  ToolboxComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  BarChart,
+  LineChart,
+  CanvasRenderer,
+  UniversalTransition,
+]);
 
 export function FinancingChart() {
+  const chartRef = useRef<HTMLDivElement | null>(null);
+  const chartInstanceRef = useRef<echarts.EChartsType | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,7 +55,7 @@ export function FinancingChart() {
       } catch (err) {
         console.error("Erro ao carregar financiamentos:", err);
         if (mounted) {
-          setError("Não foi possível carregar os financiamentos.");
+          setError("N?o foi poss?vel carregar os financiamentos.");
         }
       } finally {
         if (mounted) {
@@ -53,12 +71,21 @@ export function FinancingChart() {
     };
   }, []);
 
+  useEffect(() => {
+    const updateMedia = () =>
+      setIsMobile(window.matchMedia("(max-width: 640px)").matches);
+
+    updateMedia();
+    window.addEventListener("resize", updateMedia);
+    return () => window.removeEventListener("resize", updateMedia);
+  }, []);
+
   const months = useMemo(
     () => ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"],
     []
   );
 
-  const { approvedSeries, pendingSeries } = useMemo(() => {
+  const { approvedSeries, pendingSeries, totalSeries } = useMemo(() => {
     const base = Array(12).fill(0);
     const approved = [...base];
     const pending = [...base];
@@ -77,111 +104,150 @@ export function FinancingChart() {
       }
     });
 
-    return { approvedSeries: approved, pendingSeries: pending };
+    const total = approved.map((value, index) => value + pending[index]);
+
+    return { approvedSeries: approved, pendingSeries: pending, totalSeries: total };
   }, [proposals]);
 
-  const series = useMemo(
-    () => [
-      {
-        name: "Financiamentos Aprovados",
-        data: approvedSeries,
-      },
-      {
-        name: "Financiamentos Pendentes",
-        data: pendingSeries,
-      },
-    ],
+  const hasData = useMemo(
+    () => approvedSeries.some((value) => value > 0) || pendingSeries.some((value) => value > 0),
     [approvedSeries, pendingSeries]
   );
 
-  const hasData = useMemo(
-    () => series.some((s) => s.data.some((v) => v > 0)),
-    [series]
-  );
+  useEffect(() => {
+    if (!chartRef.current || loading || error || !hasData) return;
 
-  const options: ApexOptions = useMemo(
-    () => ({
-      chart: {
-        type: "area",
-        height: 350,
-        toolbar: {
-          show: true,
-        },
-        zoom: {
-          enabled: true,
-        },
-        fontFamily: "Inter, sans-serif",
-      },
-      dataLabels: {
-        enabled: false,
-      },
-      stroke: {
-        curve: "smooth",
-        width: 3,
-      },
-      fill: {
-        type: "gradient",
-        gradient: {
-          shadeIntensity: 1,
-          opacityFrom: 0.4,
-          opacityTo: 0.1,
-          stops: [0, 90, 100],
-        },
-      },
-      colors: ["#1B5FA0", "#9FCDED"],
-      xaxis: {
-        categories: months,
-        labels: {
-          style: {
-            colors: "#64748B",
-            fontSize: "15px",
-          },
-        },
-        axisBorder: {
-          show: true,
-        },
-        axisTicks: {
-          show: true,
-        },
-      },
-      yaxis: {
-        labels: {
-          style: {
-            colors: "#64748B",
-            fontSize: "12px",
-          },
-          formatter: (value) => `R$ ${(value / 1000).toFixed(0)}k`,
-        },
-      },
+    if (!chartInstanceRef.current) {
+      chartInstanceRef.current = echarts.init(chartRef.current);
+    }
+
+    const chart = chartInstanceRef.current;
+    const option = {
       grid: {
-        borderColor: "#E2E8F0",
-        strokeDashArray: 4,
-        xaxis: {
-          lines: {
-            show: true,
-          },
-        },
-      },
-      legend: {
-        show: false,
+        left: isMobile ? 64 : 40,
+        right: isMobile ? 24 : 20,
+        top: isMobile ? 64 : 40,
+        bottom: isMobile ? 80 : 56,
+        containLabel: true,
       },
       tooltip: {
-        theme: "light",
-        y: {
-          formatter: (value) =>
-            `R$ ${value.toLocaleString("pt-BR", {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`,
+        trigger: "axis",
+        axisPointer: {
+          type: "cross",
+          crossStyle: {
+            color: "#999",
+          },
         },
       },
-    }),
-    [months]
-  );
+      toolbox: {
+        feature: {
+          dataView: { show: true, readOnly: false },
+          magicType: { show: true, type: ["line", "bar"] },
+          restore: { show: true },
+          saveAsImage: { show: true },
+        },
+        right: isMobile ? 6 : 10,
+        top: isMobile ? 6 : 0,
+      },
+      legend: {
+        data: ["Financiamentos Aprovados", "Financiamentos Pendentes", "Total"],
+        bottom: isMobile ? 6 : 0,
+        itemWidth: isMobile ? 10 : 18,
+        itemHeight: isMobile ? 8 : 12,
+        textStyle: {
+          fontSize: isMobile ? 10 : 12,
+        },
+      },
+      xAxis: [
+        {
+          type: "category",
+          data: months,
+          axisPointer: {
+            type: "shadow",
+          },
+          boundaryGap: true,
+          axisLabel: {
+            fontSize: isMobile ? 10 : 12,
+            rotate: isMobile ? 30 : 0,
+          },
+        },
+      ],
+      yAxis: [
+        {
+          type: "value",
+          name: "Volume",
+          axisLabel: {
+            formatter: (value: number) => `R$ ${(value / 1000).toFixed(0)}k`,
+            fontSize: isMobile ? 10 : 12,
+          },
+          nameTextStyle: {
+            fontSize: isMobile ? 10 : 12,
+          },
+        },
+      ],
+      series: [
+        {
+          name: "Financiamentos Aprovados",
+          type: "bar",
+          tooltip: {
+            valueFormatter: (value: number) =>
+              `R$ ${value.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`,
+          },
+          data: approvedSeries,
+        },
+        {
+          name: "Financiamentos Pendentes",
+          type: "bar",
+          tooltip: {
+            valueFormatter: (value: number) =>
+              `R$ ${value.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`,
+          },
+          data: pendingSeries,
+        },
+        {
+          name: "Total",
+          type: "line",
+          tooltip: {
+            valueFormatter: (value: number) =>
+              `R$ ${value.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}`,
+          },
+          data: totalSeries,
+        },
+      ],
+    };
+
+    chart.setOption(option);
+
+    const handleResize = () => chart.resize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [months, approvedSeries, pendingSeries, totalSeries, loading, error, hasData, isMobile]);
+
+  useEffect(() => {
+    return () => {
+      chartInstanceRef.current?.dispose();
+      chartInstanceRef.current = null;
+    };
+  }, []);
 
   return (
     <Card className="w-full" data-oid="189d-0k">
-      <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between" data-oid="6a3.h_r">
+      <CardHeader
+        className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+        data-oid="6a3.h_r"
+      >
         <CardTitle data-oid="dne3nk2">Volume de Financiamentos</CardTitle>
         <div className="flex flex-wrap gap-2">
           <StatusBadge status="ativo" className="shadow-none">
@@ -201,13 +267,7 @@ export function FinancingChart() {
         ) : error ? (
           <div className="text-sm text-red-600 dark:text-red-400">{error}</div>
         ) : hasData ? (
-          <ReactApexChart
-            options={options}
-            series={series}
-            type="area"
-            height={350}
-            data-oid="16zn695"
-          />
+          <div ref={chartRef} className="h-[350px] w-full" />
         ) : (
           <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
             Nenhum financiamento encontrado para exibir.

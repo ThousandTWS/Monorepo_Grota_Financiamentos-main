@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownRight,
   ArrowUpRight,
@@ -16,13 +16,21 @@ import {
   BarChart,
   Cell,
   CartesianGrid,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   XAxis,
   YAxis,
 } from "recharts";
+import * as echarts from "echarts/core";
+import {
+  GridComponent,
+  LegendComponent,
+  ToolboxComponent,
+  TooltipComponent,
+} from "echarts/components";
+import { BarChart as EChartsBarChart, LineChart as EChartsLineChart } from "echarts/charts";
+import { UniversalTransition } from "echarts/features";
+import { CanvasRenderer } from "echarts/renderers";
 
 import dashboardServices, {
   type DashboardChannelMixSegment,
@@ -47,6 +55,17 @@ import {
 } from "@/presentation/ui/chart";
 import { Skeleton } from "@/presentation/ui/skeleton";
 import { RealtimeBridgePanel } from "./_components/RealtimeBridgePanel";
+
+echarts.use([
+  ToolboxComponent,
+  TooltipComponent,
+  GridComponent,
+  LegendComponent,
+  EChartsBarChart,
+  EChartsLineChart,
+  CanvasRenderer,
+  UniversalTransition,
+]);
 
 const KPI_ICON_MAP = {
   wallet: Wallet,
@@ -188,6 +207,108 @@ const ChartSkeleton = ({ height = 240 }: { height?: number }) => (
     style={{ height }}
   />
 );
+
+const MixedChart = () => {
+  const chartRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!chartRef.current) return;
+
+    const chart = echarts.init(chartRef.current);
+    const option = {
+      tooltip: {
+        trigger: "axis",
+        axisPointer: {
+          type: "cross",
+          crossStyle: {
+            color: "#999",
+          },
+        },
+      },
+      toolbox: {
+        feature: {
+          dataView: { show: true, readOnly: false },
+          magicType: { show: true, type: ["line", "bar"] },
+          restore: { show: true },
+          saveAsImage: { show: true },
+        },
+      },
+      legend: {
+        data: ["Evaporation", "Precipitation", "Temperature"],
+      },
+      xAxis: [
+        {
+          type: "category",
+          data: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+          axisPointer: {
+            type: "shadow",
+          },
+        },
+      ],
+      yAxis: [
+        {
+          type: "value",
+          name: "Precipitation",
+          min: 0,
+          max: 250,
+          interval: 50,
+          axisLabel: {
+            formatter: "{value} ml",
+          },
+        },
+        {
+          type: "value",
+          name: "Temperature",
+          min: 0,
+          max: 25,
+          interval: 5,
+          axisLabel: {
+            formatter: "{value} °C",
+          },
+        },
+      ],
+      series: [
+        {
+          name: "Evaporation",
+          type: "bar",
+          tooltip: {
+            valueFormatter: (value: number) => `${value} ml`,
+          },
+          data: [2.0, 4.9, 7.0, 23.2, 25.6, 76.7, 135.6, 162.2, 32.6, 20.0, 6.4, 3.3],
+        },
+        {
+          name: "Precipitation",
+          type: "bar",
+          tooltip: {
+            valueFormatter: (value: number) => `${value} ml`,
+          },
+          data: [2.6, 5.9, 9.0, 26.4, 28.7, 70.7, 175.6, 182.2, 48.7, 18.8, 6.0, 2.3],
+        },
+        {
+          name: "Temperature",
+          type: "line",
+          yAxisIndex: 1,
+          tooltip: {
+            valueFormatter: (value: number) => `${value} °C`,
+          },
+          data: [2.0, 2.2, 3.3, 4.5, 6.3, 10.2, 20.3, 23.4, 23.0, 16.5, 12.0, 6.2],
+        },
+      ],
+    };
+
+    chart.setOption(option);
+
+    const handleResize = () => chart.resize();
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      chart.dispose();
+    };
+  }, []);
+
+  return <div ref={chartRef} className="h-[220px] lg:h-[240px]" />;
+};
 
 const TableSkeleton = ({ rows = 5 }: { rows?: number }) => (
   <table className="w-full min-w-[620px] text-sm">
@@ -359,44 +480,8 @@ export default function Page() {
             {isInitialLoading ? (
               <ChartSkeleton />
             ) : monthlyPerformance.length ? (
-              <ChartContainer
-                config={performanceChartConfig}
-                className="h-[220px] lg:h-[240px]"
-              >
-                <LineChart
-                  data={monthlyPerformance}
-                  margin={{ left: 12, right: 12 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="month"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
-                  />
-                  <YAxis
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={12}
-                    width={36}
-                    domain={["dataMin-5", "dataMax+5"]}
-                    tickFormatter={(value) => `${value}%`}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent indicator="line" />}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="approvals"
-                    stroke="var(--color-approvals)"
-                    strokeWidth={2.5}
-                    dot={{ r: 4, strokeWidth: 2 }}
-                    activeDot={{ r: 6 }}
-                    name="Taxa de aprovação (%)"
-                  />
-                </LineChart>
-              </ChartContainer>
+              <MixedChart />
+
             ) : (
               <EmptyState
                 message="Sem histórico disponível para o período selecionado."
