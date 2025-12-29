@@ -37,6 +37,7 @@ const statusLabel: Record<ProposalStatus, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovada",
   REJECTED: "Recusada",
+  PAID: "Paga",
 };
 
 const formatDateTime = (value: string) =>
