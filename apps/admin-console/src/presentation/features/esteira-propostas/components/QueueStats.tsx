@@ -40,7 +40,7 @@ export function QueueStats({ summary, isLoading }: QueueStatsProps) {
   }
 
   return (
-    <Card className="h-full overflow-hidden" data-oid="queue-stats" bodyStyle={{ padding: 0 }}>
+    <Card className="h-full overflow-hidden" data-oid="queue-stats" styles={{ body: { padding: 0 } }}>
       <div className="bg-gradient-to-br from-[#0f3c5a] to-[#134b73] px-5 py-6 text-white">
         <Text className="text-xs font-medium uppercase tracking-[0.4em] !text-white/80">
           Pipeline Admin

@@ -82,6 +82,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/dealers/logo").hasRole("LOJISTA")
                         // Propostas - criação permitida para ADMIN, OPERADOR e VENDEDOR
                         .requestMatchers(HttpMethod.POST, "/api/v1/grota-financiamentos/proposals").hasAnyRole("ADMIN", "OPERADOR", "VENDEDOR", "LOJISTA")
+                        .requestMatchers(HttpMethod.PATCH, "/api/v1/grota-financiamentos/proposals/*/status").hasAnyRole("ADMIN", "OPERADOR", "VENDEDOR", "LOJISTA")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/proposals/**").hasAnyRole("ADMIN", "OPERADOR", "VENDEDOR", "LOJISTA")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/grota-financiamentos/proposals/*").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
@@ -99,3 +101,5 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 }
+
+
