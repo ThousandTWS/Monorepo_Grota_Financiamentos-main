@@ -1,20 +1,16 @@
 "use client";
 
 import { Proposal } from "@/application/core/@types/Proposals/Proposal";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/presentation/layout/components/ui/dialog";
-import { Button } from "@/presentation/layout/components/ui/button";
+import { Button, Modal, Typography } from "antd";
+import { useState } from "react";
 
 type ProposalDetailsDialogProps = {
   proposal: Proposal;
   dealerName?: string | null;
   sellerName?: string | null;
 };
+
+const { Text, Title } = Typography;
 
 const formatCurrency = (value?: number | null) =>
   typeof value === "number"
@@ -23,10 +19,10 @@ const formatCurrency = (value?: number | null) =>
         currency: "BRL",
         minimumFractionDigits: 2,
       }).format(value)
-    : "—";
+    : "--";
 
 const maskCpf = (cpf?: string) => {
-  if (!cpf) return "—";
+  if (!cpf) return "--";
   const digits = cpf.replace(/\D/g, "").padStart(11, "0").slice(-11);
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
@@ -36,31 +32,30 @@ export function ProposalDetailsDialog({
   dealerName,
   sellerName,
 }: ProposalDetailsDialogProps) {
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-center gap-2 border-[#0F456A] text-[#134B73] hover:bg-[#e9f0f5]"
-        >
-          Ver dados da ficha
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-[#134B73]">
-            Dados da ficha #{proposal.id}
-          </DialogTitle>
-        </DialogHeader>
+  const [open, setOpen] = useState(false);
 
+  return (
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        className="w-full justify-center gap-2 border-[#0F456A] text-[#134B73] hover:bg-[#e9f0f5]"
+      >
+        Ver dados da ficha
+      </Button>
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        width={980}
+        title={<Title level={4} className="!m-0 text-[#134B73]">Dados da ficha #{proposal.id}</Title>}
+      >
         <div className="space-y-4">
           <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Cliente</p>
+            <Text className="text-xs uppercase tracking-wide text-slate-500">Cliente</Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <div>
-                <p className="text-sm font-semibold text-slate-800">{proposal.customerName}</p>
-                <p className="text-xs text-slate-500">{maskCpf(proposal.customerCpf)}</p>
+                <Text className="text-sm font-semibold text-slate-800">{proposal.customerName}</Text>
+                <Text className="block text-xs text-slate-500">{maskCpf(proposal.customerCpf)}</Text>
               </div>
               <div className="text-sm text-slate-700">
                 <p>Email: {proposal.customerEmail}</p>
@@ -70,25 +65,25 @@ export function ProposalDetailsDialog({
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Lojista</p>
+            <Text className="text-xs uppercase tracking-wide text-slate-500">Lojista</Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <div>
-                <p className="text-sm font-semibold text-slate-800">
-                  {dealerName ?? (proposal.dealerId ? `Lojista #${proposal.dealerId}` : "Não informado")}
-                </p>
+                <Text className="text-sm font-semibold text-slate-800">
+                  {dealerName ?? (proposal.dealerId ? `Lojista #${proposal.dealerId}` : "Nao informado")}
+                </Text>
               </div>
               <div className="text-sm text-slate-700">
-                <p>Responsável: {sellerName ?? (proposal.sellerId ? `Responsável #${proposal.sellerId}` : "Não informado")}</p>
+                <p>Responsavel: {sellerName ?? (proposal.sellerId ? `Responsavel #${proposal.sellerId}` : "Nao informado")}</p>
               </div>
             </div>
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Veículo</p>
+            <Text className="text-xs uppercase tracking-wide text-slate-500">Veiculo</Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="text-sm text-slate-700">
                 <p>{proposal.vehicleBrand} {proposal.vehicleModel}</p>
-                <p>Ano: {proposal.vehicleYear ?? "—"}</p>
+                <p>Ano: {proposal.vehicleYear ?? "--"}</p>
                 <p>Placa: {proposal.vehiclePlate}</p>
               </div>
               <div className="text-sm text-slate-700">
@@ -99,11 +94,11 @@ export function ProposalDetailsDialog({
           </section>
 
           <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="text-xs uppercase tracking-wide text-slate-500">Financiamento</p>
+            <Text className="text-xs uppercase tracking-wide text-slate-500">Financiamento</Text>
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="text-sm text-slate-700">
                 <p>Valor financiado: {formatCurrency(proposal.financedValue)}</p>
-                <p>Parcelas: {proposal.termMonths ?? "—"}</p>
+                <p>Parcelas: {proposal.termMonths ?? "--"}</p>
               </div>
               <div className="text-sm text-slate-700">
                 <p>Status: {proposal.status}</p>
@@ -118,7 +113,7 @@ export function ProposalDetailsDialog({
             </div>
           </section>
         </div>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

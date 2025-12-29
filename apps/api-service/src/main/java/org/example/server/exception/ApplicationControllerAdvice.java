@@ -119,7 +119,7 @@ public class ApplicationControllerAdvice {
     public ErrorResponse handleJsonParseError(HttpMessageNotReadableException ex) {
         return new ErrorResponse(
                 HttpStatus.BAD_REQUEST,
-                "Valor inválido para o campo 'status'. Use DISPONIVEL ou INDISPONIVEL.");
+                "Valor invalido para o campo 'status'.");
     }
 
 }

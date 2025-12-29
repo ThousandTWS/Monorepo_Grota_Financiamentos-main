@@ -1,32 +1,11 @@
 import { Proposal, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/presentation/layout/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/presentation/layout/components/ui/select";
-import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
-import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
-import { Textarea } from "@/presentation/layout/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/presentation/layout/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/presentation/layout/components/ui/alert-dialog";
+import { Button, Card, Input, Modal, Select, Skeleton, Space, Typography } from "antd";
 import { StatusBadge } from "../../logista/components/status-badge";
 import { Clock3, Eye, RefreshCw, StickyNote, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
+const { Text } = Typography;
 
 type ProposalsTableProps = {
   proposals: Proposal[];
@@ -48,9 +27,16 @@ const proposalStatusLabels: Record<ProposalStatus, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovada",
   REJECTED: "Recusada",
+  PAID: "Paga",
 };
 
-const statusOptions: ProposalStatus[] = ["SUBMITTED", "PENDING", "APPROVED", "REJECTED"];
+const statusOptions: ProposalStatus[] = [
+  "SUBMITTED",
+  "PENDING",
+  "APPROVED",
+  "REJECTED",
+  "PAID",
+];
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("pt-BR", {
@@ -132,10 +118,10 @@ export function ProposalsTable({
         ? dealersById[proposal.dealerId]?.enterprise ??
           dealersById[proposal.dealerId]?.name ??
           `Lojista #${proposal.dealerId}`
-        : "Lojista não informado";
+        : "Lojista nao informado";
       const sellerLabel = proposal.sellerId
-        ? sellersById[proposal.sellerId] ?? `Responsável #${proposal.sellerId}`
-        : "Responsável não informado";
+        ? sellersById[proposal.sellerId] ?? `Responsavel #${proposal.sellerId}`
+        : "Responsavel nao informado";
 
       return {
         ...proposal,
@@ -150,15 +136,7 @@ export function ProposalsTable({
       <div className="space-y-3">
         {Array.from({ length: 3 }).map((_, index) => (
           <Card key={`skeleton-${index}`}>
-            <CardHeader className="space-y-2">
-              <Skeleton className="h-3 w-1/3" />
-              <Skeleton className="h-5 w-1/2" />
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              {Array.from({ length: 4 }).map((__, cellIndex) => (
-                <Skeleton key={cellIndex} className="h-12 w-full" />
-              ))}
-            </CardContent>
+            <Skeleton active title paragraph={{ rows: 4 }} />
           </Card>
         ))}
       </div>
@@ -168,9 +146,9 @@ export function ProposalsTable({
   if (cards.length === 0) {
     return (
       <Card>
-        <CardContent className="text-center text-sm text-muted-foreground">
+        <Text className="text-sm text-muted-foreground">
           Nenhuma proposta encontrada com os filtros selecionados.
-        </CardContent>
+        </Text>
       </Card>
     );
   }
@@ -178,13 +156,16 @@ export function ProposalsTable({
   return (
     <div className="space-y-4">
       {cards.map((proposal) => (
-        <Card key={proposal.id} className="bg-gradient-to-br from-white via-slate-50 to-white shadow-sm">
-          <CardHeader className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+        <Card
+          key={proposal.id}
+          className="bg-gradient-to-br from-white via-slate-50 to-white shadow-sm"
+        >
+          <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                {proposal.customerCpf ? maskCpf(proposal.customerCpf) : "CPF não informado"}
-              </p>
-              <h3 className="text-lg font-semibold text-[#134B73]">{proposal.customerName}</h3>
+              <Text className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
+                {proposal.customerCpf ? maskCpf(proposal.customerCpf) : "CPF nao informado"}
+              </Text>
+              <p className="text-lg font-semibold text-[#134B73]">{proposal.customerName}</p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-semibold text-slate-600">
@@ -193,30 +174,31 @@ export function ProposalsTable({
               </div>
               <StatusBadge status={proposal.status} className="px-3 py-1 text-xs shadow-none" />
             </div>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-[2fr_1fr]">
+          </div>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-[2fr_1fr]">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground">Lojista</p>
+                  <Text className="text-xs text-muted-foreground">Lojista</Text>
                   <p className="font-semibold text-slate-700">{proposal.dealerLabel}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">Operador</p>
+                  <Text className="text-xs text-muted-foreground">Operador</Text>
                   <p className="font-semibold text-slate-700">{proposal.sellerLabel}</p>
                 </div>
               </div>
               <div className="grid gap-2 sm:grid-cols-3">
                 <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
-                  <p className="text-xs text-muted-foreground">Valor financiado</p>
+                  <Text className="text-xs text-muted-foreground">Valor financiado</Text>
                   <p className="font-semibold text-emerald-600">{formatCurrency(proposal.financedValue)}</p>
                 </div>
                 <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
-                  <p className="text-xs text-muted-foreground">Valor FIPE</p>
+                  <Text className="text-xs text-muted-foreground">Valor FIPE</Text>
                   <p className="font-semibold text-slate-700">{formatCurrency(proposal.fipeValue)}</p>
                 </div>
                 <div className="space-y-1 rounded-2xl border border-slate-200 bg-white/70 p-3 text-sm">
-                  <p className="text-xs text-muted-foreground">Status atualizado</p>
+                  <Text className="text-xs text-muted-foreground">Status atualizado</Text>
                   <p className="font-semibold text-slate-700">{formatDateTime(proposal.updatedAt)}</p>
                 </div>
               </div>
@@ -225,145 +207,90 @@ export function ProposalsTable({
             <div className="space-y-3">
               <Select
                 value={proposal.status}
-                onValueChange={(value) =>
-                  onStatusChange(proposal, value as ProposalStatus)
-                }
+                onChange={(value) => onStatusChange(proposal, value as ProposalStatus)}
                 disabled={updatingId === proposal.id}
-              >
-                <SelectTrigger className="w-full text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {statusOptions.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {proposalStatusLabels[status]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                options={statusOptions.map((status) => ({
+                  value: status,
+                  label: proposalStatusLabels[status],
+                }))}
+              />
               <Button
-                variant="secondary"
-                className="gap-2"
                 onClick={() => handleOpenMessage(proposal)}
+                icon={<StickyNote className="size-4" />}
               >
-                <StickyNote className="size-4" />
                 Mensagem da analise
               </Button>
               <div className="flex flex-col gap-2">
                 <Button
-                  variant="outline"
-                  className="gap-2"
                   onClick={() =>
                     router.push(`/esteira-de-propostas/${proposal.id}/historico`)
                   }
+                  icon={<Eye className="size-4" />}
                 >
-                  <Eye className="size-4" />
-                  Ver histórico
+                  Ver historico
                 </Button>
                 <Button
-                  variant="ghost"
-                  className="gap-2 border border-dashed border-slate-300"
-                  onClick={() => {
-                    router.push(`/esteira-de-propostas/${proposal.id}`);
-                  }}
-                >
-                  <RefreshCw className="size-4" />
-                  Sincronizar
-                </Button>
-                <Button
-                  variant="destructive"
-                  className="gap-2"
+                  danger
                   onClick={() => handleOpenDelete(proposal)}
                   disabled={deletingId === proposal.id}
+                  icon={<Trash2 className="size-4" />}
                 >
-                  <Trash2 className="size-4" />
                   Excluir proposta
                 </Button>
               </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
       ))}
-      <Dialog open={messageOpen} onOpenChange={handleMessageOpenChange}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Mensagem para a loja</DialogTitle>
-            <DialogDescription>
-              Informe o andamento da analise (aprovacoes, recusas e pendencias).
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Textarea
-              value={
-                messageTarget
-                  ? noteDrafts[messageTarget.id] ?? messageTarget.notes ?? ""
-                  : ""
-              }
-              onChange={(event) => {
-                if (!messageTarget) return;
-                onNoteChange(messageTarget.id, event.target.value);
-              }}
-              placeholder="Ex.: Santander recusou, BV recusou, Banco do Brasil em analise."
-              className="min-h-28 text-sm"
-              disabled={savingNoteId === messageTarget?.id}
-            />
-            <p className="text-xs text-muted-foreground">
-              A loja vera essa mensagem em qualquer status.
-            </p>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => handleMessageOpenChange(false)}
-              disabled={savingNoteId === messageTarget?.id}
-            >
-              Fechar
-            </Button>
-            <Button
-              onClick={() => {
-                void handleSaveMessage();
-              }}
-              disabled={!messageTarget || savingNoteId === messageTarget.id}
-            >
-              {savingNoteId === messageTarget?.id ? "Salvando..." : "Salvar mensagem"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      <AlertDialog
-        open={deleteOpen}
-        onOpenChange={(open) => {
-          setDeleteOpen(open);
-          if (!open) {
-            setDeleteTarget(null);
-          }
-        }}
+
+      <Modal
+        open={messageOpen}
+        onCancel={() => handleMessageOpenChange(false)}
+        title="Mensagem para a loja"
+        okText={savingNoteId === messageTarget?.id ? "Salvando..." : "Salvar mensagem"}
+        onOk={handleSaveMessage}
+        okButtonProps={{ disabled: !messageTarget || savingNoteId === messageTarget?.id }}
+        cancelText="Fechar"
+        cancelButtonProps={{ disabled: savingNoteId === messageTarget?.id }}
       >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar exclusao</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja excluir a proposta de{" "}
-              <span className="font-semibold text-foreground">
-                {deleteTarget?.customerName ?? "--"}
-              </span>
-              ? Esta acao nao pode ser desfeita.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletingId === deleteTarget?.id}>
-              Cancelar
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-destructive text-white hover:bg-destructive/90"
-              disabled={deletingId === deleteTarget?.id}
-            >
-              {deletingId === deleteTarget?.id ? "Excluindo..." : "Excluir"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        <div className="space-y-2">
+          <Input.TextArea
+            value={
+              messageTarget
+                ? noteDrafts[messageTarget.id] ?? messageTarget.notes ?? ""
+                : ""
+            }
+            onChange={(event) => {
+              if (!messageTarget) return;
+              onNoteChange(messageTarget.id, event.target.value);
+            }}
+            placeholder="Ex.: Santander recusou, BV recusou, Banco do Brasil em analise."
+            autoSize={{ minRows: 4 }}
+            disabled={savingNoteId === messageTarget?.id}
+          />
+          <Text className="text-xs text-muted-foreground">
+            A loja vera essa mensagem em qualquer status.
+          </Text>
+        </div>
+      </Modal>
+
+      <Modal
+        open={deleteOpen}
+        onCancel={() => {
+          setDeleteOpen(false);
+          setDeleteTarget(null);
+        }}
+        title="Confirmar exclusao"
+        okText={deletingId === deleteTarget?.id ? "Excluindo..." : "Excluir"}
+        okButtonProps={{ danger: true, disabled: deletingId === deleteTarget?.id }}
+        cancelText="Cancelar"
+        onOk={handleConfirmDelete}
+      >
+        <Text>
+          Tem certeza que deseja excluir a proposta de {" "}
+          <Text strong>{deleteTarget?.customerName ?? "--"}</Text>? Esta acao nao pode ser desfeita.
+        </Text>
+      </Modal>
     </div>
   );
 }

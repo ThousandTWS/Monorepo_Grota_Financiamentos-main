@@ -27,11 +27,7 @@ import {
 import { StatusLegend } from "./components/StatusLegend";
 import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/presentation/layout/components/ui/alert";
+import { Alert } from "antd";
 import { getAllLogistics } from "@/application/services/Logista/logisticService";
 import { getAllSellers } from "@/application/services/Seller/sellerService";
 import { getRealtimeUrl } from "@/application/config/realtime";
@@ -61,6 +57,11 @@ const statusConfig: Record<
     label: "Recusadas",
     bulletColor: "bg-red-500",
     barColor: "bg-red-500",
+  },
+  PAID: {
+    label: "Pagas",
+    bulletColor: "bg-teal-500",
+    barColor: "bg-teal-500",
   },
 };
 
@@ -131,7 +132,7 @@ export default function EsteiraDePropostasFeature() {
         console.error("[Admin Esteira] Falha ao buscar propostas", error);
         toast({
           title: "Falha ao carregar",
-          description: "Não conseguimos sincronizar as fichas agora.",
+          description: "Nao conseguimos sincronizar as fichas agora.",
           variant: "destructive",
         });
       } finally {
@@ -212,7 +213,7 @@ export default function EsteiraDePropostasFeature() {
         setDealerIndex(dealerMap);
         setSellerIndex(sellerMap);
       } catch (error) {
-        console.warn("[Admin Esteira] Não foi possível carregar nomes de lojistas/vendedores", error);
+        console.warn("[Admin Esteira] Nao foi possivel carregar nomes de lojistas/vendedores", error);
       }
     };
 
@@ -236,7 +237,7 @@ export default function EsteiraDePropostasFeature() {
       applyRealtimeSnapshot(payload.proposal);
       toast({
         title: "Nova ficha do lojista",
-        description: `${payload.proposal.customerName} aguardando análise.`,
+        description: `${payload.proposal.customerName} aguardando analise.`,
       });
       return;
     }
@@ -383,7 +384,7 @@ export default function EsteiraDePropostasFeature() {
     } catch (error) {
       console.error("[Admin Esteira] export", error);
       toast({
-        title: "Não foi possível exportar",
+        title: "Nao foi possivel exportar",
         description: error instanceof Error ? error.message : "Tente novamente.",
         variant: "destructive",
       });
@@ -422,12 +423,12 @@ export default function EsteiraDePropostasFeature() {
       });
       toast({
         title: "Status atualizado",
-        description: `${proposal.customerName} agora está ${statusOptions.find((item) => item.value === nextStatus)?.label}.`,
+        description: `${proposal.customerName} agora esta ${statusOptions.find((item) => item.value === nextStatus)?.label}.`,
       });
     } catch (error) {
       console.error("[Admin Esteira] Falha ao atualizar status", error);
       toast({
-        title: "Não foi possível atualizar",
+        title: "Nao foi possivel atualizar",
         description: "Revise o status no admin e tente novamente.",
         variant: "destructive",
       });
@@ -459,13 +460,13 @@ export default function EsteiraDePropostasFeature() {
       }));
       toast({
         title: "Mensagem salva",
-        description: `Atualizamos as observações da proposta de ${proposal.customerName}.`,
+        description: `Atualizamos as observacoes da proposta de ${proposal.customerName}.`,
       });
       return true;
     } catch (error) {
-      console.error("[Admin Esteira] Falha ao salvar observação", error);
+      console.error("[Admin Esteira] Falha ao salvar observacao", error);
       const message =
-        error instanceof Error ? error.message : "Não foi possível salvar a mensagem.";
+        error instanceof Error ? error.message : "Nao foi possivel salvar a mensagem.";
       toast({
         title: "Erro ao salvar mensagem",
         description: message,
@@ -508,7 +509,7 @@ export default function EsteiraDePropostasFeature() {
   const handleCreate = () => {
     toast({
       title: "Fluxo de cadastro em desenvolvimento",
-      description: "Em breve será possível abrir fichas direto pelo admin.",
+      description: "Em breve sera possivel abrir fichas direto pelo admin.",
     });
   };
 
@@ -530,13 +531,13 @@ export default function EsteiraDePropostasFeature() {
         isRefreshing={isRefreshing}
       />
 
-      <Alert className="rounded-2xl border-slate-200 bg-white/70">
-        <AlertTitle>Conteúdo disponível</AlertTitle>
-        <AlertDescription>
-          Utilize o botão “Exportar CSV” para compartilhar lista filtrada com sua equipe, ou abra “Histórico” para revisar
-          o processo completo do cliente.
-        </AlertDescription>
-      </Alert>
+      <Alert
+        type="info"
+        showIcon
+        className="rounded-2xl border-slate-200 bg-white/70"
+        title="Conteudo disponivel"
+        description="Utilize o botao Exportar CSV para compartilhar a lista filtrada com sua equipe, ou abra o historico para revisar o processo completo do cliente."
+      />
 
       <ProposalsTable
         proposals={filteredProposals}

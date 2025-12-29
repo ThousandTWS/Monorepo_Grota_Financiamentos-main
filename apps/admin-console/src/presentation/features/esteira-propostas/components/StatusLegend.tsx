@@ -1,18 +1,15 @@
+import { Card, Empty, Progress, Typography } from "antd";
 import { ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import { ProposalsDashboardSummary } from "./QueueStats";
 
-const statusProgressClasses: Record<ProposalStatus, string> = {
-  SUBMITTED: "from-sky-500 to-sky-600",
-  PENDING: "from-amber-400 to-amber-500",
-  APPROVED: "from-emerald-500 to-emerald-600",
-  REJECTED: "from-red-500 to-red-600",
-};
+const { Text } = Typography;
 
-const statusDotColors: Record<ProposalStatus, string> = {
-  SUBMITTED: "bg-sky-500",
-  PENDING: "bg-amber-400",
-  APPROVED: "bg-emerald-500",
-  REJECTED: "bg-red-500",
+const statusColors: Record<ProposalStatus, string> = {
+  SUBMITTED: "#0ea5e9",
+  PENDING: "#f59e0b",
+  APPROVED: "#10b981",
+  REJECTED: "#ef4444",
+  PAID: "#14b8a6",
 };
 
 type StatusLegendProps = {
@@ -23,18 +20,19 @@ export function StatusLegend({ summary }: StatusLegendProps) {
   const items = summary.statusTotals;
 
   return (
-    <div
-      className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-white shadow-sm p-5"
+    <Card
+      className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white via-slate-50 to-white shadow-sm"
       data-oid="status-legend"
     >
-      <h3 className="mb-4 text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
+      <Text className="mb-4 block text-xs font-semibold uppercase tracking-[0.4em] text-slate-500">
         Radar de status
-      </h3>
+      </Text>
       <div className="space-y-4 text-sm">
         {items.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Nenhuma ficha recebida no momento.
-          </p>
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="Nenhuma ficha recebida no momento."
+          />
         ) : (
           items.map((item) => {
             const percentage =
@@ -42,27 +40,31 @@ export function StatusLegend({ summary }: StatusLegendProps) {
                 ? Math.round((item.value / summary.overallTotal) * 100)
                 : 0;
             return (
-              <div key={item.key}>
+              <div key={item.key} className="space-y-1">
                 <div className="flex items-center justify-between font-semibold text-slate-600">
                   <span className="flex items-center gap-2">
-                    <span className={`inline-flex h-2 w-2 rounded-full ${statusDotColors[item.key]}`}></span>
+                    <span
+                      className="inline-flex h-2 w-2 rounded-full"
+                      style={{ backgroundColor: statusColors[item.key] }}
+                    />
                     {item.label}
                   </span>
                   <span>
-                    {item.value} · {percentage}%
+                    {item.value} / {percentage}%
                   </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={`h-full rounded-full bg-gradient-to-r ${statusProgressClasses[item.key]}`}
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
+                <Progress
+                  percent={percentage}
+                  showInfo={false}
+                  strokeColor={statusColors[item.key]}
+                  railColor="#e5e7eb"
+                  size="small"
+                />
               </div>
             );
           })
         )}
       </div>
-    </div>
+    </Card>
   );
 }

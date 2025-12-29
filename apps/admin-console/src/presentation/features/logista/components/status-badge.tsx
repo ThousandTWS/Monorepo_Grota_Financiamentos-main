@@ -16,6 +16,7 @@ const statusConfig = {
   pendente: { label: "Pendente", color: "gold" },
   enviada: { label: "Enviada", color: "blue" },
   aprovada: { label: "Aprovada", color: "cyan" },
+  paga: { label: "Paga", color: "green" },
   recusada: { label: "Recusada", color: "red" },
 };
 
@@ -49,6 +50,9 @@ const normalizeStatus = (status?: string | null): StatusKey => {
     normalized === "rejected"
   ) {
     return "recusada";
+  }
+  if (normalized === "paga" || normalized === "pago" || normalized === "paid") {
+    return "paga";
   }
 
   return "pendente";

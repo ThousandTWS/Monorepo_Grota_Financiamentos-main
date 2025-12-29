@@ -1,16 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/presentation/layout/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/presentation/layout/components/ui/dialog";
-import { ScrollArea } from "@/presentation/layout/components/ui/scroll-area";
-import { Separator } from "@/presentation/layout/components/ui/separator";
-import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
+import { Button, Divider, Modal, Skeleton, Typography } from "antd";
 import { Proposal, ProposalEvent, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import { fetchProposalTimeline } from "@/application/services/Proposals/proposalService";
 import { Clock3, History } from "lucide-react";
@@ -21,6 +11,8 @@ import {
   useRealtimeChannel,
 } from "@grota/realtime-client";
 import { getRealtimeUrl } from "@/application/config/realtime";
+
+const { Text, Title } = Typography;
 
 type ProposalTimelineSheetProps = {
   proposalId: number;
@@ -34,6 +26,7 @@ const statusLabel: Record<ProposalStatus, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovada",
   REJECTED: "Recusada",
+  PAID: "Paga",
 };
 
 const formatDateTime = (value: string) =>
@@ -52,10 +45,10 @@ const formatCurrency = (value: number | null | undefined) =>
         currency: "BRL",
         minimumFractionDigits: 2,
       }).format(value)
-    : "—";
+    : "--";
 
 const maskCpf = (cpf?: string) => {
-  if (!cpf) return "—";
+  if (!cpf) return "--";
   const digits = cpf.replace(/\D/g, "").padStart(11, "0").slice(-11);
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
@@ -83,7 +76,7 @@ export function ProposalTimelineSheet({ proposalId, proposal, dealerName, seller
       setError(
         err instanceof Error
           ? err.message
-          : "Não foi possível carregar o histórico.",
+          : "Nao foi possivel carregar o historico.",
       );
     } finally {
       setIsLoading(false);
@@ -110,90 +103,85 @@ export function ProposalTimelineSheet({ proposalId, proposal, dealerName, seller
     }
   }, [messages, open, proposalId, loadTimeline, identity]);
 
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full justify-center gap-2 border-[#0F456A] bg-[#134B73] text-white hover:bg-[#0F456A] hover:text-white"
-        >
-          <History className="size-4" />
-          Histórico
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-5xl w-full max-h-[90vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-[#134B73]">
-            Histórico da ficha #{proposalId}
-          </DialogTitle>
-          <p className="text-sm text-slate-500">
-            Linha do tempo detalhada desta ficha.
-          </p>
-        </DialogHeader>
+    <>
+      <Button
+        onClick={() => setOpen(true)}
+        className="w-full justify-center gap-2 border-[#0F456A] bg-[#134B73] text-white hover:bg-[#0F456A] hover:text-white"
+        icon={<History className="size-4" />}
+      >
+        Historico
+      </Button>
+      <Modal
+        open={open}
+        onCancel={() => setOpen(false)}
+        footer={null}
+        width={980}
+        title={<Title level={4} className="!m-0 text-[#134B73]">Historico da ficha #{proposalId}</Title>}
+      >
+        <Text className="text-sm text-slate-500">Linha do tempo detalhada desta ficha.</Text>
         <div className="mt-4 space-y-4">
           {proposal ? (
             <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-              <p className="text-sm font-semibold text-[#134B73]">
+              <Text className="text-sm font-semibold text-[#134B73]">
                 Dados informados pelo lojista
-              </p>
+              </Text>
               <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                 <div className="rounded-md bg-slate-50 px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Cliente</p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Cliente</Text>
                   <p className="text-sm font-semibold text-slate-700">
                     {proposal.customerName}
                   </p>
-                  <p className="text-xs text-slate-500">{maskCpf(proposal.customerCpf)}</p>
-                  <p className="text-xs text-slate-500">{proposal.customerPhone}</p>
-                  <p className="text-xs text-slate-500">{proposal.customerEmail}</p>
+                  <Text className="text-xs text-slate-500">{maskCpf(proposal.customerCpf)}</Text>
+                  <Text className="block text-xs text-slate-500">{proposal.customerPhone}</Text>
+                  <Text className="block text-xs text-slate-500">{proposal.customerEmail}</Text>
                 </div>
                 <div className="rounded-md bg-slate-50 px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Lojista / Empresa</p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Lojista / Empresa</Text>
                   <p className="text-sm font-semibold text-slate-700">
-                    {dealerName ?? (proposal.dealerId ? `Lojista #${proposal.dealerId}` : "Não informado")}
+                    {dealerName ?? (proposal.dealerId ? `Lojista #${proposal.dealerId}` : "Nao informado")}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    Sócio/Responsável: {sellerName ?? (proposal.sellerId ? `Responsável #${proposal.sellerId}` : "Responsável não informado")}
-                  </p>
+                  <Text className="block text-xs text-slate-500">
+                    Socio/Responsavel: {sellerName ?? (proposal.sellerId ? `Responsavel #${proposal.sellerId}` : "Responsavel nao informado")}
+                  </Text>
                 </div>
                 <div className="rounded-md bg-slate-50 px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Valores</p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Valores</Text>
                   <p className="text-sm font-semibold text-[#0F9F6E]">
                     Financiado: {formatCurrency(proposal.financedValue)}
                   </p>
-                  <p className="text-xs text-slate-500">FIPE: {formatCurrency(proposal.fipeValue)}</p>
-                  <p className="text-xs text-slate-500">Entrada: {formatCurrency(proposal.downPaymentValue)}</p>
-                  <p className="text-xs text-slate-500">
-                    Parcelas: {proposal.termMonths ?? "—"}
-                  </p>
+                  <Text className="block text-xs text-slate-500">FIPE: {formatCurrency(proposal.fipeValue)}</Text>
+                  <Text className="block text-xs text-slate-500">Entrada: {formatCurrency(proposal.downPaymentValue)}</Text>
+                  <Text className="block text-xs text-slate-500">
+                    Parcelas: {proposal.termMonths ?? "--"}
+                  </Text>
                 </div>
                 <div className="rounded-md bg-slate-50 px-3 py-2">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Veículo</p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Veiculo</Text>
                   <p className="text-sm font-semibold text-slate-700">
                     {proposal.vehicleBrand} {proposal.vehicleModel}
                   </p>
-                  <p className="text-xs text-slate-500">
-                    Ano: {proposal.vehicleYear ?? "—"} • Placa: {proposal.vehiclePlate}
-                  </p>
-                  <p className="text-xs text-slate-500">FIPE código: {proposal.fipeCode}</p>
+                  <Text className="block text-xs text-slate-500">
+                    Ano: {proposal.vehicleYear ?? "--"} | Placa: {proposal.vehiclePlate}
+                  </Text>
+                  <Text className="block text-xs text-slate-500">FIPE codigo: {proposal.fipeCode}</Text>
                 </div>
                 <div className="rounded-md bg-slate-50 px-3 py-2 sm:col-span-2 md:col-span-3">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Endereço</p>
-                  <p className="text-sm text-slate-700">
-                    {proposal.address ?? "—"}, {proposal.addressNumber ?? "—"} {proposal.addressComplement ?? ""}
-                  </p>
-                  <p className="text-xs text-slate-500">
-                    {proposal.neighborhood ?? "—"} • {proposal.city ?? "—"} / {proposal.uf ?? "—"} • CEP: {proposal.cep ?? "—"}
-                  </p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Endereco</Text>
+                  <Text className="block text-sm text-slate-700">
+                    {proposal.address ?? "--"}, {proposal.addressNumber ?? "--"} {proposal.addressComplement ?? ""}
+                  </Text>
+                  <Text className="block text-xs text-slate-500">
+                    {proposal.neighborhood ?? "--"} | {proposal.city ?? "--"} / {proposal.uf ?? "--"} | CEP: {proposal.cep ?? "--"}
+                  </Text>
                 </div>
                 <div className="rounded-md bg-slate-50 px-3 py-2 sm:col-span-2 md:col-span-3">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500">Renda e notas</p>
-                  <p className="text-sm text-slate-700">
-                    Renda: {proposal.income ? formatCurrency(proposal.income) : "—"} • Outras rendas: {proposal.otherIncomes ? formatCurrency(proposal.otherIncomes) : "—"}
-                  </p>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">Renda e notas</Text>
+                  <Text className="block text-sm text-slate-700">
+                    Renda: {proposal.income ? formatCurrency(proposal.income) : "--"} | Outras rendas: {proposal.otherIncomes ? formatCurrency(proposal.otherIncomes) : "--"}
+                  </Text>
                   {proposal.notes ? (
-                    <p className="text-xs text-slate-500 mt-1">Observações: {proposal.notes}</p>
+                    <Text className="block text-xs text-slate-500 mt-1">Observacoes: {proposal.notes}</Text>
                   ) : null}
                 </div>
               </div>
@@ -202,23 +190,23 @@ export function ProposalTimelineSheet({ proposalId, proposal, dealerName, seller
           {isLoading ? (
             <div className="space-y-3">
               {Array.from({ length: 4 }).map((_, index) => (
-                <Skeleton key={index} className="h-16 w-full" />
+                <Skeleton key={index} active />
               ))}
             </div>
           ) : error ? (
-            <p className="text-sm text-destructive">{error}</p>
+            <Text className="text-sm text-red-500">{error}</Text>
           ) : events.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <Text className="text-sm text-muted-foreground">
               Nenhum evento registrado para esta ficha.
-            </p>
+            </Text>
           ) : (
-            <ScrollArea className="h-[65vh] pr-2">
+            <div className="h-[65vh] overflow-y-auto pr-2">
               <div className="mx-auto max-w-4xl space-y-4">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm font-semibold text-[#134B73]">Linha do tempo</p>
-                  <span className="text-[11px] uppercase tracking-wide text-slate-500">
+                  <Text className="text-sm font-semibold text-[#134B73]">Linha do tempo</Text>
+                  <Text className="text-[11px] uppercase tracking-wide text-slate-500">
                     Auditoria
-                  </span>
+                  </Text>
                 </div>
                 <div className="space-y-3 border-l-2 border-[#134B73]/20 pl-3">
                   {events.map((event, index) => (
@@ -242,7 +230,7 @@ export function ProposalTimelineSheet({ proposalId, proposal, dealerName, seller
                           </div>
                           <p className="text-sm font-semibold text-[#134B73] leading-snug">
                             {event.type === "STATUS_UPDATED"
-                              ? `Status: ${event.statusFrom ? statusLabel[event.statusFrom] ?? event.statusFrom : "—"} → ${event.statusTo ? statusLabel[event.statusTo] ?? event.statusTo : "—"}`
+                              ? `Status: ${event.statusFrom ? statusLabel[event.statusFrom] ?? event.statusFrom : "--"} -> ${event.statusTo ? statusLabel[event.statusTo] ?? event.statusTo : "--"}`
                               : event.type === "CREATED"
                                 ? "Ficha criada"
                                 : event.type}
@@ -252,15 +240,15 @@ export function ProposalTimelineSheet({ proposalId, proposal, dealerName, seller
                           ) : null}
                         </div>
                       </div>
-                      {index < events.length - 1 ? <Separator className="mt-3" /> : null}
+                      {index < events.length - 1 ? <Divider className="my-3" /> : null}
                     </div>
                   ))}
                 </div>
               </div>
-            </ScrollArea>
+            </div>
           )}
         </div>
-      </DialogContent>
-    </Dialog>
+      </Modal>
+    </>
   );
 }

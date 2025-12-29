@@ -6,10 +6,7 @@ import Link from "next/link";
 import { ArrowLeft, Clock3, User, Car, Building2, Mic, Square, Send } from "lucide-react";
 import { Proposal, ProposalEvent, ProposalStatus } from "@/application/core/@types/Proposals/Proposal";
 import { fetchProposalTimeline, fetchProposals } from "@/application/services/Proposals/proposalService";
-import { Button } from "@/presentation/layout/components/ui/button";
-import { Separator } from "@/presentation/layout/components/ui/separator";
-import { Skeleton } from "@/presentation/layout/components/ui/skeleton";
-import { Input } from "@/presentation/layout/components/ui/input";
+import { Button, Divider, Input, Skeleton } from "antd";
 import {
   REALTIME_CHANNELS,
   useRealtimeChannel,
@@ -25,6 +22,7 @@ const statusLabel: Record<ProposalStatus, string> = {
   PENDING: "Pendente",
   APPROVED: "Aprovada",
   REJECTED: "Recusada",
+  PAID: "Paga",
 };
 
 const formatDateTime = (value: string) =>
@@ -455,17 +453,15 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="bg-white text-[#0F456A] border border-white/40 hover:bg-white/90 hover:text-[#0F456A] shadow-sm"
-            >
-              <Link href="/esteira-de-propostas">
+            <Link href="/esteira-de-propostas">
+              <Button
+                size="small"
+                className="bg-white text-[#0F456A] border border-white/40 hover:bg-white/90 hover:text-[#0F456A] shadow-sm"
+              >
                 <ArrowLeft className="size-4" />
                 Voltar
-              </Link>
-            </Button>
+              </Button>
+            </Link>
             <div>
               <p className="text-xs uppercase tracking-wide text-white/70">
                 Ficha #{isValidId ? proposalId : "—"}
@@ -619,7 +615,7 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
                         ) : null}
                       </div>
                     </div>
-                    {index < timeline.length - 1 ? <Separator className="mt-3" /> : null}
+                    {index < timeline.length - 1 ? <Divider className="mt-3" /> : null}
                   </div>
                 ))}
               </div>
@@ -715,14 +711,13 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
                 className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2"
               >
                 <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
+                  type="text"
+                  shape="circle"
+                  size="small"
                   className={`h-10 w-10 rounded-full text-white hover:bg-white/20 ${isRecording ? "animate-pulse" : ""}`}
                   onClick={toggleRecording}
-                >
-                  {isRecording ? <Square className="size-5" /> : <Mic className="size-5" />}
-                </Button>
+                  icon={isRecording ? <Square className="size-5" /> : <Mic className="size-5" />}
+                />
                 <div className="relative flex-1">
                   <Input
                     value={chatInput}
@@ -750,13 +745,13 @@ export default function ProposalHistoryPage({ params }: { params: Params }) {
                   ) : null}
                 </div>
                 <Button
-                  type="submit"
-                  size="icon"
+                  htmlType="submit"
+                  shape="circle"
+                  size="small"
                   className="h-10 w-10 rounded-full border border-white/40 bg-white/20 text-white shadow-sm hover:bg-white/30"
                   disabled={(!chatInput.trim() && !isRecording) || chatStatus === "connecting"}
-                >
-                  <Send className="size-4" />
-                </Button>
+                  icon={<Send className="size-4" />}
+                />
               </form>
               <div className="text-[11px] text-white/70">
                 {isRecording

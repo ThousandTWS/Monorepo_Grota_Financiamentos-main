@@ -1,4 +1,9 @@
-export type ProposalStatus = "SUBMITTED" | "PENDING" | "APPROVED" | "REJECTED";
+export type ProposalStatus =
+  | "SUBMITTED"
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "PAID";
 
 export interface Proposal {
   id: number;
