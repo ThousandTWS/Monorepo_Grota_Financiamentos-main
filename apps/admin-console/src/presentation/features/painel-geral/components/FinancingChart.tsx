@@ -141,7 +141,7 @@ export function FinancingChart() {
       },
       toolbox: {
         feature: {
-          dataView: { show: true, readOnly: false },
+          dataView: { show: false, readOnly: false },
           magicType: { show: true, type: ["line", "bar"] },
           restore: { show: true },
           saveAsImage: { show: true },
