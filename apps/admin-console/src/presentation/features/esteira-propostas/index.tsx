@@ -1,7 +1,7 @@
 /* eslint-disable turbo/no-undeclared-env-vars */
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   REALTIME_CHANNELS,
   REALTIME_EVENT_TYPES,
@@ -101,6 +101,8 @@ export default function EsteiraDePropostasFeature() {
   const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
   const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
   const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
+  const [recentIds, setRecentIds] = useState<Record<number, boolean>>({});
+  const recentTimeouts = useRef<Record<number, number>>({});
 
   const { messages, sendMessage } = useRealtimeChannel({
     channel: REALTIME_CHANNELS.PROPOSALS,
@@ -158,9 +160,34 @@ export default function EsteiraDePropostasFeature() {
     });
   }, []);
 
+  const markRecent = useCallback((proposalId: number) => {
+    setRecentIds((prev) => ({ ...prev, [proposalId]: true }));
+    const existing = recentTimeouts.current[proposalId];
+    if (existing) {
+      window.clearTimeout(existing);
+    }
+    recentTimeouts.current[proposalId] = window.setTimeout(() => {
+      setRecentIds((prev) => {
+        const next = { ...prev };
+        delete next[proposalId];
+        return next;
+      });
+      delete recentTimeouts.current[proposalId];
+    }, 8000);
+  }, []);
+
   useEffect(() => {
     loadProposals();
   }, [loadProposals]);
+
+  useEffect(() => {
+    return () => {
+      Object.values(recentTimeouts.current).forEach((timeoutId) => {
+        window.clearTimeout(timeoutId);
+      });
+      recentTimeouts.current = {};
+    };
+  }, []);
 
   useEffect(() => {
     setNoteDrafts((prev) => {
@@ -235,6 +262,7 @@ export default function EsteiraDePropostasFeature() {
       payload.proposal
     ) {
       applyRealtimeSnapshot(payload.proposal);
+      markRecent(payload.proposal.id);
       toast({
         title: "Nova ficha do lojista",
         description: `${payload.proposal.customerName} aguardando analise.`,
@@ -552,6 +580,7 @@ export default function EsteiraDePropostasFeature() {
         deletingId={deletingId}
         dealersById={dealerIndex}
         sellersById={sellerIndex}
+        recentIds={recentIds}
       />
     </div>
   );

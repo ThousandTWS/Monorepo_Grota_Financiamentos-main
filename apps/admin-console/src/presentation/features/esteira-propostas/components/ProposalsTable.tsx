@@ -14,6 +14,7 @@ type ProposalsTableProps = {
   deletingId?: number | null;
   noteDrafts: Record<number, string>;
   savingNoteId?: number | null;
+  recentIds?: Record<number, boolean>;
   onStatusChange: (proposal: Proposal, status: ProposalStatus) => void;
   onDelete: (proposal: Proposal) => Promise<void> | void;
   onNoteChange: (proposalId: number, value: string) => void;
@@ -66,6 +67,7 @@ export function ProposalsTable({
   deletingId = null,
   noteDrafts,
   savingNoteId = null,
+  recentIds = {},
   onStatusChange,
   onDelete,
   onNoteChange,
@@ -158,7 +160,7 @@ export function ProposalsTable({
       {cards.map((proposal) => (
         <Card
           key={proposal.id}
-          className="bg-gradient-to-br from-white via-slate-50 to-white shadow-sm"
+          className={`bg-gradient-to-br from-white via-slate-50 to-white shadow-sm ${recentIds[proposal.id] ? "proposal-flash ring-2 ring-amber-300/70" : ""}`}
         >
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
@@ -291,6 +293,20 @@ export function ProposalsTable({
           <Text strong>{deleteTarget?.customerName ?? "--"}</Text>? Esta acao nao pode ser desfeita.
         </Text>
       </Modal>
+      <style jsx global>{`
+        @keyframes proposal-blink {
+          0%,
+          100% {
+            box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.45);
+          }
+          50% {
+            box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.1);
+          }
+        }
+        .proposal-flash {
+          animation: proposal-blink 1s ease-in-out 6;
+        }
+      `}</style>
     </div>
   );
 }
