@@ -25,7 +25,7 @@ const PANELS: StatusPanel[] = [
   },
   {
     key: "PENDING",
-    title: "Em Analise",
+    title: "Em analise",
     statuses: ["PENDING"],
   },
   {
@@ -262,20 +262,22 @@ export function QuickStats() {
     PENDING: "bg-amber-500/20 text-amber-100 border-amber-400/30",
     APPROVED: "bg-emerald-500/20 text-emerald-100 border-emerald-400/30",
     REJECTED: "bg-rose-500/20 text-rose-100 border-rose-400/30",
+    PAID: "bg-teal-500/20 text-teal-100 border-teal-400/30",
   };
 
   const statusLabel: Record<ProposalStatus, string> = {
     SUBMITTED: "Recebida",
-    PENDING: "Em análise",
+    PENDING: "Em analise",
     APPROVED: "Aprovada",
     REJECTED: "Reprovada",
+    PAID: "Paga",
   };
 
   if (hasError) {
     return (
       <Card className="border border-destructive/30 bg-destructive/5">
         <CardContent className="py-6 text-sm text-destructive">
-          Não foi possível carregar as estatísticas de propostas.
+          Nao foi possivel carregar as estatisticas de propostas.
         </CardContent>
       </Card>
     );
@@ -285,7 +287,7 @@ export function QuickStats() {
     <div className="grid gap-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="text-2xl font-semibold text-slate-900">
-          Olá seja bem vindo {firstName ? `, ${firstName}` : ""}
+          Ola seja bem vindo {firstName ? `, ${firstName}` : ""}
         </h2>
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
           Visao Geral
@@ -454,4 +456,5 @@ export function QuickStats() {
     </div>
   );
 }
+
 
