@@ -28,6 +28,16 @@ type Step2PersonalDataProps = {
 };
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
+const normalizePhoneDigits = (value: string) => {
+  let digits = digitsOnly(value);
+  if (digits.startsWith("55") && digits.length > 11) {
+    digits = digits.slice(2);
+  }
+  if (digits.length > 11) {
+    digits = digits.slice(-11);
+  }
+  return digits;
+};
 
 const validateEmail = (value: string) => /\S+@\S+\.\S+/.test(value);
 const requiredSelectTriggerClass =
@@ -743,7 +753,7 @@ export default function Step2PersonalData({
 
           setCpfStatus(cpfStatusText || null);
           setCpfLookupCompleted(true);
-          setCpfPhoneDigits(resolvedPhoneDigits);
+          setCpfPhoneDigits(normalizePhoneDigits(resolvedPhoneDigits));
 
           const emailFlag = contactEmail.verified ?? (contactEmail.email ? true : null);
           const phoneFlag =
@@ -985,14 +995,13 @@ export default function Step2PersonalData({
         return false;
       }
 
-      if (!cpfPhoneDigits) {
-        toast.error("Telefone nao encontrado para este CPF.");
-        return false;
-      }
-
-      if (digitsOnly(personal.phone) !== cpfPhoneDigits) {
-        toast.error("Telefone nao corresponde ao CPF informado.");
-        return false;
+      if (cpfPhoneDigits) {
+        const normalizedInput = normalizePhoneDigits(personal.phone);
+        const normalizedCpfPhone = normalizePhoneDigits(cpfPhoneDigits);
+        if (normalizedInput !== normalizedCpfPhone) {
+          toast.error("Telefone nao corresponde ao CPF informado.");
+          return false;
+        }
       }
     }
 
@@ -1104,7 +1113,19 @@ export default function Step2PersonalData({
                         setPhoneVerified(false);
                         return;
                       }
-                      setPhoneVerified(Boolean(cpfPhoneDigits && digits === cpfPhoneDigits));
+                      if (!cpfPhoneDigits) {
+                        setPhoneVerified(true);
+                        return;
+                      }
+                      const normalizedInput = normalizePhoneDigits(digits);
+                      const normalizedCpfPhone = normalizePhoneDigits(cpfPhoneDigits);
+                      setPhoneVerified(
+                        Boolean(
+                          normalizedCpfPhone &&
+                            normalizedInput &&
+                            normalizedInput === normalizedCpfPhone,
+                        ),
+                      );
                     }}
                     placeholder="(00) 00000-0000"
                     maxLength={15}
