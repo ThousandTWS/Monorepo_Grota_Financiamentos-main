@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button, Card, Divider, Input, Spin, Switch, Typography } from "antd";
+import { Button, Card, Divider, Input, Modal, Spin, Switch, Typography } from "antd";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -313,7 +313,7 @@ export default function Step4Review({
   const [calculation, setCalculation] = useState<Calculation | null>(null);
   const [proposalId, setProposalId] = useState<number | null>(null);
   const [submitted, setSubmitted] = useState(false);
-  const [resetting, setResetting] = useState(false);
+  const [downloadPromptOpen, setDownloadPromptOpen] = useState(false);
 
   const totalVehicle = useMemo(() => {
     return `${formData.vehicle.brand} ${formData.vehicle.model}`.trim();
@@ -335,16 +335,6 @@ export default function Step4Review({
     handleCalculate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  useEffect(() => {
-    if (!submitted) return;
-    const timer = window.setTimeout(() => {
-      setResetting(true);
-      clearData();
-      goToStep(1);
-    }, 1500);
-    return () => window.clearTimeout(timer);
-  }, [submitted, clearData, goToStep]);
 
   const handleCalculate = async () => {
     try {
@@ -443,6 +433,7 @@ export default function Step4Review({
       const result = await createProposal(payload);
       setProposalId(result.id);
       setSubmitted(true);
+      setDownloadPromptOpen(true);
       toast.success("Proposta enviada com sucesso!");
     } catch (error) {
       toast.error(
@@ -476,9 +467,23 @@ export default function Step4Review({
     }
   };
 
-  const handleNewSimulation = () => {
+  const handleDownloadPromptClose = () => {
+    if (downloadingPDF) return;
+    setDownloadPromptOpen(false);
+  };
+
+  const finalizeNewSimulation = () => {
     clearData();
     goToStep(1);
+  };
+
+  const handleDownloadDecision = async (shouldDownload: boolean) => {
+    if (downloadingPDF) return;
+    setDownloadPromptOpen(false);
+    if (shouldDownload) {
+      await handleDownloadPDF();
+    }
+    finalizeNewSimulation();
   };
 
   if (submitted) {
@@ -494,7 +499,7 @@ export default function Step4Review({
         </Card>
 
         <div className="flex gap-4 justify-center">
-          <Button onClick={handleDownloadPDF} disabled={downloadingPDF} size="large">
+          <Button onClick={() => setDownloadPromptOpen(true)} disabled={downloadingPDF} size="large">
             {downloadingPDF ? (
               <Spin size="small" className="mr-2" />
             ) : (
@@ -503,9 +508,28 @@ export default function Step4Review({
             Baixar PDF
           </Button>
         </div>
-        {resetting && (
-          <p className="text-center text-sm text-gray-600">Iniciando nova simulacao...</p>
-        )}
+        <Modal
+          open={downloadPromptOpen}
+          title="Deseja baixar o PDF desta proposta?"
+          onCancel={handleDownloadPromptClose}
+          footer={[
+            <Button key="skip" onClick={() => void handleDownloadDecision(false)} disabled={downloadingPDF}>
+              Nao baixar
+            </Button>,
+            <Button
+              key="download"
+              type="primary"
+              onClick={() => void handleDownloadDecision(true)}
+              loading={downloadingPDF}
+            >
+              Baixar PDF
+            </Button>,
+          ]}
+        >
+          <p className="text-sm text-gray-600">
+            O PDF sera gerado com os dados desta simulacao antes de iniciar uma nova.
+          </p>
+        </Modal>
       </div>
     );
   }
@@ -633,7 +657,8 @@ export default function Step4Review({
       </Card>
 
       <Card
-        className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
+        className="overflow-hidden"
+        styles={{ body: { padding: 0 } }}
         title={
           <div className="flex justify-between items-center">
             <span className="text-lg font-semibold text-white">Calculo do Financiamento</span>
@@ -650,7 +675,7 @@ export default function Step4Review({
           </div>
         }
       >
-        <div className="space-y-4">
+        <div className="space-y-4 bg-gradient-to-br from-[#134B73] to-[#0a2940] p-6 text-white">
           {calculation ? (
             <>
               <div className="grid grid-cols-2 gap-4">
