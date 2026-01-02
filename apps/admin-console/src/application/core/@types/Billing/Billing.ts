@@ -26,6 +26,14 @@ export type BillingInstallment = {
   paidAt?: string | null;
 };
 
+export type BillingInstallmentInput = {
+  number: number;
+  dueDate: string;
+  amount: number;
+  paid?: boolean;
+  paidAt?: string | null;
+};
+
 export type BillingOccurrence = {
   id: number;
   date: string;
@@ -61,6 +69,31 @@ export type BillingContractDetails = {
   otherContracts: BillingContractSummary[];
   createdAt: string;
   updatedAt: string;
+};
+
+export type BillingContractCreatePayload = {
+  contractNumber: string;
+  proposalId?: number | null;
+  status: BillingStatus;
+  paidAt: string;
+  startDate: string;
+  financedValue: number;
+  installmentValue: number;
+  installmentsTotal: number;
+  firstDueDate?: string | null;
+  customerName: string;
+  customerDocument: string;
+  customerBirthDate?: string | null;
+  customerEmail?: string | null;
+  customerPhone?: string | null;
+  customerAddress?: string | null;
+  customerCity?: string | null;
+  customerState?: string | null;
+  vehicleBrand?: string | null;
+  vehicleModel?: string | null;
+  vehicleYear?: number | null;
+  vehiclePlate?: string | null;
+  installments?: BillingInstallmentInput[];
 };
 
 export type BillingContractFilters = {

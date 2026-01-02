@@ -8,13 +8,18 @@ const DEFAULT_API_BASE_URL =
   "http://localhost:8080/api/v1/grota-financiamentos";
 
 const IS_PRODUCTION = process.env.NODE_ENV === "production";
+const IS_LOCALHOST =
+  (process.env.NEXT_PUBLIC_URL_API?.includes("localhost") ||
+    process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL?.includes("localhost") ||
+    process.env.ADMIN_API_BASE_URL?.includes("localhost")) ??
+  false;
 
 export const ADMIN_SESSION_COOKIE = "grota.admin.session";
 export const ADMIN_SESSION_SCOPE: SessionScope = "admin";
 // DuraÇõÇœo do cookie de sessÇœo (em segundos). Aumentado para 30 dias.
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 export const ADMIN_COOKIE_SAME_SITE = IS_PRODUCTION ? ("none" as const) : ("lax" as const);
-export const ADMIN_COOKIE_SECURE = IS_PRODUCTION;
+export const ADMIN_COOKIE_SECURE = IS_PRODUCTION && !IS_LOCALHOST;
 
 export function getAdminApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;

@@ -16,6 +16,7 @@ import org.example.server.service.DealerService;
 import org.example.server.service.JwtService;
 import org.example.server.service.RefreshTokenService;
 import org.example.server.service.UserService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -37,12 +38,23 @@ public class AuthController {
     private final UserService userService;
     private final DealerService dealerService;
     private final RefreshTokenService refreshTokenService;
+    private final boolean cookieSecure;
+    private final String cookieSameSite;
 
-    public AuthController(JwtService jwtService, UserService userService, DealerService dealerService, RefreshTokenService refreshTokenService) {
+    public AuthController(
+            JwtService jwtService,
+            UserService userService,
+            DealerService dealerService,
+            RefreshTokenService refreshTokenService,
+            @Value("${app.security.cookies.secure:true}") boolean cookieSecure,
+            @Value("${app.security.cookies.same-site:Lax}") String cookieSameSite
+    ) {
         this.jwtService = jwtService;
         this.userService = userService;
         this.dealerService = dealerService;
         this.refreshTokenService = refreshTokenService;
+        this.cookieSecure = cookieSecure;
+        this.cookieSameSite = cookieSameSite;
     }
 
     @PostMapping("/register")
@@ -291,8 +303,8 @@ public class AuthController {
 private ResponseCookie createAuthCookie(String token, boolean expire) {
         return ResponseCookie.from("access_token", expire ? "" : token)
                 .httpOnly(true)
-                .secure(true) 
-                .sameSite("Lax")
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
                 .domain(null)
                 .path("/")
                 .maxAge(expire ? Duration.ZERO : Duration.ofMinutes(15)) // 15 minutos para access token
@@ -303,8 +315,8 @@ private ResponseCookie createAuthCookie(String token, boolean expire) {
 private ResponseCookie createRefreshCookie(String token, boolean expire) {
         return ResponseCookie.from("refresh_token", expire ? "" : token)
                 .httpOnly(true)
-                .secure(true)
-                .sameSite("Lax")
+                .secure(cookieSecure)
+                .sameSite(cookieSameSite)
                 .path("/")
                 .maxAge(expire ? Duration.ZERO : Duration.ofDays(7)) // 7 dias para refresh token
                 .build();

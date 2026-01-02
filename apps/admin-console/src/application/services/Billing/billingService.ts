@@ -1,5 +1,7 @@
+import axios, { isAxiosError } from "axios";
 import { z } from "zod";
 import {
+  BillingContractCreatePayload,
   BillingContractDetails,
   BillingContractFilters,
   BillingContractSummary,
@@ -9,9 +11,34 @@ import {
   BillingOccurrencePayload,
   BillingStatus,
 } from "@/application/core/@types/Billing/Billing";
-import { getAdminApiBaseUrl } from "@/application/server/auth/config";
 
-const API_BASE_URL = getAdminApiBaseUrl();
+const billingApi = axios.create({
+  baseURL: "/api/billing",
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+async function getServerCookieHeader(): Promise<Record<string, string>> {
+  if (typeof window !== "undefined") return {};
+
+  const { cookies } = await import("next/headers");
+  const cookieStore = cookies();
+  const serialized = cookieStore.toString();
+  return serialized ? { Cookie: serialized } : {};
+}
+
+async function requestWithSession<T>(
+  config: Parameters<typeof billingApi.request>[0],
+): Promise<T> {
+  const serverCookies = await getServerCookieHeader();
+  const response = await billingApi.request({
+    ...config,
+    headers: { ...(config.headers ?? {}), ...serverCookies },
+  });
+  return response.data as T;
+}
 
 const statusSchema = z.enum(["PAGO", "EM_ABERTO", "EM_ATRASO"] satisfies BillingStatus[]);
 
@@ -114,48 +141,68 @@ const buildQueryString = (filters: BillingContractFilters) => {
   return query ? `?${query}` : "";
 };
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok) {
-    const message =
-      (payload as { error?: string; message?: string })?.error ??
-      (payload as { message?: string })?.message ??
-      "Falha ao comunicar com o servidor.";
-    throw new Error(message);
+function buildErrorMessage(error: unknown): string {
+  if (isAxiosError(error)) {
+    const payload = error.response?.data as { error?: string; message?: string } | undefined;
+    return (
+      payload?.message ??
+      payload?.error ??
+      error.message ??
+      "Falha ao comunicar com o servidor."
+    );
   }
 
-  return (payload ?? {}) as T;
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return "Falha ao comunicar com o servidor.";
 }
 
 export const listBillingContracts = async (
   filters: BillingContractFilters = {},
 ): Promise<BillingContractSummary[]> => {
-  const response = await fetch(
-    `${API_BASE_URL}${buildQueryString(filters)}`,
-    {
-      method: "GET",
-      credentials: "include",
-      cache: "no-store",
-    },
-  );
+  try {
+    const response = await requestWithSession<unknown>(
+      {
+        method: "GET",
+        url: `/contracts${buildQueryString(filters)}`,
+      },
+    );
+    const listPayload = extractArrayPayload(response);
+    return BillingContractSummaryListSchema.parse(listPayload);
+  } catch (error) {
+    throw new Error(buildErrorMessage(error));
+  }
+};
 
-  const payload = await handleResponse<unknown>(response);
-  const listPayload = extractArrayPayload(payload);
-  return BillingContractSummaryListSchema.parse(listPayload);
+export const createBillingContract = async (
+  payload: BillingContractCreatePayload,
+): Promise<BillingContractDetails> => {
+  try {
+    const response = await requestWithSession<unknown>({
+      method: "POST",
+      url: "/contracts",
+      data: payload,
+    });
+    return BillingContractDetailsSchema.parse(response);
+  } catch (error) {
+    throw new Error(buildErrorMessage(error));
+  }
 };
 
 export const getBillingContractDetails = async (
   contractNumber: string,
 ): Promise<BillingContractDetails> => {
-  const response = await fetch(`${API_BASE_URL}/${contractNumber}`, {
-    method: "GET",
-    credentials: "include",
-    cache: "no-store",
-  });
-
-  const payload = await handleResponse<unknown>(response);
-  return BillingContractDetailsSchema.parse(payload);
+  try {
+    const response = await requestWithSession<unknown>({
+      method: "GET",
+      url: `/contracts/${contractNumber}`,
+    });
+    return BillingContractDetailsSchema.parse(response);
+  } catch (error) {
+    throw new Error(buildErrorMessage(error));
+  }
 };
 
 export const updateBillingInstallment = async (
@@ -163,40 +210,32 @@ export const updateBillingInstallment = async (
   installmentNumber: number,
   payload: BillingInstallmentUpdatePayload,
 ): Promise<BillingInstallment> => {
-  const response = await fetch(
-    `${API_BASE_URL}/${contractNumber}/installments/${installmentNumber}`,
-    {
+  try {
+    const response = await requestWithSession<unknown>({
       method: "PATCH",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    },
-  );
+      url: `/contracts/${contractNumber}/installments/${installmentNumber}`,
+      data: payload,
+    });
 
-  const responsePayload = await handleResponse<unknown>(response);
-  return BillingInstallmentSchema.parse(responsePayload);
+    return BillingInstallmentSchema.parse(response);
+  } catch (error) {
+    throw new Error(buildErrorMessage(error));
+  }
 };
 
 export const createBillingOccurrence = async (
   contractNumber: string,
   payload: BillingOccurrencePayload,
 ): Promise<BillingOccurrence> => {
-  const response = await fetch(
-    `${API_BASE_URL}/${contractNumber}/occurrences`,
-    {
+  try {
+    const response = await requestWithSession<unknown>({
       method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-      cache: "no-store",
-    },
-  );
+      url: `/contracts/${contractNumber}/occurrences`,
+      data: payload,
+    });
 
-  const responsePayload = await handleResponse<unknown>(response);
-  return BillingOccurrenceSchema.parse(responsePayload);
+    return BillingOccurrenceSchema.parse(response);
+  } catch (error) {
+    throw new Error(buildErrorMessage(error));
+  }
 };
