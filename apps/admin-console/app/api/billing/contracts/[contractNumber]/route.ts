@@ -8,11 +8,11 @@ import { getAdminApiBaseUrl } from "@/application/server/auth/config";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
-async function proxyRequest<T>(
+async function proxyRequest(
   session: NonNullable<Awaited<ReturnType<typeof getAdminSession>>>,
   input: RequestInfo | URL,
   init?: RequestInit,
-): Promise<NextResponse<T>> {
+): Promise<NextResponse> {
   const fetchWithSession = (
     activeSession: NonNullable<Awaited<ReturnType<typeof getAdminSession>>>,
   ) =>
@@ -45,13 +45,10 @@ async function proxyRequest<T>(
       (payload as { message?: string; error?: string })?.message ??
       (payload as { error?: string })?.error ??
       "Falha ao processar a requisição.";
-    return NextResponse.json(
-      { error: message } as unknown as T,
-      { status: upstreamResponse.status },
-    );
+    return NextResponse.json({ error: message }, { status: upstreamResponse.status });
   }
 
-  return NextResponse.json(payload ?? ({} as T), {
+  return NextResponse.json(payload ?? {}, {
     status: upstreamResponse.status,
   });
 }
