@@ -10,7 +10,7 @@ import org.example.server.exception.DocumentUploadException;
 import org.example.server.exception.auth.AccessDeniedException;
 import org.example.server.exception.generic.DataAlreadyExistsException;
 import org.example.server.exception.generic.RecordNotFoundException;
-import org.example.server.infra.security.aws.S3Service;
+import org.example.server.infra.storage.cloudinary.CloudinaryDocumentService;
 import org.example.server.model.Document;
 import org.example.server.model.User;
 import org.example.server.repository.DealerRepository;
@@ -26,7 +26,7 @@ import java.util.UUID;
 @Service
 public class DocumentService {
 
-    private final S3Service s3Service;
+    private final CloudinaryDocumentService cloudinaryDocumentService;
     private final DocumentRepository documentRepository;
     private final DealerRepository dealerRepository;
     private final EmailService emailService;
@@ -36,8 +36,8 @@ public class DocumentService {
     private static final long MAX_FILE_BYTES = 10 * 1024 * 1024; // 10MB
     private static final String[] ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png"};
 
-    public DocumentService(S3Service s3Service, DocumentRepository documentRepository, DealerRepository dealerRepository, EmailService emailService, DocumentFactory documentFactory, DocumentMapper mapper) {
-        this.s3Service = s3Service;
+    public DocumentService(CloudinaryDocumentService cloudinaryDocumentService, DocumentRepository documentRepository, DealerRepository dealerRepository, EmailService emailService, DocumentFactory documentFactory, DocumentMapper mapper) {
+        this.cloudinaryDocumentService = cloudinaryDocumentService;
         this.documentRepository = documentRepository;
         this.dealerRepository = dealerRepository;
         this.emailService = emailService;
@@ -70,15 +70,15 @@ public class DocumentService {
         MultipartFile file = dto.file();
         validateFile(file);
 
-        String s3Key = buildS3Key(user.getId(), file.getOriginalFilename());
+        String publicId = buildCloudinaryPublicId(user.getId());
 
         try {
-            s3Service.uploadFile(s3Key, file);
+            publicId = cloudinaryDocumentService.uploadFile(publicId, file);
         } catch (IOException e) {
-            throw new DocumentUploadException("Falha ao enviar documento para o servidor", e);
+            throw new DocumentUploadException("Falha ao enviar documento para o Cloudinary.", e);
         }
 
-        Document document = documentFactory.create(dto, user, s3Key);
+        Document document = documentFactory.create(dto, user, publicId);
 
         return mapper.toDTO(documentRepository.save(document));
     }
@@ -97,7 +97,7 @@ public class DocumentService {
             throw new AccessDeniedException("Acesso negado: você não tem permissão para visualizar este documento.");
         }
 
-        return s3Service.generatePresignedUrl(doc.getS3Key());
+        return cloudinaryDocumentService.generateFileUrl(doc.getS3Key());
     }
 
     @Transactional
@@ -136,19 +136,8 @@ public class DocumentService {
                 .collect(java.util.stream.Collectors.toList());
     }
 
-    private String buildS3Key(Long dealerId, String originalFilename) {
-
-        String ext = "bin";
-        if (originalFilename != null && originalFilename.contains(".")) {
-            ext = originalFilename.substring(originalFilename.lastIndexOf('.') + 1);
-        }
-
-        return String.format(
-                "dealers/%d/documents/%s.%s",
-                dealerId,
-                UUID.randomUUID(),
-                ext
-        );
+    private String buildCloudinaryPublicId(Long userId) {
+        return "user-" + userId + "-document-" + UUID.randomUUID();
     }
 
     private void validateFile(MultipartFile file) {

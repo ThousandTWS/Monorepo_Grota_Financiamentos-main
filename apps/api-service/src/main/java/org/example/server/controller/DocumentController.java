@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.net.URL;
 @Controller
-@Tag(name = "Documents", description = "Documents s3")
+@Tag(name = "Documents", description = "Documents cloudinary")
 @RequestMapping("/api/v1/grota-financiamentos/documents")
 public class DocumentController {
 
@@ -87,7 +87,7 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}/url")
-    @Operation(summary = "Obter URL pré -Assinada do Documento", description = "Gera e retorna URL pré-assinada")
+    @Operation(summary = "Obter URL do Documento", description = "Gera e retorna a URL de acesso do documento")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "URL pre-assinada gerada com sucesso", content = @Content(schema = @Schema(implementation = DocumentResponseDTO.class))),
             @ApiResponse(responseCode = "401", description = "Não autorizado"),
