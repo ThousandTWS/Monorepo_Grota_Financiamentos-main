@@ -73,6 +73,27 @@ async function clearAdminSessionCookie(
   });
 }
 
+export async function refreshAdminSession(
+  session: SessionPayload,
+): Promise<SessionPayload | null> {
+  const cookieStore = await cookies();
+  const refreshed = await refreshTokens(session);
+  if (!refreshed) {
+    await clearAdminSessionCookie(cookieStore);
+    return null;
+  }
+
+  const refreshedSession: SessionPayload = {
+    ...session,
+    accessToken: refreshed.accessToken,
+    refreshToken: refreshed.refreshToken,
+    expiresAt: refreshed.expiresAt,
+  };
+
+  await setAdminSessionCookie(cookieStore, refreshedSession);
+  return refreshedSession;
+}
+
 export async function getAdminSession(): Promise<AdminSession | null> {
   const cookieStore = await cookies();
   const encoded = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
@@ -83,21 +104,8 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   }
 
   if (isSessionNearExpiry(session)) {
-    const refreshed = await refreshTokens(session);
-    if (!refreshed) {
-      await clearAdminSessionCookie(cookieStore);
-      return null;
-    }
-
-    const refreshedSession: SessionPayload = {
-      ...session,
-      accessToken: refreshed.accessToken,
-      refreshToken: refreshed.refreshToken,
-      expiresAt: refreshed.expiresAt,
-    };
-
-    await setAdminSessionCookie(cookieStore, refreshedSession);
-    return refreshedSession;
+    const refreshed = await refreshAdminSession(session);
+    return refreshed ?? session;
   }
   return session;
 }

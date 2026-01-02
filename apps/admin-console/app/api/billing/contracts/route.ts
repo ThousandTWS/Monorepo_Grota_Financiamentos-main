@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
+import {
+  getAdminSession,
+  refreshAdminSession,
+  unauthorizedResponse,
+} from "../../_lib/session";
 import { getAdminApiBaseUrl } from "@/application/server/auth/config";
 
 const API_BASE_URL = getAdminApiBaseUrl();
@@ -9,14 +13,30 @@ async function proxyRequest<T>(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<NextResponse<T>> {
-  const upstreamResponse = await fetch(input, {
-    ...init,
-    headers: {
-      ...(init?.headers ?? {}),
-      Authorization: `Bearer ${session.accessToken}`,
-    },
-    cache: "no-store",
-  });
+  const fetchWithSession = (
+    activeSession: NonNullable<Awaited<ReturnType<typeof getAdminSession>>>,
+  ) =>
+    fetch(input, {
+      ...init,
+      headers: {
+        ...(init?.headers ?? {}),
+        Authorization: `Bearer ${activeSession.accessToken}`,
+      },
+      cache: "no-store",
+    });
+
+  let upstreamResponse = await fetchWithSession(session);
+
+  if (upstreamResponse.status === 401) {
+    const refreshed = await refreshAdminSession(session);
+    if (refreshed) {
+      upstreamResponse = await fetchWithSession(refreshed);
+    }
+  }
+
+  if (upstreamResponse.status === 401) {
+    return unauthorizedResponse();
+  }
 
   const payload = await upstreamResponse.json().catch(() => null);
 
