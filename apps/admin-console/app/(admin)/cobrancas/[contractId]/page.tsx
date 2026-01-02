@@ -320,7 +320,7 @@ export default function ContractDetailsPage({ params }: { params: Params }) {
         </div>
 
         <Tabs
-          tabPlacement="left"
+          tabPosition="left"
           items={[
             {
               key: "dados",
