@@ -1,0 +1,51 @@
+import { NextRequest, NextResponse } from "next/server";
+import { getAdminSession, unauthorizedResponse } from "../../../_lib/session";
+import { getAdminApiBaseUrl } from "@/application/server/auth/config";
+
+const API_BASE_URL = getAdminApiBaseUrl();
+
+async function proxyRequest<T>(
+  session: NonNullable<Awaited<ReturnType<typeof getAdminSession>>>,
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<NextResponse<T>> {
+  const upstreamResponse = await fetch(input, {
+    ...init,
+    headers: {
+      ...(init?.headers ?? {}),
+      Authorization: `Bearer ${session.accessToken}`,
+    },
+    cache: "no-store",
+  });
+
+  const payload = await upstreamResponse.json().catch(() => null);
+
+  if (!upstreamResponse.ok) {
+    const message =
+      (payload as { message?: string; error?: string })?.message ??
+      (payload as { error?: string })?.error ??
+      "Falha ao processar a requisição.";
+    return NextResponse.json(
+      { error: message } as unknown as T,
+      { status: upstreamResponse.status },
+    );
+  }
+
+  return NextResponse.json(payload ?? ({} as T), {
+    status: upstreamResponse.status,
+  });
+}
+
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<{ contractNumber: string }> },
+) {
+  const session = await getAdminSession();
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  const params = await context.params;
+  const contractNumber = params.contractNumber;
+  return proxyRequest(session, `${API_BASE_URL}/billing/contracts/${contractNumber}`);
+}

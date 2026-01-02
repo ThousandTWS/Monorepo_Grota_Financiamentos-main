@@ -35,6 +35,7 @@ public class ProposalService {
     private final RealtimeBridgeClient realtimeBridgeClient;
     private final ObjectMapper objectMapper;
     private final ProposalEventFactory proposalEventFactory;
+    private final BillingService billingService;
 
     private static final String REALTIME_CHANNEL = "proposals-bridge";
     private static final String REALTIME_SENDER = "api-service";
@@ -46,7 +47,8 @@ public class ProposalService {
             ProposalEventRepository proposalEventRepository,
             RealtimeBridgeClient realtimeBridgeClient,
             ObjectMapper objectMapper,
-            ProposalEventFactory proposalEventFactory
+            ProposalEventFactory proposalEventFactory,
+            BillingService billingService
     ) {
         this.proposalRepository = proposalRepository;
         this.dealerRepository = dealerRepository;
@@ -55,6 +57,7 @@ public class ProposalService {
         this.realtimeBridgeClient = realtimeBridgeClient;
         this.objectMapper = objectMapper;
         this.proposalEventFactory = proposalEventFactory;
+        this.billingService = billingService;
     }
 
     @Transactional
@@ -116,6 +119,10 @@ public class ProposalService {
         appendEvent(saved, "STATUS_UPDATED", previousStatus, saved.getStatus(), dto.actor(), dto.notes(), payload);
         publishRealtime("PROPOSAL_STATUS_UPDATED", Map.of("proposal", toResponse(saved), "source", dto.actor()));
         publishRealtime("PROPOSAL_EVENT_APPENDED", Map.of("proposalId", saved.getId(), "statusFrom", previousStatus, "statusTo", saved.getStatus(), "actor", dto.actor()));
+
+        if (previousStatus != ProposalStatus.PAID && saved.getStatus() == ProposalStatus.PAID) {
+            billingService.createFromPaidProposal(saved);
+        }
         return toResponse(saved);
     }
 

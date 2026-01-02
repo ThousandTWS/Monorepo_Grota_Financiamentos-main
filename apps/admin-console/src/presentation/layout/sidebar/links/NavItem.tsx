@@ -8,6 +8,7 @@ import {
   ShieldCheck,
   UserCog,
   FileText,
+  Receipt,
 } from "lucide-react";
 
 export const navItems: NavItem[] = [
@@ -76,6 +77,18 @@ export const navItems: NavItem[] = [
          pro: false,
          icon: <Building2 size={16} />
       }, 
+    ],
+  },
+  {
+    name: "Gestao de cobranca",
+    icon: <Receipt />,
+    subItems: [
+      {
+        name: "Cobrancas",
+        path: "/cobrancas",
+        pro: false,
+        icon: <Receipt size={16} />,
+      },
     ],
   },
   /*
