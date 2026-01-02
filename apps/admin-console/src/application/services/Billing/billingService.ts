@@ -10,7 +10,7 @@ import {
   BillingStatus,
 } from "@/application/core/@types/Billing/Billing";
 
-const BILLING_ENDPOINT = "/api/billing/contracts";
+const BILLING_ENDPOINT = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
 
 const statusSchema = z.enum(["PAGO", "EM_ABERTO", "EM_ATRASO"] satisfies BillingStatus[]);
 
