@@ -4,9 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Button, Card, Empty, Input, Select, Table, Tag, Typography } from "antd";
 import type { ColumnsType } from "antd/es/table";
-import {
-  listBillingContracts,
-} from "@/application/services/Billing/billingService";
 import type {
   BillingContractSummary,
   BillingStatus,
@@ -42,41 +39,10 @@ export default function CobrancasPage() {
   const [statusFilter, setStatusFilter] = useState<BillingStatus | undefined>(
     undefined,
   );
-  const [contracts, setContracts] = useState<BillingContractSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const debounceRef = useRef<number | null>(null);
+  const [contracts, ] = useState<BillingContractSummary[]>([]);
+  const [isLoading, ] = useState(false);
+  const [error, ] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (debounceRef.current) {
-      window.clearTimeout(debounceRef.current);
-    }
-    debounceRef.current = window.setTimeout(async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const data = await listBillingContracts({
-          name: nameFilter.trim() || undefined,
-          document: digitsOnly(documentFilter.trim()) || undefined,
-          status: statusFilter,
-        });
-        setContracts(data);
-      } catch (err) {
-        setContracts([]);
-        setError(
-          err instanceof Error ? err.message : "Falha ao carregar cobrancas.",
-        );
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => {
-      if (debounceRef.current) {
-        window.clearTimeout(debounceRef.current);
-      }
-    };
-  }, [documentFilter, nameFilter, statusFilter]);
 
   const columns: ColumnsType<BillingContractSummary> = [
     {
