@@ -8,6 +8,7 @@ import type {
   BillingContractSummary,
   BillingStatus,
 } from "@/application/core/@types/Billing/Billing";
+import { fetchBillingContracts } from "@/application/services/Billing/billingService";
 
 const statusColor: Record<BillingStatus, string> = {
   PAGO: "green",
@@ -39,9 +40,46 @@ export default function CobrancasPage() {
   const [statusFilter, setStatusFilter] = useState<BillingStatus | undefined>(
     undefined,
   );
-  const [contracts, ] = useState<BillingContractSummary[]>([]);
-  const [isLoading, ] = useState(false);
-  const [error, ] = useState<string | null>(null);
+  const [contracts, setContracts] = useState<BillingContractSummary[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    debounceRef.current = setTimeout(async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetchBillingContracts({
+          name: nameFilter.trim() || undefined,
+          document: digitsOnly(documentFilter),
+          status: statusFilter,
+        });
+        if (!active) return;
+        setContracts(response);
+      } catch (err) {
+        if (!active) return;
+        setContracts([]);
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Nao foi possivel carregar os contratos.",
+        );
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    }, 400);
+
+    return () => {
+      active = false;
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+      }
+    };
+  }, [nameFilter, documentFilter, statusFilter]);
 
 
   const columns: ColumnsType<BillingContractSummary> = [
@@ -173,7 +211,7 @@ export default function CobrancasPage() {
         >
           {error ? (
             <Empty description={error} />
-          ) : contracts.length === 0 ? (
+          ) : contracts.length === 0 && !isLoading ? (
             <Empty description="Nenhum contrato encontrado com esses filtros." />
           ) : (
             <Table
