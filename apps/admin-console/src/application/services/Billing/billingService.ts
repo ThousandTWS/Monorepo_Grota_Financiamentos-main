@@ -9,8 +9,9 @@ import {
   BillingOccurrencePayload,
   BillingStatus,
 } from "@/application/core/@types/Billing/Billing";
+import { getAdminApiBaseUrl } from "@/application/server/auth/config";
 
-const BILLING_ENDPOINT = process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL;
+const API_BASE_URL = getAdminApiBaseUrl();
 
 const statusSchema = z.enum(["PAGO", "EM_ABERTO", "EM_ATRASO"] satisfies BillingStatus[]);
 
@@ -131,7 +132,7 @@ export const listBillingContracts = async (
   filters: BillingContractFilters = {},
 ): Promise<BillingContractSummary[]> => {
   const response = await fetch(
-    `${BILLING_ENDPOINT}${buildQueryString(filters)}`,
+    `${API_BASE_URL}${buildQueryString(filters)}`,
     {
       method: "GET",
       credentials: "include",
@@ -147,7 +148,7 @@ export const listBillingContracts = async (
 export const getBillingContractDetails = async (
   contractNumber: string,
 ): Promise<BillingContractDetails> => {
-  const response = await fetch(`${BILLING_ENDPOINT}/${contractNumber}`, {
+  const response = await fetch(`${API_BASE_URL}/${contractNumber}`, {
     method: "GET",
     credentials: "include",
     cache: "no-store",
@@ -163,7 +164,7 @@ export const updateBillingInstallment = async (
   payload: BillingInstallmentUpdatePayload,
 ): Promise<BillingInstallment> => {
   const response = await fetch(
-    `${BILLING_ENDPOINT}/${contractNumber}/installments/${installmentNumber}`,
+    `${API_BASE_URL}/${contractNumber}/installments/${installmentNumber}`,
     {
       method: "PATCH",
       credentials: "include",
@@ -184,7 +185,7 @@ export const createBillingOccurrence = async (
   payload: BillingOccurrencePayload,
 ): Promise<BillingOccurrence> => {
   const response = await fetch(
-    `${BILLING_ENDPOINT}/${contractNumber}/occurrences`,
+    `${API_BASE_URL}/${contractNumber}/occurrences`,
     {
       method: "POST",
       credentials: "include",
