@@ -13,13 +13,20 @@ const IS_LOCALHOST =
     process.env.NEXT_PUBLIC_ADMIN_API_BASE_URL?.includes("localhost") ||
     process.env.ADMIN_API_BASE_URL?.includes("localhost")) ??
   false;
+const COOKIE_SECURE_OVERRIDE = process.env.ADMIN_COOKIE_SECURE;
+const COOKIE_SECURE =
+  COOKIE_SECURE_OVERRIDE !== undefined
+    ? COOKIE_SECURE_OVERRIDE === "true"
+    : IS_PRODUCTION && !IS_LOCALHOST;
 
 export const ADMIN_SESSION_COOKIE = "grota.admin.session";
 export const ADMIN_SESSION_SCOPE: SessionScope = "admin";
 // DuraÇõÇœo do cookie de sessÇœo (em segundos). Aumentado para 30 dias.
 export const ADMIN_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
-export const ADMIN_COOKIE_SAME_SITE = IS_PRODUCTION ? ("none" as const) : ("lax" as const);
-export const ADMIN_COOKIE_SECURE = IS_PRODUCTION && !IS_LOCALHOST;
+export const ADMIN_COOKIE_SECURE = COOKIE_SECURE;
+export const ADMIN_COOKIE_SAME_SITE = COOKIE_SECURE
+  ? ("none" as const)
+  : ("lax" as const);
 
 export function getAdminApiBaseUrl(): string {
   return DEFAULT_API_BASE_URL;

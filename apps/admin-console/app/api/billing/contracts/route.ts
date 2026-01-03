@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
   const upstream = await fetch(`${API_BASE_URL}/billing/contracts${query}`, {
     headers: {
       Authorization: `Bearer ${session.accessToken}`,
+      
     },
     cache: "no-store",
   });
