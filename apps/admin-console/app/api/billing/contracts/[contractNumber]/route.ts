@@ -15,11 +15,12 @@ function extractErrorMessage(payload: unknown, fallback: string) {
 
 export async function GET(
   request: NextRequest,
-  context: { params: { contractNumber?: string } },
+  context: { params: Promise<{ contractNumber: string }> },
 ) {
   const session = await getAdminSession();
 
-  let contractNumber = context.params.contractNumber;
+  const resolvedParams = await context.params;
+  let contractNumber = resolvedParams.contractNumber;
   if (!contractNumber) {
     const parts = request.nextUrl.pathname.split("/billing/contracts/");
     contractNumber = parts[1]?.split("/")[0] ?? "";
@@ -56,11 +57,12 @@ export async function GET(
 
 export async function DELETE(
   request: NextRequest,
-  context: { params: { contractNumber?: string } },
+  context: { params: Promise<{ contractNumber: string }> },
 ) {
   const session = await getAdminSession();
 
-  let contractNumber = context.params.contractNumber;
+  const resolvedParams = await context.params;
+  let contractNumber = resolvedParams.contractNumber;
   if (!contractNumber) {
     const parts = request.nextUrl.pathname.split("/billing/contracts/");
     contractNumber = parts[1]?.split("/")[0] ?? "";
