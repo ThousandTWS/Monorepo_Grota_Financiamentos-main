@@ -86,7 +86,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/grota-financiamentos/proposals/**").hasAnyRole("ADMIN", "OPERADOR", "VENDEDOR", "LOJISTA")
                         .requestMatchers(HttpMethod.DELETE, "/api/v1/grota-financiamentos/proposals/*").hasRole("ADMIN")
                         // Cobrança: liberar para os mesmos perfis das demais operações
-                        .requestMatchers(HttpMethod.GET,"/api/v1/grota-financiamentos/billing/**").authenticated()
+                        .requestMatchers("/api/v1/grota-financiamentos/billing/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
