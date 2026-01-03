@@ -15,12 +15,15 @@ function extractErrorMessage(payload: unknown, fallback: string) {
 
 export async function PATCH(
   request: NextRequest,
-  context: { params: { contractNumber?: string; installmentNumber?: string } },
+  context: {
+    params: Promise<{ contractNumber: string; installmentNumber: string }>;
+  },
 ) {
   const session = await getAdminSession();
 
-  let contractNumber = context.params.contractNumber;
-  let installmentNumber = context.params.installmentNumber;
+  const resolvedParams = await context.params;
+  let contractNumber = resolvedParams.contractNumber;
+  let installmentNumber = resolvedParams.installmentNumber;
   if (!contractNumber || !installmentNumber) {
     const parts = request.nextUrl.pathname.split("/billing/contracts/");
     const remainder = parts[1] ?? "";
