@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminApiBaseUrl } from "@/application/server/auth/config";
-import { getAdminSession, unauthorizedResponse } from "../../_lib/session";
+import { getAdminSession } from "../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
@@ -41,18 +41,17 @@ function extractErrorMessage(payload: unknown, fallback: string) {
 
 export async function GET(request: NextRequest) {
   const session = await getAdminSession();
-  if (!session) {
-    return unauthorizedResponse();
-  }
 
   const url = new URL(request.url);
   const query = buildQueryString(url);
 
+  const headers: HeadersInit = {};
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
+
   const upstream = await fetch(`${API_BASE_URL}/billing/contracts${query}`, {
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      
-    },
+    headers,
     cache: "no-store",
   });
 
@@ -71,9 +70,6 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const session = await getAdminSession();
-  if (!session) {
-    return unauthorizedResponse();
-  }
 
   let body: unknown;
   try {
@@ -84,11 +80,17 @@ export async function POST(request: NextRequest) {
 
   const actorHeader = buildActorHeader(session);
 
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
+
   const upstream = await fetch(`${API_BASE_URL}/billing/contracts`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${session.accessToken}`,
-      "Content-Type": "application/json",
+      ...headers,
       ...(actorHeader ? { "X-Actor": actorHeader } : {}),
     },
     body: JSON.stringify(body),

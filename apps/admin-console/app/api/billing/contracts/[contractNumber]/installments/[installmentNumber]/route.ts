@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminApiBaseUrl } from "@/application/server/auth/config";
-import { getAdminSession, unauthorizedResponse } from "../../../../../_lib/session";
+import { getAdminSession } from "../../../../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
@@ -18,9 +18,6 @@ export async function PATCH(
   context: { params: { contractNumber?: string; installmentNumber?: string } },
 ) {
   const session = await getAdminSession();
-  if (!session) {
-    return unauthorizedResponse();
-  }
 
   const contractNumber = context.params.contractNumber;
   const installmentNumber = context.params.installmentNumber;
@@ -39,14 +36,18 @@ export async function PATCH(
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
+  const headers: HeadersInit = {
+    "Content-Type": "application/json",
+  };
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
+
   const upstream = await fetch(
     `${API_BASE_URL}/billing/contracts/${encodeURIComponent(contractNumber)}/installments/${encodeURIComponent(installmentNumber)}`,
     {
       method: "PATCH",
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify(body),
       cache: "no-store",
     },

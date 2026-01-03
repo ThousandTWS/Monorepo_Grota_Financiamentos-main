@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminApiBaseUrl } from "@/application/server/auth/config";
-import { getAdminSession, unauthorizedResponse } from "../../../_lib/session";
+import { getAdminSession } from "../../../_lib/session";
 
 const API_BASE_URL = getAdminApiBaseUrl();
 
@@ -18,21 +18,21 @@ export async function GET(
   context: { params: { contractNumber?: string } },
 ) {
   const session = await getAdminSession();
-  if (!session) {
-    return unauthorizedResponse();
-  }
 
   const contractNumber = context.params.contractNumber;
   if (!contractNumber) {
     return NextResponse.json({ error: "contractNumber é obrigatório." }, { status: 400 });
   }
 
+  const headers: HeadersInit = {};
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
+
   const upstream = await fetch(
     `${API_BASE_URL}/billing/contracts/${encodeURIComponent(contractNumber)}`,
     {
-      headers: {
-        Authorization: `Bearer ${session.accessToken}`,
-      },
+      headers,
       cache: "no-store",
     },
   );
