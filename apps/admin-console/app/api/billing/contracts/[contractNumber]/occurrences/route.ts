@@ -19,7 +19,11 @@ export async function POST(
 ) {
   const session = await getAdminSession();
 
-  const contractNumber = context.params.contractNumber;
+  let contractNumber = context.params.contractNumber;
+  if (!contractNumber) {
+    const parts = request.nextUrl.pathname.split("/billing/contracts/");
+    contractNumber = parts[1]?.split("/")[0] ?? "";
+  }
   if (!contractNumber) {
     return NextResponse.json({ error: "contractNumber é obrigatório." }, { status: 400 });
   }

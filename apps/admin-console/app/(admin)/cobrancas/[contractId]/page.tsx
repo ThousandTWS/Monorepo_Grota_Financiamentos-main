@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   Button,
   Card,
@@ -9,7 +10,6 @@ import {
   Descriptions,
   Empty,
   Input,
-  List,
   message,
   Switch,
   Table,
@@ -31,10 +31,6 @@ import {
   updateBillingInstallment,
 } from "@/application/services/Billing/billingService";
 
-
-type Params = Promise<{
-  contractId: string;
-}>;
 
 const { TextArea } = Input;
 
@@ -62,9 +58,11 @@ const getDaysLate = (dueDate: string, paid: boolean) => {
   return diffMs > 0 ? Math.floor(diffMs / 86400000) : 0;
 };
 
-export default function ContractDetailsPage({ params }: { params: Params }) {
-  const resolvedParams = use(params);
-  const contractId = resolvedParams.contractId;
+export default function ContractDetailsPage() {
+  const params = useParams();
+  const rawContractId = params?.contractId;
+  const contractId =
+    Array.isArray(rawContractId) ? rawContractId[0] : rawContractId ?? "";
 
   const [contract, setContract] = useState<BillingContractDetails | null>(null);
   const [installments, setInstallments] = useState<BillingInstallment[]>([]);
@@ -80,6 +78,13 @@ export default function ContractDetailsPage({ params }: { params: Params }) {
   useEffect(() => {
     let active = true;
     const load = async () => {
+      if (!contractId) {
+        setContract(null);
+        setInstallments([]);
+        setOccurrences([]);
+        setError("contractNumber é obrigatório.");
+        return;
+      }
       setIsLoading(true);
       setError(null);
       try {
@@ -321,7 +326,7 @@ export default function ContractDetailsPage({ params }: { params: Params }) {
         </div>
 
         <Tabs
-          tabPosition="left"
+          tabPlacement="left"
           items={[
             {
               key: "dados",
@@ -443,25 +448,28 @@ export default function ContractDetailsPage({ params }: { params: Params }) {
                       <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">
                         Historico de contato
                       </Typography.Text>
-                      <List
-                        className="mt-3"
-                        dataSource={occurrences}
-                        renderItem={(item) => (
-                          <List.Item>
-                            <List.Item.Meta
-                              title={
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <Tag color="blue">
-                                    {dayjs(item.date).format("DD/MM/YYYY")}
-                                  </Tag>
-                                  <span className="font-semibold">{item.contact}</span>
-                                </div>
-                              }
-                              description={<span>{item.note}</span>}
-                            />
-                          </List.Item>
-                        )}
-                      />
+                      {occurrences.length === 0 ? (
+                        <Empty className="mt-4" description="Sem ocorrencias registradas." />
+                      ) : (
+                        <div className="mt-3 space-y-3">
+                          {occurrences.map((item) => (
+                            <div
+                              key={item.id}
+                              className="rounded-lg border border-slate-200 bg-white p-4"
+                            >
+                              <div className="flex flex-wrap items-center gap-2">
+                                <Tag color="blue">
+                                  {dayjs(item.date).format("DD/MM/YYYY")}
+                                </Tag>
+                                <span className="font-semibold">{item.contact}</span>
+                              </div>
+                              <Typography.Paragraph className="!mt-2 !mb-0 text-sm text-slate-600">
+                                {item.note}
+                              </Typography.Paragraph>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <div>
                       <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">

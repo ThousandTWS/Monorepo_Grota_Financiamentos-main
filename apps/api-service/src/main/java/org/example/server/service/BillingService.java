@@ -13,6 +13,8 @@ import org.example.server.model.Proposal;
 import org.example.server.repository.BillingContractRepository;
 import org.example.server.repository.BillingInstallmentRepository;
 import org.example.server.repository.BillingOccurrenceRepository;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -158,11 +160,44 @@ public class BillingService {
         String contractFilter = normalizeFilter(contractNumber.orElse(null));
         BillingStatus statusFilter = status.orElse(null);
 
-        List<BillingContract> contracts = contractRepository.search(
-                nameFilter,
-                documentFilter,
-                contractFilter,
-                statusFilter
+        Specification<BillingContract> spec = (root, query, builder) -> {
+            List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+            if (nameFilter != null) {
+                String normalized = "%" + nameFilter.toLowerCase() + "%";
+                predicates.add(
+                        builder.like(
+                                builder.lower(root.get("customerName").as(String.class)),
+                                normalized
+                        )
+                );
+            }
+            if (documentFilter != null) {
+                predicates.add(
+                        builder.like(
+                                root.get("customerDocument").as(String.class),
+                                "%" + documentFilter + "%"
+                        )
+                );
+            }
+            if (contractFilter != null) {
+                predicates.add(
+                        builder.like(
+                                root.get("contractNumber").as(String.class),
+                                "%" + contractFilter + "%"
+                        )
+                );
+            }
+            if (statusFilter != null) {
+                predicates.add(builder.equal(root.get("status"), statusFilter));
+            }
+            return predicates.isEmpty()
+                    ? builder.conjunction()
+                    : builder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        List<BillingContract> contracts = contractRepository.findAll(
+                spec,
+                Sort.by(Sort.Direction.DESC, "createdAt")
         );
         return contracts.stream().map(this::toSummary).toList();
     }
@@ -209,6 +244,13 @@ public class BillingService {
         occurrence.setNote(dto.note());
         BillingOccurrence saved = occurrenceRepository.save(occurrence);
         return toOccurrence(saved);
+    }
+
+    @Transactional
+    public void deleteContract(String contractNumber) {
+        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        contractRepository.delete(contract);
     }
 
     private void applyContractData(BillingContract contract, BillingContractCreateDTO dto) {

@@ -67,4 +67,10 @@ public class BillingController {
     ) {
         return ResponseEntity.ok(billingService.addOccurrence(contractNumber, dto));
     }
+
+    @DeleteMapping("/contracts/{contractNumber}")
+    public ResponseEntity<Void> deleteContract(@PathVariable String contractNumber) {
+        billingService.deleteContract(contractNumber);
+        return ResponseEntity.noContent().build();
+    }
 }

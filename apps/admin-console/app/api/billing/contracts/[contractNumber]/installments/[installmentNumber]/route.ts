@@ -19,8 +19,22 @@ export async function PATCH(
 ) {
   const session = await getAdminSession();
 
-  const contractNumber = context.params.contractNumber;
-  const installmentNumber = context.params.installmentNumber;
+  let contractNumber = context.params.contractNumber;
+  let installmentNumber = context.params.installmentNumber;
+  if (!contractNumber || !installmentNumber) {
+    const parts = request.nextUrl.pathname.split("/billing/contracts/");
+    const remainder = parts[1] ?? "";
+    const segments = remainder.split("/");
+    if (!contractNumber) {
+      contractNumber = segments[0] ?? "";
+    }
+    if (!installmentNumber) {
+      const installmentIndex = segments.findIndex((part) => part === "installments");
+      if (installmentIndex >= 0) {
+        installmentNumber = segments[installmentIndex + 1] ?? "";
+      }
+    }
+  }
 
   if (!contractNumber || !installmentNumber) {
     return NextResponse.json(

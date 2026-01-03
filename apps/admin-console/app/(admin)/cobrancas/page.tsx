@@ -2,13 +2,27 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Button, Card, Empty, Input, Select, Table, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Empty,
+  Input,
+  Modal,
+  Select,
+  Table,
+  Tag,
+  Typography,
+  message,
+} from "antd";
 import type { ColumnsType } from "antd/es/table";
 import type {
   BillingContractSummary,
   BillingStatus,
 } from "@/application/core/@types/Billing/Billing";
-import { fetchBillingContracts } from "@/application/services/Billing/billingService";
+import {
+  deleteBillingContract,
+  fetchBillingContracts,
+} from "@/application/services/Billing/billingService";
 
 const statusColor: Record<BillingStatus, string> = {
   PAGO: "green",
@@ -43,6 +57,7 @@ export default function CobrancasPage() {
   const [contracts, setContracts] = useState<BillingContractSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -81,6 +96,35 @@ export default function CobrancasPage() {
     };
   }, [nameFilter, documentFilter, statusFilter]);
 
+
+  const handleDelete = (contractNumber: string) => {
+    Modal.confirm({
+      title: "Remover contrato",
+      content:
+        "Tem certeza que deseja remover este contrato? Esta acao nao pode ser desfeita.",
+      okText: "Remover",
+      cancelText: "Cancelar",
+      okButtonProps: { danger: true, loading: isDeleting === contractNumber },
+      onOk: async () => {
+        setIsDeleting(contractNumber);
+        try {
+          await deleteBillingContract(contractNumber);
+          setContracts((prev) =>
+            prev.filter((item) => item.contractNumber !== contractNumber),
+          );
+          message.success("Contrato removido.");
+        } catch (err) {
+          message.error(
+            err instanceof Error
+              ? err.message
+              : "Nao foi possivel remover o contrato.",
+          );
+        } finally {
+          setIsDeleting(null);
+        }
+      },
+    });
+  };
 
   const columns: ColumnsType<BillingContractSummary> = [
     {
@@ -129,11 +173,21 @@ export default function CobrancasPage() {
       title: "Acoes",
       key: "actions",
       render: (_, record) => (
-        <Link href={`/cobrancas/${record.contractNumber}`}>
-          <Button type="primary" size="small">
-            Ver contrato
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/cobrancas/${record.contractNumber}`}>
+            <Button type="primary" size="small">
+              Ver contrato
+            </Button>
+          </Link>
+          <Button
+            danger
+            size="small"
+            loading={isDeleting === record.contractNumber}
+            onClick={() => handleDelete(record.contractNumber)}
+          >
+            Remover
           </Button>
-        </Link>
+        </div>
       ),
     },
   ];

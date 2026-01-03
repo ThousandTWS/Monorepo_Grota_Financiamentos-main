@@ -119,3 +119,12 @@ export const createBillingOccurrence = async (
     },
   );
 };
+
+export const deleteBillingContract = async (
+  contractNumber: string,
+): Promise<void> => {
+  await request<Record<string, never>>(
+    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}`,
+    { method: "DELETE" },
+  );
+};

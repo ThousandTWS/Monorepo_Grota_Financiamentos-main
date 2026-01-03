@@ -14,12 +14,16 @@ function extractErrorMessage(payload: unknown, fallback: string) {
 }
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: { params: { contractNumber?: string } },
 ) {
   const session = await getAdminSession();
 
-  const contractNumber = context.params.contractNumber;
+  let contractNumber = context.params.contractNumber;
+  if (!contractNumber) {
+    const parts = request.nextUrl.pathname.split("/billing/contracts/");
+    contractNumber = parts[1]?.split("/")[0] ?? "";
+  }
   if (!contractNumber) {
     return NextResponse.json({ error: "contractNumber é obrigatório." }, { status: 400 });
   }
@@ -48,4 +52,45 @@ export async function GET(
   }
 
   return NextResponse.json(payload ?? {}, { status: upstream.status });
+}
+
+export async function DELETE(
+  request: NextRequest,
+  context: { params: { contractNumber?: string } },
+) {
+  const session = await getAdminSession();
+
+  let contractNumber = context.params.contractNumber;
+  if (!contractNumber) {
+    const parts = request.nextUrl.pathname.split("/billing/contracts/");
+    contractNumber = parts[1]?.split("/")[0] ?? "";
+  }
+  if (!contractNumber) {
+    return NextResponse.json({ error: "contractNumber ゼ obrigatИrio." }, { status: 400 });
+  }
+
+  const headers: HeadersInit = {};
+  if (session?.accessToken) {
+    headers.Authorization = `Bearer ${session.accessToken}`;
+  }
+
+  const upstream = await fetch(
+    `${API_BASE_URL}/billing/contracts/${encodeURIComponent(contractNumber)}`,
+    {
+      method: "DELETE",
+      headers,
+      cache: "no-store",
+    },
+  );
+
+  if (!upstream.ok) {
+    const payload = await upstream.json().catch(() => null);
+    const message = extractErrorMessage(
+      payload,
+      "Falha ao remover contrato de cobranca.",
+    );
+    return NextResponse.json({ error: message }, { status: upstream.status });
+  }
+
+  return NextResponse.json({}, { status: upstream.status });
 }
