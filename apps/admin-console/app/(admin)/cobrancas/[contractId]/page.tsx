@@ -326,7 +326,7 @@ export default function ContractDetailsPage() {
         </div>
 
         <Tabs
-          tabPlacement="left"
+          tabPosition="left"
           items={[
             {
               key: "dados",
