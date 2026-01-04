@@ -379,7 +379,7 @@ export default function ContractDetailsPage() {
         </div>
 
         <Tabs
-          tabPlacement="left"
+          tabPlacement="start"
           items={[
             {
               key: "dados",
