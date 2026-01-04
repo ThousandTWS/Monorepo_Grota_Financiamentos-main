@@ -57,6 +57,8 @@ public record BillingContractCreateDTO(
         String vehicleModel,
         Integer vehicleYear,
         String vehiclePlate,
+        String vehicleRenavam,
+        Boolean dutIssued,
 
         @Valid
         List<BillingInstallmentInputDTO> installments

@@ -9,6 +9,7 @@ import { fetchProposalTimeline, fetchProposals } from "@/application/services/Pr
 import { Badge, Button, Card, Divider, Input, Skeleton, Tag, Typography } from "antd";
 import { REALTIME_CHANNELS, useRealtimeChannel } from "@grota/realtime-client";
 import { getRealtimeUrl } from "@/application/config/realtime";
+import { formatDateTime, formatTime } from "@/presentation/features/esteira-propostas/utils/date";
 
 type Params = Promise<{
   proposalId: string;
@@ -26,15 +27,6 @@ const statusLabel: Record<ProposalStatus, string> = {
   PAID: "Paga",
 };
 
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
-
 const formatCurrency = (value?: number | null) =>
   typeof value === "number"
     ? new Intl.NumberFormat("pt-BR", {
@@ -49,14 +41,6 @@ const maskCpf = (cpf?: string) => {
   const digits = cpf.replace(/\D/g, "").padStart(11, "0").slice(-11);
   return digits.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 };
-
-const formatTime = (value?: string) =>
-  value
-    ? new Intl.DateTimeFormat("pt-BR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }).format(new Date(value))
-    : "";
 
 const blobToDataUrl = (blob: Blob) =>
   new Promise<string>((resolve, reject) => {

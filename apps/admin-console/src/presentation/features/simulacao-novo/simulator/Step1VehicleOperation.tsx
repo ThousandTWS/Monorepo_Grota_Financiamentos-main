@@ -637,8 +637,8 @@ export default function Step1VehicleOperation({
         className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
         title={<span className="text-lg font-semibold text-white">Condicoes do Financiamento</span>}
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4 ">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
             <div className="space-y-2">
               <Typography.Text className="text-white">Valor a Financiar</Typography.Text>
               <Input
@@ -659,7 +659,7 @@ export default function Step1VehicleOperation({
                 className="text-lg font-semibold bg-white"
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 ">
               <Typography.Text className="text-white">Prazo (meses)</Typography.Text>
               <Select
                 value={formData.financial.termMonths ? String(formData.financial.termMonths) : undefined}
@@ -677,7 +677,7 @@ export default function Step1VehicleOperation({
         </div>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end mt-5">
         <Button onClick={handleNext} type="primary" size="large">
           Proximo: Dados Pessoais
           <ArrowRight className="w-4 h-4 ml-2" />

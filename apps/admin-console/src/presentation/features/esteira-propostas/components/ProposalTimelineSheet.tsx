@@ -11,6 +11,7 @@ import {
   useRealtimeChannel,
 } from "@grota/realtime-client";
 import { getRealtimeUrl } from "@/application/config/realtime";
+import { formatDateTime } from "../utils/date";
 
 const { Text, Title } = Typography;
 
@@ -28,15 +29,6 @@ const statusLabel: Record<ProposalStatus, string> = {
   REJECTED: "Recusada",
   PAID: "Paga",
 };
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
 
 const formatCurrency = (value: number | null | undefined) =>
   typeof value === "number"

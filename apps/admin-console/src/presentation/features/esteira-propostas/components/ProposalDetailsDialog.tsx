@@ -3,6 +3,7 @@
 import { Proposal } from "@/application/core/@types/Proposals/Proposal";
 import { Button, Modal, Typography } from "antd";
 import { useState } from "react";
+import { formatDateTime } from "../utils/date";
 
 type ProposalDetailsDialogProps = {
   proposal: Proposal;
@@ -102,13 +103,7 @@ export function ProposalDetailsDialog({
               </div>
               <div className="text-sm text-slate-700">
                 <p>Status: {proposal.status}</p>
-                <p>Atualizado em: {new Intl.DateTimeFormat("pt-BR", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                }).format(new Date(proposal.updatedAt))}</p>
+                <p>Atualizado em: {formatDateTime(proposal.updatedAt)}</p>
               </div>
             </div>
           </section>

@@ -72,6 +72,11 @@ public class BillingContract {
     @Column(length = 12)
     private String vehiclePlate;
 
+    @Column(length = 20)
+    private String vehicleRenavam;
+
+    private Boolean dutIssued;
+
     @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BillingInstallment> installments = new ArrayList<>();
 
@@ -249,6 +254,22 @@ public class BillingContract {
 
     public void setVehiclePlate(String vehiclePlate) {
         this.vehiclePlate = vehiclePlate;
+    }
+
+    public String getVehicleRenavam() {
+        return vehicleRenavam;
+    }
+
+    public void setVehicleRenavam(String vehicleRenavam) {
+        this.vehicleRenavam = vehicleRenavam;
+    }
+
+    public Boolean getDutIssued() {
+        return dutIssued;
+    }
+
+    public void setDutIssued(Boolean dutIssued) {
+        this.dutIssued = dutIssued;
     }
 
     public List<BillingInstallment> getInstallments() {

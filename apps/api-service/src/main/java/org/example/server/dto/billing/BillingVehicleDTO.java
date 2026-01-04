@@ -4,6 +4,8 @@ public record BillingVehicleDTO(
         String brand,
         String model,
         Integer year,
-        String plate
+        String plate,
+        String renavam,
+        Boolean dutIssued
 ) {
 }

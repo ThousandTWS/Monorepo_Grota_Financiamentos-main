@@ -16,6 +16,8 @@ public record BillingContractDetailsDTO(
         BigDecimal financedValue,
         BigDecimal installmentValue,
         Integer installmentsTotal,
+        BigDecimal outstandingBalance,
+        BigDecimal remainingBalance,
         BillingCustomerDTO customer,
         BillingVehicleDTO vehicle,
         List<BillingInstallmentDTO> installments,

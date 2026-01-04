@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.ArrayList;
 import java.util.List;
@@ -135,6 +136,8 @@ public class BillingService {
         contract.setVehicleModel(proposal.getVehicleModel());
         contract.setVehicleYear(proposal.getVehicleYear());
         contract.setVehiclePlate(proposal.getVehiclePlate());
+        contract.setVehicleRenavam(resolveString(metadata, "vehicleRenavam", "renavam", "renavan"));
+        contract.setDutIssued(resolveBoolean(metadata, "dutIssued", "dutEmitido", "dut"));
 
         LocalDate firstDueDate = resolveDate(metadata, "firstDueDate", "vencimento");
         if (firstDueDate == null) {
@@ -274,6 +277,8 @@ public class BillingService {
         contract.setVehicleModel(dto.vehicleModel());
         contract.setVehicleYear(dto.vehicleYear());
         contract.setVehiclePlate(dto.vehiclePlate());
+        contract.setVehicleRenavam(dto.vehicleRenavam());
+        contract.setDutIssued(dto.dutIssued());
     }
 
     private List<BillingInstallment> buildInstallments(BillingContract contract, BillingContractCreateDTO dto) {
@@ -346,6 +351,8 @@ public class BillingService {
             List<BillingInstallment> installments,
             List<BillingOccurrence> occurrences
     ) {
+        BigDecimal outstandingBalance = calculateOutstandingBalance(contract, installments);
+        BigDecimal remainingBalance = calculateRemainingBalance(outstandingBalance, installments);
         List<BillingContractSummaryDTO> otherContracts = contractRepository
                 .findByCustomerDocumentAndContractNumberNot(contract.getCustomerDocument(), contract.getContractNumber())
                 .stream()
@@ -361,6 +368,8 @@ public class BillingService {
                 contract.getFinancedValue(),
                 contract.getInstallmentValue(),
                 contract.getInstallmentsTotal(),
+                outstandingBalance,
+                remainingBalance,
                 toCustomer(contract),
                 toVehicle(contract),
                 installments.stream().map(this::toInstallment).toList(),
@@ -389,7 +398,9 @@ public class BillingService {
                 contract.getVehicleBrand(),
                 contract.getVehicleModel(),
                 contract.getVehicleYear(),
-                contract.getVehiclePlate()
+                contract.getVehiclePlate(),
+                contract.getVehicleRenavam(),
+                contract.getDutIssued()
         );
     }
 
@@ -399,7 +410,8 @@ public class BillingService {
                 installment.getDueDate(),
                 installment.getAmount(),
                 installment.isPaid(),
-                installment.getPaidAt()
+                installment.getPaidAt(),
+                calculateDaysLate(installment)
         );
     }
 
@@ -487,6 +499,28 @@ public class BillingService {
         return null;
     }
 
+    private Boolean resolveBoolean(Map<String, Object> metadata, String... keys) {
+        for (String key : keys) {
+            Object value = metadata.get(key);
+            if (value instanceof Boolean bool) {
+                return bool;
+            }
+            if (value instanceof Number number) {
+                return number.intValue() != 0;
+            }
+            if (value instanceof String str && !str.isBlank()) {
+                String normalized = str.trim().toLowerCase();
+                if (normalized.equals("true") || normalized.equals("sim") || normalized.equals("1")) {
+                    return true;
+                }
+                if (normalized.equals("false") || normalized.equals("nao") || normalized.equals("0")) {
+                    return false;
+                }
+            }
+        }
+        return null;
+    }
+
     private LocalDate resolveDate(Map<String, Object> metadata, String... keys) {
         for (String key : keys) {
             Object value = metadata.get(key);
@@ -498,6 +532,56 @@ public class BillingService {
             }
         }
         return null;
+    }
+
+    private BigDecimal calculateOutstandingBalance(
+            BillingContract contract,
+            List<BillingInstallment> installments
+    ) {
+        if (installments != null && !installments.isEmpty()) {
+            BigDecimal total = BigDecimal.ZERO;
+            for (BillingInstallment installment : installments) {
+                if (installment.getAmount() != null) {
+                    total = total.add(installment.getAmount());
+                }
+            }
+            return total;
+        }
+
+        BigDecimal installmentValue = contract.getInstallmentValue();
+        Integer installmentsTotal = contract.getInstallmentsTotal();
+        if (installmentValue == null || installmentsTotal == null) {
+            return BigDecimal.ZERO;
+        }
+        return installmentValue.multiply(BigDecimal.valueOf(installmentsTotal));
+    }
+
+    private BigDecimal calculateRemainingBalance(
+            BigDecimal outstandingBalance,
+            List<BillingInstallment> installments
+    ) {
+        BigDecimal paidTotal = BigDecimal.ZERO;
+        if (installments != null && !installments.isEmpty()) {
+            for (BillingInstallment installment : installments) {
+                if (installment.isPaid() && installment.getAmount() != null) {
+                    paidTotal = paidTotal.add(installment.getAmount());
+                }
+            }
+        }
+        BigDecimal total = outstandingBalance != null ? outstandingBalance : BigDecimal.ZERO;
+        BigDecimal remaining = total.subtract(paidTotal);
+        return remaining.compareTo(BigDecimal.ZERO) < 0 ? BigDecimal.ZERO : remaining;
+    }
+
+    private Integer calculateDaysLate(BillingInstallment installment) {
+        if (installment == null || installment.getDueDate() == null) {
+            return 0;
+        }
+        LocalDate referenceDate = installment.isPaid()
+                ? (installment.getPaidAt() != null ? installment.getPaidAt() : LocalDate.now())
+                : LocalDate.now();
+        long daysLate = ChronoUnit.DAYS.between(installment.getDueDate(), referenceDate);
+        return daysLate > 0 ? (int) daysLate : 0;
     }
 
     private LocalDate parseDate(String value) {

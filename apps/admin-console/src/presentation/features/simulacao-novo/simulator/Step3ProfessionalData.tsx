@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, Input, Typography } from "antd";
+import { Button, Card, Input, Select, Typography } from "antd";
 import { ArrowRight, ArrowLeft, Briefcase } from "lucide-react";
 import { toast } from "sonner";
 import { formatNumberToBRL, parseBRL } from "@/lib/formatters";
@@ -10,6 +10,42 @@ type Step3ProfessionalDataProps = {
   updateFormData: UpdateSimulatorFormData;
   nextStep: () => void;
   prevStep: () => void;
+};
+
+type IbgeCity = {
+  nome?: string;
+  microrregiao?: {
+    mesorregiao?: {
+      UF?: {
+        sigla?: string;
+      };
+    };
+  };
+  "regiao-imediata"?: {
+    "regiao-intermediaria"?: {
+      UF?: {
+        sigla?: string;
+      };
+    };
+  };
+};
+
+type CityOption = {
+  label: string;
+  value: string;
+};
+
+const CITY_CACHE_KEY = "ibge-cities-v1";
+
+const buildCityOption = (city: IbgeCity) => {
+  const name = city.nome?.trim() ?? "";
+  const uf =
+    city.microrregiao?.mesorregiao?.UF?.sigla ??
+    city["regiao-imediata"]?.["regiao-intermediaria"]?.UF?.sigla ??
+    "";
+  if (!name || !uf) return null;
+  const label = `${name}/${uf}`;
+  return { label, value: label };
 };
 
 export default function Step3ProfessionalData({
@@ -23,6 +59,9 @@ export default function Step3ProfessionalData({
   const [otherIncomeInput, setOtherIncomeInput] = useState("");
   const incomeFocusedRef = useRef(false);
   const otherIncomeFocusedRef = useRef(false);
+  const [cityOptions, setCityOptions] = useState<CityOption[]>([]);
+  const [loadingCities, setLoadingCities] = useState(false);
+  const [citiesLoadError, setCitiesLoadError] = useState(false);
 
   useEffect(() => {
     if (incomeFocusedRef.current) return;
@@ -41,6 +80,64 @@ export default function Step3ProfessionalData({
         : "",
     );
   }, [formData.professional.otherIncomes]);
+
+  useEffect(() => {
+    if (formData.personType !== "PF") return;
+    if (cityOptions.length > 0) return;
+    let mounted = true;
+
+    const loadCities = async () => {
+      try {
+        setLoadingCities(true);
+        setCitiesLoadError(false);
+        const cached = sessionStorage.getItem(CITY_CACHE_KEY);
+        if (cached) {
+          const parsed = JSON.parse(cached) as CityOption[];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            if (mounted) {
+              setCityOptions(parsed);
+            }
+            return;
+          }
+        }
+
+        const response = await fetch(
+          "https://servicodados.ibge.gov.br/api/v1/localidades/municipios?orderBy=nome",
+        );
+        if (!response.ok) {
+          throw new Error("Falha ao carregar cidades.");
+        }
+        const payload = (await response.json()) as IbgeCity[];
+        const options: CityOption[] = [];
+        const seen = new Set<string>();
+        payload.forEach((city) => {
+          const option = buildCityOption(city);
+          if (!option || seen.has(option.value)) return;
+          seen.add(option.value);
+          options.push(option);
+        });
+        if (mounted) {
+          setCityOptions(options);
+        }
+        sessionStorage.setItem(CITY_CACHE_KEY, JSON.stringify(options));
+      } catch (error) {
+        console.error("[admin][simulador] loadCities", error);
+        if (mounted) {
+          setCitiesLoadError(true);
+        }
+        toast.error("Erro ao carregar cidades.");
+      } finally {
+        if (mounted) {
+          setLoadingCities(false);
+        }
+      }
+    };
+
+    void loadCities();
+    return () => {
+      mounted = false;
+    };
+  }, [formData.personType, cityOptions.length]);
 
   const handleIncomeChange = (value: string) => {
     const numeric = parseBRL(value);
@@ -125,11 +222,33 @@ export default function Step3ProfessionalData({
             {formData.personType === "PF" && (
               <div className="space-y-2">
                 <Typography.Text>Naturalidade</Typography.Text>
-                <Input
-                  value={formData.personal.nationality}
-                  onChange={(e) => updateFormData("personal", { nationality: e.target.value })}
-                  placeholder="Cidade/Estado de nascimento"
-                />
+                {citiesLoadError ? (
+                  <Input
+                    value={formData.personal.nationality}
+                    onChange={(e) =>
+                      updateFormData("personal", { nationality: e.target.value })
+                    }
+                    placeholder="Cidade/Estado de nascimento"
+                  />
+                ) : (
+                  <Select
+                    showSearch
+                    allowClear
+                    value={formData.personal.nationality || undefined}
+                    onChange={(value) =>
+                      updateFormData("personal", { nationality: value ?? "" })
+                    }
+                    placeholder={
+                      loadingCities
+                        ? "Carregando cidades..."
+                        : "Cidade/Estado de nascimento"
+                    }
+                    options={cityOptions}
+                    loading={loadingCities}
+                    className="w-full"
+                    optionFilterProp="label"
+                  />
+                )}
               </div>
             )}
           </div>

@@ -8,6 +8,7 @@ public record BillingInstallmentDTO(
         LocalDate dueDate,
         BigDecimal amount,
         boolean paid,
-        LocalDate paidAt
+        LocalDate paidAt,
+        Integer daysLate
 ) {
 }

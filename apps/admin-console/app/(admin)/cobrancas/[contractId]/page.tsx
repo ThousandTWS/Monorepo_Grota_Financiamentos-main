@@ -44,17 +44,41 @@ const formatCurrency = (value: number) =>
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T00:00:00`));
 
+const calculateOutstandingBalance = (items: BillingInstallment[]) =>
+  items.reduce((total, item) => total + (item.amount ?? 0), 0);
+
+const calculateRemainingBalance = (
+  items: BillingInstallment[],
+  outstandingBalance?: number,
+) => {
+  const paidTotal = items.reduce(
+    (total, item) => total + (item.paid ? item.amount ?? 0 : 0),
+    0,
+  );
+  const base =
+    typeof outstandingBalance === "number"
+      ? outstandingBalance
+      : calculateOutstandingBalance(items);
+  const remaining = base - paidTotal;
+  return remaining > 0 ? remaining : 0;
+};
+
 const statusColor: Record<BillingStatus, string> = {
   PAGO: "green",
   EM_ABERTO: "blue",
   EM_ATRASO: "red",
 };
 
-const getDaysLate = (dueDate: string, paid: boolean) => {
-  if (paid) return 0;
-  const today = new Date();
-  const due = new Date(`${dueDate}T00:00:00`);
-  const diffMs = today.getTime() - due.getTime();
+const resolveDaysLate = (record: BillingInstallment) => {
+  if (typeof record.daysLate === "number") {
+    return record.daysLate;
+  }
+  const due = new Date(`${record.dueDate}T00:00:00`);
+  const baseDate =
+    record.paid && record.paidAt
+      ? new Date(`${record.paidAt}T00:00:00`)
+      : new Date();
+  const diffMs = baseDate.getTime() - due.getTime();
   return diffMs > 0 ? Math.floor(diffMs / 86400000) : 0;
 };
 
@@ -157,7 +181,7 @@ export default function ContractDetailsPage() {
       dataIndex: "paid",
       key: "paid",
       render: (_value, record) => {
-        const daysLate = getDaysLate(record.dueDate, record.paid);
+        const daysLate = resolveDaysLate(record);
         if (record.paid) return <Tag color="green">Pago</Tag>;
         if (daysLate > 0) return <Tag color="red">Em atraso</Tag>;
         return <Tag color="blue">Em aberto</Tag>;
@@ -167,9 +191,15 @@ export default function ContractDetailsPage() {
       title: "Dias em atraso",
       key: "daysLate",
       render: (_value, record) => {
-        const daysLate = getDaysLate(record.dueDate, record.paid);
+        const daysLate = resolveDaysLate(record);
         return daysLate ? `${daysLate} dia(s)` : "-";
       },
+    },
+    {
+      title: "Data do pagamento",
+      key: "paidAt",
+      render: (_value, record) =>
+        record.paidAt ? formatDate(record.paidAt) : "--",
     },
     {
       title: "Valor",
@@ -192,11 +222,28 @@ export default function ContractDetailsPage() {
                 record.number,
                 { paid: checked },
               );
-              setInstallments((prev) =>
-                prev.map((item) =>
+              setInstallments((prev) => {
+                const nextInstallments = prev.map((item) =>
                   item.number === record.number ? updated : item,
-                ),
-              );
+                );
+                setContract((prevContract) => {
+                  if (!prevContract) return prevContract;
+                  const outstandingBalance = Number.isFinite(
+                    prevContract.outstandingBalance,
+                  )
+                    ? prevContract.outstandingBalance
+                    : calculateOutstandingBalance(nextInstallments);
+                  return {
+                    ...prevContract,
+                    outstandingBalance,
+                    remainingBalance: calculateRemainingBalance(
+                      nextInstallments,
+                      outstandingBalance,
+                    ),
+                  };
+                });
+                return nextInstallments;
+              });
             } catch (err) {
               message.error(
                 err instanceof Error
@@ -307,6 +354,12 @@ export default function ContractDetailsPage() {
               <Descriptions.Item label="Parcela">
                 {formatCurrency(contract.installmentValue)} ({contract.installmentsTotal}x)
               </Descriptions.Item>
+              <Descriptions.Item label="Saldo devedor">
+                {formatCurrency(contract.outstandingBalance)}
+              </Descriptions.Item>
+              <Descriptions.Item label="Saldo restante">
+                {formatCurrency(contract.remainingBalance)}
+              </Descriptions.Item>
             </Descriptions>
             {contract.otherContracts.length ? (
               <div className="mt-4">
@@ -326,7 +379,7 @@ export default function ContractDetailsPage() {
         </div>
 
         <Tabs
-          tabPosition="left"
+          tabPlacement="left"
           items={[
             {
               key: "dados",
@@ -386,6 +439,16 @@ export default function ContractDetailsPage() {
                     </Descriptions.Item>
                     <Descriptions.Item label="Placa">
                       {contract.vehicle.plate ?? "--"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Renavam">
+                      {contract.vehicle.renavam ?? "--"}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="DUT emitido">
+                      {contract.vehicle.dutIssued == null
+                        ? "--"
+                        : contract.vehicle.dutIssued
+                          ? "Sim"
+                          : "Nao"}
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>

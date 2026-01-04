@@ -558,14 +558,15 @@ export default function EsteiraDePropostasFeature() {
         onExport={handleExport}
         isRefreshing={isRefreshing}
       />
-
+      <div className="mb-5">
       <Alert
         type="info"
         showIcon
-        className="rounded-2xl border-slate-200 bg-white/70"
+        className="rounded-2xl border-slate-200 bg-white/70 "
         title="Conteudo disponivel"
         description="Utilize o botao Exportar CSV para compartilhar a lista filtrada com sua equipe, ou abra o historico para revisar o processo completo do cliente."
       />
+      </div>
 
       <ProposalsTable
         proposals={filteredProposals}

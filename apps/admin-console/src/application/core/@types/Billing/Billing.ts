@@ -16,6 +16,8 @@ export type BillingVehicle = {
   model?: string | null;
   year?: number | null;
   plate?: string | null;
+  renavam?: string | null;
+  dutIssued?: boolean | null;
 };
 
 export type BillingInstallment = {
@@ -24,6 +26,7 @@ export type BillingInstallment = {
   amount: number;
   paid: boolean;
   paidAt?: string | null;
+  daysLate?: number | null;
 };
 
 export type BillingInstallmentInput = {
@@ -62,6 +65,8 @@ export type BillingContractDetails = {
   financedValue: number;
   installmentValue: number;
   installmentsTotal: number;
+  outstandingBalance: number;
+  remainingBalance: number;
   customer: BillingCustomer;
   vehicle: BillingVehicle;
   installments: BillingInstallment[];
@@ -93,6 +98,8 @@ export type BillingContractCreatePayload = {
   vehicleModel?: string | null;
   vehicleYear?: number | null;
   vehiclePlate?: string | null;
+  vehicleRenavam?: string | null;
+  dutIssued?: boolean | null;
   installments?: BillingInstallmentInput[];
 };
 

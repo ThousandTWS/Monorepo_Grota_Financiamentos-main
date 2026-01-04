@@ -46,19 +46,27 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: "Payload inválido." }, { status: 400 });
   }
 
-  const { userId, dealerId } = (body as { userId?: number; dealerId?: number | null }) ?? {};
+  const { userId, dealerId } =
+    (body as { userId?: number; dealerId?: number | null }) ?? {};
   if (!userId) {
-    return NextResponse.json({ error: "userId é obrigatório." }, { status: 400 });
+    return NextResponse.json(
+      { error: "userId é obrigatório." },
+      { status: 400 },
+    );
   }
 
-  const dealerQuery = dealerId === null || dealerId === undefined ? "" : `?dealerId=${dealerId}`;
-  const upstream = await fetch(`${API_BASE_URL}/users/${userId}/dealer${dealerQuery}`, {
-    method: "PATCH",
-    headers: {
-      Authorization: `Bearer ${session.accessToken}`,
+  const dealerQuery =
+    dealerId === null || dealerId === undefined ? "" : `?dealerId=${dealerId}`;
+  const upstream = await fetch(
+    `${API_BASE_URL}/users/${userId}/dealer${dealerQuery}`,
+    {
+      method: "PATCH",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+      cache: "no-store",
     },
-    cache: "no-store",
-  });
+  );
 
   const payload = await upstream.json().catch(() => null);
 

@@ -4,6 +4,7 @@ import { StatusBadge } from "../../logista/components/status-badge";
 import { Clock3, Eye, RefreshCw, StickyNote, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { formatDateTime } from "../utils/date";
 
 const { Text } = Typography;
 
@@ -45,15 +46,6 @@ const formatCurrency = (value: number) =>
     currency: "BRL",
     minimumFractionDigits: 2,
   }).format(value);
-
-const formatDateTime = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(value));
 
 const maskCpf = (cpf: string) => {
   const digits = cpf.replace(/\D/g, "").padStart(11, "0").slice(-11);

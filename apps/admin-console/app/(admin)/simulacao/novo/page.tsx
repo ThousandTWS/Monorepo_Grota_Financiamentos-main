@@ -64,7 +64,7 @@ export default function SimuladorAdminPage() {
     switch (currentStep) {
       case 1:
         return (
-          <Step1VehicleOperation
+            <Step1VehicleOperation
             formData={formData}
             updateFormData={updateFormData}
             updateField={updateField}
@@ -87,6 +87,7 @@ export default function SimuladorAdminPage() {
             selectedSellerId={selectedSellerId}
             onSellerChange={handleSellerChange}
           />
+
         );
       case 2:
         return (
