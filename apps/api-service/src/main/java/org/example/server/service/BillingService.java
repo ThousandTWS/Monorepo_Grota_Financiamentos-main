@@ -13,6 +13,8 @@ import org.example.server.model.Proposal;
 import org.example.server.repository.BillingContractRepository;
 import org.example.server.repository.BillingInstallmentRepository;
 import org.example.server.repository.BillingOccurrenceRepository;
+import org.example.server.repository.ProposalRepository;
+import org.example.server.repository.DealerRepository;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.security.SecureRandom;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -35,17 +38,23 @@ public class BillingService {
     private final BillingContractRepository contractRepository;
     private final BillingInstallmentRepository installmentRepository;
     private final BillingOccurrenceRepository occurrenceRepository;
+    private final ProposalRepository proposalRepository;
+    private final DealerRepository dealerRepository;
     private final ObjectMapper objectMapper;
 
     public BillingService(
             BillingContractRepository contractRepository,
             BillingInstallmentRepository installmentRepository,
             BillingOccurrenceRepository occurrenceRepository,
+            ProposalRepository proposalRepository,
+            DealerRepository dealerRepository,
             ObjectMapper objectMapper
     ) {
         this.contractRepository = contractRepository;
         this.installmentRepository = installmentRepository;
         this.occurrenceRepository = occurrenceRepository;
+        this.proposalRepository = proposalRepository;
+        this.dealerRepository = dealerRepository;
         this.objectMapper = objectMapper;
     }
 
@@ -214,6 +223,81 @@ public class BillingService {
         return toDetails(contract, installments, occurrences);
     }
 
+
+    @Transactional
+    public BillingOccurrenceDTO addOccurrence(String contractNumber, BillingOccurrenceRequestDTO dto) {
+        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        BillingOccurrence occurrence = new BillingOccurrence();
+        occurrence.setContract(contract);
+        occurrence.setDate(dto.date());
+        occurrence.setContact(dto.contact());
+        occurrence.setNote(dto.note());
+        BillingOccurrence saved = occurrenceRepository.save(occurrence);
+        return toOccurrence(saved);
+    }
+
+    @Transactional
+    public BillingContractDetailsDTO updateContract(String contractNumber, BillingContractUpdateDTO dto) {
+        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        if (dto.paidAt() != null) {
+            contract.setPaidAt(dto.paidAt());
+        }
+        
+        if (dto.startDate() != null) {
+            contract.setStartDate(dto.startDate());
+        }
+        
+        syncContractStatus(contract);
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
+    public BillingContractDetailsDTO updateVehicle(String contractNumber, BillingVehicleUpdateDTO dto) {
+        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        if (dto.plate() != null) {
+            contract.setVehiclePlate(dto.plate());
+        }
+        if (dto.renavam() != null) {
+            contract.setVehicleRenavam(dto.renavam());
+        }
+        if (dto.dutIssued() != null) {
+            contract.setDutIssued(dto.dutIssued());
+        }
+        
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
+    public BillingInstallmentDTO updateInstallmentDueDate(
+            String contractNumber,
+            Integer installmentNumber,
+            BillingInstallmentDueDateUpdateDTO dto
+    ) {
+        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        BillingInstallment installment = installmentRepository.findByContractAndNumber(contract, installmentNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Parcela nao encontrada"));
+
+        installment.setDueDate(dto.dueDate());
+        BillingInstallment saved = installmentRepository.save(installment);
+        
+        syncContractStatus(contract);
+        contractRepository.save(contract);
+        
+        return toInstallment(saved);
+    }
+
     @Transactional
     public BillingInstallmentDTO updateInstallment(
             String contractNumber,
@@ -233,20 +317,46 @@ public class BillingService {
             installment.setPaidAt(null);
         }
         BillingInstallment saved = installmentRepository.save(installment);
+        
+        // Recarrega o contrato para garantir que temos a versão mais atualizada
+        contract = contractRepository.findByContractNumber(contractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        // Recarrega as parcelas atualizadas para sincronizar o status corretamente
+        List<BillingInstallment> updatedInstallments = installmentRepository.findByContractOrderByNumberAsc(contract);
+        syncContractStatusWithInstallments(contract, updatedInstallments);
+        contractRepository.save(contract);
+        
         return toInstallment(saved);
     }
 
-    @Transactional
-    public BillingOccurrenceDTO addOccurrence(String contractNumber, BillingOccurrenceRequestDTO dto) {
-        BillingContract contract = contractRepository.findByContractNumber(contractNumber)
-                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
-        BillingOccurrence occurrence = new BillingOccurrence();
-        occurrence.setContract(contract);
-        occurrence.setDate(dto.date());
-        occurrence.setContact(dto.contact());
-        occurrence.setNote(dto.note());
-        BillingOccurrence saved = occurrenceRepository.save(occurrence);
-        return toOccurrence(saved);
+    private void syncContractStatus(BillingContract contract) {
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(contract);
+        syncContractStatusWithInstallments(contract, installments);
+    }
+
+    private void syncContractStatusWithInstallments(BillingContract contract, List<BillingInstallment> installments) {
+        if (installments == null || installments.isEmpty()) {
+            contract.setStatus(BillingStatus.EM_ABERTO);
+            return;
+        }
+
+        boolean allPaid = installments.stream().allMatch(BillingInstallment::isPaid);
+        if (allPaid) {
+            contract.setStatus(BillingStatus.PAGO);
+            return;
+        }
+
+        LocalDate today = LocalDate.now();
+        boolean hasOverdue = installments.stream()
+                .filter(inst -> !inst.isPaid())
+                .anyMatch(inst -> inst.getDueDate() != null && inst.getDueDate().isBefore(today));
+
+        if (hasOverdue) {
+            contract.setStatus(BillingStatus.EM_ATRASO);
+        } else {
+            contract.setStatus(BillingStatus.EM_ABERTO);
+        }
     }
 
     @Transactional
@@ -372,6 +482,7 @@ public class BillingService {
                 remainingBalance,
                 toCustomer(contract),
                 toVehicle(contract),
+                toDealer(contract),
                 installments.stream().map(this::toInstallment).toList(),
                 occurrences.stream().map(this::toOccurrence).toList(),
                 otherContracts,
@@ -402,6 +513,22 @@ public class BillingService {
                 contract.getVehicleRenavam(),
                 contract.getDutIssued()
         );
+    }
+
+    private BillingDealerDTO toDealer(BillingContract contract) {
+        if (contract.getProposalId() == null) {
+            return null;
+        }
+        return proposalRepository.findById(contract.getProposalId())
+                .map(proposal -> proposal.getDealer())
+                .map(dealer -> new BillingDealerDTO(
+                        dealer.getId(),
+                        dealer.getEnterprise(),
+                        dealer.getFullNameEnterprise(),
+                        dealer.getCnpj(),
+                        dealer.getPhone()
+                ))
+                .orElse(null);
     }
 
     private BillingInstallmentDTO toInstallment(BillingInstallment installment) {
@@ -445,11 +572,30 @@ public class BillingService {
     }
 
     private String resolveContractNumber(Map<String, Object> metadata, Long proposalId) {
-        String fromMetadata = resolveString(metadata, "contractNumber", "numeroContrato", "operacao");
+        // Primeiro tenta buscar no metadata
+        String fromMetadata = resolveString(metadata, "contractNumber", "numeroContrato", "operacao", "numeroContrato");
         if (fromMetadata != null && !fromMetadata.isBlank()) {
             return fromMetadata;
         }
-        return "PROP-" + proposalId;
+        // Gera automaticamente um número de contrato aleatório único (apenas números)
+        // Usa 10 dígitos para garantir unicidade
+        SecureRandom random = new SecureRandom();
+        String contractNumber;
+        int attempts = 0;
+        do {
+            // Gera um número de 10 dígitos (1000000000 a 9999999999)
+            long randomNumber = 1000000000L + (long)(random.nextDouble() * 9000000000L);
+            contractNumber = String.valueOf(randomNumber);
+            attempts++;
+            // Limite de tentativas para evitar loop infinito
+            if (attempts > 100) {
+                // Fallback: usa timestamp + proposalId como último recurso
+                contractNumber = String.valueOf(System.currentTimeMillis() % 10000000000L);
+                break;
+            }
+        } while (contractRepository.findByContractNumber(contractNumber).isPresent());
+        
+        return contractNumber;
     }
 
     private String resolveString(Map<String, Object> metadata, String... keys) {

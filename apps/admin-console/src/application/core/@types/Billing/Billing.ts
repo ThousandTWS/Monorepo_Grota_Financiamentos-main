@@ -20,6 +20,14 @@ export type BillingVehicle = {
   dutIssued?: boolean | null;
 };
 
+export type BillingDealer = {
+  id?: number | null;
+  enterprise?: string | null;
+  fullNameEnterprise?: string | null;
+  cnpj?: string | null;
+  phone?: string | null;
+};
+
 export type BillingInstallment = {
   number: number;
   dueDate: string;
@@ -69,6 +77,7 @@ export type BillingContractDetails = {
   remainingBalance: number;
   customer: BillingCustomer;
   vehicle: BillingVehicle;
+  dealer?: BillingDealer | null;
   installments: BillingInstallment[];
   occurrences: BillingOccurrence[];
   otherContracts: BillingContractSummary[];
@@ -119,4 +128,19 @@ export type BillingOccurrencePayload = {
   date: string;
   contact: string;
   note: string;
+};
+
+export type BillingContractUpdatePayload = {
+  paidAt?: string;
+  startDate?: string;
+};
+
+export type BillingVehicleUpdatePayload = {
+  plate?: string;
+  renavam?: string;
+  dutIssued?: boolean;
+};
+
+export type BillingInstallmentDueDateUpdatePayload = {
+  dueDate: string;
 };

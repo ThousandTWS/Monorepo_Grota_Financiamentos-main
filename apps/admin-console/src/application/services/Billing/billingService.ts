@@ -3,10 +3,13 @@ import {
   BillingContractDetails,
   BillingContractFilters,
   BillingContractSummary,
+  BillingContractUpdatePayload,
   BillingInstallment,
+  BillingInstallmentDueDateUpdatePayload,
   BillingInstallmentUpdatePayload,
   BillingOccurrence,
   BillingOccurrencePayload,
+  BillingVehicleUpdatePayload,
 } from "@/application/core/@types/Billing/Billing";
 
 const BILLING_ENDPOINT = "/api/billing/contracts";
@@ -115,6 +118,46 @@ export const createBillingOccurrence = async (
     `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/occurrences`,
     {
       method: "POST",
+      body: JSON.stringify(payload),
+    },
+  );
+};
+
+export const updateBillingContract = async (
+  contractNumber: string,
+  payload: BillingContractUpdatePayload,
+): Promise<BillingContractDetails> => {
+  return request<BillingContractDetails>(
+    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+};
+
+export const updateBillingVehicle = async (
+  contractNumber: string,
+  payload: BillingVehicleUpdatePayload,
+): Promise<BillingContractDetails> => {
+  return request<BillingContractDetails>(
+    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/vehicle`,
+    {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    },
+  );
+};
+
+export const updateBillingInstallmentDueDate = async (
+  contractNumber: string,
+  installmentNumber: number,
+  payload: BillingInstallmentDueDateUpdatePayload,
+): Promise<BillingInstallment> => {
+  return request<BillingInstallment>(
+    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/installments/${installmentNumber}/due-date`,
+    {
+      method: "PATCH",
       body: JSON.stringify(payload),
     },
   );

@@ -203,6 +203,7 @@ export function ProposalsTable({
                 value={proposal.status}
                 onChange={(value) => onStatusChange(proposal, value as ProposalStatus)}
                 disabled={updatingId === proposal.id}
+                style={{ width: "100%", minWidth: "200px" }}
                 options={statusOptions.map((status) => ({
                   value: status,
                   label: proposalStatusLabels[status],

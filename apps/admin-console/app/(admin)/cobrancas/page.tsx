@@ -5,6 +5,7 @@ import Link from "next/link";
 import {
   Button,
   Card,
+  DatePicker,
   Empty,
   Input,
   Modal,
@@ -15,6 +16,7 @@ import {
   message,
 } from "antd";
 import type { ColumnsType } from "antd/es/table";
+import dayjs from "dayjs";
 import type {
   BillingContractSummary,
   BillingStatus,
@@ -22,6 +24,7 @@ import type {
 import {
   deleteBillingContract,
   fetchBillingContracts,
+  updateBillingContract,
 } from "@/application/services/Billing/billingService";
 
 const statusColor: Record<BillingStatus, string> = {
@@ -45,8 +48,14 @@ const formatCurrency = (value: number) =>
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T00:00:00`));
+const formatDate = (value: string) => {
+  if (!value) return "--";
+  // Para datas sem hora, cria a data no timezone do Brasil
+  const date = new Date(`${value}T00:00:00-03:00`); // UTC-3 (horário de Brasília)
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
+};
 
 export default function CobrancasPage() {
   const [nameFilter, setNameFilter] = useState("");
@@ -58,6 +67,8 @@ export default function CobrancasPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [editingDateContract, setEditingDateContract] = useState<string | null>(null);
+  const [isUpdatingDate, setIsUpdatingDate] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -152,7 +163,57 @@ export default function CobrancasPage() {
       title: "Data base",
       dataIndex: "startDate",
       key: "startDate",
-      render: (value: string) => formatDate(value),
+      render: (value: string, record) => {
+        const isEditing = editingDateContract === record.contractNumber;
+        if (isEditing) {
+          return (
+            <DatePicker
+              format="DD/MM/YYYY"
+              defaultValue={dayjs(value, "YYYY-MM-DD")}
+              onBlur={() => {
+                setEditingDateContract(null);
+              }}
+              onChange={async (date) => {
+                if (date) {
+                  setIsUpdatingDate(true);
+                  try {
+                    await updateBillingContract(record.contractNumber, {
+                      startDate: date.format("YYYY-MM-DD"),
+                    });
+                    setContracts((prev) =>
+                      prev.map((item) =>
+                        item.contractNumber === record.contractNumber
+                          ? { ...item, startDate: date.format("YYYY-MM-DD") }
+                          : item,
+                      ),
+                    );
+                    message.success("Data base atualizada.");
+                    setEditingDateContract(null);
+                  } catch (err) {
+                    message.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Não foi possível atualizar a data base.",
+                    );
+                  } finally {
+                    setIsUpdatingDate(false);
+                  }
+                }
+              }}
+              autoFocus
+              disabled={isUpdatingDate}
+            />
+          );
+        }
+        return (
+          <span
+            className="cursor-pointer hover:text-blue-600 hover:underline"
+            onClick={() => setEditingDateContract(record.contractNumber)}
+          >
+            {formatDate(value)}
+          </span>
+        );
+      },
     },
     {
       title: "Parcela",

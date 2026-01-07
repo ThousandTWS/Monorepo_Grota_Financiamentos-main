@@ -28,7 +28,10 @@ import type {
 import {
   createBillingOccurrence,
   getBillingContractDetails,
+  updateBillingContract,
   updateBillingInstallment,
+  updateBillingInstallmentDueDate,
+  updateBillingVehicle,
 } from "@/application/services/Billing/billingService";
 
 
@@ -41,8 +44,14 @@ const formatCurrency = (value: number) =>
     minimumFractionDigits: 2,
   }).format(value);
 
-const formatDate = (value: string) =>
-  new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T00:00:00`));
+const formatDate = (value: string) => {
+  if (!value) return "--";
+  // Para datas sem hora, cria a data no timezone do Brasil
+  const date = new Date(`${value}T00:00:00-03:00`); // UTC-3 (horário de Brasília)
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+  }).format(date);
+};
 
 const calculateOutstandingBalance = (items: BillingInstallment[]) =>
   items.reduce((total, item) => total + (item.amount ?? 0), 0);
@@ -70,16 +79,31 @@ const statusColor: Record<BillingStatus, string> = {
 };
 
 const resolveDaysLate = (record: BillingInstallment) => {
-  if (typeof record.daysLate === "number") {
-    return record.daysLate;
+  if (record.paid) {
+    return 0;
   }
-  const due = new Date(`${record.dueDate}T00:00:00`);
-  const baseDate =
-    record.paid && record.paidAt
-      ? new Date(`${record.paidAt}T00:00:00`)
-      : new Date();
-  const diffMs = baseDate.getTime() - due.getTime();
-  return diffMs > 0 ? Math.floor(diffMs / 86400000) : 0;
+  if (!record.dueDate) {
+    return 0;
+  }
+  // Cria a data de vencimento no timezone do Brasil (meia-noite)
+  const due = new Date(`${record.dueDate}T00:00:00-03:00`);
+  // Obtém a data de hoje no timezone do Brasil (meia-noite)
+  const now = new Date();
+  const todayBR = new Date(
+    now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
+  );
+  todayBR.setHours(0, 0, 0, 0);
+  
+  // Calcula a diferença em dias
+  const diffMs = todayBR.getTime() - due.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  return diffDays > 0 ? diffDays : 0;
+};
+
+const formatPhoneForWhatsApp = (phone?: string | null) => {
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 10 ? `55${digits}` : "";
 };
 
 export default function ContractDetailsPage() {
@@ -94,10 +118,18 @@ export default function ContractDetailsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isUpdatingInstallment, setIsUpdatingInstallment] = useState<number | null>(null);
+  const [isUpdatingDueDate, setIsUpdatingDueDate] = useState<number | null>(null);
+  const [isUpdatingContract, setIsUpdatingContract] = useState(false);
+  const [isUpdatingVehicle, setIsUpdatingVehicle] = useState(false);
   const [isAddingOccurrence, setIsAddingOccurrence] = useState(false);
   const [occurrenceDate, setOccurrenceDate] = useState<string>("");
   const [occurrenceContact, setOccurrenceContact] = useState("");
   const [occurrenceNote, setOccurrenceNote] = useState("");
+  const [editingPaidAt, setEditingPaidAt] = useState<string | null>(null);
+  const [editingStartDate, setEditingStartDate] = useState<string | null>(null);
+  const [editingPlate, setEditingPlate] = useState<string>("");
+  const [editingRenavam, setEditingRenavam] = useState<string>("");
+  const [editingDutIssued, setEditingDutIssued] = useState<boolean>(false);
 
   useEffect(() => {
     let active = true;
@@ -137,7 +169,14 @@ export default function ContractDetailsPage() {
     setOccurrenceDate("");
     setOccurrenceContact("");
     setOccurrenceNote("");
-  }, [contract?.contractNumber]);
+    if (contract) {
+      setEditingPaidAt(contract.paidAt);
+      setEditingStartDate(contract.startDate);
+      setEditingPlate(contract.vehicle.plate ?? "");
+      setEditingRenavam(contract.vehicle.renavam ?? "");
+      setEditingDutIssued(contract.vehicle.dutIssued ?? false);
+    }
+  }, [contract?.contractNumber, contract]);
 
   if (isLoading) {
     return (
@@ -174,7 +213,53 @@ export default function ContractDetailsPage() {
       title: "Vencimento",
       dataIndex: "dueDate",
       key: "dueDate",
-      render: (value: string) => formatDate(value),
+      render: (value: string, record) => {
+        const isEditing = isUpdatingDueDate === record.number;
+        if (isEditing) {
+          return (
+            <DatePicker
+              format="DD/MM/YYYY"
+              defaultValue={dayjs(value, "YYYY-MM-DD")}
+              onBlur={async () => {
+                setIsUpdatingDueDate(null);
+              }}
+              onChange={async (date) => {
+                if (date) {
+                  setIsUpdatingDueDate(record.number);
+                  try {
+                    await updateBillingInstallmentDueDate(
+                      contract.contractNumber,
+                      record.number,
+                      { dueDate: date.format("YYYY-MM-DD") },
+                    );
+                    const refreshed = await getBillingContractDetails(contract.contractNumber);
+                    setContract(refreshed);
+                    setInstallments(refreshed.installments);
+                    message.success("Data de vencimento atualizada.");
+                  } catch (err) {
+                    message.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Não foi possível atualizar a data de vencimento.",
+                    );
+                  } finally {
+                    setIsUpdatingDueDate(null);
+                  }
+                }
+              }}
+              autoFocus
+            />
+          );
+        }
+        return (
+          <span
+            className="cursor-pointer hover:text-blue-600"
+            onClick={() => setIsUpdatingDueDate(record.number)}
+          >
+            {formatDate(value)}
+          </span>
+        );
+      },
     },
     {
       title: "Status",
@@ -222,28 +307,19 @@ export default function ContractDetailsPage() {
                 record.number,
                 { paid: checked },
               );
-              setInstallments((prev) => {
-                const nextInstallments = prev.map((item) =>
-                  item.number === record.number ? updated : item,
-                );
-                setContract((prevContract) => {
-                  if (!prevContract) return prevContract;
-                  const outstandingBalance = Number.isFinite(
-                    prevContract.outstandingBalance,
-                  )
-                    ? prevContract.outstandingBalance
-                    : calculateOutstandingBalance(nextInstallments);
-                  return {
-                    ...prevContract,
-                    outstandingBalance,
-                    remainingBalance: calculateRemainingBalance(
-                      nextInstallments,
-                      outstandingBalance,
-                    ),
-                  };
-                });
-                return nextInstallments;
-              });
+              // Recarregar dados completos do contrato para sincronizar status
+              const refreshed = await getBillingContractDetails(contract.contractNumber);
+              setContract(refreshed);
+              setInstallments(refreshed.installments);
+              message.success(
+                `Parcela ${checked ? "marcada como paga" : "desmarcada"}. Status: ${
+                  refreshed.status === "PAGO"
+                    ? "Pago"
+                    : refreshed.status === "EM_ATRASO"
+                      ? "Em atraso"
+                      : "Em aberto"
+                }`,
+              );
             } catch (err) {
               message.error(
                 err instanceof Error
@@ -326,6 +402,27 @@ export default function ContractDetailsPage() {
                 / {contract.customer.state ?? "--"}
               </Descriptions.Item>
             </Descriptions>
+            {contract.dealer && (
+              <div className="mt-4">
+                <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">
+                  Dados da loja
+                </Typography.Text>
+                <Descriptions column={2} className="mt-2">
+                  <Descriptions.Item label="Empresa">
+                    {contract.dealer.enterprise ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Razao Social">
+                    {contract.dealer.fullNameEnterprise ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="CNPJ">
+                    {contract.dealer.cnpj ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Telefone">
+                    {contract.dealer.phone ?? "--"}
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+            )}
           </Card>
 
           <Card>
@@ -343,10 +440,64 @@ export default function ContractDetailsPage() {
                 {contract.contractNumber}
               </Descriptions.Item>
               <Descriptions.Item label="Data do pagamento">
-                {formatDate(contract.paidAt)}
+                <div className="flex items-center gap-2">
+                  <DatePicker
+                    format="DD/MM/YYYY"
+                    value={editingPaidAt ? dayjs(editingPaidAt, "YYYY-MM-DD") : null}
+                    onChange={async (date) => {
+                      if (date) {
+                        const newDate = date.format("YYYY-MM-DD");
+                        setIsUpdatingContract(true);
+                        try {
+                          const updated = await updateBillingContract(contract.contractNumber, {
+                            paidAt: newDate,
+                          });
+                          setContract(updated);
+                          setEditingPaidAt(newDate);
+                          message.success("Data de pagamento atualizada.");
+                        } catch (err) {
+                          message.error(
+                            err instanceof Error
+                              ? err.message
+                              : "Não foi possível atualizar a data de pagamento.",
+                          );
+                        } finally {
+                          setIsUpdatingContract(false);
+                        }
+                      }
+                    }}
+                    disabled={isUpdatingContract}
+                  />
+                </div>
               </Descriptions.Item>
               <Descriptions.Item label="Data base">
-                {formatDate(contract.startDate)}
+                <DatePicker
+                  format="DD/MM/YYYY"
+                  value={editingStartDate ? dayjs(editingStartDate, "YYYY-MM-DD") : null}
+                  onChange={async (date) => {
+                    if (date) {
+                      const newDate = date.format("YYYY-MM-DD");
+                      setIsUpdatingContract(true);
+                      try {
+                        const updated = await updateBillingContract(contract.contractNumber, {
+                          startDate: newDate,
+                        });
+                        setContract(updated);
+                        setEditingStartDate(newDate);
+                        message.success("Data base atualizada.");
+                      } catch (err) {
+                        message.error(
+                          err instanceof Error
+                            ? err.message
+                            : "Não foi possível atualizar a data base.",
+                        );
+                      } finally {
+                        setIsUpdatingContract(false);
+                      }
+                    }
+                  }}
+                  disabled={isUpdatingContract}
+                />
               </Descriptions.Item>
               <Descriptions.Item label="Valor financiado">
                 {formatCurrency(contract.financedValue)}
@@ -394,10 +545,62 @@ export default function ContractDetailsPage() {
                       {contract.customer.document}
                     </Descriptions.Item>
                     <Descriptions.Item label="Data base">
-                      {formatDate(contract.startDate)}
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        value={editingStartDate ? dayjs(editingStartDate, "YYYY-MM-DD") : null}
+                        onChange={async (date) => {
+                          if (date) {
+                            const newDate = date.format("YYYY-MM-DD");
+                            setIsUpdatingContract(true);
+                            try {
+                              const updated = await updateBillingContract(contract.contractNumber, {
+                                startDate: newDate,
+                              });
+                              setContract(updated);
+                              setEditingStartDate(newDate);
+                              message.success("Data base atualizada.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar a data base.",
+                              );
+                            } finally {
+                              setIsUpdatingContract(false);
+                            }
+                          }
+                        }}
+                        disabled={isUpdatingContract}
+                      />
                     </Descriptions.Item>
                     <Descriptions.Item label="Data de pagamento">
-                      {formatDate(contract.paidAt)}
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        value={editingPaidAt ? dayjs(editingPaidAt, "YYYY-MM-DD") : null}
+                        onChange={async (date) => {
+                          if (date) {
+                            const newDate = date.format("YYYY-MM-DD");
+                            setIsUpdatingContract(true);
+                            try {
+                              const updated = await updateBillingContract(contract.contractNumber, {
+                                paidAt: newDate,
+                              });
+                              setContract(updated);
+                              setEditingPaidAt(newDate);
+                              message.success("Data de pagamento atualizada.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar a data de pagamento.",
+                              );
+                            } finally {
+                              setIsUpdatingContract(false);
+                            }
+                          }
+                        }}
+                        disabled={isUpdatingContract}
+                      />
                     </Descriptions.Item>
                     <Descriptions.Item label="Contato principal">
                       {contract.customer.phone ?? "--"}
@@ -425,7 +628,33 @@ export default function ContractDetailsPage() {
                       {contract.contractNumber}
                     </Descriptions.Item>
                     <Descriptions.Item label="Inicio do contrato">
-                      {formatDate(contract.startDate)}
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        value={editingStartDate ? dayjs(editingStartDate, "YYYY-MM-DD") : null}
+                        onChange={async (date) => {
+                          if (date) {
+                            const newDate = date.format("YYYY-MM-DD");
+                            setIsUpdatingContract(true);
+                            try {
+                              const updated = await updateBillingContract(contract.contractNumber, {
+                                startDate: newDate,
+                              });
+                              setContract(updated);
+                              setEditingStartDate(newDate);
+                              message.success("Data base atualizada.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar a data base.",
+                              );
+                            } finally {
+                              setIsUpdatingContract(false);
+                            }
+                          }
+                        }}
+                        disabled={isUpdatingContract}
+                      />
                     </Descriptions.Item>
                     <Descriptions.Item label="Valor financiado">
                       {formatCurrency(contract.financedValue)}
@@ -438,17 +667,103 @@ export default function ContractDetailsPage() {
                       {contract.vehicle.year ? `(${contract.vehicle.year})` : ""}
                     </Descriptions.Item>
                     <Descriptions.Item label="Placa">
-                      {contract.vehicle.plate ?? "--"}
+                      <Input
+                        value={editingPlate}
+                        onChange={(e) => setEditingPlate(e.target.value)}
+                        onBlur={async () => {
+                          if (editingPlate !== (contract.vehicle.plate ?? "")) {
+                            setIsUpdatingVehicle(true);
+                            try {
+                              const updated = await updateBillingVehicle(contract.contractNumber, {
+                                plate: editingPlate.trim() || undefined,
+                                renavam: editingRenavam.trim() || undefined,
+                                dutIssued: editingDutIssued,
+                              });
+                              setContract(updated);
+                              setEditingPlate(updated.vehicle.plate ?? "");
+                              setEditingRenavam(updated.vehicle.renavam ?? "");
+                              setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                              message.success("Dados do veículo atualizados.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar os dados do veículo.",
+                              );
+                              setEditingPlate(contract.vehicle.plate ?? "");
+                            } finally {
+                              setIsUpdatingVehicle(false);
+                            }
+                          }
+                        }}
+                        disabled={isUpdatingVehicle}
+                        placeholder="Digite a placa"
+                      />
                     </Descriptions.Item>
                     <Descriptions.Item label="Renavam">
-                      {contract.vehicle.renavam ?? "--"}
+                      <Input
+                        value={editingRenavam}
+                        onChange={(e) => setEditingRenavam(e.target.value)}
+                        onBlur={async () => {
+                          if (editingRenavam !== (contract.vehicle.renavam ?? "")) {
+                            setIsUpdatingVehicle(true);
+                            try {
+                              const updated = await updateBillingVehicle(contract.contractNumber, {
+                                plate: editingPlate.trim() || undefined,
+                                renavam: editingRenavam.trim() || undefined,
+                                dutIssued: editingDutIssued,
+                              });
+                              setContract(updated);
+                              setEditingPlate(updated.vehicle.plate ?? "");
+                              setEditingRenavam(updated.vehicle.renavam ?? "");
+                              setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                              message.success("Dados do veículo atualizados.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar os dados do veículo.",
+                              );
+                              setEditingRenavam(contract.vehicle.renavam ?? "");
+                            } finally {
+                              setIsUpdatingVehicle(false);
+                            }
+                          }
+                        }}
+                        disabled={isUpdatingVehicle}
+                        placeholder="Digite o RENAVAM"
+                      />
                     </Descriptions.Item>
                     <Descriptions.Item label="DUT emitido">
-                      {contract.vehicle.dutIssued == null
-                        ? "--"
-                        : contract.vehicle.dutIssued
-                          ? "Sim"
-                          : "Nao"}
+                      <Switch
+                        checked={editingDutIssued}
+                        onChange={async (checked) => {
+                          setEditingDutIssued(checked);
+                          setIsUpdatingVehicle(true);
+                          try {
+                            const updated = await updateBillingVehicle(contract.contractNumber, {
+                              plate: editingPlate.trim() || undefined,
+                              renavam: editingRenavam.trim() || undefined,
+                              dutIssued: checked,
+                            });
+                            setContract(updated);
+                            setEditingPlate(updated.vehicle.plate ?? "");
+                            setEditingRenavam(updated.vehicle.renavam ?? "");
+                            setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                            message.success("DUT emitido atualizado.");
+                          } catch (err) {
+                            message.error(
+                              err instanceof Error
+                                ? err.message
+                                : "Não foi possível atualizar o DUT emitido.",
+                            );
+                            setEditingDutIssued(contract.vehicle.dutIssued ?? false);
+                          } finally {
+                            setIsUpdatingVehicle(false);
+                          }
+                        }}
+                        disabled={isUpdatingVehicle}
+                      />
                     </Descriptions.Item>
                   </Descriptions>
                 </Card>
@@ -525,6 +840,17 @@ export default function ContractDetailsPage() {
                                   {dayjs(item.date).format("DD/MM/YYYY")}
                                 </Tag>
                                 <span className="font-semibold">{item.contact}</span>
+                                {contract.customer.phone && (
+                                  <Button
+                                    type="link"
+                                    size="small"
+                                    href={`https://wa.me/${formatPhoneForWhatsApp(contract.customer.phone)}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    📱 WhatsApp
+                                  </Button>
+                                )}
                               </div>
                               <Typography.Paragraph className="!mt-2 !mb-0 text-sm text-slate-600">
                                 {item.note}

@@ -101,6 +101,16 @@ public class ProposalService {
         return proposals.stream().map(this::toResponse).toList();
     }
 
+    /**
+     * Atualiza o status da proposta.
+     * Permite mudanças livres entre qualquer status sem validações ou bloqueios.
+     * Quando uma proposta muda para PAID, um contrato de cobrança é criado automaticamente (se não existir).
+     * 
+     * @param id ID da proposta
+     * @param dto DTO com o novo status, notas e ator
+     * @param originIp IP de origem da requisição
+     * @return Proposta atualizada
+     */
     @SuppressWarnings("null")
     @Transactional
     public ProposalResponseDTO updateStatus(Long id, ProposalStatusUpdateDTO dto, String originIp) {
@@ -108,6 +118,8 @@ public class ProposalService {
         Proposal proposal = proposalRepository.findById(id)
                 .orElseThrow(() -> new RecordNotFoundException("Proposta não encontrada"));
         ProposalStatus previousStatus = proposal.getStatus();
+        
+        // Permite mudança livre para qualquer status - sem validações ou bloqueios
         if (dto.status() != null) {
             proposal.setStatus(dto.status());
         }
@@ -120,6 +132,8 @@ public class ProposalService {
         publishRealtime("PROPOSAL_STATUS_UPDATED", Map.of("proposal", toResponse(saved), "source", dto.actor()));
         publishRealtime("PROPOSAL_EVENT_APPENDED", Map.of("proposalId", saved.getId(), "statusFrom", previousStatus, "statusTo", saved.getStatus(), "actor", dto.actor()));
 
+        // Cria contrato de cobrança automaticamente quando muda para PAID (se não existir)
+        // Nota: Se a proposta voltar de PAID para outro status, o contrato permanece (mantém histórico)
         if (previousStatus != ProposalStatus.PAID && saved.getStatus() == ProposalStatus.PAID) {
             billingService.createFromPaidProposal(saved);
         }

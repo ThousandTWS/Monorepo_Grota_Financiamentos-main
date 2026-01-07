@@ -427,6 +427,13 @@ export default function EsteiraDePropostasFeature() {
     });
   };
 
+  /**
+   * Atualiza o status da proposta.
+   * Permite mudanças livres entre qualquer status (Enviada, Pendente, Aprovada, Recusada, Paga)
+   * sem validações ou bloqueios.
+   * Ajusta o filtro automaticamente para "ALL" se o novo status não corresponder ao filtro atual,
+   * garantindo que a proposta continue visível na tela.
+   */
   const handleStatusUpdate = async (
     proposal: Proposal,
     nextStatus: ProposalStatus,
@@ -434,6 +441,7 @@ export default function EsteiraDePropostasFeature() {
     setUpdatingId(proposal.id);
     try {
       const note = noteDrafts[proposal.id] ?? proposal.notes ?? undefined;
+      // Permite mudança para qualquer status - sem validações
       const updated = await updateProposalStatus(proposal.id, {
         status: nextStatus,
         notes: note,
@@ -444,6 +452,15 @@ export default function EsteiraDePropostasFeature() {
         ...prev,
         [updated.id]: "",
       }));
+      
+      // Se o filtro atual não incluir o novo status, ajusta para "ALL" para manter a proposta visível
+      if (filters.status !== "ALL" && filters.status !== nextStatus) {
+        setFilters((prev) => ({
+          ...prev,
+          status: "ALL",
+        }));
+      }
+      
       dispatchBridgeEvent(sendMessage, REALTIME_EVENT_TYPES.PROPOSALS_REFRESH_REQUEST, {
         source: ADMIN_PROPOSALS_IDENTITY,
         reason: "admin-note-update",
@@ -455,9 +472,13 @@ export default function EsteiraDePropostasFeature() {
       });
     } catch (error) {
       console.error("[Admin Esteira] Falha ao atualizar status", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Não foi possível atualizar o status. Verifique sua conexão e tente novamente.";
       toast({
-        title: "Nao foi possivel atualizar",
-        description: "Revise o status no admin e tente novamente.",
+        title: "Erro ao atualizar status",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

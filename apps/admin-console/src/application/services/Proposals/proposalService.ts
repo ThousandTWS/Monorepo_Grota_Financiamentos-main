@@ -101,9 +101,39 @@ async function handleResponse<T>(response: Response): Promise<T> {
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      (payload as { error?: string })?.error ??
-      "Falha ao comunicar com o servidor.";
+    let message = "Falha ao comunicar com o servidor.";
+    
+    if (payload && typeof payload === "object") {
+      const errorPayload = payload as { 
+        error?: string; 
+        message?: string; 
+        errors?: string | string[];
+      };
+      
+      if (errorPayload.error) {
+        message = errorPayload.error;
+      } else if (errorPayload.message) {
+        message = errorPayload.message;
+      } else if (errorPayload.errors) {
+        if (Array.isArray(errorPayload.errors)) {
+          message = errorPayload.errors.join(", ");
+        } else {
+          message = String(errorPayload.errors);
+        }
+      }
+    }
+    
+    // Tratamento especial para erros de autenticação/autorização
+    if (response.status === 401) {
+      message = "Sessão expirada. Por favor, faça login novamente.";
+      // Redirecionar para a página de login (raiz)
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    } else if (response.status === 403) {
+      message = "Você não tem permissão para realizar esta ação.";
+    }
+    
     throw new Error(message);
   }
 

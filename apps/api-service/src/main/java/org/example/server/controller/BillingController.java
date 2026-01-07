@@ -49,6 +49,22 @@ public class BillingController {
         return ResponseEntity.ok(billingService.getContractDetails(contractNumber));
     }
 
+    @PatchMapping("/contracts/{contractNumber}")
+    public ResponseEntity<BillingContractDetailsDTO> updateContract(
+            @PathVariable String contractNumber,
+            @Valid @RequestBody BillingContractUpdateDTO dto
+    ) {
+        return ResponseEntity.ok(billingService.updateContract(contractNumber, dto));
+    }
+
+    @PatchMapping("/contracts/{contractNumber}/vehicle")
+    public ResponseEntity<BillingContractDetailsDTO> updateVehicle(
+            @PathVariable String contractNumber,
+            @Valid @RequestBody BillingVehicleUpdateDTO dto
+    ) {
+        return ResponseEntity.ok(billingService.updateVehicle(contractNumber, dto));
+    }
+
     @PatchMapping("/contracts/{contractNumber}/installments/{installmentNumber}")
     public ResponseEntity<BillingInstallmentDTO> updateInstallment(
             @PathVariable String contractNumber,
@@ -57,6 +73,17 @@ public class BillingController {
     ) {
         return ResponseEntity.ok(
                 billingService.updateInstallment(contractNumber, installmentNumber, dto)
+        );
+    }
+
+    @PatchMapping("/contracts/{contractNumber}/installments/{installmentNumber}/due-date")
+    public ResponseEntity<BillingInstallmentDTO> updateInstallmentDueDate(
+            @PathVariable String contractNumber,
+            @PathVariable Integer installmentNumber,
+            @Valid @RequestBody BillingInstallmentDueDateUpdateDTO dto
+    ) {
+        return ResponseEntity.ok(
+                billingService.updateInstallmentDueDate(contractNumber, installmentNumber, dto)
         );
     }
 
