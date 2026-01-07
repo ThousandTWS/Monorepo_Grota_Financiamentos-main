@@ -53,7 +53,7 @@ const digitsOnly = (value: string) => value.replace(/\D/g, "");
  * Valida o formato do número de contrato.
  * Aceita:
  * - Formato padrão: apenas números (ex: "1234567890")
- * - Formato com hífen e barra: XX-XXXXXX/XX (ex: "14-555555/25")
+ * - Formato específico: NN-NNNNNN/AA (2 dígitos-hífen-6 dígitos/2 dígitos) (ex: "14-555555/25")
  */
 const isValidContractNumber = (value: string): boolean => {
   if (!value || value.trim() === "") return false;
@@ -65,9 +65,8 @@ const isValidContractNumber = (value: string): boolean => {
     return true;
   }
   
-  // Formato com hífen e barra: XX-XXXXXX/XX
-  // Aceita de 1 a 4 dígitos antes do hífen, 1 a 10 dígitos entre hífen e barra, e 1 a 4 dígitos após a barra
-  if (/^\d{1,4}-\d{1,10}\/\d{1,4}$/.test(trimmed)) {
+  // Formato específico: NN-NNNNNN/AA (exatamente 2 dígitos, hífen, 6 dígitos, barra, 2 dígitos)
+  if (/^\d{2}-\d{6}\/\d{2}$/.test(trimmed)) {
     return true;
   }
   
@@ -194,7 +193,7 @@ export default function CobrancasPage() {
                 if (newValue && newValue !== value) {
                   if (!isValidContractNumber(newValue)) {
                     message.error(
-                      "Formato inválido. Use apenas números ou o formato XX-XXXXXX/XX (ex: 14-555555/25).",
+                      "Formato inválido. Use apenas números ou o formato NN-NNNNNN/AA (ex: 14-555555/25).",
                     );
                     setEditingContractNumberValue(value);
                     setEditingContractNumber(null);
@@ -232,7 +231,7 @@ export default function CobrancasPage() {
                 if (newValue && newValue !== value) {
                   if (!isValidContractNumber(newValue)) {
                     message.error(
-                      "Formato inválido. Use apenas números ou o formato XX-XXXXXX/XX (ex: 14-555555/25).",
+                      "Formato inválido. Use apenas números ou o formato NN-NNNNNN/AA (ex: 14-555555/25).",
                     );
                     setEditingContractNumberValue(value);
                     setEditingContractNumber(null);
