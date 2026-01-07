@@ -46,7 +46,7 @@ async function handleDecision(decision: ArcjetDecision) {
   return null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (!aj) {
     return NextResponse.next();
   }

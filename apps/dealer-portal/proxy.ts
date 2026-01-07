@@ -42,7 +42,7 @@ function buildRedirectResponse(url: string, request: NextRequest) {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (aj) {
     const decision = await aj.protect(request);
 
@@ -89,7 +89,7 @@ export async function middleware(request: NextRequest) {
 
   // PERMISSÕES: Todos os usuários autenticados (VENDEDOR, OPERADOR, ADMIN)
   // podem acessar todas as rotas, incluindo criação de fichas (/simulacao/novo)
-  // Não há restrição por role neste middleware
+  // Não há restrição por role neste proxy
   return NextResponse.next();
 }
 

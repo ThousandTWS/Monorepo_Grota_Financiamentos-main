@@ -47,7 +47,7 @@ function isPublicPath(pathname: string) {
   );
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (aj) {
     const decision = await aj.protect(request);
 
@@ -95,7 +95,7 @@ export async function middleware(request: NextRequest) {
 
   // PERMISSÕES: Todos os usuários autenticados (ADMIN e outros roles)
   // podem acessar todas as rotas protegidas, incluindo criação de fichas
-  // Não há restrição por role neste middleware
+  // Não há restrição por role neste proxy
   return NextResponse.next();
 }
 
