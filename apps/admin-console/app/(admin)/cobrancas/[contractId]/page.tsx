@@ -109,8 +109,17 @@ const formatPhoneForWhatsApp = (phone?: string | null) => {
 export default function ContractDetailsPage() {
   const params = useParams();
   const rawContractId = params?.contractId;
-  const contractId =
-    Array.isArray(rawContractId) ? rawContractId[0] : rawContractId ?? "";
+  // Decodifica o contractId para lidar com caracteres especiais como "/" no número do contrato
+  // Se for um array (catch-all route), junta os segmentos com "/"
+  let contractId = "";
+  if (rawContractId) {
+    if (Array.isArray(rawContractId)) {
+      // Catch-all route: junta todos os segmentos
+      contractId = rawContractId.map(segment => decodeURIComponent(segment)).join("/");
+    } else {
+      contractId = decodeURIComponent(rawContractId);
+    }
+  }
 
   const [contract, setContract] = useState<BillingContractDetails | null>(null);
   const [installments, setInstallments] = useState<BillingInstallment[]>([]);
@@ -519,7 +528,7 @@ export default function ContractDetailsPage() {
                 </Typography.Text>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {contract.otherContracts.map((item) => (
-                    <Link key={item.contractNumber} href={`/cobrancas/${item.contractNumber}`}>
+                    <Link key={item.contractNumber} href={`/cobrancas/${encodeURIComponent(item.contractNumber)}`}>
                       <Tag color="blue">{item.contractNumber}</Tag>
                     </Link>
                   ))}

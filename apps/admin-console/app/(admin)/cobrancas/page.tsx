@@ -359,7 +359,7 @@ export default function CobrancasPage() {
       key: "actions",
       render: (_, record) => (
         <div className="flex flex-wrap gap-2">
-          <Link href={`/cobrancas/${record.contractNumber}`}>
+          <Link href={`/cobrancas/${encodeURIComponent(record.contractNumber)}`}>
             <Button type="primary" size="small">
               Ver contrato
             </Button>
