@@ -44,12 +44,12 @@ public class BillingController {
         );
     }
 
-    @GetMapping("/contracts/{contractNumber}")
+    @GetMapping("/contracts/{contractNumber:.*}")
     public ResponseEntity<BillingContractDetailsDTO> getContract(@PathVariable String contractNumber) {
         return ResponseEntity.ok(billingService.getContractDetails(contractNumber));
     }
 
-    @PatchMapping("/contracts/{contractNumber}")
+    @PatchMapping("/contracts/{contractNumber:.*}")
     public ResponseEntity<BillingContractDetailsDTO> updateContract(
             @PathVariable String contractNumber,
             @Valid @RequestBody BillingContractUpdateDTO dto
@@ -57,7 +57,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.updateContract(contractNumber, dto));
     }
 
-    @PatchMapping("/contracts/{contractNumber}/vehicle")
+    @PatchMapping("/contracts/{contractNumber:.*}/vehicle")
     public ResponseEntity<BillingContractDetailsDTO> updateVehicle(
             @PathVariable String contractNumber,
             @Valid @RequestBody BillingVehicleUpdateDTO dto
@@ -65,7 +65,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.updateVehicle(contractNumber, dto));
     }
 
-    @PatchMapping("/contracts/{contractNumber}/installments/{installmentNumber}")
+    @PatchMapping("/contracts/{contractNumber:.*}/installments/{installmentNumber}")
     public ResponseEntity<BillingInstallmentDTO> updateInstallment(
             @PathVariable String contractNumber,
             @PathVariable Integer installmentNumber,
@@ -76,7 +76,7 @@ public class BillingController {
         );
     }
 
-    @PatchMapping("/contracts/{contractNumber}/installments/{installmentNumber}/due-date")
+    @PatchMapping("/contracts/{contractNumber:.*}/installments/{installmentNumber}/due-date")
     public ResponseEntity<BillingInstallmentDTO> updateInstallmentDueDate(
             @PathVariable String contractNumber,
             @PathVariable Integer installmentNumber,
@@ -87,7 +87,7 @@ public class BillingController {
         );
     }
 
-    @PatchMapping("/contracts/{contractNumber}/contract-number")
+    @PatchMapping("/contracts/{contractNumber:.*}/contract-number")
     public ResponseEntity<BillingContractDetailsDTO> updateContractNumber(
             @PathVariable String contractNumber,
             @Valid @RequestBody BillingContractNumberUpdateDTO dto
@@ -95,7 +95,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.updateContractNumber(contractNumber, dto));
     }
 
-    @PostMapping("/contracts/{contractNumber}/occurrences")
+    @PostMapping("/contracts/{contractNumber:.*}/occurrences")
     public ResponseEntity<BillingOccurrenceDTO> createOccurrence(
             @PathVariable String contractNumber,
             @Valid @RequestBody BillingOccurrenceRequestDTO dto
@@ -103,7 +103,7 @@ public class BillingController {
         return ResponseEntity.ok(billingService.addOccurrence(contractNumber, dto));
     }
 
-    @DeleteMapping("/contracts/{contractNumber}")
+    @DeleteMapping("/contracts/{contractNumber:.*}")
     public ResponseEntity<Void> deleteContract(@PathVariable String contractNumber) {
         billingService.deleteContract(contractNumber);
         return ResponseEntity.noContent().build();
