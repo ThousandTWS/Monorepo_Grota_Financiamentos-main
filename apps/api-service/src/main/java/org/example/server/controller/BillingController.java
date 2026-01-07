@@ -87,6 +87,14 @@ public class BillingController {
         );
     }
 
+    @PatchMapping("/contracts/{contractNumber}/contract-number")
+    public ResponseEntity<BillingContractDetailsDTO> updateContractNumber(
+            @PathVariable String contractNumber,
+            @Valid @RequestBody BillingContractNumberUpdateDTO dto
+    ) {
+        return ResponseEntity.ok(billingService.updateContractNumber(contractNumber, dto));
+    }
+
     @PostMapping("/contracts/{contractNumber}/occurrences")
     public ResponseEntity<BillingOccurrenceDTO> createOccurrence(
             @PathVariable String contractNumber,

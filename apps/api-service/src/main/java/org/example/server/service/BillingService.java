@@ -360,6 +360,28 @@ public class BillingService {
     }
 
     @Transactional
+    public BillingContractDetailsDTO updateContractNumber(String currentContractNumber, BillingContractNumberUpdateDTO dto) {
+        BillingContract contract = contractRepository.findByContractNumber(currentContractNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        String newContractNumber = dto.contractNumber();
+        if (newContractNumber == null || newContractNumber.isBlank()) {
+            throw new IllegalArgumentException("Numero do contrato nao pode ser vazio");
+        }
+        
+        // Verifica se o novo número já existe
+        if (contractRepository.findByContractNumber(newContractNumber).isPresent()) {
+            throw new DataAlreadyExistsException("Numero de contrato ja existe");
+        }
+        
+        contract.setContractNumber(newContractNumber);
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
     public void deleteContract(String contractNumber) {
         BillingContract contract = contractRepository.findByContractNumber(contractNumber)
                 .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));

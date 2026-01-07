@@ -163,6 +163,19 @@ export const updateBillingInstallmentDueDate = async (
   );
 };
 
+export const updateBillingContractNumber = async (
+  contractNumber: string,
+  newContractNumber: string,
+): Promise<BillingContractDetails> => {
+  return request<BillingContractDetails>(
+    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/contract-number`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ contractNumber: newContractNumber }),
+    },
+  );
+};
+
 export const deleteBillingContract = async (
   contractNumber: string,
 ): Promise<void> => {

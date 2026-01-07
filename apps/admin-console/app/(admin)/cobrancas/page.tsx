@@ -25,6 +25,7 @@ import {
   deleteBillingContract,
   fetchBillingContracts,
   updateBillingContract,
+  updateBillingContractNumber,
 } from "@/application/services/Billing/billingService";
 
 const statusColor: Record<BillingStatus, string> = {
@@ -69,6 +70,9 @@ export default function CobrancasPage() {
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [editingDateContract, setEditingDateContract] = useState<string | null>(null);
   const [isUpdatingDate, setIsUpdatingDate] = useState(false);
+  const [editingContractNumber, setEditingContractNumber] = useState<string | null>(null);
+  const [editingContractNumberValue, setEditingContractNumberValue] = useState<string>("");
+  const [isUpdatingContractNumber, setIsUpdatingContractNumber] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -153,11 +157,90 @@ export default function CobrancasPage() {
       title: "Operacao",
       dataIndex: "contractNumber",
       key: "contractNumber",
-      render: (value: string) => (
-        <Link href={`/cobrancas/${value}`} className="font-semibold text-blue-600">
-          {value}
-        </Link>
-      ),
+      render: (value: string, record) => {
+        const isEditing = editingContractNumber === record.contractNumber;
+        if (isEditing) {
+          return (
+            <Input
+              value={editingContractNumberValue}
+              onChange={(e) => setEditingContractNumberValue(e.target.value)}
+              onBlur={async () => {
+                const newValue = editingContractNumberValue.trim();
+                if (newValue && newValue !== value) {
+                  setIsUpdatingContractNumber(true);
+                  try {
+                    await updateBillingContractNumber(value, newValue);
+                    setContracts((prev) =>
+                      prev.map((item) =>
+                        item.contractNumber === value
+                          ? { ...item, contractNumber: newValue }
+                          : item,
+                      ),
+                    );
+                    message.success("Número do contrato atualizado.");
+                    setEditingContractNumber(null);
+                  } catch (err) {
+                    message.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Não foi possível atualizar o número do contrato.",
+                    );
+                    setEditingContractNumberValue(value);
+                  } finally {
+                    setIsUpdatingContractNumber(false);
+                  }
+                } else {
+                  setEditingContractNumber(null);
+                  setEditingContractNumberValue("");
+                }
+              }}
+              onPressEnter={async () => {
+                const newValue = editingContractNumberValue.trim();
+                if (newValue && newValue !== value) {
+                  setIsUpdatingContractNumber(true);
+                  try {
+                    await updateBillingContractNumber(value, newValue);
+                    setContracts((prev) =>
+                      prev.map((item) =>
+                        item.contractNumber === value
+                          ? { ...item, contractNumber: newValue }
+                          : item,
+                      ),
+                    );
+                    message.success("Número do contrato atualizado.");
+                    setEditingContractNumber(null);
+                  } catch (err) {
+                    message.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Não foi possível atualizar o número do contrato.",
+                    );
+                    setEditingContractNumberValue(value);
+                  } finally {
+                    setIsUpdatingContractNumber(false);
+                  }
+                } else {
+                  setEditingContractNumber(null);
+                  setEditingContractNumberValue("");
+                }
+              }}
+              autoFocus
+              disabled={isUpdatingContractNumber}
+            />
+          );
+        }
+        return (
+          <span
+            className="cursor-pointer hover:text-blue-600 hover:underline font-semibold text-blue-600"
+            onClick={() => {
+              setEditingContractNumber(record.contractNumber);
+              setEditingContractNumberValue(record.contractNumber);
+            }}
+          >
+            {value}
+          </span>
+        );
+      },
     },
     {
       title: "Data base",

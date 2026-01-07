@@ -126,6 +126,26 @@ public class ProposalService {
         if (dto.notes() != null) {
             proposal.setNotes(dto.notes());
         }
+        
+        // Se um número de contrato foi fornecido e a proposta está sendo marcada como paga,
+        // atualiza o metadata para incluir o número do contrato
+        if (dto.contractNumber() != null && !dto.contractNumber().isBlank() 
+                && dto.status() == ProposalStatus.PAID) {
+            String currentMetadata = proposal.getMetadata();
+            try {
+                Map<String, Object> metadataMap = new HashMap<>();
+                if (currentMetadata != null && !currentMetadata.isBlank()) {
+                    metadataMap = objectMapper.readValue(currentMetadata, 
+                            objectMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class));
+                }
+                metadataMap.put("contractNumber", dto.contractNumber());
+                proposal.setMetadata(objectMapper.writeValueAsString(metadataMap));
+            } catch (JsonProcessingException e) {
+                // Se houver erro ao processar o metadata, continua sem atualizar
+                // O número do contrato ainda será usado pelo BillingService através do DTO
+            }
+        }
+        
         Proposal saved = proposalRepository.save(proposal);
         String payload = buildPayload(null, originIp, dto.actor());
         appendEvent(saved, "STATUS_UPDATED", previousStatus, saved.getStatus(), dto.actor(), dto.notes(), payload);

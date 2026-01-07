@@ -27,7 +27,7 @@ import {
 import { StatusLegend } from "./components/StatusLegend";
 import { QueueFilters } from "./components/QueueFilters";
 import { ProposalsTable } from "./components/ProposalsTable";
-import { Alert } from "antd";
+import { Alert, Modal, Input } from "antd";
 import { getAllLogistics } from "@/application/services/Logista/logisticService";
 import { getAllSellers } from "@/application/services/Seller/sellerService";
 import { getRealtimeUrl } from "@/application/config/realtime";
@@ -98,6 +98,17 @@ export default function EsteiraDePropostasFeature() {
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [noteDrafts, setNoteDrafts] = useState<Record<number, string>>({});
+  const [contractNumberModal, setContractNumberModal] = useState<{
+    open: boolean;
+    proposal: Proposal | null;
+    nextStatus: ProposalStatus | null;
+    contractNumber: string;
+  }>({
+    open: false,
+    proposal: null,
+    nextStatus: null,
+    contractNumber: "",
+  });
   const [savingNoteId, setSavingNoteId] = useState<number | null>(null);
   const [dealerIndex, setDealerIndex] = useState<Record<number, { name: string; enterprise?: string }>>({});
   const [sellerIndex, setSellerIndex] = useState<Record<number, string>>({});
@@ -433,10 +444,31 @@ export default function EsteiraDePropostasFeature() {
    * sem validações ou bloqueios.
    * Ajusta o filtro automaticamente para "ALL" se o novo status não corresponder ao filtro atual,
    * garantindo que a proposta continue visível na tela.
+   * Quando o status muda para PAID, abre um modal para inserir o número do contrato.
    */
   const handleStatusUpdate = async (
     proposal: Proposal,
     nextStatus: ProposalStatus,
+  ) => {
+    // Se o status está mudando para PAID, abre modal para inserir número do contrato
+    if (nextStatus === "PAID" && proposal.status !== "PAID") {
+      setContractNumberModal({
+        open: true,
+        proposal,
+        nextStatus,
+        contractNumber: "",
+      });
+      return;
+    }
+
+    // Para outros status, atualiza diretamente
+    await performStatusUpdate(proposal, nextStatus, undefined);
+  };
+
+  const performStatusUpdate = async (
+    proposal: Proposal,
+    nextStatus: ProposalStatus,
+    contractNumber?: string,
   ) => {
     setUpdatingId(proposal.id);
     try {
@@ -446,6 +478,7 @@ export default function EsteiraDePropostasFeature() {
         status: nextStatus,
         notes: note,
         actor: "admin-console",
+        contractNumber: contractNumber,
       });
       applyRealtimeSnapshot(updated);
       setNoteDrafts((prev) => ({
@@ -484,6 +517,31 @@ export default function EsteiraDePropostasFeature() {
     } finally {
       setUpdatingId(null);
     }
+  };
+
+  const handleContractNumberModalOk = async () => {
+    if (!contractNumberModal.proposal || !contractNumberModal.nextStatus) return;
+    
+    const contractNumber = contractNumberModal.contractNumber.trim();
+    // Permite deixar em branco para gerar automaticamente
+    const finalContractNumber = contractNumber || undefined;
+
+    setContractNumberModal((prev) => ({ ...prev, open: false }));
+    await performStatusUpdate(
+      contractNumberModal.proposal!,
+      contractNumberModal.nextStatus!,
+      finalContractNumber,
+    );
+  };
+
+  const handleContractNumberModalCancel = () => {
+    setContractNumberModal({
+      open: false,
+      proposal: null,
+      nextStatus: null,
+      contractNumber: "",
+    });
+    setUpdatingId(null);
   };
 
   const handleNoteChange = (proposalId: number, value: string) => {
@@ -604,6 +662,40 @@ export default function EsteiraDePropostasFeature() {
         sellersById={sellerIndex}
         recentIds={recentIds}
       />
+
+      <Modal
+        title="Inserir número do contrato"
+        open={contractNumberModal.open}
+        onOk={handleContractNumberModalOk}
+        onCancel={handleContractNumberModalCancel}
+        okText="Confirmar"
+        cancelText="Cancelar"
+        confirmLoading={updatingId === contractNumberModal.proposal?.id}
+      >
+        <div className="space-y-4 py-4">
+          <p>
+            A proposta de <strong>{contractNumberModal.proposal?.customerName}</strong> será marcada como paga.
+            Insira o número do contrato ou deixe em branco para gerar automaticamente.
+          </p>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Número do contrato
+            </label>
+            <Input
+              placeholder="Deixe em branco para gerar automaticamente"
+              value={contractNumberModal.contractNumber}
+              onChange={(e) =>
+                setContractNumberModal((prev) => ({
+                  ...prev,
+                  contractNumber: e.target.value,
+                }))
+              }
+              onPressEnter={handleContractNumberModalOk}
+              autoFocus
+            />
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
