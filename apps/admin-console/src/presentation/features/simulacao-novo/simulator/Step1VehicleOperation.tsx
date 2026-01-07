@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button, Card, Input, Select, Spin, Switch, Typography } from "antd";
 import { ArrowRight, Car, Users } from "lucide-react";
 import { toast } from "sonner";
@@ -177,7 +177,7 @@ export default function Step1VehicleOperation({
     );
   }, [formData.financial.downPayment]);
 
-  const handleBrandChange = async (value: string) => {
+  const handleBrandChange = useCallback(async (value: string) => {
     const [brandCode, brandName] = value.split("|");
 
     updateFormData("vehicle", {
@@ -206,9 +206,9 @@ export default function Step1VehicleOperation({
     } finally {
       setLoadingModels(false);
     }
-  };
+  }, [vehicleTypeId, updateFormData]);
 
-  const handleModelChange = async (value: string) => {
+  const handleModelChange = useCallback(async (value: string) => {
     const [modelCode, modelName] = value.split("|");
 
     updateFormData("vehicle", {
@@ -237,9 +237,9 @@ export default function Step1VehicleOperation({
     } finally {
       setLoadingYears(false);
     }
-  };
+  }, [vehicleTypeId, formData.vehicle.brandCode, updateFormData]);
 
-  const handleYearChange = async (value: string) => {
+  const handleYearChange = useCallback(async (value: string) => {
     const [yearCode, yearName] = value.split("|");
 
     updateFormData("vehicle", {
@@ -270,7 +270,7 @@ export default function Step1VehicleOperation({
     } finally {
       setLoadingValue(false);
     }
-  };
+  }, [vehicleTypeId, formData.vehicle.brandCode, formData.vehicle.modelCode, updateFormData]);
 
   const handleFinancedAmountChange = (value: string) => {
     const numeric = parseBRL(value);
@@ -330,6 +330,10 @@ export default function Step1VehicleOperation({
     }
   };
 
+  const getPopupContainer = useCallback((triggerNode: HTMLElement) => {
+    return triggerNode.parentElement || document.body;
+  }, []);
+
   return (
     <div className="space-y-6">
       <Card
@@ -365,6 +369,7 @@ export default function Step1VehicleOperation({
               className="w-full"
               showSearch
               optionFilterProp="label"
+              getPopupContainer={getPopupContainer}
             />
           </div>
 
@@ -392,6 +397,7 @@ export default function Step1VehicleOperation({
                   { value: "PJ", label: "Pessoa Juridica (PJ)" },
                 ]}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
             </div>
 
@@ -407,6 +413,7 @@ export default function Step1VehicleOperation({
                   { value: "autofin", label: "AutoFin" },
                 ]}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
             </div>
 
@@ -442,85 +449,89 @@ export default function Step1VehicleOperation({
                   { value: "pesados", label: "Veiculos Pesados" },
                 ]}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
             </div>
           </div>
         </div>
       </Card>
 
-      {selectedDealerId && (
-        <Card
-          title={
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-[#134B73]" />
-              <span className="text-lg font-semibold text-[#134B73]">
-                Vendedores vinculados
-              </span>
-            </div>
-          }
-        >
-          <div className="space-y-3">
-            {loadingSellers ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Spin size="small" />
-                <span>Carregando vendedores...</span>
-              </div>
-            ) : sellers.length ? (
-              <div className="space-y-3">
-                <p className="text-xs text-muted-foreground">
-                  Selecione o vendedor responsavel pela ficha.
-                </p>
-                <div className="space-y-2">
-                  {sellers.map((seller) => {
-                    const isSelected = selectedSellerId === seller.id;
-                    const sellerLabel =
-                      seller.fullName ||
-                      seller.email ||
-                      `Vendedor #${seller.id}`;
-
-                    return (
-                      <button
-                        key={seller.id}
-                        type="button"
-                        onClick={() => onSellerChange(seller.id, sellerLabel)}
-                        aria-pressed={isSelected}
-                        className={`w-full rounded-lg border p-3 text-left transition ${
-                          isSelected
-                            ? "border-[#134B73] bg-[#134B73]/10"
-                            : "border-slate-200/70 bg-white hover:border-[#134B73]/40"
-                        }`}
-                      >
-                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-sm font-semibold text-slate-900">
-                              {sellerLabel}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {seller.email || "--"}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3 text-sm text-slate-600">
-                            <span>{seller.phone || "--"}</span>
-                            {isSelected ? (
-                              <span className="rounded-full bg-[#134B73]/10 px-2 py-1 text-[11px] font-semibold text-[#134B73]">
-                                Selecionado
-                              </span>
-                            ) : null}
-                          </div>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Nenhum vendedor vinculado a esta loja.
-              </p>
-            )}
+      <Card
+        title={
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#134B73]" />
+            <span className="text-lg font-semibold text-[#134B73]">
+              Vendedores vinculados
+            </span>
           </div>
-        </Card>
-      )}
+        }
+        style={{ minHeight: selectedDealerId ? "auto" : "120px" }}
+      >
+        <div className="space-y-3">
+          {!selectedDealerId ? (
+            <p className="text-sm text-muted-foreground">
+              Selecione uma loja para visualizar os vendedores vinculados.
+            </p>
+          ) : loadingSellers ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Spin size="small" />
+              <span>Carregando vendedores...</span>
+            </div>
+          ) : sellers.length ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                Selecione o vendedor responsavel pela ficha.
+              </p>
+              <div className="space-y-2">
+                {sellers.map((seller) => {
+                  const isSelected = selectedSellerId === seller.id;
+                  const sellerLabel =
+                    seller.fullName ||
+                    seller.email ||
+                    `Vendedor #${seller.id}`;
+
+                  return (
+                    <button
+                      key={seller.id}
+                      type="button"
+                      onClick={() => onSellerChange(seller.id, sellerLabel)}
+                      aria-pressed={isSelected}
+                      className={`w-full rounded-lg border p-3 text-left transition ${
+                        isSelected
+                          ? "border-[#134B73] bg-[#134B73]/10"
+                          : "border-slate-200/70 bg-white hover:border-[#134B73]/40"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-900">
+                            {sellerLabel}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {seller.email || "--"}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm text-slate-600">
+                          <span>{seller.phone || "--"}</span>
+                          {isSelected ? (
+                            <span className="rounded-full bg-[#134B73]/10 px-2 py-1 text-[11px] font-semibold text-[#134B73]">
+                              Selecionado
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              Nenhum vendedor vinculado a esta loja.
+            </p>
+          )}
+        </div>
+      </Card>
 
       <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</span>}>
         <div className="space-y-4">
@@ -552,6 +563,7 @@ export default function Step1VehicleOperation({
                   label: brand.name,
                 }))}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
               {loadingBrands && <Typography.Text type="secondary">Carregando marcas...</Typography.Text>}
             </div>
@@ -575,6 +587,7 @@ export default function Step1VehicleOperation({
                   label: model.name,
                 }))}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
               {loadingModels && <Typography.Text type="secondary">Carregando modelos...</Typography.Text>}
             </div>
@@ -598,6 +611,7 @@ export default function Step1VehicleOperation({
                   label: year.name,
                 }))}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
               {loadingYears && <Typography.Text type="secondary">Carregando anos...</Typography.Text>}
             </div>
@@ -671,6 +685,7 @@ export default function Step1VehicleOperation({
                   label: `${term} meses`,
                 }))}
                 className="w-full"
+                getPopupContainer={getPopupContainer}
               />
             </div>
           </div>
