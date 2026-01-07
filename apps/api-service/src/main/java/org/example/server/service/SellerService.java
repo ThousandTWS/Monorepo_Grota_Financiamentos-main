@@ -57,6 +57,7 @@ public class SellerService {
         this.sellerUserFactory = sellerUserFactory;
     }
 
+    @Transactional
     public SellerResponseDTO create(User user, SellerRequestDTO sellerRequestDTO) {
 
         if (!user.getRole().equals(UserRole.ADMIN)) {

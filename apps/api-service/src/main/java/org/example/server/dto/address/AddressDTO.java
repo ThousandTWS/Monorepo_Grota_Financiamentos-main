@@ -20,6 +20,7 @@ public record AddressDTO(
         @Size(min = 2, max = 100, message = "O bairro deve ter entre 2 e 100 caracteres")
         String neighborhood,
 
+        @NotBlank(message = "A cidade é obrigatória")
         @Size(min = 2, max = 100, message = "A cidade deve ter entre 2 e 100 caracteres")
         String city,
 

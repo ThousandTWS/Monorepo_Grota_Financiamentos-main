@@ -17,6 +17,7 @@ import org.example.server.repository.RefreshTokenRepository;
 import org.example.server.repository.UserRepository;
 import org.example.server.service.factory.ManagerUserFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
@@ -53,6 +54,7 @@ public class ManagerService {
         this.managerUserFactory = managerUserFactory;
     }
 
+    @Transactional
     public ManagerResponseDTO create(User user, ManagerRequestDTO managerRequestDTO) {
 
         if (!user.getRole().equals(UserRole.ADMIN)) {
