@@ -49,6 +49,31 @@ const formatCurrency = (value: number) =>
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
+/**
+ * Valida o formato do número de contrato.
+ * Aceita:
+ * - Formato padrão: apenas números (ex: "1234567890")
+ * - Formato com hífen e barra: XX-XXXXXX/XX (ex: "14-555555/25")
+ */
+const isValidContractNumber = (value: string): boolean => {
+  if (!value || value.trim() === "") return false;
+  
+  const trimmed = value.trim();
+  
+  // Formato padrão: apenas números
+  if (/^\d+$/.test(trimmed)) {
+    return true;
+  }
+  
+  // Formato com hífen e barra: XX-XXXXXX/XX
+  // Aceita de 1 a 4 dígitos antes do hífen, 1 a 10 dígitos entre hífen e barra, e 1 a 4 dígitos após a barra
+  if (/^\d{1,4}-\d{1,10}\/\d{1,4}$/.test(trimmed)) {
+    return true;
+  }
+  
+  return false;
+};
+
 const formatDate = (value: string) => {
   if (!value) return "--";
   // Para datas sem hora, cria a data no timezone do Brasil
@@ -167,6 +192,14 @@ export default function CobrancasPage() {
               onBlur={async () => {
                 const newValue = editingContractNumberValue.trim();
                 if (newValue && newValue !== value) {
+                  if (!isValidContractNumber(newValue)) {
+                    message.error(
+                      "Formato inválido. Use apenas números ou o formato XX-XXXXXX/XX (ex: 14-555555/25).",
+                    );
+                    setEditingContractNumberValue(value);
+                    setEditingContractNumber(null);
+                    return;
+                  }
                   setIsUpdatingContractNumber(true);
                   try {
                     await updateBillingContractNumber(value, newValue);
@@ -197,6 +230,14 @@ export default function CobrancasPage() {
               onPressEnter={async () => {
                 const newValue = editingContractNumberValue.trim();
                 if (newValue && newValue !== value) {
+                  if (!isValidContractNumber(newValue)) {
+                    message.error(
+                      "Formato inválido. Use apenas números ou o formato XX-XXXXXX/XX (ex: 14-555555/25).",
+                    );
+                    setEditingContractNumberValue(value);
+                    setEditingContractNumber(null);
+                    return;
+                  }
                   setIsUpdatingContractNumber(true);
                   try {
                     await updateBillingContractNumber(value, newValue);
