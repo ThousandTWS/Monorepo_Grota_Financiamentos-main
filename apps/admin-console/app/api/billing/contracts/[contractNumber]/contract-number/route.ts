@@ -21,11 +21,36 @@ export async function PATCH(
 
   const resolvedParams = await context.params;
   let contractNumber = resolvedParams.contractNumber;
-
-  if (!contractNumber) {
-    const parts = request.nextUrl.pathname.split("/billing/contracts/");
-    contractNumber = parts[1]?.split("/")[0] ?? "";
+  
+  // Se o contractNumber não veio ou pode estar incompleto (pode ter barras no número)
+  // sempre extrair do pathname para garantir que pegamos o número completo
+  if (!contractNumber || request.nextUrl.pathname.split('/').length > 5) {
+    // Extrai o número do contrato completo do pathname
+    // Rotas conhecidas que indicam fim do número do contrato
+    const knownRoutes = ['installments', 'occurrences', 'vehicle', 'contract-number'];
+    const pathname = request.nextUrl.pathname;
+    // Remove /api/billing/contracts/ e pega tudo até o próximo segmento de rota conhecido
+    const pathAfterBase = pathname.replace(/^\/api\/billing\/contracts\//, '');
+    const segments = pathAfterBase.split('/');
+    
+    // Encontra o primeiro segmento que é uma rota conhecida
+    let contractSegments: string[] = [];
+    for (const segment of segments) {
+      if (knownRoutes.includes(segment)) {
+        break;
+      }
+      contractSegments.push(segment);
+    }
+    
+    // Junta todos os segmentos do número do contrato
+    contractNumber = contractSegments.length > 0 
+      ? contractSegments.map(s => decodeURIComponent(s)).join('/')
+      : "";
+  } else {
+    // Decodifica se veio como parâmetro
+    contractNumber = decodeURIComponent(contractNumber);
   }
+  
   if (!contractNumber) {
     return NextResponse.json({ error: "contractNumber é obrigatório." }, { status: 400 });
   }
