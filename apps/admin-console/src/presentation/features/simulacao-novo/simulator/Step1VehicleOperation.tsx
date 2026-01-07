@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button, Card, Input, Select, Spin, Switch, Typography } from "antd";
+import { Button, Card, Input, Modal, Select, Spin, Switch, Typography } from "antd";
 import { ArrowRight, Car, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -67,6 +67,8 @@ export default function Step1VehicleOperation({
   const [brandQuery, setBrandQuery] = useState("");
   const [modelQuery, setModelQuery] = useState("");
   const [yearQuery, setYearQuery] = useState("");
+  const [sellerModalOpen, setSellerModalOpen] = useState(false);
+  const [pendingDealerId, setPendingDealerId] = useState<number | null>(null);
 
   const vehicleTypeId = useMemo(
     () => getVehicleTypeId(formData.vehicleCategory),
@@ -115,10 +117,9 @@ export default function Step1VehicleOperation({
   useEffect(() => {
     let mounted = true;
 
-    if (!selectedDealerId) {
+    if (!pendingDealerId) {
       setSellers([]);
       setLoadingSellers(false);
-      onSellerChange(null);
       return () => {
         mounted = false;
       };
@@ -127,7 +128,7 @@ export default function Step1VehicleOperation({
     const loadSellers = async () => {
       try {
         setLoadingSellers(true);
-        const data = await getAllSellers(selectedDealerId);
+        const data = await getAllSellers(pendingDealerId);
         if (mounted) {
           setSellers(data);
         }
@@ -149,7 +150,7 @@ export default function Step1VehicleOperation({
     return () => {
       mounted = false;
     };
-  }, [selectedDealerId, onSellerChange]);
+  }, [pendingDealerId]);
 
   useEffect(() => {
     if (!selectedSellerId) return;
@@ -334,6 +335,35 @@ export default function Step1VehicleOperation({
     return triggerNode.parentElement || document.body;
   }, []);
 
+  const handleDealerChange = useCallback((value: string | null) => {
+    const dealerId = value ? Number(value) : null;
+    if (dealerId) {
+      setPendingDealerId(dealerId);
+      setSellerModalOpen(true);
+      onSellerChange(null);
+    } else {
+      onDealerChange(null);
+      setPendingDealerId(null);
+      setSellers([]);
+    }
+  }, [onDealerChange, onSellerChange]);
+
+  const handleSellerSelect = useCallback((sellerId: number, sellerName: string) => {
+    Modal.confirm({
+      title: "Confirmar seleção",
+      content: `Deseja vincular o vendedor "${sellerName}" a esta simulação?`,
+      okText: "Confirmar",
+      cancelText: "Cancelar",
+      onOk: () => {
+        onDealerChange(pendingDealerId);
+        onSellerChange(sellerId, sellerName);
+        setSellerModalOpen(false);
+        setPendingDealerId(null);
+        toast.success(`Vendedor "${sellerName}" vinculado com sucesso!`);
+      },
+    });
+  }, [pendingDealerId, onDealerChange, onSellerChange]);
+
   return (
     <div className="space-y-6">
       <Card
@@ -349,7 +379,7 @@ export default function Step1VehicleOperation({
             <Typography.Text>Loja</Typography.Text>
             <Select
               value={selectedDealerId ? String(selectedDealerId) : undefined}
-              onChange={(value) => onDealerChange(value ? Number(value) : null)}
+              onChange={handleDealerChange}
               disabled={dealersLoading || dealers.length === 0}
               placeholder={
                 dealersLoading
@@ -456,82 +486,114 @@ export default function Step1VehicleOperation({
         </div>
       </Card>
 
-      <Card
+      {selectedDealerId && selectedSellerId && (
+        <Card
+          title={
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-[#134B73]" />
+              <span className="text-lg font-semibold text-[#134B73]">
+                Vendedor selecionado
+              </span>
+            </div>
+          }
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <Typography.Text className="text-base font-semibold">
+                {sellers.find((s) => s.id === selectedSellerId)?.fullName ||
+                  sellers.find((s) => s.id === selectedSellerId)?.email ||
+                  `Vendedor #${selectedSellerId}`}
+              </Typography.Text>
+              <Typography.Text type="secondary" className="block text-sm">
+                {sellers.find((s) => s.id === selectedSellerId)?.email || "--"}
+              </Typography.Text>
+            </div>
+            <Button
+              type="default"
+              onClick={() => {
+                Modal.confirm({
+                  title: "Remover vendedor",
+                  content: "Deseja remover o vendedor selecionado?",
+                  okText: "Remover",
+                  cancelText: "Cancelar",
+                  onOk: () => {
+                    onSellerChange(null);
+                    toast.info("Vendedor removido");
+                  },
+                });
+              }}
+            >
+              Alterar
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      <Modal
+        open={sellerModalOpen}
+        onCancel={() => {
+          setSellerModalOpen(false);
+          setPendingDealerId(null);
+          setSellers([]);
+        }}
         title={
           <div className="flex items-center gap-2">
             <Users className="w-5 h-5 text-[#134B73]" />
             <span className="text-lg font-semibold text-[#134B73]">
-              Vendedores vinculados
+              Selecionar Vendedor
             </span>
           </div>
         }
-        style={{ minHeight: selectedDealerId ? "auto" : "120px" }}
+        footer={null}
+        width={600}
       >
         <div className="space-y-3">
-          {!selectedDealerId ? (
-            <p className="text-sm text-muted-foreground">
-              Selecione uma loja para visualizar os vendedores vinculados.
-            </p>
-          ) : loadingSellers ? (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          {loadingSellers ? (
+            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
               <Spin size="small" />
               <span>Carregando vendedores...</span>
             </div>
           ) : sellers.length ? (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">
-                Selecione o vendedor responsavel pela ficha.
-              </p>
-              <div className="space-y-2">
-                {sellers.map((seller) => {
-                  const isSelected = selectedSellerId === seller.id;
-                  const sellerLabel =
-                    seller.fullName ||
-                    seller.email ||
-                    `Vendedor #${seller.id}`;
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {sellers.map((seller) => {
+                const sellerLabel =
+                  seller.fullName ||
+                  seller.email ||
+                  `Vendedor #${seller.id}`;
 
-                  return (
-                    <button
-                      key={seller.id}
-                      type="button"
-                      onClick={() => onSellerChange(seller.id, sellerLabel)}
-                      aria-pressed={isSelected}
-                      className={`w-full rounded-lg border p-3 text-left transition ${
-                        isSelected
-                          ? "border-[#134B73] bg-[#134B73]/10"
-                          : "border-slate-200/70 bg-white hover:border-[#134B73]/40"
-                      }`}
-                    >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm font-semibold text-slate-900">
-                            {sellerLabel}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {seller.email || "--"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-3 text-sm text-slate-600">
-                          <span>{seller.phone || "--"}</span>
-                          {isSelected ? (
-                            <span className="rounded-full bg-[#134B73]/10 px-2 py-1 text-[11px] font-semibold text-[#134B73]">
-                              Selecionado
-                            </span>
-                          ) : null}
-                        </div>
+                return (
+                  <button
+                    key={seller.id}
+                    type="button"
+                    onClick={() => handleSellerSelect(seller.id, sellerLabel)}
+                    className="w-full rounded-lg border border-slate-200/70 bg-white p-4 text-left transition hover:border-[#134B73]/40 hover:bg-[#134B73]/5"
+                  >
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-900">
+                          {sellerLabel}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {seller.email || "--"}
+                        </p>
                       </div>
-                    </button>
-                  );
-                })}
-              </div>
+                      <div className="flex items-center gap-3 text-sm text-slate-600">
+                        <span>{seller.phone || "--"}</span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
-              Nenhum vendedor vinculado a esta loja.
-            </p>
+            <div className="py-8 text-center">
+              <p className="text-sm text-muted-foreground">
+                Nenhum vendedor vinculado a esta loja.
+              </p>
+            </div>
           )}
         </div>
-      </Card>
+      </Modal>
 
       <Card title={<span className="text-lg font-semibold text-[#134B73]">Dados do Veiculo</span>}>
         <div className="space-y-4">
@@ -649,12 +711,18 @@ export default function Step1VehicleOperation({
 
       <Card
         className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
-        title={<span className="text-lg font-semibold text-white">Condicoes do Financiamento</span>}
+        title={
+          <span className="text-lg font-semibold" style={{ color: "#ffffff" }}>
+            Condições do Financiamento
+          </span>
+        }
       >
-        <div className="space-y-4 ">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Typography.Text className="text-white">Valor a Financiar</Typography.Text>
+              <Typography.Text style={{ color: "#ffffff" }}>
+                Valor a Financiar
+              </Typography.Text>
               <Input
                 value={financedInput}
                 onChange={(e) => handleFinancedAmountChange(e.target.value)}
@@ -671,10 +739,13 @@ export default function Step1VehicleOperation({
                 }}
                 placeholder="R$ 0,00"
                 className="text-lg font-semibold bg-white"
+                style={{ minHeight: "40px" }}
               />
             </div>
-            <div className="space-y-2 ">
-              <Typography.Text className="text-white">Prazo (meses)</Typography.Text>
+            <div className="space-y-2">
+              <Typography.Text style={{ color: "#ffffff" }}>
+                Prazo (meses)
+              </Typography.Text>
               <Select
                 value={formData.financial.termMonths ? String(formData.financial.termMonths) : undefined}
                 onChange={(value) =>
@@ -686,6 +757,7 @@ export default function Step1VehicleOperation({
                 }))}
                 className="w-full"
                 getPopupContainer={getPopupContainer}
+                style={{ minHeight: "40px" }}
               />
             </div>
           </div>
