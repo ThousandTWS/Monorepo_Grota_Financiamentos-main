@@ -293,19 +293,7 @@ export default function Step1VehicleOperation({
       return false;
     }
 
-    if (loadingSellers) {
-      toast.error("Aguarde o carregamento dos vendedores.");
-      return false;
-    }
-
-    if (!selectedSellerId) {
-      toast.error(
-        sellers.length > 0
-          ? "Selecione o vendedor responsavel pela ficha."
-          : "Nenhum vendedor vinculado a esta loja.",
-      );
-      return false;
-    }
+    // Vendedor agora é opcional - não precisa validar
 
     if (!vehicle.brand || !vehicle.model || !vehicle.year) {
       toast.error("Por favor, selecione marca, modelo e ano do veiculo");
@@ -338,6 +326,7 @@ export default function Step1VehicleOperation({
   const handleDealerChange = useCallback((value: string | null) => {
     const dealerId = value ? Number(value) : null;
     if (dealerId) {
+      onDealerChange(dealerId);
       setPendingDealerId(dealerId);
       setSellerModalOpen(true);
       onSellerChange(null);
@@ -345,24 +334,23 @@ export default function Step1VehicleOperation({
       onDealerChange(null);
       setPendingDealerId(null);
       setSellers([]);
+      onSellerChange(null);
     }
   }, [onDealerChange, onSellerChange]);
 
   const handleSellerSelect = useCallback((sellerId: number, sellerName: string) => {
-    Modal.confirm({
-      title: "Confirmar seleção",
-      content: `Deseja vincular o vendedor "${sellerName}" a esta simulação?`,
-      okText: "Confirmar",
-      cancelText: "Cancelar",
-      onOk: () => {
-        onDealerChange(pendingDealerId);
-        onSellerChange(sellerId, sellerName);
-        setSellerModalOpen(false);
-        setPendingDealerId(null);
-        toast.success(`Vendedor "${sellerName}" vinculado com sucesso!`);
-      },
-    });
-  }, [pendingDealerId, onDealerChange, onSellerChange]);
+    onSellerChange(sellerId, sellerName);
+    setSellerModalOpen(false);
+    setPendingDealerId(null);
+    toast.success(`Vendedor "${sellerName}" vinculado com sucesso!`);
+  }, [onSellerChange]);
+
+  const handleContinueWithoutSeller = useCallback(() => {
+    onSellerChange(null);
+    setSellerModalOpen(false);
+    setPendingDealerId(null);
+    toast.info("Simulação será criada sem vendedor vinculado.");
+  }, [onSellerChange]);
 
   return (
     <div className="space-y-6">
@@ -486,46 +474,55 @@ export default function Step1VehicleOperation({
         </div>
       </Card>
 
-      {selectedDealerId && selectedSellerId && (
+      {selectedDealerId && (
         <Card
           title={
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-[#134B73]" />
               <span className="text-lg font-semibold text-[#134B73]">
-                Vendedor selecionado
+                Vendedor {selectedSellerId ? "selecionado" : "(opcional)"}
               </span>
             </div>
           }
         >
-          <div className="flex items-center justify-between">
-            <div>
-              <Typography.Text className="text-base font-semibold">
-                {sellers.find((s) => s.id === selectedSellerId)?.fullName ||
-                  sellers.find((s) => s.id === selectedSellerId)?.email ||
-                  `Vendedor #${selectedSellerId}`}
-              </Typography.Text>
-              <Typography.Text type="secondary" className="block text-sm">
-                {sellers.find((s) => s.id === selectedSellerId)?.email || "--"}
-              </Typography.Text>
+          {selectedSellerId ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <Typography.Text className="text-base font-semibold">
+                  {sellers.find((s) => s.id === selectedSellerId)?.fullName ||
+                    sellers.find((s) => s.id === selectedSellerId)?.email ||
+                    `Vendedor #${selectedSellerId}`}
+                </Typography.Text>
+                <Typography.Text type="secondary" className="block text-sm">
+                  {sellers.find((s) => s.id === selectedSellerId)?.email || "--"}
+                </Typography.Text>
+              </div>
+              <Button
+                type="default"
+                onClick={() => {
+                  setPendingDealerId(selectedDealerId);
+                  setSellerModalOpen(true);
+                }}
+              >
+                Alterar
+              </Button>
             </div>
-            <Button
-              type="default"
-              onClick={() => {
-                Modal.confirm({
-                  title: "Remover vendedor",
-                  content: "Deseja remover o vendedor selecionado?",
-                  okText: "Remover",
-                  cancelText: "Cancelar",
-                  onOk: () => {
-                    onSellerChange(null);
-                    toast.info("Vendedor removido");
-                  },
-                });
-              }}
-            >
-              Alterar
-            </Button>
-          </div>
+          ) : (
+            <div className="flex items-center justify-between">
+              <Typography.Text type="secondary" className="text-sm">
+                Nenhum vendedor vinculado. Você pode continuar sem vendedor ou selecionar um.
+              </Typography.Text>
+              <Button
+                type="primary"
+                onClick={() => {
+                  setPendingDealerId(selectedDealerId);
+                  setSellerModalOpen(true);
+                }}
+              >
+                Selecionar vendedor
+              </Button>
+            </div>
+          )}
         </Card>
       )}
 
@@ -537,59 +534,118 @@ export default function Step1VehicleOperation({
           setSellers([]);
         }}
         title={
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-[#134B73]" />
-            <span className="text-lg font-semibold text-[#134B73]">
-              Selecionar Vendedor
-            </span>
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#134B73]/10">
+              <Users className="h-5 w-5 text-[#134B73]" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">Selecionar Vendedor</h3>
+              <p className="text-xs text-slate-500">Escolha um vendedor ou continue sem vincular</p>
+            </div>
           </div>
         }
-        footer={null}
-        width={600}
+        footer={
+          <div className="flex items-center justify-between border-t pt-4">
+            <Button
+              type="default"
+              onClick={handleContinueWithoutSeller}
+              className="flex items-center gap-2"
+            >
+              Continuar sem vendedor
+            </Button>
+            <Button
+              type="default"
+              onClick={() => {
+                setSellerModalOpen(false);
+                setPendingDealerId(null);
+                setSellers([]);
+              }}
+            >
+              Cancelar
+            </Button>
+          </div>
+        }
+        width={700}
+        className="[&_.ant-modal-body]:p-6"
       >
-        <div className="space-y-3">
+        <div className="space-y-4">
           {loadingSellers ? (
-            <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground">
-              <Spin size="small" />
-              <span>Carregando vendedores...</span>
+            <div className="flex flex-col items-center justify-center gap-3 py-12">
+              <Spin size="large" />
+              <p className="text-sm font-medium text-slate-600">Carregando vendedores...</p>
             </div>
-          ) : sellers.length ? (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {sellers.map((seller) => {
-                const sellerLabel =
-                  seller.fullName ||
-                  seller.email ||
-                  `Vendedor #${seller.id}`;
+          ) : sellers.length > 0 ? (
+            <>
+              <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <Typography.Text className="text-xs text-slate-600">
+                  {sellers.length} vendedor{sellers.length > 1 ? "es" : ""} disponível{sellers.length > 1 ? "eis" : ""} para esta loja
+                </Typography.Text>
+              </div>
+              <div className="space-y-2 max-h-[450px] overflow-y-auto pr-2">
+                {sellers.map((seller) => {
+                  const sellerLabel =
+                    seller.fullName ||
+                    seller.email ||
+                    `Vendedor #${seller.id}`;
 
-                return (
-                  <button
-                    key={seller.id}
-                    type="button"
-                    onClick={() => handleSellerSelect(seller.id, sellerLabel)}
-                    className="w-full rounded-lg border border-slate-200/70 bg-white p-4 text-left transition hover:border-[#134B73]/40 hover:bg-[#134B73]/5"
-                  >
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          {sellerLabel}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {seller.email || "--"}
-                        </p>
+                  return (
+                    <button
+                      key={seller.id}
+                      type="button"
+                      onClick={() => handleSellerSelect(seller.id, sellerLabel)}
+                      className="group w-full rounded-xl border-2 border-slate-200 bg-white p-5 text-left transition-all hover:border-[#134B73] hover:bg-[#134B73]/5 hover:shadow-md"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#134B73]/10 group-hover:bg-[#134B73]/20 transition-colors">
+                          <Users className="h-6 w-6 text-[#134B73]" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-base font-semibold text-slate-900 group-hover:text-[#134B73] transition-colors">
+                            {sellerLabel}
+                          </p>
+                          <div className="mt-1.5 flex flex-wrap items-center gap-3 text-sm text-slate-500">
+                            {seller.email && (
+                              <span className="flex items-center gap-1.5">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                {seller.email}
+                              </span>
+                            )}
+                            {seller.phone && (
+                              <span className="flex items-center gap-1.5">
+                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                </svg>
+                                {seller.phone}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 group-hover:bg-[#134B73] transition-colors">
+                            <svg className="h-4 w-4 text-slate-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <span>{seller.phone || "--"}</span>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           ) : (
-            <div className="py-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                Nenhum vendedor vinculado a esta loja.
-              </p>
+            <div className="flex flex-col items-center justify-center gap-4 py-12">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-100">
+                <Users className="h-8 w-8 text-slate-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-base font-semibold text-slate-900">Nenhum vendedor vinculado</p>
+                <p className="mt-1 text-sm text-slate-500">
+                  Esta loja não possui vendedores cadastrados. Você pode continuar sem vincular um vendedor.
+                </p>
+              </div>
             </div>
           )}
         </div>

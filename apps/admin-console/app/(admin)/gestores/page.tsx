@@ -28,25 +28,25 @@ import { convertBRtoISO } from "@/application/core/utils/formatters";
 const managerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
-  email: z.string().email("E-mail invÇ­lido"),
+  email: z.string().email("E-mail invalido"),
   phone: z.string().min(8, "Informe o telefone"),
   password: z
     .string()
-    .min(6, "A senha precisa ter no mÇðnimo 6 caracteres")
-    .max(8, "A senha deve ter no mÇ­ximo 8 caracteres"),
+    .min(6, "A senha precisa ter no minimo 6 caracteres")
+    .max(8, "A senha deve ter no maximo 8 caracteres"),
   cpf: z.string().min(11, "Informe o CPF"),
   birthData: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato AAAA-MM-DD"),
   street: z.string().min(3, "Informe a rua"),
-  number: z.string().min(1, "Informe o nÇ§mero"),
+  number: z.string().min(1, "Informe o numero"),
   complement: z.string().optional(),
   neighborhood: z.string().min(3, "Informe o bairro"),
   city: z.string().min(2, "Informe a cidade"),
   state: z
     .string()
-    .min(2, "UF invÇ­lida")
-    .max(2, "UF invÇ­lida"),
+    .min(2, "UF invalida")
+    .max(2, "UF invalida"),
   zipCode: z.string().min(8, "Informe o CEP"),
   canView: z.boolean().default(true),
   canCreate: z.boolean().default(true),
@@ -156,7 +156,6 @@ function GestoresContent() {
           number: values.number.trim(),
           complement: values.complement?.trim() ?? "",
           neighborhood: values.neighborhood.trim(),
-          //@ts-ignore
           city: values.city.trim(),
           state: values.state.trim().toUpperCase(),
           zipCode: digitsOnly(values.zipCode),
@@ -186,7 +185,7 @@ function GestoresContent() {
       const message =
         error instanceof Error
           ? error.message
-          : "NÇœo foi possÇðvel cadastrar o gestor.";
+          : "Nao foi possivel cadastrar o gestor.";
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -261,7 +260,7 @@ function GestoresContent() {
     try {
       const address = await fetchAddressByCep(cep);
       if (!address) {
-        toast.error("CEP nÇœo encontrado.");
+        toast.error("CEP nao encontrado.");
         return;
       }
       setValue("street", address.street ?? "");
@@ -270,7 +269,7 @@ function GestoresContent() {
       setValue("state", (address.state ?? "").toUpperCase());
     } catch (error) {
       console.error("[gestores] CEP lookup", error);
-      toast.error("NÇœo foi possÇðvel buscar o CEP.");
+      toast.error("Nao foi possivel buscar o CEP.");
     } finally {
       setIsCepLoading(false);
     }
@@ -303,7 +302,7 @@ function GestoresContent() {
                   }))}
                   className="w-full"
                   popupMatchSelectWidth={false}
-                  dropdownStyle={{ minWidth: 420 }}
+                  styles={{ popup: { root: { minWidth: 420 } } }}
                 />
               )}
             />
@@ -348,7 +347,7 @@ function GestoresContent() {
                 onChange: (event) => handleCpfLookup(event.target.value),
               })}
               placeholder="000.000.000-00"
-              suffix={isCpfLoading ? <Spin size="small" /> : null}
+              suffix={isCpfLoading ? <Spin size="small" /> : <span style={{ width: 16 }} />}
             />
             {errors.cpf && <p className="text-sm text-red-500">{errors.cpf.message}</p>}
             {cpfError && (

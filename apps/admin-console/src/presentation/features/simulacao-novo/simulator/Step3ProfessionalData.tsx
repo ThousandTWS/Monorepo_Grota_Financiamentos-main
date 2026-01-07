@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Button, Card, Input, Select, Typography } from "antd";
+import { Button, Card, DatePicker, Input, Select, Typography } from "antd";
 import { ArrowRight, ArrowLeft, Briefcase } from "lucide-react";
 import { toast } from "sonner";
+import dayjs from "dayjs";
 import { formatNumberToBRL, parseBRL } from "@/lib/formatters";
 import { SimulatorFormData, UpdateSimulatorFormData } from "../hooks/useSimulator";
 
@@ -209,13 +210,21 @@ export default function Step3ProfessionalData({
 
             <div className="space-y-2">
               <Typography.Text>Data de Admissao</Typography.Text>
-              <Input
-                type="date"
-                value={formData.professional.admissionDate}
-                onChange={(e) =>
-                  updateFormData("professional", { admissionDate: e.target.value })
+              <DatePicker
+                format="DD/MM/YYYY"
+                value={
+                  formData.professional.admissionDate
+                    ? dayjs(formData.professional.admissionDate, "YYYY-MM-DD")
+                    : null
                 }
-                className={blueInputClass}
+                onChange={(date) => {
+                  updateFormData("professional", {
+                    admissionDate: date ? date.format("YYYY-MM-DD") : "",
+                  });
+                }}
+                placeholder="dd/mm/aaaa"
+                className={`w-full ${blueInputClass}`}
+                getPopupContainer={(triggerNode) => triggerNode.parentElement || document.body}
               />
             </div>
 

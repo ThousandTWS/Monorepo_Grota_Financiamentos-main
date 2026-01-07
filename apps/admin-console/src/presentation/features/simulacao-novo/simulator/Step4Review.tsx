@@ -368,10 +368,7 @@ export default function Step4Review({
       return;
     }
 
-    if (sellerId == null) {
-      toast.error("Selecione o vendedor responsavel pela ficha.");
-      return;
-    }
+    // Vendedor agora é opcional - não precisa validar
 
     if (!calculation) {
       toast.error("Calculo nao disponivel. Recalcule a simulacao.");
@@ -388,7 +385,7 @@ export default function Step4Review({
 
       const payload = {
         dealerId,
-        sellerId,
+        sellerId: sellerId ?? undefined,
         customerName: formData.personal.name,
         customerCpf: formData.personal.cpfCnpj,
         customerBirthDate: formData.personal.birthday || undefined,
