@@ -44,83 +44,70 @@ public class BillingController {
         );
     }
 
-    // Rotas aninhadas devem vir ANTES da rota genérica para garantir matching correto
-    @PatchMapping("/contracts/{contractNumber:.+}/installments/{installmentNumber}/due-date")
+    // Rotas usando ID do contrato (Long) em vez de contractNumber para evitar problemas com barras
+    @GetMapping("/contracts/{id}")
+    public ResponseEntity<BillingContractDetailsDTO> getContract(@PathVariable Long id) {
+        return ResponseEntity.ok(billingService.getContractDetailsById(id));
+    }
+
+    @PatchMapping("/contracts/{id}")
+    public ResponseEntity<BillingContractDetailsDTO> updateContract(
+            @PathVariable Long id,
+            @Valid @RequestBody BillingContractUpdateDTO dto
+    ) {
+        return ResponseEntity.ok(billingService.updateContractById(id, dto));
+    }
+
+    @DeleteMapping("/contracts/{id}")
+    public ResponseEntity<Void> deleteContract(@PathVariable Long id) {
+        billingService.deleteContractById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Rotas aninhadas
+    @PatchMapping("/contracts/{id}/installments/{installmentNumber}/due-date")
     public ResponseEntity<BillingInstallmentDTO> updateInstallmentDueDate(
-            @PathVariable String contractNumber,
+            @PathVariable Long id,
             @PathVariable Integer installmentNumber,
             @Valid @RequestBody BillingInstallmentDueDateUpdateDTO dto
     ) {
         return ResponseEntity.ok(
-                billingService.updateInstallmentDueDate(contractNumber, installmentNumber, dto)
+                billingService.updateInstallmentDueDateById(id, installmentNumber, dto)
         );
     }
 
-    @PatchMapping("/contracts/{contractNumber:.+}/installments/{installmentNumber}")
+    @PatchMapping("/contracts/{id}/installments/{installmentNumber}")
     public ResponseEntity<BillingInstallmentDTO> updateInstallment(
-            @PathVariable String contractNumber,
+            @PathVariable Long id,
             @PathVariable Integer installmentNumber,
             @Valid @RequestBody BillingInstallmentUpdateDTO dto
     ) {
         return ResponseEntity.ok(
-                billingService.updateInstallment(contractNumber, installmentNumber, dto)
+                billingService.updateInstallmentById(id, installmentNumber, dto)
         );
     }
 
-    @PatchMapping("/contracts/{contractNumber:.+}/contract-number")
+    @PatchMapping("/contracts/{id}/contract-number")
     public ResponseEntity<BillingContractDetailsDTO> updateContractNumber(
-            @PathVariable String contractNumber,
+            @PathVariable Long id,
             @Valid @RequestBody BillingContractNumberUpdateDTO dto
     ) {
-        return ResponseEntity.ok(billingService.updateContractNumber(contractNumber, dto));
+        return ResponseEntity.ok(billingService.updateContractNumberById(id, dto));
     }
 
-    @PatchMapping("/contracts/{contractNumber:.+}/vehicle")
+    @PatchMapping("/contracts/{id}/vehicle")
     public ResponseEntity<BillingContractDetailsDTO> updateVehicle(
-            @PathVariable String contractNumber,
+            @PathVariable Long id,
             @Valid @RequestBody BillingVehicleUpdateDTO dto
     ) {
-        return ResponseEntity.ok(billingService.updateVehicle(contractNumber, dto));
+        return ResponseEntity.ok(billingService.updateVehicleById(id, dto));
     }
 
-    @PostMapping("/contracts/{contractNumber:.+}/occurrences")
+    @PostMapping("/contracts/{id}/occurrences")
     public ResponseEntity<BillingOccurrenceDTO> createOccurrence(
-            @PathVariable String contractNumber,
+            @PathVariable Long id,
             @Valid @RequestBody BillingOccurrenceRequestDTO dto
     ) {
-        return ResponseEntity.ok(billingService.addOccurrence(contractNumber, dto));
-    }
-
-    // Rotas genéricas vêm por último
-    // Usa regex .+ em vez de .* para garantir que capture pelo menos um caractere
-    @GetMapping("/contracts/{contractNumber:.+}")
-    public ResponseEntity<BillingContractDetailsDTO> getContract(@PathVariable String contractNumber) {
-        // O Spring Boot já decodifica automaticamente path variables
-        // Se vier codificado, decodifica explicitamente
-        String decodedContractNumber = contractNumber;
-        try {
-            // Tenta decodificar caso tenha sido duplamente codificado
-            if (contractNumber.contains("%")) {
-                decodedContractNumber = java.net.URLDecoder.decode(contractNumber, java.nio.charset.StandardCharsets.UTF_8);
-            }
-        } catch (Exception e) {
-            // Se falhar, usa o original
-            decodedContractNumber = contractNumber;
-        }
-        return ResponseEntity.ok(billingService.getContractDetails(decodedContractNumber));
-    }
-
-    @PatchMapping("/contracts/{contractNumber:.+}")
-    public ResponseEntity<BillingContractDetailsDTO> updateContract(
-            @PathVariable String contractNumber,
-            @Valid @RequestBody BillingContractUpdateDTO dto
-    ) {
-        return ResponseEntity.ok(billingService.updateContract(contractNumber, dto));
-    }
-
-    @DeleteMapping("/contracts/{contractNumber:.+}")
-    public ResponseEntity<Void> deleteContract(@PathVariable String contractNumber) {
-        billingService.deleteContract(contractNumber);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(billingService.addOccurrenceById(id, dto));
     }
 }

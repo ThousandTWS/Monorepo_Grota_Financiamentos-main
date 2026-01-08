@@ -20,7 +20,7 @@ public class BillingContract {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 40)
+    @Column(nullable = false, unique = true, length = 50)
     private String contractNumber;
 
     private Long proposalId;

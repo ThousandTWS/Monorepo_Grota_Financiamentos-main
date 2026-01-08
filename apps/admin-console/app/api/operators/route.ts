@@ -94,11 +94,29 @@ export async function POST(request: NextRequest) {
     const payload = await upstreamResponse.json().catch(() => null);
 
     if (!upstreamResponse.ok) {
-      const message =
-        (payload as { message?: string; error?: string })?.message ??
-        (payload as { error?: string })?.error ??
-        "Não foi possível criar o operador.";
-      return NextResponse.json({ error: message }, {
+      // Trata erros de validação do backend (lista de erros)
+      const errors = Array.isArray((payload as { errors?: unknown })?.errors)
+        ? (payload as { errors: string[] }).errors
+        : [];
+      
+      // Se houver lista de erros, junta todos em uma mensagem
+      let message: string;
+      if (errors.length > 0) {
+        message = errors.join("; ");
+      } else {
+        message =
+          (payload as { error?: string; message?: string })?.error ??
+          (payload as { error?: string; message?: string })?.message ??
+          "Não foi possível criar o operador.";
+      }
+      
+      console.error("[admin][operators] upstream error", {
+        status: upstreamResponse.status,
+        message,
+        errors,
+        payload,
+      });
+      return NextResponse.json({ error: message, errors }, {
         status: upstreamResponse.status,
       });
     }

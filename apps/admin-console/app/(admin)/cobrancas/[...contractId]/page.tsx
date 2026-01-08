@@ -108,16 +108,14 @@ const formatPhoneForWhatsApp = (phone?: string | null) => {
 
 export default function ContractDetailsPage() {
   const params = useParams();
-  const rawContractId = params?.contractId;
-  // Decodifica o contractId para lidar com caracteres especiais como "/" no número do contrato
-  // Se for um array (catch-all route), junta os segmentos com "/"
-  let contractId = "";
-  if (rawContractId) {
-    if (Array.isArray(rawContractId)) {
-      // Catch-all route: junta todos os segmentos
-      contractId = rawContractId.map(segment => decodeURIComponent(segment)).join("/");
-    } else {
-      contractId = decodeURIComponent(rawContractId);
+  const rawId = params?.contractId;
+  // Extrai o ID do contrato (agora usa ID numérico em vez de contractNumber)
+  let contractId: number | null = null;
+  if (rawId) {
+    const idStr = Array.isArray(rawId) ? rawId[0] : rawId;
+    const parsedId = Number(idStr);
+    if (!isNaN(parsedId) && parsedId > 0) {
+      contractId = parsedId;
     }
   }
 
@@ -147,7 +145,7 @@ export default function ContractDetailsPage() {
         setContract(null);
         setInstallments([]);
         setOccurrences([]);
-        setError("contractNumber é obrigatório.");
+        setError("ID do contrato é obrigatório.");
         return;
       }
       setIsLoading(true);
@@ -185,7 +183,7 @@ export default function ContractDetailsPage() {
       setEditingRenavam(contract.vehicle.renavam ?? "");
       setEditingDutIssued(contract.vehicle.dutIssued ?? false);
     }
-  }, [contract?.contractNumber, contract]);
+  }, [contract?.id, contract]);
 
   if (isLoading) {
     return (
@@ -237,11 +235,11 @@ export default function ContractDetailsPage() {
                   setIsUpdatingDueDate(record.number);
                   try {
                     await updateBillingInstallmentDueDate(
-                      contract.contractNumber,
+                      contract.id,
                       record.number,
                       { dueDate: date.format("YYYY-MM-DD") },
                     );
-                    const refreshed = await getBillingContractDetails(contract.contractNumber);
+                    const refreshed = await getBillingContractDetails(contract.id);
                     setContract(refreshed);
                     setInstallments(refreshed.installments);
                     message.success("Data de vencimento atualizada.");
@@ -312,12 +310,12 @@ export default function ContractDetailsPage() {
             setIsUpdatingInstallment(record.number);
             try {
               const updated = await updateBillingInstallment(
-                contract.contractNumber,
+                contract.id,
                 record.number,
                 { paid: checked },
               );
               // Recarregar dados completos do contrato para sincronizar status
-              const refreshed = await getBillingContractDetails(contract.contractNumber);
+              const refreshed = await getBillingContractDetails(contract.id);
               setContract(refreshed);
               setInstallments(refreshed.installments);
               message.success(
@@ -351,7 +349,7 @@ export default function ContractDetailsPage() {
     }
     setIsAddingOccurrence(true);
     try {
-      const created = await createBillingOccurrence(contract.contractNumber, {
+      const created = await createBillingOccurrence(contract.id, {
         date: dayjs(occurrenceDate, "DD/MM/YYYY").format("YYYY-MM-DD"),
         contact: occurrenceContact.trim(),
         note: occurrenceNote.trim(),
@@ -378,7 +376,7 @@ export default function ContractDetailsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">
-              Cobrança / Contrato {contract.contractNumber}
+              Cobrança / Contrato {contract.id}
             </Typography.Text>
             <Typography.Title level={2} className="!m-0">
               {contract.customer.name}
@@ -446,7 +444,7 @@ export default function ContractDetailsPage() {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Numero da operacao">
-                {contract.contractNumber}
+                {contract.id}
               </Descriptions.Item>
               <Descriptions.Item label="Data do pagamento">
                 <div className="flex items-center gap-2">
@@ -458,7 +456,7 @@ export default function ContractDetailsPage() {
                         const newDate = date.format("YYYY-MM-DD");
                         setIsUpdatingContract(true);
                         try {
-                          const updated = await updateBillingContract(contract.contractNumber, {
+                          const updated = await updateBillingContract(contract.id, {
                             paidAt: newDate,
                           });
                           setContract(updated);
@@ -488,7 +486,7 @@ export default function ContractDetailsPage() {
                       const newDate = date.format("YYYY-MM-DD");
                       setIsUpdatingContract(true);
                       try {
-                        const updated = await updateBillingContract(contract.contractNumber, {
+                        const updated = await updateBillingContract(contract.id, {
                           startDate: newDate,
                         });
                         setContract(updated);
@@ -528,7 +526,7 @@ export default function ContractDetailsPage() {
                 </Typography.Text>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {contract.otherContracts.map((item) => (
-                    <Link key={item.contractNumber} href={`/cobrancas/${encodeURIComponent(item.contractNumber)}`}>
+                    <Link key={item.id} href={`/cobrancas/${item.id}`}>
                       <Tag color="blue">{item.contractNumber}</Tag>
                     </Link>
                   ))}
@@ -562,7 +560,7 @@ export default function ContractDetailsPage() {
                             const newDate = date.format("YYYY-MM-DD");
                             setIsUpdatingContract(true);
                             try {
-                              const updated = await updateBillingContract(contract.contractNumber, {
+                              const updated = await updateBillingContract(contract.id, {
                                 startDate: newDate,
                               });
                               setContract(updated);
@@ -591,7 +589,7 @@ export default function ContractDetailsPage() {
                             const newDate = date.format("YYYY-MM-DD");
                             setIsUpdatingContract(true);
                             try {
-                              const updated = await updateBillingContract(contract.contractNumber, {
+                              const updated = await updateBillingContract(contract.id, {
                                 paidAt: newDate,
                               });
                               setContract(updated);
@@ -634,7 +632,7 @@ export default function ContractDetailsPage() {
                 <Card>
                   <Descriptions column={2}>
                     <Descriptions.Item label="Numero do contrato">
-                      {contract.contractNumber}
+                      {contract.id}
                     </Descriptions.Item>
                     <Descriptions.Item label="Inicio do contrato">
                       <DatePicker
@@ -645,7 +643,7 @@ export default function ContractDetailsPage() {
                             const newDate = date.format("YYYY-MM-DD");
                             setIsUpdatingContract(true);
                             try {
-                              const updated = await updateBillingContract(contract.contractNumber, {
+                              const updated = await updateBillingContract(contract.id, {
                                 startDate: newDate,
                               });
                               setContract(updated);
@@ -683,7 +681,7 @@ export default function ContractDetailsPage() {
                           if (editingPlate !== (contract.vehicle.plate ?? "")) {
                             setIsUpdatingVehicle(true);
                             try {
-                              const updated = await updateBillingVehicle(contract.contractNumber, {
+                              const updated = await updateBillingVehicle(contract.id, {
                                 plate: editingPlate.trim() || undefined,
                                 renavam: editingRenavam.trim() || undefined,
                                 dutIssued: editingDutIssued,
@@ -717,7 +715,7 @@ export default function ContractDetailsPage() {
                           if (editingRenavam !== (contract.vehicle.renavam ?? "")) {
                             setIsUpdatingVehicle(true);
                             try {
-                              const updated = await updateBillingVehicle(contract.contractNumber, {
+                              const updated = await updateBillingVehicle(contract.id, {
                                 plate: editingPlate.trim() || undefined,
                                 renavam: editingRenavam.trim() || undefined,
                                 dutIssued: editingDutIssued,
@@ -750,7 +748,7 @@ export default function ContractDetailsPage() {
                           setEditingDutIssued(checked);
                           setIsUpdatingVehicle(true);
                           try {
-                            const updated = await updateBillingVehicle(contract.contractNumber, {
+                            const updated = await updateBillingVehicle(contract.id, {
                               plate: editingPlate.trim() || undefined,
                               renavam: editingRenavam.trim() || undefined,
                               dutIssued: checked,

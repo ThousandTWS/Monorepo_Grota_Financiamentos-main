@@ -15,35 +15,20 @@ function extractErrorMessage(payload: unknown, fallback: string) {
 
 export async function PATCH(
   request: NextRequest,
-  context: {
-    params: Promise<{ contractNumber: string; installmentNumber: string }>;
-  },
+  context: { params: Promise<{ id: string; installmentNumber: string }> },
 ) {
   const session = await getAdminSession();
 
   const resolvedParams = await context.params;
-  let contractNumber = resolvedParams.contractNumber;
-  let installmentNumber = resolvedParams.installmentNumber;
-  if (!contractNumber || !installmentNumber) {
-    const parts = request.nextUrl.pathname.split("/billing/contracts/");
-    const remainder = parts[1] ?? "";
-    const segments = remainder.split("/");
-    if (!contractNumber) {
-      contractNumber = segments[0] ?? "";
-    }
-    if (!installmentNumber) {
-      const installmentIndex = segments.findIndex((part) => part === "installments");
-      if (installmentIndex >= 0) {
-        installmentNumber = segments[installmentIndex + 1] ?? "";
-      }
-    }
+  const id = resolvedParams.id;
+  const installmentNumber = resolvedParams.installmentNumber;
+  
+  if (!id || isNaN(Number(id))) {
+    return NextResponse.json({ error: "ID do contrato inválido." }, { status: 400 });
   }
-
-  if (!contractNumber || !installmentNumber) {
-    return NextResponse.json(
-      { error: "contractNumber e installmentNumber são obrigatórios." },
-      { status: 400 },
-    );
+  
+  if (!installmentNumber || isNaN(Number(installmentNumber))) {
+    return NextResponse.json({ error: "Número da parcela inválido." }, { status: 400 });
   }
 
   let body: unknown;
@@ -60,22 +45,21 @@ export async function PATCH(
     headers.Authorization = `Bearer ${session.accessToken}`;
   }
 
-  const upstream = await fetch(
-    `${API_BASE_URL}/billing/contracts/${encodeURIComponent(contractNumber)}/installments/${encodeURIComponent(installmentNumber)}`,
-    {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(body),
-      cache: "no-store",
-    },
-  );
+  const backendUrl = `${API_BASE_URL}/billing/contracts/${id}/installments/${installmentNumber}/due-date`;
+
+  const upstream = await fetch(backendUrl, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
 
   const payload = await upstream.json().catch(() => null);
 
   if (!upstream.ok) {
     const message = extractErrorMessage(
       payload,
-      "Não foi possível atualizar a parcela.",
+      "Falha ao atualizar data de vencimento.",
     );
     return NextResponse.json({ error: message }, { status: upstream.status });
   }

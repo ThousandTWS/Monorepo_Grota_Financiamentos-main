@@ -88,21 +88,21 @@ export const createBillingContract = async (
 };
 
 export const getBillingContractDetails = async (
-  contractNumber: string,
+  id: number,
 ): Promise<BillingContractDetails> => {
   return request<BillingContractDetails>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}`,
+    `${BILLING_ENDPOINT}/${id}`,
     { method: "GET" },
   );
 };
 
 export const updateBillingInstallment = async (
-  contractNumber: string,
+  id: number,
   installmentNumber: number,
   payload: BillingInstallmentUpdatePayload,
 ): Promise<BillingInstallment> => {
   return request<BillingInstallment>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/installments/${installmentNumber}`,
+    `${BILLING_ENDPOINT}/${id}/installments/${installmentNumber}`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -111,11 +111,11 @@ export const updateBillingInstallment = async (
 };
 
 export const createBillingOccurrence = async (
-  contractNumber: string,
+  id: number,
   payload: BillingOccurrencePayload,
 ): Promise<BillingOccurrence> => {
   return request<BillingOccurrence>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/occurrences`,
+    `${BILLING_ENDPOINT}/${id}/occurrences`,
     {
       method: "POST",
       body: JSON.stringify(payload),
@@ -124,11 +124,11 @@ export const createBillingOccurrence = async (
 };
 
 export const updateBillingContract = async (
-  contractNumber: string,
+  id: number,
   payload: BillingContractUpdatePayload,
 ): Promise<BillingContractDetails> => {
   return request<BillingContractDetails>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}`,
+    `${BILLING_ENDPOINT}/${id}`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -137,11 +137,11 @@ export const updateBillingContract = async (
 };
 
 export const updateBillingVehicle = async (
-  contractNumber: string,
+  id: number,
   payload: BillingVehicleUpdatePayload,
 ): Promise<BillingContractDetails> => {
   return request<BillingContractDetails>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/vehicle`,
+    `${BILLING_ENDPOINT}/${id}/vehicle`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -150,12 +150,12 @@ export const updateBillingVehicle = async (
 };
 
 export const updateBillingInstallmentDueDate = async (
-  contractNumber: string,
+  id: number,
   installmentNumber: number,
   payload: BillingInstallmentDueDateUpdatePayload,
 ): Promise<BillingInstallment> => {
   return request<BillingInstallment>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/installments/${installmentNumber}/due-date`,
+    `${BILLING_ENDPOINT}/${id}/installments/${installmentNumber}/due-date`,
     {
       method: "PATCH",
       body: JSON.stringify(payload),
@@ -164,11 +164,11 @@ export const updateBillingInstallmentDueDate = async (
 };
 
 export const updateBillingContractNumber = async (
-  contractNumber: string,
+  id: number,
   newContractNumber: string,
 ): Promise<BillingContractDetails> => {
   return request<BillingContractDetails>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}/contract-number`,
+    `${BILLING_ENDPOINT}/${id}/contract-number`,
     {
       method: "PATCH",
       body: JSON.stringify({ contractNumber: newContractNumber }),
@@ -177,10 +177,10 @@ export const updateBillingContractNumber = async (
 };
 
 export const deleteBillingContract = async (
-  contractNumber: string,
+  id: number,
 ): Promise<void> => {
   await request<Record<string, never>>(
-    `${BILLING_ENDPOINT}/${encodeURIComponent(contractNumber)}`,
+    `${BILLING_ENDPOINT}/${id}`,
     { method: "DELETE" },
   );
 };

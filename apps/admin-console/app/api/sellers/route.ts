@@ -80,23 +80,128 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validação e sanitização do payload
+    const sanitizedBody: any = {
+      fullName: String(body.fullName || "").trim(),
+      email: String(body.email || "").trim(),
+      phone: String(body.phone || "").replace(/\D/g, ""),
+      password: String(body.password || ""),
+      CPF: String(body.CPF || "").replace(/\D/g, ""),
+      birthData: String(body.birthData || ""),
+      address: {
+        street: String(body.address?.street || "").trim(),
+        number: String(body.address?.number || "").trim(),
+        complement: (body.address?.complement && String(body.address.complement).trim()) 
+          ? String(body.address.complement).trim() 
+          : null,
+        neighborhood: String(body.address?.neighborhood || "").trim(),
+        city: String(body.address?.city || "").trim(),
+        state: body.address?.state ? String(body.address.state).trim().toUpperCase() : null,
+        zipCode: String(body.address?.zipCode || "").replace(/\D/g, ""),
+      },
+      canView: body.canView !== undefined ? Boolean(body.canView) : true,
+      canCreate: body.canCreate !== undefined ? Boolean(body.canCreate) : true,
+      canUpdate: body.canUpdate !== undefined ? Boolean(body.canUpdate) : true,
+      canDelete: body.canDelete !== undefined ? Boolean(body.canDelete) : true,
+    };
+    
+    // Adiciona dealerId apenas se fornecido
+    if (body.dealerId !== null && body.dealerId !== undefined && body.dealerId !== "") {
+      sanitizedBody.dealerId = Number(body.dealerId);
+    } else {
+      sanitizedBody.dealerId = null;
+    }
+    
+    // Validações básicas antes de enviar
+    if (!sanitizedBody.fullName || sanitizedBody.fullName.length < 2) {
+      return NextResponse.json(
+        { error: "O nome completo deve ter pelo menos 2 caracteres." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.email || !sanitizedBody.email.includes("@")) {
+      return NextResponse.json(
+        { error: "E-mail inválido." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.phone || sanitizedBody.phone.length < 10) {
+      return NextResponse.json(
+        { error: "Telefone deve ter no mínimo 10 dígitos." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.password || sanitizedBody.password.length < 6 || sanitizedBody.password.length > 8) {
+      return NextResponse.json(
+        { error: "A senha deve ter entre 6 e 8 caracteres." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.CPF || sanitizedBody.CPF.length !== 11) {
+      return NextResponse.json(
+        { error: "CPF deve ter exatamente 11 dígitos." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.birthData) {
+      return NextResponse.json(
+        { error: "Data de nascimento é obrigatória." },
+        { status: 400 },
+      );
+    }
+    
+    if (!sanitizedBody.address.zipCode || sanitizedBody.address.zipCode.length !== 8) {
+      return NextResponse.json(
+        { error: "CEP deve ter exatamente 8 dígitos." },
+        { status: 400 },
+      );
+    }
+
+    // Log do payload para debug
+    console.log("[admin][sellers] POST request payload:", JSON.stringify(sanitizedBody, null, 2));
+    console.log("[admin][sellers] POST request URL:", `${API_BASE_URL}/sellers`);
+
     const upstreamResponse = await fetch(`${API_BASE_URL}/sellers`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.accessToken}`,
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(sanitizedBody),
       cache: "no-store",
     });
 
     const payload = await upstreamResponse.json().catch(() => null);
 
     if (!upstreamResponse.ok) {
-      const message =
-        (payload as { message?: string })?.message ??
-        "Não foi possível criar o vendedor.";
-      return NextResponse.json({ error: message }, {
+      // Trata erros de validação do backend (lista de erros)
+      const errors = Array.isArray((payload as { errors?: unknown })?.errors)
+        ? (payload as { errors: string[] }).errors
+        : [];
+      
+      // Se houver lista de erros, junta todos em uma mensagem
+      let message: string;
+      if (errors.length > 0) {
+        message = errors.join("; ");
+      } else {
+        message =
+          (payload as { error?: string; message?: string })?.error ??
+          (payload as { error?: string; message?: string })?.message ??
+          "Não foi possível criar o vendedor.";
+      }
+      
+      console.error("[admin][sellers] upstream error", {
+        status: upstreamResponse.status,
+        message,
+        errors,
+        payload,
+      });
+      return NextResponse.json({ error: message, errors }, {
         status: upstreamResponse.status,
       });
     }

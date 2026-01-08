@@ -51,10 +51,20 @@ async function request<T>(
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      (payload as { error?: string })?.error ??
-      (payload as { message?: string })?.message ??
-      "Não foi possível concluir a operação.";
+    // Trata erros de validação do backend (lista de erros)
+    const errors = Array.isArray((payload as { errors?: unknown })?.errors)
+      ? (payload as { errors: string[] }).errors
+      : [];
+    
+    let message: string;
+    if (errors.length > 0) {
+      message = errors.join("; ");
+    } else {
+      message =
+        (payload as { error?: string })?.error ??
+        (payload as { message?: string })?.message ??
+        "Não foi possível concluir a operação.";
+    }
     throw new Error(message);
   }
 

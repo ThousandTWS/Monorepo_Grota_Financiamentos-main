@@ -25,29 +25,45 @@ import { StatusBadge } from "@/presentation/features/logista/components/status-b
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
 
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
 const managerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
-  email: z.string().email("E-mail invalido"),
-  phone: z.string().min(8, "Informe o telefone"),
+  email: z.string().email("E-mail inválido"),
+  phone: z.string().refine((val) => digitsOnly(val).length >= 10, {
+    message: "Informe um telefone válido (mínimo 10 dígitos)",
+  }),
   password: z
     .string()
-    .min(6, "A senha precisa ter no minimo 6 caracteres")
-    .max(8, "A senha deve ter no maximo 8 caracteres"),
-  cpf: z.string().min(11, "Informe o CPF"),
+    .min(6, "A senha precisa ter no mínimo 6 caracteres")
+    .max(8, "A senha deve ter no máximo 8 caracteres"),
+  cpf: z.string().refine((val) => digitsOnly(val).length === 11, {
+    message: "Informe um CPF válido (11 dígitos)",
+  }),
   birthData: z
     .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "Use o formato AAAA-MM-DD"),
+    .min(1, "Informe a data de nascimento")
+    .refine((val) => {
+      if (!val) return false;
+      // Aceita formato AAAA-MM-DD (input type="date")
+      if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return true;
+      return false;
+    }, {
+      message: "Use o formato AAAA-MM-DD",
+    }),
   street: z.string().min(3, "Informe a rua"),
-  number: z.string().min(1, "Informe o numero"),
+  number: z.string().min(1, "Informe o número"),
   complement: z.string().optional(),
   neighborhood: z.string().min(3, "Informe o bairro"),
   city: z.string().min(2, "Informe a cidade"),
   state: z
     .string()
-    .min(2, "UF invalida")
-    .max(2, "UF invalida"),
-  zipCode: z.string().min(8, "Informe o CEP"),
+    .min(2, "UF inválida")
+    .max(2, "UF inválida"),
+  zipCode: z.string().refine((val) => digitsOnly(val).length === 8, {
+    message: "Informe um CEP válido (8 dígitos)",
+  }),
   canView: z.boolean().default(true),
   canCreate: z.boolean().default(true),
   canUpdate: z.boolean().default(true),
@@ -56,7 +72,6 @@ const managerSchema = z.object({
 
 type ManagerFormValues = z.infer<typeof managerSchema>;
 
-const digitsOnly = (value: string) => value.replace(/\D/g, "");
 const brazilStates = [
   "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG","PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO",
 ];
@@ -140,7 +155,21 @@ function GestoresContent() {
 
     setIsSubmitting(true);
     try {
-      const birthDateIso = new Date(values.birthData).toISOString().split("T")[0];
+      // Valida e formata a data de nascimento
+      let birthDateIso: string;
+      if (values.birthData) {
+        const date = new Date(values.birthData);
+        if (isNaN(date.getTime())) {
+          toast.error("Data de nascimento inválida.");
+          setIsSubmitting(false);
+          return;
+        }
+        birthDateIso = date.toISOString().split("T")[0];
+      } else {
+        toast.error("Data de nascimento é obrigatória.");
+        setIsSubmitting(false);
+        return;
+      }
       const dealerId = values.dealerId ? Number(values.dealerId) : undefined;
 
       await createManager({
@@ -253,23 +282,24 @@ function GestoresContent() {
   const handleCepLookup = async () => {
     const cep = digitsOnly(watch("zipCode") ?? "");
     if (cep.length !== 8) {
-      toast.error("Informe um CEP com 8 dÇðgitos.");
+      toast.error("Informe um CEP com 8 dígitos.");
       return;
     }
     setIsCepLoading(true);
     try {
       const address = await fetchAddressByCep(cep);
       if (!address) {
-        toast.error("CEP nao encontrado.");
+        toast.error("CEP não encontrado. Verifique o número e tente novamente.");
         return;
       }
       setValue("street", address.street ?? "");
       setValue("neighborhood", address.neighborhood ?? "");
       setValue("city", address.city ?? "");
       setValue("state", (address.state ?? "").toUpperCase());
+      toast.success("Endereço encontrado e preenchido automaticamente!");
     } catch (error) {
       console.error("[gestores] CEP lookup", error);
-      toast.error("Nao foi possivel buscar o CEP.");
+      toast.error("Não foi possível buscar o CEP. Tente novamente mais tarde.");
     } finally {
       setIsCepLoading(false);
     }

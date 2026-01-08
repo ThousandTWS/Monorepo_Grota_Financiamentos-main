@@ -13,20 +13,17 @@ function extractErrorMessage(payload: unknown, fallback: string) {
   return fallback;
 }
 
-export async function PATCH(
+export async function POST(
   request: NextRequest,
-  context: { params: Promise<{ contractNumber: string }> },
+  context: { params: Promise<{ id: string }> },
 ) {
   const session = await getAdminSession();
 
   const resolvedParams = await context.params;
-  let contractNumber = resolvedParams.contractNumber;
-  if (!contractNumber) {
-    const parts = request.nextUrl.pathname.split("/billing/contracts/");
-    contractNumber = parts[1]?.split("/")[0] ?? "";
-  }
-  if (!contractNumber) {
-    return NextResponse.json({ error: "contractNumber é obrigatório." }, { status: 400 });
+  const id = resolvedParams.id;
+  
+  if (!id || isNaN(Number(id))) {
+    return NextResponse.json({ error: "ID do contrato inválido." }, { status: 400 });
   }
 
   let body: unknown;
@@ -43,22 +40,21 @@ export async function PATCH(
     headers.Authorization = `Bearer ${session.accessToken}`;
   }
 
-  const upstream = await fetch(
-    `${API_BASE_URL}/billing/contracts/${encodeURIComponent(contractNumber)}/vehicle`,
-    {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify(body),
-      cache: "no-store",
-    },
-  );
+  const backendUrl = `${API_BASE_URL}/billing/contracts/${id}/occurrences`;
+
+  const upstream = await fetch(backendUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    cache: "no-store",
+  });
 
   const payload = await upstream.json().catch(() => null);
 
   if (!upstream.ok) {
     const message = extractErrorMessage(
       payload,
-      "Falha ao atualizar dados do veículo.",
+      "Falha ao criar ocorrência.",
     );
     return NextResponse.json({ error: message }, { status: upstream.status });
   }

@@ -57,10 +57,20 @@ async function request<T>(
         )
       : [];
 
-    const baseMessage =
-      (payload as { error?: string; message?: string })?.error ??
-      (payload as { message?: string })?.message ??
-      "Não foi possível concluir a operação.";
+    // Trata erros de validação do backend (lista de erros)
+    const validationErrors = Array.isArray((payload as { errors?: unknown })?.errors)
+      ? (payload as { errors: string[] }).errors
+      : [];
+    
+    let baseMessage: string;
+    if (validationErrors.length > 0) {
+      baseMessage = validationErrors.join("; ");
+    } else {
+      baseMessage =
+        (payload as { error?: string; message?: string })?.error ??
+        (payload as { message?: string })?.message ??
+        "Não foi possível concluir a operação.";
+    }
 
     const detailedMessage =
       errors.length > 0 ? `${baseMessage} - ${errors.join("; ")}` : baseMessage;

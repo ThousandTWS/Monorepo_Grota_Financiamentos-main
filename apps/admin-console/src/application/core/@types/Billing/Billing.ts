@@ -54,6 +54,7 @@ export type BillingOccurrence = {
 };
 
 export type BillingContractSummary = {
+  id: number;
   contractNumber: string;
   status: BillingStatus;
   paidAt: string;
@@ -65,6 +66,7 @@ export type BillingContractSummary = {
 };
 
 export type BillingContractDetails = {
+  id: number;
   contractNumber: string;
   proposalId?: number | null;
   status: BillingStatus;

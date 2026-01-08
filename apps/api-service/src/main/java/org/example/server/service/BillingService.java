@@ -388,6 +388,138 @@ public class BillingService {
         contractRepository.delete(contract);
     }
 
+    // Métodos usando ID em vez de contractNumber (para evitar problemas com barras nas URLs)
+    @Transactional(readOnly = true)
+    public BillingContractDetailsDTO getContractDetailsById(Long id) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(contract);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(contract);
+        return toDetails(contract, installments, occurrences);
+    }
+
+    @Transactional
+    public BillingContractDetailsDTO updateContractById(Long id, BillingContractUpdateDTO dto) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        if (dto.paidAt() != null) {
+            contract.setPaidAt(dto.paidAt());
+        }
+        
+        if (dto.startDate() != null) {
+            contract.setStartDate(dto.startDate());
+        }
+        
+        syncContractStatus(contract);
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
+    public void deleteContractById(Long id) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        contractRepository.delete(contract);
+    }
+
+    @Transactional
+    public BillingContractDetailsDTO updateVehicleById(Long id, BillingVehicleUpdateDTO dto) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        if (dto.plate() != null) {
+            contract.setVehiclePlate(dto.plate());
+        }
+        if (dto.renavam() != null) {
+            contract.setVehicleRenavam(dto.renavam());
+        }
+        if (dto.dutIssued() != null) {
+            contract.setDutIssued(dto.dutIssued());
+        }
+        
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
+    public BillingInstallmentDTO updateInstallmentById(Long contractId, Integer installmentNumber, BillingInstallmentUpdateDTO dto) {
+        BillingContract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        BillingInstallment installment = installmentRepository.findByContractAndNumber(contract, installmentNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Parcela nao encontrada"));
+
+        boolean paid = Boolean.TRUE.equals(dto.paid());
+        installment.setPaid(paid);
+        if (dto.paidAt() != null) {
+            installment.setPaidAt(dto.paidAt());
+        } else if (!paid) {
+            installment.setPaidAt(null);
+        }
+
+        BillingInstallment saved = installmentRepository.save(installment);
+        contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        // Recarrega as parcelas atualizadas para sincronizar o status corretamente
+        List<BillingInstallment> updatedInstallments = 
+                installmentRepository.findByContractOrderByNumberAsc(contract);
+        syncContractStatusWithInstallments(contract, updatedInstallments);
+        
+        return toInstallment(saved);
+    }
+
+    @Transactional
+    public BillingInstallmentDTO updateInstallmentDueDateById(Long contractId, Integer installmentNumber, BillingInstallmentDueDateUpdateDTO dto) {
+        BillingContract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        BillingInstallment installment = installmentRepository.findByContractAndNumber(contract, installmentNumber)
+                .orElseThrow(() -> new RecordNotFoundException("Parcela nao encontrada"));
+
+        installment.setDueDate(dto.dueDate());
+        BillingInstallment saved = installmentRepository.save(installment);
+        return toInstallment(saved);
+    }
+
+    @Transactional
+    public BillingContractDetailsDTO updateContractNumberById(Long id, BillingContractNumberUpdateDTO dto) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        
+        String newContractNumber = dto.contractNumber();
+        if (newContractNumber == null || newContractNumber.isBlank()) {
+            throw new IllegalArgumentException("Numero do contrato nao pode ser vazio");
+        }
+        
+        // Verifica se o novo número já existe
+        if (contractRepository.findByContractNumber(newContractNumber).isPresent()) {
+            throw new DataAlreadyExistsException("Numero de contrato ja existe");
+        }
+        
+        contract.setContractNumber(newContractNumber);
+        BillingContract saved = contractRepository.save(contract);
+        List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
+        List<BillingOccurrence> occurrences = occurrenceRepository.findByContractOrderByDateDesc(saved);
+        return toDetails(saved, installments, occurrences);
+    }
+
+    @Transactional
+    public BillingOccurrenceDTO addOccurrenceById(Long id, BillingOccurrenceRequestDTO dto) {
+        BillingContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RecordNotFoundException("Contrato nao encontrado"));
+        BillingOccurrence occurrence = new BillingOccurrence();
+        occurrence.setContract(contract);
+        occurrence.setDate(dto.date());
+        occurrence.setContact(dto.contact());
+        occurrence.setNote(dto.note());
+        BillingOccurrence saved = occurrenceRepository.save(occurrence);
+        return toOccurrence(saved);
+    }
+
     private void applyContractData(BillingContract contract, BillingContractCreateDTO dto) {
         contract.setContractNumber(dto.contractNumber());
         contract.setProposalId(dto.proposalId());
@@ -467,6 +599,7 @@ public class BillingService {
 
     private BillingContractSummaryDTO toSummary(BillingContract contract) {
         return new BillingContractSummaryDTO(
+                contract.getId(),
                 contract.getContractNumber(),
                 contract.getStatus(),
                 contract.getPaidAt(),
@@ -492,6 +625,7 @@ public class BillingService {
                 .toList();
 
         return new BillingContractDetailsDTO(
+                contract.getId(),
                 contract.getContractNumber(),
                 contract.getProposalId(),
                 contract.getStatus(),

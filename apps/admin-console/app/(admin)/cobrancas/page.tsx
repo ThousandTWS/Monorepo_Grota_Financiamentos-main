@@ -91,10 +91,10 @@ export default function CobrancasPage() {
   const [contracts, setContracts] = useState<BillingContractSummary[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState<string | null>(null);
-  const [editingDateContract, setEditingDateContract] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [editingDateContract, setEditingDateContract] = useState<number | null>(null);
   const [isUpdatingDate, setIsUpdatingDate] = useState(false);
-  const [editingContractNumber, setEditingContractNumber] = useState<string | null>(null);
+  const [editingContractNumber, setEditingContractNumber] = useState<number | null>(null);
   const [editingContractNumberValue, setEditingContractNumberValue] = useState<string>("");
   const [isUpdatingContractNumber, setIsUpdatingContractNumber] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -136,20 +136,20 @@ export default function CobrancasPage() {
   }, [nameFilter, documentFilter, statusFilter]);
 
 
-  const handleDelete = (contractNumber: string) => {
+  const handleDelete = (id: number) => {
     Modal.confirm({
       title: "Remover contrato",
       content:
         "Tem certeza que deseja remover este contrato? Esta acao nao pode ser desfeita.",
       okText: "Remover",
       cancelText: "Cancelar",
-      okButtonProps: { danger: true, loading: isDeleting === contractNumber },
+      okButtonProps: { danger: true, loading: isDeleting === id },
       onOk: async () => {
-        setIsDeleting(contractNumber);
+        setIsDeleting(id);
         try {
-          await deleteBillingContract(contractNumber);
+          await deleteBillingContract(id);
           setContracts((prev) =>
-            prev.filter((item) => item.contractNumber !== contractNumber),
+            prev.filter((item) => item.id !== id),
           );
           message.success("Contrato removido.");
         } catch (err) {
@@ -182,7 +182,7 @@ export default function CobrancasPage() {
       dataIndex: "contractNumber",
       key: "contractNumber",
       render: (value: string, record) => {
-        const isEditing = editingContractNumber === record.contractNumber;
+        const isEditing = editingContractNumber === record.id;
         if (isEditing) {
           return (
             <Input
@@ -201,10 +201,10 @@ export default function CobrancasPage() {
                   }
                   setIsUpdatingContractNumber(true);
                   try {
-                    await updateBillingContractNumber(value, newValue);
+                    await updateBillingContractNumber(record.id, newValue);
                     setContracts((prev) =>
                       prev.map((item) =>
-                        item.contractNumber === value
+                        item.id === record.id
                           ? { ...item, contractNumber: newValue }
                           : item,
                       ),
@@ -239,10 +239,10 @@ export default function CobrancasPage() {
                   }
                   setIsUpdatingContractNumber(true);
                   try {
-                    await updateBillingContractNumber(value, newValue);
+                    await updateBillingContractNumber(record.id, newValue);
                     setContracts((prev) =>
                       prev.map((item) =>
-                        item.contractNumber === value
+                        item.id === record.id
                           ? { ...item, contractNumber: newValue }
                           : item,
                       ),
@@ -273,7 +273,7 @@ export default function CobrancasPage() {
           <span
             className="cursor-pointer hover:text-blue-600 hover:underline font-semibold text-blue-600"
             onClick={() => {
-              setEditingContractNumber(record.contractNumber);
+              setEditingContractNumber(record.id);
               setEditingContractNumberValue(record.contractNumber);
             }}
           >
@@ -287,7 +287,7 @@ export default function CobrancasPage() {
       dataIndex: "startDate",
       key: "startDate",
       render: (value: string, record) => {
-        const isEditing = editingDateContract === record.contractNumber;
+        const isEditing = editingDateContract === record.id;
         if (isEditing) {
           return (
             <DatePicker
@@ -300,12 +300,12 @@ export default function CobrancasPage() {
                 if (date) {
                   setIsUpdatingDate(true);
                   try {
-                    await updateBillingContract(record.contractNumber, {
+                    await updateBillingContract(record.id, {
                       startDate: date.format("YYYY-MM-DD"),
                     });
                     setContracts((prev) =>
                       prev.map((item) =>
-                        item.contractNumber === record.contractNumber
+                        item.id === record.id
                           ? { ...item, startDate: date.format("YYYY-MM-DD") }
                           : item,
                       ),
@@ -331,7 +331,7 @@ export default function CobrancasPage() {
         return (
           <span
             className="cursor-pointer hover:text-blue-600 hover:underline"
-            onClick={() => setEditingDateContract(record.contractNumber)}
+            onClick={() => setEditingDateContract(record.id)}
           >
             {formatDate(value)}
           </span>
@@ -358,7 +358,7 @@ export default function CobrancasPage() {
       key: "actions",
       render: (_, record) => (
         <div className="flex flex-wrap gap-2">
-          <Link href={`/cobrancas/${encodeURIComponent(record.contractNumber)}`}>
+          <Link href={`/cobrancas/${record.id}`}>
             <Button type="primary" size="small">
               Ver contrato
             </Button>
@@ -366,8 +366,8 @@ export default function CobrancasPage() {
           <Button
             danger
             size="small"
-            loading={isDeleting === record.contractNumber}
-            onClick={() => handleDelete(record.contractNumber)}
+            loading={isDeleting === record.id}
+            onClick={() => handleDelete(record.id)}
           >
             Remover
           </Button>
@@ -455,7 +455,7 @@ export default function CobrancasPage() {
             <Table
               columns={columns}
               dataSource={contracts}
-              rowKey="contractNumber"
+              rowKey="id"
               pagination={{ pageSize: 6 }}
               loading={isLoading}
             />

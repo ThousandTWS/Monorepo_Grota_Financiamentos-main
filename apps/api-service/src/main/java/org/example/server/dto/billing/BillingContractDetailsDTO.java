@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record BillingContractDetailsDTO(
+        Long id,
         String contractNumber,
         Long proposalId,
         BillingStatus status,

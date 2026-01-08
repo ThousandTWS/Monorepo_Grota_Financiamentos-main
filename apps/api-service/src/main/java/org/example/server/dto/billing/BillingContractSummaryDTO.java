@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public record BillingContractSummaryDTO(
+        Long id,
         String contractNumber,
         BillingStatus status,
         LocalDate paidAt,
