@@ -112,10 +112,17 @@ export default function ContractDetailsPage() {
   // Extrai o ID do contrato (agora usa ID numérico em vez de contractNumber)
   let contractId: number | null = null;
   if (rawId) {
-    const idStr = Array.isArray(rawId) ? rawId[0] : rawId;
-    const parsedId = Number(idStr);
-    if (!isNaN(parsedId) && parsedId > 0) {
-      contractId = parsedId;
+    // Se for array (catch-all route), pega o primeiro elemento
+    // Se for string, usa diretamente
+    const idStr = Array.isArray(rawId) 
+      ? (rawId.length > 0 ? rawId[0] : null)
+      : rawId;
+    
+    if (idStr && typeof idStr === "string") {
+      const parsedId = Number(idStr);
+      if (!isNaN(parsedId) && parsedId > 0 && Number.isInteger(parsedId)) {
+        contractId = parsedId;
+      }
     }
   }
 
@@ -525,11 +532,13 @@ export default function ContractDetailsPage() {
                   Outras operacoes
                 </Typography.Text>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {contract.otherContracts.map((item) => (
-                    <Link key={item.id} href={`/cobrancas/${item.id}`}>
-                      <Tag color="blue">{item.contractNumber}</Tag>
-                    </Link>
-                  ))}
+                  {contract.otherContracts
+                    .filter((item) => item.id && !isNaN(Number(item.id)))
+                    .map((item) => (
+                      <Link key={item.id} href={`/cobrancas/${item.id}`}>
+                        <Tag color="blue">{item.contractNumber}</Tag>
+                      </Link>
+                    ))}
                 </div>
               </div>
             ) : null}

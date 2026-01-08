@@ -356,23 +356,32 @@ export default function CobrancasPage() {
     {
       title: "Acoes",
       key: "actions",
-      render: (_, record) => (
-        <div className="flex flex-wrap gap-2">
-          <Link href={`/cobrancas/${record.id}`}>
-            <Button type="primary" size="small">
-              Ver contrato
+      render: (_, record) => {
+        if (!record.id || isNaN(Number(record.id))) {
+          return (
+            <Button type="primary" size="small" disabled>
+              ID inválido
             </Button>
-          </Link>
-          <Button
-            danger
-            size="small"
-            loading={isDeleting === record.id}
-            onClick={() => handleDelete(record.id)}
-          >
-            Remover
-          </Button>
-        </div>
-      ),
+          );
+        }
+        return (
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/cobrancas/${record.id}`}>
+              <Button type="primary" size="small">
+                Ver contrato
+              </Button>
+            </Link>
+            <Button
+              danger
+              size="small"
+              loading={isDeleting === record.id}
+              onClick={() => handleDelete(record.id)}
+            >
+              Remover
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
