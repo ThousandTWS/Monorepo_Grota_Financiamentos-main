@@ -20,6 +20,7 @@ public record BillingContractDetailsDTO(
         BigDecimal outstandingBalance,
         BigDecimal remainingBalance,
         BillingCustomerDTO customer,
+        BillingProfessionalDataDTO professionalData,
         BillingVehicleDTO vehicle,
         BillingDealerDTO dealer,
         List<BillingInstallmentDTO> installments,

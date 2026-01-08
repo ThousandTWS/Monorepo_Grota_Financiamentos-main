@@ -141,6 +141,14 @@ public class BillingService {
         contract.setCustomerCity(proposal.getCity());
         contract.setCustomerState(proposal.getUf());
 
+        // Dados profissionais - copia da proposta e metadata
+        contract.setProfessionalEnterprise(resolveString(metadata, "enterprise", "empresa", "professionalEnterprise"));
+        contract.setProfessionalFunction(resolveString(metadata, "enterpriseFunction", "funcao", "function", "cargo"));
+        contract.setProfessionalAdmissionDate(resolveDate(metadata, "admissionDate", "dataAdmissao", "admissao"));
+        contract.setProfessionalIncome(proposal.getIncome());
+        contract.setProfessionalOtherIncomes(proposal.getOtherIncomes());
+        contract.setProfessionalMaritalStatus(proposal.getMaritalStatus());
+
         contract.setVehicleBrand(proposal.getVehicleBrand());
         contract.setVehicleModel(proposal.getVehicleModel());
         contract.setVehicleYear(proposal.getVehicleYear());
@@ -549,6 +557,12 @@ public class BillingService {
         contract.setCustomerAddress(dto.customerAddress());
         contract.setCustomerCity(dto.customerCity());
         contract.setCustomerState(dto.customerState());
+        contract.setProfessionalEnterprise(dto.professionalEnterprise());
+        contract.setProfessionalFunction(dto.professionalFunction());
+        contract.setProfessionalAdmissionDate(dto.professionalAdmissionDate());
+        contract.setProfessionalIncome(dto.professionalIncome());
+        contract.setProfessionalOtherIncomes(dto.professionalOtherIncomes());
+        contract.setProfessionalMaritalStatus(dto.professionalMaritalStatus());
         contract.setVehicleBrand(dto.vehicleBrand());
         contract.setVehicleModel(dto.vehicleModel());
         contract.setVehicleYear(dto.vehicleYear());
@@ -649,6 +663,7 @@ public class BillingService {
                 outstandingBalance,
                 remainingBalance,
                 toCustomer(contract),
+                toProfessionalData(contract),
                 toVehicle(contract),
                 toDealer(contract),
                 installments.stream().map(this::toInstallment).toList(),
@@ -682,6 +697,17 @@ public class BillingService {
                 contract.getDutIssued(),
                 contract.getDutPaid(),
                 contract.getDutPaidDate()
+        );
+    }
+
+    private BillingProfessionalDataDTO toProfessionalData(BillingContract contract) {
+        return new BillingProfessionalDataDTO(
+                contract.getProfessionalEnterprise(),
+                contract.getProfessionalFunction(),
+                contract.getProfessionalAdmissionDate(),
+                contract.getProfessionalIncome(),
+                contract.getProfessionalOtherIncomes(),
+                contract.getProfessionalMaritalStatus()
         );
     }
 

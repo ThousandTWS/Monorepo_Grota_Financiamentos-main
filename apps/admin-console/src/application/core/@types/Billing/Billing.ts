@@ -11,6 +11,15 @@ export type BillingCustomer = {
   state?: string | null;
 };
 
+export type BillingProfessionalData = {
+  enterprise?: string | null;
+  function?: string | null;
+  admissionDate?: string | null;
+  income?: number | null;
+  otherIncomes?: number | null;
+  maritalStatus?: string | null;
+};
+
 export type BillingVehicle = {
   brand?: string | null;
   model?: string | null;
@@ -80,6 +89,7 @@ export type BillingContractDetails = {
   outstandingBalance: number;
   remainingBalance: number;
   customer: BillingCustomer;
+  professionalData?: BillingProfessionalData | null;
   vehicle: BillingVehicle;
   dealer?: BillingDealer | null;
   installments: BillingInstallment[];

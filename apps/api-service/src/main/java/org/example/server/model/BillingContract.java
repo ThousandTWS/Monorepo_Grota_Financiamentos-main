@@ -61,6 +61,22 @@ public class BillingContract {
     @Column(length = 4)
     private String customerState;
 
+    // Dados profissionais
+    @Column(length = 120)
+    private String professionalEnterprise;
+
+    @Column(length = 80)
+    private String professionalFunction;
+
+    private LocalDate professionalAdmissionDate;
+
+    private BigDecimal professionalIncome;
+
+    private BigDecimal professionalOtherIncomes;
+
+    @Column(length = 40)
+    private String professionalMaritalStatus;
+
     @Column(length = 80)
     private String vehicleBrand;
 
@@ -226,6 +242,54 @@ public class BillingContract {
 
     public void setCustomerState(String customerState) {
         this.customerState = customerState;
+    }
+
+    public String getProfessionalEnterprise() {
+        return professionalEnterprise;
+    }
+
+    public void setProfessionalEnterprise(String professionalEnterprise) {
+        this.professionalEnterprise = professionalEnterprise;
+    }
+
+    public String getProfessionalFunction() {
+        return professionalFunction;
+    }
+
+    public void setProfessionalFunction(String professionalFunction) {
+        this.professionalFunction = professionalFunction;
+    }
+
+    public LocalDate getProfessionalAdmissionDate() {
+        return professionalAdmissionDate;
+    }
+
+    public void setProfessionalAdmissionDate(LocalDate professionalAdmissionDate) {
+        this.professionalAdmissionDate = professionalAdmissionDate;
+    }
+
+    public BigDecimal getProfessionalIncome() {
+        return professionalIncome;
+    }
+
+    public void setProfessionalIncome(BigDecimal professionalIncome) {
+        this.professionalIncome = professionalIncome;
+    }
+
+    public BigDecimal getProfessionalOtherIncomes() {
+        return professionalOtherIncomes;
+    }
+
+    public void setProfessionalOtherIncomes(BigDecimal professionalOtherIncomes) {
+        this.professionalOtherIncomes = professionalOtherIncomes;
+    }
+
+    public String getProfessionalMaritalStatus() {
+        return professionalMaritalStatus;
+    }
+
+    public void setProfessionalMaritalStatus(String professionalMaritalStatus) {
+        this.professionalMaritalStatus = professionalMaritalStatus;
     }
 
     public String getVehicleBrand() {

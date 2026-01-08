@@ -53,6 +53,13 @@ public record BillingContractCreateDTO(
         String customerCity,
         String customerState,
 
+        String professionalEnterprise,
+        String professionalFunction,
+        LocalDate professionalAdmissionDate,
+        BigDecimal professionalIncome,
+        BigDecimal professionalOtherIncomes,
+        String professionalMaritalStatus,
+
         String vehicleBrand,
         String vehicleModel,
         Integer vehicleYear,

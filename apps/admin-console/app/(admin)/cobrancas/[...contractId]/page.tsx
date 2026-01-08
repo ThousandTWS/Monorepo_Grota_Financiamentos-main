@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { FileText } from "lucide-react";
 import {
   Button,
   Card,
@@ -33,6 +34,10 @@ import {
   updateBillingInstallmentDueDate,
   updateBillingVehicle,
 } from "@/application/services/Billing/billingService";
+import {
+  generateContractReportPDF,
+  generateContractReportWord,
+} from "@/application/services/Billing/reportService";
 
 
 const { TextArea } = Input;
@@ -396,9 +401,43 @@ export default function ContractDetailsPage() {
               Acompanhe as parcelas, status de pagamento e ocorrencias de contato.
             </Typography.Paragraph>
           </div>
-          <Link href="/cobrancas">
-            <Button>Voltar para cobrancas</Button>
-          </Link>
+          <div className="flex gap-2">
+            <Button
+              type="default"
+              icon={<FileText />}
+              onClick={async () => {
+                if (!contract) return;
+                try {
+                  await generateContractReportPDF(contract);
+                  message.success("Relatório PDF gerado com sucesso!");
+                } catch (err) {
+                  message.error("Erro ao gerar relatório PDF");
+                  console.error(err);
+                }
+              }}
+            >
+              Gerar PDF
+            </Button>
+            <Button
+              type="default"
+              icon={<FileText />}
+              onClick={async () => {
+                if (!contract) return;
+                try {
+                  await generateContractReportWord(contract);
+                  message.success("Relatório Word gerado com sucesso!");
+                } catch (err) {
+                  message.error("Erro ao gerar relatório Word");
+                  console.error(err);
+                }
+              }}
+            >
+              Gerar Word
+            </Button>
+            <Link href="/cobrancas">
+              <Button>Voltar para cobrancas</Button>
+            </Link>
+          </div>
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
@@ -420,6 +459,39 @@ export default function ContractDetailsPage() {
                 / {contract.customer.state ?? "--"}
               </Descriptions.Item>
             </Descriptions>
+            {contract.professionalData && (
+              <div className="mt-4">
+                <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">
+                  Dados profissionais
+                </Typography.Text>
+                <Descriptions column={2} className="mt-2">
+                  <Descriptions.Item label="Empresa">
+                    {contract.professionalData.enterprise ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Funcao">
+                    {contract.professionalData.function ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Data de admissao">
+                    {contract.professionalData.admissionDate
+                      ? formatDate(contract.professionalData.admissionDate)
+                      : "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Estado civil">
+                    {contract.professionalData.maritalStatus ?? "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Renda">
+                    {contract.professionalData.income
+                      ? formatCurrency(contract.professionalData.income)
+                      : "--"}
+                  </Descriptions.Item>
+                  <Descriptions.Item label="Outras rendas">
+                    {contract.professionalData.otherIncomes
+                      ? formatCurrency(contract.professionalData.otherIncomes)
+                      : "--"}
+                  </Descriptions.Item>
+                </Descriptions>
+              </div>
+            )}
             {contract.dealer && (
               <div className="mt-4">
                 <Typography.Text className="text-xs uppercase tracking-wide text-slate-500">
