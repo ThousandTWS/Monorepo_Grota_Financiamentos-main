@@ -18,6 +18,8 @@ export type BillingVehicle = {
   plate?: string | null;
   renavam?: string | null;
   dutIssued?: boolean | null;
+  dutPaid?: boolean | null;
+  dutPaidDate?: string | null;
 };
 
 export type BillingDealer = {
@@ -141,6 +143,8 @@ export type BillingVehicleUpdatePayload = {
   plate?: string;
   renavam?: string;
   dutIssued?: boolean;
+  dutPaid?: boolean;
+  dutPaidDate?: string;
 };
 
 export type BillingInstallmentDueDateUpdatePayload = {

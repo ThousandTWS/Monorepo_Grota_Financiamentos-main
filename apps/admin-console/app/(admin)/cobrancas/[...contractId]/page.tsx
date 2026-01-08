@@ -144,6 +144,8 @@ export default function ContractDetailsPage() {
   const [editingPlate, setEditingPlate] = useState<string>("");
   const [editingRenavam, setEditingRenavam] = useState<string>("");
   const [editingDutIssued, setEditingDutIssued] = useState<boolean>(false);
+  const [editingDutPaid, setEditingDutPaid] = useState<boolean>(false);
+  const [editingDutPaidDate, setEditingDutPaidDate] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -189,6 +191,8 @@ export default function ContractDetailsPage() {
       setEditingPlate(contract.vehicle.plate ?? "");
       setEditingRenavam(contract.vehicle.renavam ?? "");
       setEditingDutIssued(contract.vehicle.dutIssued ?? false);
+      setEditingDutPaid(contract.vehicle.dutPaid ?? false);
+      setEditingDutPaidDate(contract.vehicle.dutPaidDate ?? null);
     }
   }, [contract?.id, contract]);
 
@@ -641,7 +645,7 @@ export default function ContractDetailsPage() {
                 <Card>
                   <Descriptions column={2}>
                     <Descriptions.Item label="Numero do contrato">
-                      {contract.id}
+                      {contract.contractNumber}
                     </Descriptions.Item>
                     <Descriptions.Item label="Inicio do contrato">
                       <DatePicker
@@ -694,11 +698,15 @@ export default function ContractDetailsPage() {
                                 plate: editingPlate.trim() || undefined,
                                 renavam: editingRenavam.trim() || undefined,
                                 dutIssued: editingDutIssued,
+                                dutPaid: editingDutPaid,
+                                dutPaidDate: editingDutPaidDate || undefined,
                               });
                               setContract(updated);
                               setEditingPlate(updated.vehicle.plate ?? "");
                               setEditingRenavam(updated.vehicle.renavam ?? "");
                               setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                              setEditingDutPaid(updated.vehicle.dutPaid ?? false);
+                              setEditingDutPaidDate(updated.vehicle.dutPaidDate ?? null);
                               message.success("Dados do veículo atualizados.");
                             } catch (err) {
                               message.error(
@@ -728,11 +736,15 @@ export default function ContractDetailsPage() {
                                 plate: editingPlate.trim() || undefined,
                                 renavam: editingRenavam.trim() || undefined,
                                 dutIssued: editingDutIssued,
+                                dutPaid: editingDutPaid,
+                                dutPaidDate: editingDutPaidDate || undefined,
                               });
                               setContract(updated);
                               setEditingPlate(updated.vehicle.plate ?? "");
                               setEditingRenavam(updated.vehicle.renavam ?? "");
                               setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                              setEditingDutPaid(updated.vehicle.dutPaid ?? false);
+                              setEditingDutPaidDate(updated.vehicle.dutPaidDate ?? null);
                               message.success("Dados do veículo atualizados.");
                             } catch (err) {
                               message.error(
@@ -761,6 +773,8 @@ export default function ContractDetailsPage() {
                               plate: editingPlate.trim() || undefined,
                               renavam: editingRenavam.trim() || undefined,
                               dutIssued: checked,
+                              dutPaid: editingDutPaid,
+                              dutPaidDate: editingDutPaidDate || undefined,
                             });
                             setContract(updated);
                             setEditingPlate(updated.vehicle.plate ?? "");
@@ -774,8 +788,84 @@ export default function ContractDetailsPage() {
                                 : "Não foi possível atualizar o DUT emitido.",
                             );
                             setEditingDutIssued(contract.vehicle.dutIssued ?? false);
+                            setEditingDutPaid(contract.vehicle.dutPaid ?? false);
+                            setEditingDutPaidDate(contract.vehicle.dutPaidDate ?? null);
                           } finally {
                             setIsUpdatingVehicle(false);
+                          }
+                        }}
+                        disabled={isUpdatingVehicle}
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="DUT pago">
+                      <Switch
+                        checked={editingDutPaid}
+                        onChange={async (checked) => {
+                          setEditingDutPaid(checked);
+                          setIsUpdatingVehicle(true);
+                          try {
+                            const updated = await updateBillingVehicle(contract.id, {
+                              plate: editingPlate.trim() || undefined,
+                              renavam: editingRenavam.trim() || undefined,
+                              dutIssued: editingDutIssued,
+                              dutPaid: checked,
+                              dutPaidDate: editingDutPaidDate || undefined,
+                            });
+                            setContract(updated);
+                            setEditingPlate(updated.vehicle.plate ?? "");
+                            setEditingRenavam(updated.vehicle.renavam ?? "");
+                            setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                            setEditingDutPaid(updated.vehicle.dutPaid ?? false);
+                            setEditingDutPaidDate(updated.vehicle.dutPaidDate ?? null);
+                            message.success("DUT pago atualizado.");
+                          } catch (err) {
+                            message.error(
+                              err instanceof Error
+                                ? err.message
+                                : "Não foi possível atualizar o DUT pago.",
+                            );
+                            setEditingDutPaid(contract.vehicle.dutPaid ?? false);
+                          } finally {
+                            setIsUpdatingVehicle(false);
+                          }
+                        }}
+                        disabled={isUpdatingVehicle}
+                      />
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Data DUT pago">
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        value={editingDutPaidDate ? dayjs(editingDutPaidDate, "YYYY-MM-DD") : null}
+                        onChange={async (date) => {
+                          const newDate = date ? date.format("YYYY-MM-DD") : null;
+                          setEditingDutPaidDate(newDate);
+                          if (newDate !== (contract.vehicle.dutPaidDate ?? null)) {
+                            setIsUpdatingVehicle(true);
+                            try {
+                              const updated = await updateBillingVehicle(contract.id, {
+                                plate: editingPlate.trim() || undefined,
+                                renavam: editingRenavam.trim() || undefined,
+                                dutIssued: editingDutIssued,
+                                dutPaid: editingDutPaid,
+                                dutPaidDate: newDate || undefined,
+                              });
+                              setContract(updated);
+                              setEditingPlate(updated.vehicle.plate ?? "");
+                              setEditingRenavam(updated.vehicle.renavam ?? "");
+                              setEditingDutIssued(updated.vehicle.dutIssued ?? false);
+                              setEditingDutPaid(updated.vehicle.dutPaid ?? false);
+                              setEditingDutPaidDate(updated.vehicle.dutPaidDate ?? null);
+                              message.success("Data DUT pago atualizada.");
+                            } catch (err) {
+                              message.error(
+                                err instanceof Error
+                                  ? err.message
+                                  : "Não foi possível atualizar a data DUT pago.",
+                              );
+                              setEditingDutPaidDate(contract.vehicle.dutPaidDate ?? null);
+                            } finally {
+                              setIsUpdatingVehicle(false);
+                            }
                           }
                         }}
                         disabled={isUpdatingVehicle}

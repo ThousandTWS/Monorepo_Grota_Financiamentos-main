@@ -77,6 +77,10 @@ public class BillingContract {
 
     private Boolean dutIssued;
 
+    private Boolean dutPaid;
+
+    private LocalDate dutPaidDate;
+
     @OneToMany(mappedBy = "contract", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BillingInstallment> installments = new ArrayList<>();
 
@@ -270,6 +274,22 @@ public class BillingContract {
 
     public void setDutIssued(Boolean dutIssued) {
         this.dutIssued = dutIssued;
+    }
+
+    public Boolean getDutPaid() {
+        return dutPaid;
+    }
+
+    public void setDutPaid(Boolean dutPaid) {
+        this.dutPaid = dutPaid;
+    }
+
+    public LocalDate getDutPaidDate() {
+        return dutPaidDate;
+    }
+
+    public void setDutPaidDate(LocalDate dutPaidDate) {
+        this.dutPaidDate = dutPaidDate;
     }
 
     public List<BillingInstallment> getInstallments() {

@@ -6,6 +6,8 @@ public record BillingVehicleDTO(
         Integer year,
         String plate,
         String renavam,
-        Boolean dutIssued
+        Boolean dutIssued,
+        Boolean dutPaid,
+        java.time.LocalDate dutPaidDate
 ) {
 }

@@ -271,6 +271,12 @@ public class BillingService {
         if (dto.dutIssued() != null) {
             contract.setDutIssued(dto.dutIssued());
         }
+        if (dto.dutPaid() != null) {
+            contract.setDutPaid(dto.dutPaid());
+        }
+        if (dto.dutPaidDate() != null) {
+            contract.setDutPaidDate(dto.dutPaidDate());
+        }
         
         BillingContract saved = contractRepository.save(contract);
         List<BillingInstallment> installments = installmentRepository.findByContractOrderByNumberAsc(saved);
@@ -438,6 +444,12 @@ public class BillingService {
         }
         if (dto.dutIssued() != null) {
             contract.setDutIssued(dto.dutIssued());
+        }
+        if (dto.dutPaid() != null) {
+            contract.setDutPaid(dto.dutPaid());
+        }
+        if (dto.dutPaidDate() != null) {
+            contract.setDutPaidDate(dto.dutPaidDate());
         }
         
         BillingContract saved = contractRepository.save(contract);
@@ -667,7 +679,9 @@ public class BillingService {
                 contract.getVehicleYear(),
                 contract.getVehiclePlate(),
                 contract.getVehicleRenavam(),
-                contract.getDutIssued()
+                contract.getDutIssued(),
+                contract.getDutPaid(),
+                contract.getDutPaidDate()
         );
     }
 
