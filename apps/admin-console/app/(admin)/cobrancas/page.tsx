@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Button,
@@ -15,6 +15,7 @@ import {
   Typography,
   message,
 } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import type { ColumnsType } from "antd/es/table";
 import dayjs from "dayjs";
 import type {
@@ -99,32 +100,35 @@ export default function CobrancasPage() {
   const [isUpdatingContractNumber, setIsUpdatingContractNumber] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const loadContracts = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetchBillingContracts({
+        name: nameFilter.trim() || undefined,
+        document: digitsOnly(documentFilter),
+        status: statusFilter,
+      });
+      setContracts(response);
+    } catch (err) {
+      setContracts([]);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Nao foi possivel carregar os contratos.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [nameFilter, documentFilter, statusFilter]);
+
   useEffect(() => {
     let active = true;
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
     debounceRef.current = setTimeout(async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetchBillingContracts({
-          name: nameFilter.trim() || undefined,
-          document: digitsOnly(documentFilter),
-          status: statusFilter,
-        });
-        if (!active) return;
-        setContracts(response);
-      } catch (err) {
-        if (!active) return;
-        setContracts([]);
-        setError(
-          err instanceof Error
-            ? err.message
-            : "Nao foi possivel carregar os contratos.",
-        );
-      } finally {
-        if (active) setIsLoading(false);
-      }
+      if (!active) return;
+      await loadContracts();
     }, 400);
 
     return () => {
@@ -133,7 +137,7 @@ export default function CobrancasPage() {
         clearTimeout(debounceRef.current);
       }
     };
-  }, [nameFilter, documentFilter, statusFilter]);
+  }, [loadContracts]);
 
 
   const handleDelete = (id: number) => {
@@ -148,10 +152,9 @@ export default function CobrancasPage() {
         setIsDeleting(id);
         try {
           await deleteBillingContract(id);
-          setContracts((prev) =>
-            prev.filter((item) => item.id !== id),
-          );
           message.success("Contrato removido.");
+          // Recarrega os dados após remover
+          await loadContracts();
         } catch (err) {
           message.error(
             err instanceof Error
@@ -450,9 +453,20 @@ export default function CobrancasPage() {
           title={
             <div className="flex flex-wrap items-center justify-between gap-2">
               <span>Resultados de cobranca</span>
-              <span className="text-xs text-slate-500">
-                {contracts.length} contrato(s) encontrado(s)
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-500">
+                  {contracts.length} contrato(s) encontrado(s)
+                </span>
+                <Button
+                  type="default"
+                  icon={<ReloadOutlined />}
+                  onClick={loadContracts}
+                  loading={isLoading}
+                  size="small"
+                >
+                  Atualizar
+                </Button>
+              </div>
             </div>
           }
         >
