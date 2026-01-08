@@ -51,8 +51,8 @@ const formatCurrency = (value: number) =>
 
 const formatDate = (value: string) => {
   if (!value) return "--";
-  // Para datas sem hora, cria a data no timezone do Brasil
-  const date = new Date(`${value}T00:00:00-03:00`); // UTC-3 (horário de Brasília)
+
+  const date = new Date(`${value}T00:00:00-03:00`); 
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
   }).format(date);
@@ -90,16 +90,13 @@ const resolveDaysLate = (record: BillingInstallment) => {
   if (!record.dueDate) {
     return 0;
   }
-  // Cria a data de vencimento no timezone do Brasil (meia-noite)
   const due = new Date(`${record.dueDate}T00:00:00-03:00`);
-  // Obtém a data de hoje no timezone do Brasil (meia-noite)
   const now = new Date();
   const todayBR = new Date(
     now.toLocaleString("en-US", { timeZone: "America/Sao_Paulo" })
   );
   todayBR.setHours(0, 0, 0, 0);
   
-  // Calcula a diferença em dias
   const diffMs = todayBR.getTime() - due.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
@@ -114,11 +111,8 @@ const formatPhoneForWhatsApp = (phone?: string | null) => {
 export default function ContractDetailsPage() {
   const params = useParams();
   const rawId = params?.contractId;
-  // Extrai o ID do contrato (agora usa ID numérico em vez de contractNumber)
   let contractId: number | null = null;
   if (rawId) {
-    // Se for array (catch-all route), pega o primeiro elemento
-    // Se for string, usa diretamente
     const idStr = Array.isArray(rawId) 
       ? (rawId.length > 0 ? rawId[0] : null)
       : rawId;
@@ -330,7 +324,6 @@ export default function ContractDetailsPage() {
                 record.number,
                 { paid: checked },
               );
-              // Recarregar dados completos do contrato para sincronizar status
               const refreshed = await getBillingContractDetails(contract.id);
               setContract(refreshed);
               setInstallments(refreshed.installments);

@@ -1306,12 +1306,12 @@ export default function Step2PersonalData({
         </div>
       </Card>
 
-      <div className="flex justify-between">
+      <div className="flex justify-between mt-5">
         <Button onClick={prevStep} type="default" size="large">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar
         </Button>
-        <Button onClick={handleNext} type="primary" size="large">
+        <Button onClick={handleNext} className="mt-5" type="primary" size="large">
           Proximo: Dados Profissionais
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>

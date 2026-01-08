@@ -52,7 +52,7 @@ export default function Step1VehicleOperation({
   onSellerChange,
 }: Step1VehicleOperationProps) {
   const [financedInput, setFinancedInput] = useState("");
-  const [downPaymentInput, setDownPaymentInput] = useState("");
+  const [, setDownPaymentInput] = useState("");
   const financedFocusedRef = useRef(false);
   const downPaymentFocusedRef = useRef(false);
   const [brands, setBrands] = useState<Marca[]>([]);
@@ -279,11 +279,6 @@ export default function Step1VehicleOperation({
     updateFormData("financial", { financedAmount: numeric });
   };
 
-  const handleDownPaymentChange = (value: string) => {
-    const numeric = parseBRL(value);
-    setDownPaymentInput(value);
-    updateFormData("financial", { downPayment: numeric });
-  };
 
   const validateStep = () => {
     const { vehicle, financial } = formData;
@@ -292,8 +287,6 @@ export default function Step1VehicleOperation({
       toast.error("Selecione a loja para vincular a simulacao");
       return false;
     }
-
-    // Vendedor agora é opcional - não precisa validar
 
     if (!vehicle.brand || !vehicle.model || !vehicle.year) {
       toast.error("Por favor, selecione marca, modelo e ano do veiculo");
@@ -768,7 +761,7 @@ export default function Step1VehicleOperation({
       <Card
         className="bg-gradient-to-br from-[#134B73] to-[#0a2940]"
         title={
-          <span className="text-lg font-semibold" style={{ color: "#ffffff" }}>
+          <span className="text-lg font-semibold" style={{ color: "#134b73" }}>
             Condições do Financiamento
           </span>
         }
@@ -776,7 +769,7 @@ export default function Step1VehicleOperation({
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Typography.Text style={{ color: "#ffffff" }}>
+              <Typography.Text style={{ color: "#000" }}>
                 Valor a Financiar
               </Typography.Text>
               <Input
@@ -799,7 +792,7 @@ export default function Step1VehicleOperation({
               />
             </div>
             <div className="space-y-2">
-              <Typography.Text style={{ color: "#ffffff" }}>
+              <Typography.Text style={{ color: "#000" }}>
                 Prazo (meses)
               </Typography.Text>
               <Select

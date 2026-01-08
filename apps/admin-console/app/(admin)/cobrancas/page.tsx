@@ -50,23 +50,16 @@ const formatCurrency = (value: number) =>
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
-/**
- * Valida o formato do número de contrato.
- * Aceita:
- * - Formato padrão: apenas números (ex: "1234567890")
- * - Formato específico: NN-NNNNNN/AA (2 dígitos-hífen-6 dígitos/2 dígitos) (ex: "14-555555/25")
- */
 const isValidContractNumber = (value: string): boolean => {
   if (!value || value.trim() === "") return false;
   
   const trimmed = value.trim();
   
-  // Formato padrão: apenas números
   if (/^\d+$/.test(trimmed)) {
     return true;
   }
   
-  // Formato específico: NN-NNNNNN/AA (exatamente 2 dígitos, hífen, 6 dígitos, barra, 2 dígitos)
+
   if (/^\d{2}-\d{6}\/\d{2}$/.test(trimmed)) {
     return true;
   }
@@ -76,8 +69,7 @@ const isValidContractNumber = (value: string): boolean => {
 
 const formatDate = (value: string) => {
   if (!value) return "--";
-  // Para datas sem hora, cria a data no timezone do Brasil
-  const date = new Date(`${value}T00:00:00-03:00`); // UTC-3 (horário de Brasília)
+  const date = new Date(`${value}T00:00:00-03:00`); 
   return new Intl.DateTimeFormat("pt-BR", {
     timeZone: "America/Sao_Paulo",
   }).format(date);
@@ -153,7 +145,6 @@ export default function CobrancasPage() {
         try {
           await deleteBillingContract(id);
           message.success("Contrato removido.");
-          // Recarrega os dados após remover
           await loadContracts();
         } catch (err) {
           message.error(
