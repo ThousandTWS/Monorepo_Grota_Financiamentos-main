@@ -205,7 +205,7 @@ function VendedoresContent() {
         address: {
           street: values.street.trim(),
           number: values.number.trim(),
-          complement: values.complement?.trim() || null,
+          complement: values.complement?.trim() || undefined,
           neighborhood: values.neighborhood.trim(),
           city: values.city.trim(),
           state: values.state.trim().toUpperCase(),

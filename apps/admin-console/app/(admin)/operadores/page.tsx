@@ -25,6 +25,8 @@ import { StatusBadge } from "@/presentation/features/logista/components/status-b
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
 
+const digitsOnly = (value: string) => value.replace(/\D/g, "");
+
 const operatorSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo"),
