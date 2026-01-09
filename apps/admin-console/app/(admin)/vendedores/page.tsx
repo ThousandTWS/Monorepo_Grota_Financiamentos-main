@@ -23,23 +23,30 @@ import { fetchAddressByCep } from "@/application/services/cep/cepService";
 import { StatusBadge } from "@/presentation/features/logista/components/status-badge";
 import { formatName } from "@/lib/formatters";
 import { convertBRtoISO } from "@/application/core/utils/formatters";
+import { maskCEP, maskCPF, maskPhone } from "@/lib/masks";
 
 const digitsOnly = (value: string) => value.replace(/\D/g, "");
 
 const sellerSchema = z.object({
   dealerId: z.string().optional(),
-  fullName: z.string().min(2, "Informe o nome completo"),
-  email: z.string().email("E-mail inválido"),
-  phone: z.string().refine((val) => digitsOnly(val).length >= 10, {
-    message: "Informe um telefone válido (mínimo 10 dígitos)",
-  }),
+  fullName: z.string().min(2, "Informe o nome completo").transform(v => v.trim()),
+  email: z.string()
+    .email("E-mail inválido")
+    .transform(v => v.trim().toLowerCase()),
+  phone: z.string()
+    .refine((val) => digitsOnly(val).length >= 10, {
+      message: "Informe um telefone válido (mínimo 10 dígitos)",
+    })
+    .transform(v => digitsOnly(v)),
   password: z
     .string()
     .min(6, "A senha precisa ter no mínimo 6 caracteres")
-    .max(8, "A senha deve ter no máximo 8 caracteres"),
-  cpf: z.string().refine((val) => digitsOnly(val).length === 11, {
-    message: "Informe um CPF válido (11 dígitos)",
-  }),
+    .max(50, "A senha deve ter no máximo 50 caracteres"),
+  cpf: z.string()
+    .refine((val) => digitsOnly(val).length === 11, {
+      message: "Informe um CPF válido (11 dígitos)",
+    })
+    .transform(v => digitsOnly(v)),
   birthData: z
     .string()
     .min(1, "Informe a data de nascimento")
@@ -51,18 +58,21 @@ const sellerSchema = z.object({
     }, {
       message: "Use o formato AAAA-MM-DD",
     }),
-  street: z.string().min(3, "Informe a rua"),
-  number: z.string().min(1, "Informe o número"),
-  complement: z.string().optional(),
-  neighborhood: z.string().min(3, "Informe o bairro"),
-  city: z.string().min(2, "Informe a cidade"),
+  street: z.string().min(3, "Informe a rua").transform(v => v.trim()),
+  number: z.string().min(1, "Informe o número").transform(v => v.trim()),
+  complement: z.string().optional().transform(v => v?.trim()),
+  neighborhood: z.string().min(3, "Informe o bairro").transform(v => v.trim()),
+  city: z.string().min(2, "Informe a cidade").transform(v => v.trim()),
   state: z
     .string()
     .min(2, "UF inválida")
-    .max(2, "UF inválida"),
-  zipCode: z.string().refine((val) => digitsOnly(val).length === 8, {
-    message: "Informe um CEP válido (8 dígitos)",
-  }),
+    .max(2, "UF inválida")
+    .transform(v => v.trim().toUpperCase()),
+  zipCode: z.string()
+    .refine((val) => digitsOnly(val).length === 8, {
+      message: "Informe um CEP válido (8 dígitos)",
+    })
+    .transform(v => digitsOnly(v)),
   canView: z.boolean().default(true),
   canCreate: z.boolean().default(true),
   canUpdate: z.boolean().default(true),
@@ -142,16 +152,16 @@ function VendedoresContent() {
   }, [searchParams, setValue]);
 
   const onSubmit = async (values: SellerFormValues) => {
+    console.log("[vendedores] onSubmit values:", values);
     const cpfDigits = digitsOnly(values.cpf);
     if (isCpfLoading) {
-      toast.error("Aguarde a verificacao do CPF.");
+      toast.error("Aguarde a verificação do CPF ou tente novamente.");
       return;
     }
-    if (cpfDigits.length === 11 && !cpfVerified) {
-      toast.error("CPF nao verificado na Receita.");
-      return;
-    }
-
+    
+    // Deixamos de exigir o cpfVerified para permitir o cadastro mesmo se a API de consulta falhar
+    // O backend validará se o CPF já existe ou se é válido.
+    
     setIsSubmitting(true);
     try {
       // Valida e formata a data de nascimento
@@ -171,45 +181,22 @@ function VendedoresContent() {
       }
       const dealerId = values.dealerId ? Number(values.dealerId) : undefined;
       
-      // Validações finais antes de enviar
-      const phoneDigits = digitsOnly(values.phone);
-      const cpfDigits = digitsOnly(values.cpf);
-      const zipCodeDigits = digitsOnly(values.zipCode);
-      
-      if (phoneDigits.length < 10) {
-        toast.error("Telefone deve ter no mínimo 10 dígitos.");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (cpfDigits.length !== 11) {
-        toast.error("CPF deve ter exatamente 11 dígitos.");
-        setIsSubmitting(false);
-        return;
-      }
-      
-      if (zipCodeDigits.length !== 8) {
-        toast.error("CEP deve ter exatamente 8 dígitos.");
-        setIsSubmitting(false);
-        return;
-      }
-      
       const payload = {
         dealerId: dealerId || null,
-        fullName: values.fullName.trim(),
-        email: values.email.trim(),
-        phone: phoneDigits,
+        fullName: values.fullName,
+        email: values.email,
+        phone: values.phone,
         password: values.password,
-        CPF: cpfDigits,
+        CPF: values.cpf,
         birthData: birthDateIso,
         address: {
-          street: values.street.trim(),
-          number: values.number.trim(),
-          complement: values.complement?.trim() || undefined,
-          neighborhood: values.neighborhood.trim(),
-          city: values.city.trim(),
-          state: values.state.trim().toUpperCase(),
-          zipCode: zipCodeDigits,
+          street: values.street,
+          number: values.number,
+          complement: values.complement || undefined,
+          neighborhood: values.neighborhood,
+          city: values.city,
+          state: values.state,
+          zipCode: values.zipCode,
         },
         canView: values.canView ?? true,
         canCreate: values.canCreate ?? true,
@@ -296,29 +283,67 @@ function VendedoresContent() {
   };
 
   const handleCepLookup = async () => {
-    const cep = digitsOnly(watch("zipCode") ?? "");
+    const rawZip = watch("zipCode") ?? "";
+    const cep = digitsOnly(rawZip);
     if (cep.length !== 8) {
       toast.error("Informe um CEP com 8 dígitos.");
       return;
     }
     setIsCepLoading(true);
     try {
+      console.log("[vendedores] Buscando CEP:", cep);
       const address = await fetchAddressByCep(cep);
       if (!address) {
         toast.error("CEP não encontrado. Verifique o número e tente novamente.");
         return;
       }
-      setValue("street", address.street ?? "");
-      setValue("neighborhood", address.neighborhood ?? "");
-      setValue("city", address.city ?? "");
-      setValue("state", (address.state ?? "").toUpperCase());
-      toast.success("Endereço encontrado e preenchido automaticamente!");
+      console.log("[vendedores] Endereço encontrado:", address);
+      
+      // Pequeno timeout para garantir que os campos existam/renderizem se necessário
+      // e forçar a atualização no react-hook-form
+      setTimeout(() => {
+        setValue("street", address.street ?? "", { shouldValidate: true, shouldDirty: true });
+        setValue("neighborhood", address.neighborhood ?? "", { shouldValidate: true, shouldDirty: true });
+        setValue("city", address.city ?? "", { shouldValidate: true, shouldDirty: true });
+        setValue("state", (address.state ?? "").toUpperCase(), { shouldValidate: true, shouldDirty: true });
+        toast.success("Endereço encontrado e preenchido!");
+      }, 100);
     } catch (error) {
-      console.error("[vendedores] CEP lookup", error);
-      toast.error("Não foi possível buscar o CEP. Tente novamente mais tarde.");
+      console.error("[vendedores] CEP lookup error:", error);
+      toast.error("Erro ao buscar o CEP. Tente preencher manualmente.");
     } finally {
       setIsCepLoading(false);
     }
+  };
+
+  const onError = (errors: any) => {
+    console.error("[vendedores] Erros de validação detalhados:", JSON.stringify(errors, null, 2));
+    
+    // Nomes amigáveis para os campos
+    const fieldNames: Record<string, string> = {
+      fullName: "Nome completo",
+      email: "E-mail",
+      phone: "Telefone",
+      password: "Senha",
+      cpf: "CPF",
+      birthData: "Data de nascimento",
+      street: "Rua",
+      number: "Número",
+      neighborhood: "Bairro",
+      city: "Cidade",
+      state: "UF",
+      zipCode: "CEP",
+      dealerId: "Loja"
+    };
+
+    // Lista todos os erros para o usuário
+    Object.keys(errors).forEach((key) => {
+      const error = errors[key];
+      if (error?.message) {
+        const fieldName = fieldNames[key] || key;
+        toast.error(`${fieldName}: ${error.message}`);
+      }
+    });
   };
 
   return (
@@ -329,7 +354,7 @@ function VendedoresContent() {
         </Typography.Paragraph>
         <form
           //@ts-ignore
-          onSubmit={handleSubmit(onSubmit)}
+          onSubmit={handleSubmit(onSubmit, onError)}
           className="grid gap-6 md:grid-cols-2"
         >
           <div className="space-y-2 md:col-span-2">
@@ -366,20 +391,37 @@ function VendedoresContent() {
           </div>
           <div className="space-y-2">
             <Typography.Text>E-mail</Typography.Text>
-            <Input id="email" type="email" {...register("email")} />
+            <Input 
+              id="email" 
+              type="email" 
+              {...register("email", {
+                setValueAs: (v) => v.trim().toLowerCase()
+              })} 
+            />
             {errors.email && (
               <p className="text-sm text-red-500">{errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Typography.Text>Telefone</Typography.Text>
-            <Input id="phone" {...register("phone")} placeholder="(11) 99999-0000" />
+            <Controller
+              control={control}
+              name="phone"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="phone"
+                  placeholder="(11) 99999-0000"
+                  onChange={(e) => field.onChange(maskPhone(e.target.value))}
+                />
+              )}
+            />
             {errors.phone && (
               <p className="text-sm text-red-500">{errors.phone.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Typography.Text>Senha (6 a 8 caracteres)</Typography.Text>
+            <Typography.Text>Senha (mínimo 6 caracteres)</Typography.Text>
             <Input.Password id="password" {...register("password")} />
             {errors.password && (
               <p className="text-sm text-red-500">{errors.password.message}</p>
@@ -387,13 +429,22 @@ function VendedoresContent() {
           </div>
           <div className="space-y-2">
             <Typography.Text>CPF</Typography.Text>
-            <Input
-              id="cpf"
-              {...register("cpf", {
-                onChange: (event) => handleCpfLookup(event.target.value),
-              })}
-              placeholder="000.000.000-00"
-              suffix={isCpfLoading ? <Spin size="small" /> : <span style={{ width: 16 }} />}
+            <Controller
+              control={control}
+              name="cpf"
+              render={({ field }) => (
+                <Input
+                  {...field}
+                  id="cpf"
+                  placeholder="000.000.000-00"
+                  suffix={isCpfLoading ? <Spin size="small" /> : <span style={{ width: 16 }} />}
+                  onChange={(e) => {
+                    const masked = maskCPF(e.target.value);
+                    field.onChange(masked);
+                    handleCpfLookup(masked);
+                  }}
+                />
+              )}
             />
             {errors.cpf && <p className="text-sm text-red-500">{errors.cpf.message}</p>}
             {cpfError && (
@@ -401,10 +452,11 @@ function VendedoresContent() {
                 <p className="text-sm text-red-500">{cpfError}</p>
                 <Button
                   type="default"
+                  size="small"
                   onClick={() => handleCpfLookup(watch("cpf") ?? "")}
                   disabled={isCpfLoading}
                 >
-                  {isCpfLoading ? "Consultando..." : "Tentar novamente"}
+                  {isCpfLoading ? "Consultando..." : "Tentar consulta novamente"}
                 </Button>
               </div>
             )}
@@ -436,7 +488,18 @@ function VendedoresContent() {
           <div className="space-y-2">
             <Typography.Text>CEP</Typography.Text>
             <div className="flex gap-2">
-              <Input id="zipCode" {...register("zipCode")} placeholder="00000-000" />
+              <Controller
+                control={control}
+                name="zipCode"
+                render={({ field }) => (
+                  <Input
+                    {...field}
+                    id="zipCode"
+                    placeholder="00000-000"
+                    onChange={(e) => field.onChange(maskCEP(e.target.value))}
+                  />
+                )}
+              />
               <Button
                 type="default"
                 onClick={handleCepLookup}
@@ -454,7 +517,7 @@ function VendedoresContent() {
 
           <div className="space-y-2">
             <Typography.Text>Rua</Typography.Text>
-            <Input id="street" {...register("street")} />
+            <Input id="street" {...register("street")} placeholder="Ex: Av. Paulista" />
             {errors.street && (
               <p className="text-sm text-red-500">{errors.street.message}</p>
             )}
@@ -565,7 +628,7 @@ function VendedoresContent() {
           </div>
 
           <div className="md:col-span-2 flex justify-end">
-            <Button type="primary" htmlType="submit" disabled={isSubmitting || !cpfVerified}>
+            <Button type="primary" htmlType="submit" disabled={isSubmitting}>
               {isSubmitting ? "Salvando..." : "Cadastrar vendedor"}
             </Button>
           </div>

@@ -24,7 +24,7 @@ public record SellerRequestDTO(
         String phone,
 
         @NotBlank(message = "A senha e obrigatoria")
-        @Size(min = 6, max = 8, message = "A senha deve ter entre 6 e 8 caracteres")
+        @Size(min = 6, max = 50, message = "A senha deve ter entre 6 e 50 caracteres")
         String password,
 
         @NotBlank(message = "O CPF e obrigatorio")

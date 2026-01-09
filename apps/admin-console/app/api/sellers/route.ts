@@ -134,9 +134,9 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!sanitizedBody.password || sanitizedBody.password.length < 6 || sanitizedBody.password.length > 8) {
+    if (!sanitizedBody.password || sanitizedBody.password.length < 6 || sanitizedBody.password.length > 50) {
       return NextResponse.json(
-        { error: "A senha deve ter entre 6 e 8 caracteres." },
+        { error: "A senha deve ter entre 6 e 50 caracteres." },
         { status: 400 },
       );
     }
@@ -192,6 +192,7 @@ export async function POST(request: NextRequest) {
         message =
           (payload as { error?: string; message?: string })?.error ??
           (payload as { error?: string; message?: string })?.message ??
+          (payload as { details?: string })?.details ??
           "Não foi possível criar o vendedor.";
       }
       

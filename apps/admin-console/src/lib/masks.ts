@@ -67,6 +67,13 @@ export function maskBRL(value: string) {
     .replace(/\B(?=(\d{3})+(?!\d))/g, "."); // separador de milhar
 }
 
+export function maskCEP(value: string) {
+  return value
+    .replace(/\D/g, "")
+    .replace(/(\d{5})(\d)/, "$1-$2")
+    .substring(0, 9);
+}
+
 export function unmaskCPF(value: string) {
   return (value ?? "").replace(/\D/g, "");
 }
