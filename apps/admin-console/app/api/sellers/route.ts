@@ -119,9 +119,15 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    if (!sanitizedBody.email || String(sanitizedBody.email).trim() === "") {
+      return NextResponse.json(
+        { error: "O email e obrigatorio." },
+        { status: 400 },
+      );
+    }
     
-    // As validações de e-mail, telefone, senha, CPF e CEP foram flexibilizadas no frontend.
-    // O backend pode ainda rejeitar se forem obrigatórios lá.
+    // O backend ainda pode rejeitar campos obrigatorios ou invalidos.
 
     // Log do payload para debug
     console.log("[admin][sellers] POST request payload:", JSON.stringify(sanitizedBody, null, 2));

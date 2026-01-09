@@ -16,6 +16,8 @@ public record SellerRequestDTO(
         @Size(min = 2, max = 100, message = "O nome completo deve ter entre 2 e 100 caracteres")
         String fullName,
 
+        @NotBlank(message = "O e-mail e obrigatorio")
+        @Email(message = "E-mail invalido")
         String email,
 
         String phone,

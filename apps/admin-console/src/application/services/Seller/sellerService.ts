@@ -15,7 +15,7 @@ export type Seller = {
 export type CreateSellerPayload = {
   dealerId?: number | null;
   fullName: string;
-  email: string | null;
+  email: string;
   phone: string | null;
   password: string | null;
   CPF: string | null;
