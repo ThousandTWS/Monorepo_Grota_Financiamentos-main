@@ -40,14 +40,13 @@ const sellerSchema = z.object({
     .transform(v => v ? digitsOnly(v) : v),
   password: z
     .string()
+    .max(50, "A senha deve ter no máximo 50 caracteres")
+    .optional()
+    .or(z.literal("")),
+  cpf: z.string()
     .optional()
     .or(z.literal(""))
-    .max(50, "A senha deve ter no máximo 50 caracteres"),
-  cpf: z.string()
-    .refine((val) => !val || digitsOnly(val).length === 11, {
-      message: "Informe um CPF válido (11 dígitos)",
-    })
-    .transform(v => digitsOnly(v)),
+    .transform(v => v ? digitsOnly(v) : ""),
   birthData: z
     .string()
     .optional()
@@ -71,10 +70,9 @@ const sellerSchema = z.object({
     .or(z.literal(""))
     .transform(v => v ? v.trim().toUpperCase() : v),
   zipCode: z.string()
-    .refine((val) => !val || digitsOnly(val).length === 8, {
-      message: "Informe um CEP válido (8 dígitos)",
-    })
-    .transform(v => digitsOnly(v)),
+    .optional()
+    .or(z.literal(""))
+    .transform(v => v ? digitsOnly(v) : ""),
   canView: z.boolean().default(true),
   canCreate: z.boolean().default(true),
   canUpdate: z.boolean().default(true),

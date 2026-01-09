@@ -15,19 +15,19 @@ export type Seller = {
 export type CreateSellerPayload = {
   dealerId?: number | null;
   fullName: string;
-  email: string;
-  phone: string;
-  password: string;
-  CPF: string;
-  birthData: string;
+  email: string | null;
+  phone: string | null;
+  password: string | null;
+  CPF: string | null;
+  birthData: string | null;
   address: {
-    street: string;
-    number: string;
-    complement?: string;
-    neighborhood: string;
-    city: string;
-    state: string;
-    zipCode: string;
+    street: string | null;
+    number: string | null;
+    complement?: string | null;
+    neighborhood: string | null;
+    city: string | null;
+    state: string | null;
+    zipCode: string | null;
   };
   canView?: boolean;
   canCreate?: boolean;
