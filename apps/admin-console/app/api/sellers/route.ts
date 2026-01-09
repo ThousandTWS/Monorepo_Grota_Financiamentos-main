@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     // Validação e sanitização do payload
     const sanitizedBody: any = {
       fullName: String(body.fullName || "").trim(),
-      email: (body.email && String(body.email).trim() !== "") ? String(body.email).trim().toLowerCase() : null,
+      email: (body.email && String(body.email).trim() !== "" && body.email !== "null") ? String(body.email).trim().toLowerCase() : null,
       phone: String(body.phone || "").replace(/\D/g, ""),
       password: String(body.password || ""),
       CPF: String(body.CPF || "").replace(/\D/g, ""),

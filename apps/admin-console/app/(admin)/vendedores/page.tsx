@@ -34,7 +34,7 @@ const sellerSchema = z.object({
     .email("E-mail inválido")
     .optional()
     .or(z.literal(""))
-    .transform(v => v ? v.trim().toLowerCase() : v),
+    .transform(v => (v && v.trim() !== "") ? v.trim().toLowerCase() : null),
   phone: z.string()
     .optional()
     .or(z.literal(""))
@@ -181,7 +181,7 @@ function VendedoresContent() {
       const payload = {
         dealerId: dealerId || null,
         fullName: values.fullName,
-        email: values.email || null,
+        email: values.email,
         phone: values.phone || null,
         password: values.password || null,
         CPF: values.cpf || null,
