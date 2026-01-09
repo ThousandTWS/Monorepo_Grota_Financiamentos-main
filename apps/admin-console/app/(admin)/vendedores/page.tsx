@@ -111,6 +111,7 @@ function VendedoresContent() {
     control,
     watch,
     setValue,
+    getValues,
     formState: { errors },
   } = useForm<SellerFormValues>({
     //@ts-ignore
@@ -155,6 +156,13 @@ function VendedoresContent() {
   const onSubmit = async (values: SellerFormValues) => {
     console.log("[vendedores] onSubmit values:", values);
     const cpfDigits = values.cpf ? digitsOnly(values.cpf) : "";
+    const rawEmail = getValues("email");
+    const normalizedEmail =
+      typeof values.email === "string" && values.email.trim() !== ""
+        ? values.email.trim().toLowerCase()
+        : typeof rawEmail === "string"
+          ? rawEmail.trim().toLowerCase()
+          : "";
     if (isCpfLoading) {
       toast.error("Aguarde a verificação do CPF ou tente novamente.");
       return;
@@ -181,7 +189,7 @@ function VendedoresContent() {
       const payload = {
         dealerId: dealerId || null,
         fullName: values.fullName,
-        email: values.email,
+        email: normalizedEmail !== "" ? normalizedEmail : null,
         phone: values.phone || null,
         password: values.password || null,
         CPF: values.cpf || null,
