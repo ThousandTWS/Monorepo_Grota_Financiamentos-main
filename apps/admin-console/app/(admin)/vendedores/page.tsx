@@ -31,8 +31,10 @@ const sellerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo").transform(v => v.trim()),
   email: z.string()
+    .trim()
+    .min(1, "Informe o e-mail")
     .email("E-mail invalido")
-    .transform(v => v.trim().toLowerCase()),
+    .transform(v => v.toLowerCase()),
   phone: z.string()
     .optional()
     .or(z.literal(""))
