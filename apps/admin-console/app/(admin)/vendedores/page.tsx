@@ -302,12 +302,21 @@ function VendedoresContent() {
       // Pequeno timeout para garantir que os campos existam/renderizem se necessário
       // e forçar a atualização no react-hook-form
       setTimeout(() => {
-        setValue("street", address.street ?? "", { shouldValidate: true, shouldDirty: true });
-        setValue("neighborhood", address.neighborhood ?? "", { shouldValidate: true, shouldDirty: true });
-        setValue("city", address.city ?? "", { shouldValidate: true, shouldDirty: true });
-        setValue("state", (address.state ?? "").toUpperCase(), { shouldValidate: true, shouldDirty: true });
+        // Log para depuração
+        console.log("[vendedores] Atualizando campos com:", {
+          street: address.street,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          state: address.state
+        });
+
+        setValue("street", address.street ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        setValue("neighborhood", address.neighborhood ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        setValue("city", address.city ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        setValue("state", (address.state ?? "").toUpperCase(), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
+        
         toast.success("Endereço encontrado e preenchido!");
-      }, 100);
+      }, 0);
     } catch (error) {
       console.error("[vendedores] CEP lookup error:", error);
       toast.error("Erro ao buscar o CEP. Tente preencher manualmente.");
@@ -317,7 +326,7 @@ function VendedoresContent() {
   };
 
   const onError = (errors: any) => {
-    console.error("[vendedores] Erros de validação detalhados:", JSON.stringify(errors, null, 2));
+    console.error("[vendedores] Erros de validação detalhados:", errors);
     
     // Nomes amigáveis para os campos
     const fieldNames: Record<string, string> = {
