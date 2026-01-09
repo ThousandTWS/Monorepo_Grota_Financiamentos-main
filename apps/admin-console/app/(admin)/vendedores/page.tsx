@@ -31,6 +31,7 @@ const sellerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo").transform(v => v.trim()),
   email: z.string()
+    .email("E-mail inválido")
     .optional()
     .or(z.literal(""))
     .transform(v => v ? v.trim().toLowerCase() : v),
@@ -295,23 +296,15 @@ function VendedoresContent() {
       }
       console.log("[vendedores] Endereço encontrado:", address);
       
-      // Pequeno timeout para garantir que os campos existam/renderizem se necessário
-      // e forçar a atualização no react-hook-form
+      // Atualizando campos com shouldValidate: true e shouldDirty: true
+      // Usamos setTimeout 0 para garantir que o ciclo de renderização do React processe as mudanças
       setTimeout(() => {
-        // Log para depuração
-        console.log("[vendedores] Atualizando campos com:", {
-          street: address.street,
-          neighborhood: address.neighborhood,
-          city: address.city,
-          state: address.state
-        });
-
         setValue("street", address.street ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         setValue("neighborhood", address.neighborhood ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         setValue("city", address.city ?? "", { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         setValue("state", (address.state ?? "").toUpperCase(), { shouldValidate: true, shouldDirty: true, shouldTouch: true });
         
-        toast.success("Endereço encontrado e preenchido!");
+        toast.success("Endereço preenchido automaticamente!");
       }, 0);
     } catch (error) {
       console.error("[vendedores] CEP lookup error:", error);
@@ -520,32 +513,62 @@ function VendedoresContent() {
 
           <div className="space-y-2">
             <Typography.Text>Rua</Typography.Text>
-            <Input id="street" {...register("street")} placeholder="Ex: Av. Paulista" />
+            <Controller
+              control={control}
+              name="street"
+              render={({ field }) => (
+                <Input {...field} id="street" placeholder="Ex: Av. Paulista" />
+              )}
+            />
             {errors.street && (
               <p className="text-sm text-red-500">{errors.street.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Typography.Text>Numero</Typography.Text>
-            <Input id="number" {...register("number")} />
+            <Controller
+              control={control}
+              name="number"
+              render={({ field }) => (
+                <Input {...field} id="number" />
+              )}
+            />
             {errors.number && (
               <p className="text-sm text-red-500">{errors.number.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Typography.Text>Complemento</Typography.Text>
-            <Input id="complement" {...register("complement")} />
+            <Controller
+              control={control}
+              name="complement"
+              render={({ field }) => (
+                <Input {...field} id="complement" />
+              )}
+            />
           </div>
           <div className="space-y-2">
             <Typography.Text>Bairro</Typography.Text>
-            <Input id="neighborhood" {...register("neighborhood")} />
+            <Controller
+              control={control}
+              name="neighborhood"
+              render={({ field }) => (
+                <Input {...field} id="neighborhood" />
+              )}
+            />
             {errors.neighborhood && (
               <p className="text-sm text-red-500">{errors.neighborhood.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Typography.Text>Cidade</Typography.Text>
-            <Input id="city" {...register("city")} />
+            <Controller
+              control={control}
+              name="city"
+              render={({ field }) => (
+                <Input {...field} id="city" />
+              )}
+            />
             {errors.city && (
               <p className="text-sm text-red-500">{errors.city.message}</p>
             )}
