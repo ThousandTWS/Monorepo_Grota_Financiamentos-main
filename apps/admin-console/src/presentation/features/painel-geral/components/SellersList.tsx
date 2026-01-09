@@ -194,15 +194,21 @@ export function SellersList({ dealerId }: { dealerId?: number }) {
       ),
     },
     {
-      key: "contact",
-      title: "Contato",
-      render: (_: unknown, seller: Seller) => (
-        <div>
-          <div className="text-sm text-gray-900">{seller.email ?? "--"}</div>
-          <Typography.Text type="secondary" className="text-xs">
-            {seller.phone ?? "--"}
-          </Typography.Text>
-        </div>
+      key: "email",
+      title: "E-mail",
+      dataIndex: "email",
+      render: (value: string | undefined) => (
+        <div className="text-sm text-gray-900">{value ?? "--"}</div>
+      ),
+    },
+    {
+      key: "phone",
+      title: "Telefone",
+      dataIndex: "phone",
+      render: (value: string | undefined) => (
+        <Typography.Text type="secondary" className="text-xs">
+          {value ?? "--"}
+        </Typography.Text>
       ),
     },
     {
