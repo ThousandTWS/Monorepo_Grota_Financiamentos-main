@@ -84,6 +84,11 @@ public class SellerService {
                 sellerRequestDTO.password()
         );
 
+        // Garantir que o email seja setado se por acaso a factory não o fizer
+        if (sellerRequestDTO.email() != null && !sellerRequestDTO.email().isBlank()) {
+            newUser.setEmail(sellerRequestDTO.email().trim().toLowerCase());
+        }
+
         Seller seller = new Seller();
         seller.setPhone(sellerRequestDTO.phone());
         seller.setCPF(sellerRequestDTO.CPF());
