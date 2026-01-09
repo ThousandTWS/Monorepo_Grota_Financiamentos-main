@@ -120,47 +120,8 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    if (!sanitizedBody.email || !sanitizedBody.email.includes("@")) {
-      return NextResponse.json(
-        { error: "E-mail inválido." },
-        { status: 400 },
-      );
-    }
-    
-    if (!sanitizedBody.phone || sanitizedBody.phone.length < 10) {
-      return NextResponse.json(
-        { error: "Telefone deve ter no mínimo 10 dígitos." },
-        { status: 400 },
-      );
-    }
-    
-    if (!sanitizedBody.password || sanitizedBody.password.length < 6 || sanitizedBody.password.length > 50) {
-      return NextResponse.json(
-        { error: "A senha deve ter entre 6 e 50 caracteres." },
-        { status: 400 },
-      );
-    }
-    
-    if (!sanitizedBody.CPF || sanitizedBody.CPF.length !== 11) {
-      return NextResponse.json(
-        { error: "CPF deve ter exatamente 11 dígitos." },
-        { status: 400 },
-      );
-    }
-    
-    if (!sanitizedBody.birthData) {
-      return NextResponse.json(
-        { error: "Data de nascimento é obrigatória." },
-        { status: 400 },
-      );
-    }
-    
-    if (!sanitizedBody.address.zipCode || sanitizedBody.address.zipCode.length !== 8) {
-      return NextResponse.json(
-        { error: "CEP deve ter exatamente 8 dígitos." },
-        { status: 400 },
-      );
-    }
+    // As validações de e-mail, telefone, senha, CPF e CEP foram flexibilizadas no frontend.
+    // O backend pode ainda rejeitar se forem obrigatórios lá.
 
     // Log do payload para debug
     console.log("[admin][sellers] POST request payload:", JSON.stringify(sanitizedBody, null, 2));

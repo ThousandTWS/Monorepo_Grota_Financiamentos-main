@@ -31,45 +31,47 @@ const sellerSchema = z.object({
   dealerId: z.string().optional(),
   fullName: z.string().min(2, "Informe o nome completo").transform(v => v.trim()),
   email: z.string()
-    .email("E-mail inválido")
-    .transform(v => v.trim().toLowerCase()),
+    .optional()
+    .or(z.literal(""))
+    .transform(v => v ? v.trim().toLowerCase() : v),
   phone: z.string()
-    .refine((val) => digitsOnly(val).length >= 10, {
-      message: "Informe um telefone válido (mínimo 10 dígitos)",
-    })
-    .transform(v => digitsOnly(v)),
+    .optional()
+    .or(z.literal(""))
+    .transform(v => v ? digitsOnly(v) : v),
   password: z
     .string()
-    .min(6, "A senha precisa ter no mínimo 6 caracteres")
+    .optional()
+    .or(z.literal(""))
     .max(50, "A senha deve ter no máximo 50 caracteres"),
   cpf: z.string()
-    .refine((val) => digitsOnly(val).length === 11, {
+    .refine((val) => !val || digitsOnly(val).length === 11, {
       message: "Informe um CPF válido (11 dígitos)",
     })
     .transform(v => digitsOnly(v)),
   birthData: z
     .string()
-    .min(1, "Informe a data de nascimento")
+    .optional()
+    .or(z.literal(""))
     .refine((val) => {
-      if (!val) return false;
+      if (!val) return true;
       // Aceita formato AAAA-MM-DD (input type="date")
       if (/^\d{4}-\d{2}-\d{2}$/.test(val)) return true;
       return false;
     }, {
       message: "Use o formato AAAA-MM-DD",
     }),
-  street: z.string().min(3, "Informe a rua").transform(v => v.trim()),
-  number: z.string().min(1, "Informe o número").transform(v => v.trim()),
+  street: z.string().optional().or(z.literal("")).transform(v => v?.trim()),
+  number: z.string().optional().or(z.literal("")).transform(v => v?.trim()),
   complement: z.string().optional().transform(v => v?.trim()),
-  neighborhood: z.string().min(3, "Informe o bairro").transform(v => v.trim()),
-  city: z.string().min(2, "Informe a cidade").transform(v => v.trim()),
+  neighborhood: z.string().optional().or(z.literal("")).transform(v => v?.trim()),
+  city: z.string().optional().or(z.literal("")).transform(v => v?.trim()),
   state: z
     .string()
-    .min(2, "UF inválida")
-    .max(2, "UF inválida")
-    .transform(v => v.trim().toUpperCase()),
+    .optional()
+    .or(z.literal(""))
+    .transform(v => v ? v.trim().toUpperCase() : v),
   zipCode: z.string()
-    .refine((val) => digitsOnly(val).length === 8, {
+    .refine((val) => !val || digitsOnly(val).length === 8, {
       message: "Informe um CEP válido (8 dígitos)",
     })
     .transform(v => digitsOnly(v)),
@@ -153,7 +155,7 @@ function VendedoresContent() {
 
   const onSubmit = async (values: SellerFormValues) => {
     console.log("[vendedores] onSubmit values:", values);
-    const cpfDigits = digitsOnly(values.cpf);
+    const cpfDigits = values.cpf ? digitsOnly(values.cpf) : "";
     if (isCpfLoading) {
       toast.error("Aguarde a verificação do CPF ou tente novamente.");
       return;
@@ -165,7 +167,7 @@ function VendedoresContent() {
     setIsSubmitting(true);
     try {
       // Valida e formata a data de nascimento
-      let birthDateIso: string;
+      let birthDateIso: string | undefined = undefined;
       if (values.birthData) {
         const date = new Date(values.birthData);
         if (isNaN(date.getTime())) {
@@ -174,29 +176,25 @@ function VendedoresContent() {
           return;
         }
         birthDateIso = date.toISOString().split("T")[0];
-      } else {
-        toast.error("Data de nascimento é obrigatória.");
-        setIsSubmitting(false);
-        return;
       }
       const dealerId = values.dealerId ? Number(values.dealerId) : undefined;
       
       const payload = {
         dealerId: dealerId || null,
         fullName: values.fullName,
-        email: values.email,
-        phone: values.phone,
-        password: values.password,
-        CPF: values.cpf,
-        birthData: birthDateIso,
+        email: values.email || null,
+        phone: values.phone || null,
+        password: values.password || null,
+        CPF: values.cpf || null,
+        birthData: birthDateIso || null,
         address: {
-          street: values.street,
-          number: values.number,
-          complement: values.complement || undefined,
-          neighborhood: values.neighborhood,
-          city: values.city,
-          state: values.state,
-          zipCode: values.zipCode,
+          street: values.street || null,
+          number: values.number || null,
+          complement: values.complement || null,
+          neighborhood: values.neighborhood || null,
+          city: values.city || null,
+          state: values.state || null,
+          zipCode: values.zipCode || null,
         },
         canView: values.canView ?? true,
         canCreate: values.canCreate ?? true,
@@ -403,9 +401,7 @@ function VendedoresContent() {
             <Input 
               id="email" 
               type="email" 
-              {...register("email", {
-                setValueAs: (v) => v.trim().toLowerCase()
-              })} 
+              {...register("email")} 
             />
             {errors.email && (
               <p className="text-sm text-red-500">{errors.email.message}</p>
